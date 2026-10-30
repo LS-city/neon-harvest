@@ -75,6 +75,17 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .pl-pick{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto}
 .pl-pick label{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);cursor:pointer}
 .dot{width:7px;height:7px;border-radius:50%;background:#43f0a4;display:inline-block;flex:none}
+.rbook details{border:1px solid var(--line);background:rgba(21,14,38,.6);margin-bottom:6px}
+.rbook summary{display:flex;gap:10px;align-items:center;padding:6px 8px;cursor:pointer;list-style:none}
+.rbook summary::-webkit-details-marker{display:none}
+.rbook summary::after{content:"▸";margin-left:auto;color:var(--cyan);transition:transform .15s}
+.rbook details[open] summary::after{transform:rotate(90deg)}
+.rbook .rb-body{padding:4px 10px 10px;display:flex;flex-direction:column;gap:8px}
+.rbook .rb-need{border-top:1px dashed var(--line);padding-top:6px}
+.rbook .rb-items{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.rbook .rb-items span{border:1px solid var(--line);padding:1px 6px;font-size:11px}
+.rbook .rb-items span.own{border-color:#43f0a4}
+.rbook .rb-mk{display:flex;flex-wrap:wrap;gap:6px;font-size:11px}
 #chatin{flex:1;min-width:0;max-width:340px;font-family:var(--f-ui);font-size:13px;background:rgba(21,14,38,.9);color:var(--text);border:1px solid var(--line);padding:7px 9px}
 .emotes{display:flex;gap:4px}
 .emotes .btn{padding:6px 8px}
@@ -1347,7 +1358,7 @@ const GUIDE={
     ["Other ways",["Encrypted Floppy cracks can pay chips, and other players can trade or gift you parts worth selling."]]]},
   items:{n:"Get every item",secs:[
     ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
-    ["Build rigs",["Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
+    ["Build rigs",["Open the Recipe Book tab at the Workbench to see what every recipe needs, which items count for each part, and where to buy or find them.","Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
     ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu for less, plus 8 noodle-bar specials of its own.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
     ["Gear, tech and home items",["Cyber Buys & More sells hacker tools, phones, floppies, weapons, accessories and living-room decor.","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
     ["Look and style",["Press C to open your Character screen and change your name and look anytime.","Over 200 options: 13 tops, 12 hairstyles, 22 colors for your top, legs, hair and name, plus shoes, neck pieces, eyewear, 17 headpieces, back items, companions and auras.","Basics are free. Premium pieces cost credits once and stay unlocked, so you can swap outfits freely. Try anything on before you buy."]],
@@ -1641,7 +1652,8 @@ function pickParts(rec,mode){ const out=[]; for(const [t,need] of Object.entries
 function buildTier(parts){ return clamp(Math.round(parts.reduce((s,id)=>s+TIER[BY[id].r],0)/parts.length),0,3); }
 function openWorkbench(tab="build"){
   const body=panel("Workbench","Combine parts from your stash into finished rigs. Better parts make a higher Mk. Rigs can be displayed, gifted, traded or dismantled.");
-  const tabs=el("div",{class:"tabs"}); [["build","Build"],["dismantle","Dismantle"]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>openWorkbench(k)}))); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); [["build","Build"],["recipes","Recipe Book"],["dismantle","Dismantle"]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>openWorkbench(k)}))); body.append(tabs);
+  if(tab==="recipes"){ recipeBook(body); return; }
   const stage=el("div",{class:"detail",hidden:""}); body.append(stage);
   if(tab==="dismantle"){
     const builds=invList().filter(([id])=>BY[id].t==="build");
@@ -1667,6 +1679,34 @@ function openWorkbench(tab="build"){
   }
   body.append(list);
 }
+/* --- recipe book: what every recipe needs, which items count, and where to get them */
+let rbQuery="", rbReady=false;
+function partSources(t){ const out=[]; if(PARTS.some(p=>p.t===t)) out.push("Parts Depot (Sector 9, stock rotates hourly)","Scrap Alley digs");
+  for(const st of STALLS) if(st.types&&st.types.includes(t)) out.push(`${st.n} (Byte Market)`);
+  if(CB_ITEMS.some(i=>i.t===t)) out.push("Cyber Buys & More (Sector 9)");
+  if(typeof TECH_T!=="undefined"&&TECH_T.includes(t)) out.push("Void bot loot");
+  out.push("Trade Board, gifts and Grid duels"); return [...new Set(out)]; }
+function recipeBook(body){
+  body.append(el("p",{class:"sub",text:"Every recipe needs parts by TYPE: any item of that type works. The finished rig's Mk comes from the average rarity of the parts you use: mostly common makes Mk.I, uncommon Mk.II, rare Mk.III and epic Mk.IV. Higher Mk rigs are worth more and work better. Tap a recipe to see exactly which items count and where to get them."}));
+  const q=el("input",{id:"rbq",placeholder:"Search recipes or parts (e.g. fan, Credit Miner)",autocomplete:"off",value:rbQuery,style:"flex:1;min-width:0"});
+  const rd=el("label",{style:"display:flex;gap:6px;align-items:center;white-space:nowrap"},el("input",{type:"checkbox",id:"rbready"}),"Only what I can build");
+  const list=el("div",{class:"rbook"}); body.append(el("div",{class:"row"},q,rd),list); rd.querySelector("input").checked=rbReady;
+  const draw=()=>{ list.innerHTML=""; const f=rbQuery.trim().toLowerCase(); let shown=0;
+    for(const rec of RECIPES){ const needs=Object.entries(rec.need); const missing=needs.filter(([t,n])=>countType(t)<n).map(([t,n])=>`${n-countType(t)} ${TYPE_N[t]}${n-countType(t)>1?"s":""}`); const ok=!missing.length;
+      const matchItems=f&&needs.some(([t])=>TYPE_N[t].toLowerCase().includes(f)||CAT.some(i=>i.t===t&&i.n.toLowerCase().includes(f)));
+      if(f&&!rec.n.toLowerCase().includes(f)&&!rec.desc.toLowerCase().includes(f)&&!matchItems) continue; if(rbReady&&!ok) continue; shown++;
+      const outs=BY_R.map((r,i)=>BY[`b_${rec.k}_${r}`]); const d=el("details");
+      d.append(el("summary",{},itemCanvas(`b_${rec.k}_common`,40),el("div",{class:"grow"},el("div",{text:rec.n}),el("div",{class:ok?"r-uncommon":"sub",text:ok?"✓ You have every part":"Missing: "+missing.join(", ")})),el("span",{class:"sub",text:`₵${outs[0].v}–₵${outs[3].v}`})));
+      const b=el("div",{class:"rb-body"}); b.append(el("div",{class:"sub",text:rec.desc}));
+      b.append(el("div",{class:"rb-mk"},...outs.map(o=>el("span",{class:"r-"+o.r,text:`${MK[TIER[o.r]]} (${o.r}) worth ₵${o.v}`}))));
+      for(const [t,n] of needs){ const have=countType(t), items=CAT.filter(i=>i.t===t).sort((a,b2)=>TIER[a.r]-TIER[b2.r]||a.v-b2.v);
+        const box=el("div",{class:"rb-need"},el("strong",{class:have>=n?"r-uncommon":"r-epic",text:`${n}× ${TYPE_N[t]} · you have ${have}`}));
+        box.append(el("div",{class:"sub",text:`Any of these ${items.length} items counts:`}),el("div",{class:"rb-items"},...items.map(i=>{ const own=save.inv[i.id]||0; return el("span",{class:"r-"+i.r+(own?" own":""),title:`${i.r} · worth ₵${i.v}`,text:`${i.n}${own?` ×${own}`:""}`}); })));
+        box.append(el("div",{class:"sub",text:"Get them at: "+partSources(t).join(" · ")})); b.append(box); }
+      if(ok) b.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:`Build ${rec.n} now`,onclick:()=>openWorkbench("build")})));
+      d.append(b); if(f) d.open=true; list.append(d); }
+    if(!shown) list.append(el("div",{class:"empty",text:rbReady?"You don't have the parts for any recipe yet. Untick the box to see what each one needs.":"No recipe matches that search."})); };
+  q.addEventListener("input",()=>{ rbQuery=q.value; draw(); }); rd.querySelector("input").addEventListener("change",e=>{ rbReady=e.target.checked; draw(); }); draw(); }
 function doBuild(rec,mode,stage){
   const parts=pickParts(rec,mode); if(!parts) return; const tier=buildTier(parts); const outId=`b_${rec.k}_${BY_R[tier]}`;
   for(const p of parts) addItem(p,-1); persist();
