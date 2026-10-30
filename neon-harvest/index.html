@@ -974,6 +974,7 @@ function hotspots(sc){
   if(sc==="void") return [
     {x:120,hw:60,label:"Take the metro",act:()=>{ if(T-lastHitT<6){ toast("You're in combat. Wait a few seconds before leaving."); return; } openMetro(); }},
     {x:264,hw:50,label:"Top fraggers and weapon stats",act:()=>openFraggers()},
+    {x:392,hw:42,label:`Bot Control: ${botMode().n} mode`,act:()=>openBotControl()},
   ];
   if(sc==="club") return [
     {x:70,hw:50,label:"Exit to the street",act:()=>go("street",3960)},
@@ -1249,10 +1250,10 @@ function render(){
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
-  if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; ents.push({x:b.x,y:b.y,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:BOT_LOOK,name:"NULL BOT",hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
+  if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
   ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0?"★ ":"")+(myName||"Runner"),me:true,say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   ents.sort((a,b)=>a.y-b.y);
-    for(const e of ents){ const s=.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top); drawStick(ctx,e.x,e.y,s,e.o,T);
+    for(const e of ents){ const s=(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
   drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx();
   // rain (street)
@@ -1293,7 +1294,7 @@ const GUIDE={
     ["Scrap Alley",["Dig through the five scrap piles at the east end of Sector 9. Every dig gives 2–9 chips plus 1–2 random parts and sometimes a floppy disk.","Piles refill after 90 seconds (60 seconds if you keep a Cyberdeck in your stash). A Drone in your stash adds an extra part per dig."]],
     ["CHIP PRINT arcade",["In The Glitch. Each run costs 5 chips. Stop the print head in the bright zone three times; tighter hits print rarer chips and pay 2 chips per point (up to +18)."]],
     ["Mining Rack",["In your apartment. Install crypto miners, Mining Rigs, Phone Farms or Quantum Rigs and they mine chips while you're offline, for up to 12 hours before the buffer fills.","Each Home Server in your stash boosts the rack 25% (up to 2). Come home and collect."]],
-    ["The Void",["Delete Null Bots in The Void for chips.","Beat other players: when a player dies they lose 15% of their credits and chips, and half of that goes to the player who got the kill."]],
+    ["The Void",["Delete bots in The Void for chips: pick Easy, Normal or Hard at the Bot Control terminal in the safe zone. Harder modes pay more chips per kill, up to 40 for the SENTINEL Ω boss.","Bots drop loot on the floor: tech parts and gear, apartment decor, food, and wardrobe unlocks, from common to epic. Walk over a drop to grab it within 45 seconds.","Beat other players: when a player dies they lose 15% of their credits and chips, and half of that goes to the player who got the kill."]],
     ["UPLOAD",["The snake-style hacking arcade at the far end of The Grid. Steer your upload through firewalls, grab every data packet, then reach the uplink port.","First clears pay 4 to 22 chips per level, gold root keys inside the game pay +1 chip each, and clearing all 10 levels wins a HALO Singularity Chip."]],
     ["Other ways",["Encrypted Floppy cracks can pay chips, and other players can trade or gift you parts worth selling."]]]},
   items:{n:"Get every item",secs:[
@@ -1302,10 +1303,11 @@ const GUIDE={
     ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu for less, plus 8 noodle-bar specials of its own.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
     ["Gear, tech and home items",["Cyber Buys & More sells hacker tools, phones, floppies, weapons, accessories and living-room decor.","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
     ["Look and style",["Press C to open your Character screen and change your name and look anytime.","Over 200 options: 13 tops, 12 hairstyles, 22 colors for your top, legs, hair and name, plus shoes, neck pieces, eyewear, 17 headpieces, back items, companions and auras.","Basics are free. Premium pieces cost credits once and stay unlocked, so you can swap outfits freely. Try anything on before you buy."]],
+    ["From Void bots",["Every bot type has its own loot: Glitch Drones and Pulse Gunners drop mostly tech, Phantoms drop wardrobe unlocks, Firewall Brutes drop apartment decor, and the SENTINEL Ω always drops two rare-or-better items.","Hard mode gives the best rarity odds, including epic drops. Wardrobe unlocks you already own turn into credits."]],
     ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
   places:{n:"Places",secs:[
     ["Sector 9",["Apt 7C: stash terminal, display shelves, wardrobe, workbench, Mining Rack, living room and an intercom to invite friends.","The Glitch: Vex's bar counter with 11 drinks, Kai's Glitch Kitchen with 7 hot dishes, the Job Board, jukebox and the CHIP PRINT arcade. The Trade Board stands outside on the street.","Parts Depot, Cyber Buys & More, Scrap Alley, and The Third Eye club with a trippy stage, DJ booth, seats and its own tech-buzz menu with effects."]],
-    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, and Byte Bowl Noodles with Gran Ko's 8 noodle-bar specials and paid shifts.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home."]]]},
+    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, and Byte Bowl Noodles with Gran Ko's 8 noodle-bar specials and paid shifts.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home.","Bot Control (in The Void's safe zone): Off, Easy (Glitch Drones, Null Bots), Normal (adds katana Code Slashers and ranged Pulse Gunners) or Hard (Phantoms that blink behind you, Firewall Brutes with ground slams, and the SENTINEL Ω boss). Watch for red warning rings and aim lines: step away to dodge."]]]},
   social:{n:"Play with others",secs:[
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes. Chat lines fade after a few seconds; tap Log next to the chat box for the full history, filtered by chat or events.","Invite players to your apartment from the intercom; they get a card that brings them straight to you.","Visit neighbors' doors to look at their display shelves."]],
     ["Private messages and groups",["Press M or tap Messages to chat privately. Tap a player (or use Who's online) and choose Message to start a one-on-one chat.","Make a group chat with up to 8 people, name it, invite more players later, or leave anytime.","Only the people in a chat can read it. Block anyone from their chat to stop seeing their messages."]],
@@ -3127,7 +3129,7 @@ function drawClub(t){
 function drawClubHeld(){ if(!clubHolding||me.scene!=="club") return; drawItem(ctx,clubHolding.id,me.x,me.y-110,24,T); }
 
 /* ============================================================ THE VOID (PvP arena) */
-const SAFE_X=340;
+const SAFE_X=460;
 const WSTATS={
   fists:      {n:"Fists",dmg:6, range:30, cd:.45,kind:"melee", fx:"punch",col:"#e9e2ff"},
   wpn_knife:  {dmg:9, range:36, cd:.38,kind:"melee", fx:"slash",col:"#38e8ff"},
@@ -3206,19 +3208,108 @@ function die(src){ me.dead=true; me.blocking=false; target=null;
   setTimeout(()=>{ ov.hidden=true; me.dead=false; myHP=100; me.blocking=false; viewHome=null; me.visiting=null; go("home",160); toast(`You respawned at home. Lost ₵${lc} and ${lch} chips.`,"#ff5a4a"); },2800); }
 function onKo(m){ const d=m.data||{}; if(m.isMe||d.killer!==myId) return; save.voidKills=(save.voidKills||0)+1; persist(); toast(`You deleted ${nameOf(m.by)}! Their bounty is on its way.`,"#ff3fa8"); emote("cheer"); }
 
-/* --- Null Bots (local training enemies) */
-function newBot(x){ return {x,y:rnd(LANE.top+10,LANE.bot-10),hp:60,max:60,dir:-1,phase:0,cd:0,dead:false,moving:false,wt:0}; }
-function hitBot(b,dmg,w){ b.hp-=dmg; b.hurtT=T; b.x=clamp(b.x+me.dir*10,SAFE_X+20,SCENES.void.w-30); if(WSTATS[w].slow) b.slowUntil=T+WSTATS[w].slow;
-  addVfx({type:"num",x:b.x,y:b.y-84,txt:"-"+dmg,col:"#ffb84a"}); addVfx({type:"hit",x:b.x,y:b.y-36});
-  if(b.hp<=0){ b.dead=true; b.deadT=T; b.respawnAt=T+8; const ch=3+((Math.random()*6)|0); save.chips+=ch; save.botKills=(save.botKills||0)+1; persist(); toast(`Null Bot deleted. +${ch} chips`,"#38e8ff"); beep(900,.08); } }
-function tickBots(){ if(me.scene!=="void") return; if(!bots.length) for(let i=0;i<3;i++) bots.push(newBot(1100+i*520));
-  for(const b of bots){ if(b.dead){ if(T>b.respawnAt) Object.assign(b,newBot(rnd(1300,2500))); continue; }
-    const dx=me.x-b.x, dy=me.y-b.y, dist=Math.hypot(dx,dy*1.5), sp=(b.slowUntil||0)>T?28:62, chase=!me.dead&&!inSafe(me.x)&&dist<320;
-    let tx,ty; if(chase){ tx=me.x-Math.sign(dx||1)*24; ty=me.y; } else { if(T>b.wt){ b.wx=clamp(b.x+rnd(-220,220),SAFE_X+140,SCENES.void.w-60); b.wy=rnd(LANE.top,LANE.bot); b.wt=T+rnd(2,4); } tx=b.wx; ty=b.wy; }
+/* --- Void bots (local enemies; each player picks a mode at the Bot Control terminal) */
+const oi=(k,n)=>Math.max(0,WARD[k].opts.findIndex(o=>o[0]===n));
+const ci=n=>Math.max(0,COLOR_N.indexOf(n));
+const BOT_TYPES={
+  drone:  {n:"Glitch Drone",  hp:35, sp:98, dmg:4, range:34, cd:.8, fx:"fists",      chips:[2,4],  drop:.35,cats:{tech:65,food:25,look:10},          sc:.85, look:{skin:oi("skin","Cyan wire"),style:oi("style","Tank top"),jacket:ci("Blackout"),pants:ci("Blackout"),visor:oi("visor","LED visor"),hat:oi("hat","Antenna"),pet:oi("pet","Mini drone"),aura:oi("aura","Glitch"),feet:oi("feet","Hover boots"),nameCol:ci("Cyan")}},
+  grunt:  {n:"Null Bot",      hp:60, sp:62, dmg:7, range:36, cd:1.2,fx:"wpn_baton",  chips:[3,8],  drop:.4, cats:{tech:50,food:20,decor:15,look:15}, look:{...BOT_LOOK}},
+  slasher:{n:"Code Slasher",  hp:70, sp:84, dmg:10,range:48, cd:1.0,fx:"wpn_katana", chips:[4,9],  drop:.5, cats:{tech:55,look:30,decor:15},         look:{skin:oi("skin","Shadow"),style:oi("style","Kimono jacket"),jacket:ci("Hot pink"),pants:ci("Blackout"),visor:oi("visor","Face mask"),hair:oi("hair","Ponytail"),hairCol:ci("Ghost white"),back:oi("back","Twin swords"),hand:"wpn_katana",nameCol:ci("Hot pink")}},
+  gunner: {n:"Pulse Gunner",  hp:50, sp:60, dmg:8, range:270,cd:1.8,kind:"ranged",keep:200,chips:[4,9],drop:.5,cats:{tech:75,food:10,look:15},          look:{skin:oi("skin","Chrome"),style:oi("style","Tactical vest"),jacket:ci("Blackout"),pants:ci("Periwinkle"),visor:oi("visor","Scanner HUD"),hat:oi("hat","Cap"),feet:oi("feet","Combat boots"),hand:"wpn_pistol",nameCol:ci("Periwinkle")}},
+  phantom:{n:"Phantom",       hp:55, sp:72, dmg:9, range:38, cd:1.0,fx:"wpn_knife",  blink:true,chips:[5,10],drop:.6,cats:{look:60,decor:25,tech:15},  look:{skin:oi("skin","Obsidian"),style:oi("style","Trench coat"),jacket:ci("Royal purple"),pants:ci("Blackout"),visor:oi("visor","Glowing eyes"),aura:oi("aura","Shadow smoke"),hand:"wpn_knife",nameCol:ci("Violet")}},
+  brute:  {n:"Firewall Brute",hp:180,sp:40, dmg:16,range:64, cd:2.2,slam:true,heavy:true,chips:[8,14],drop:.8,cats:{decor:55,tech:30,look:15},    sc:1.25,look:{skin:oi("skin","Shadow"),style:oi("style","Mech suit"),jacket:ci("Signal red"),pants:ci("Blackout"),visor:oi("visor","Cyber eye"),hat:oi("hat","Horns"),back:oi("back","Mech arms"),feet:oi("feet","Combat boots"),hand:"wpn_baton",nameCol:ci("Signal red")}},
+  sentinel:{n:"SENTINEL Ω",   hp:420,sp:48, dmg:18,range:70, cd:2.0,slam:true,volley:true,heavy:true,boss:true,chips:[25,40],drop:1,drops:2,minR:"rare",cats:{tech:40,look:30,decor:30},sc:1.5,look:{skin:oi("skin","Chrome"),style:oi("style","Mech suit"),jacket:ci("Blood red"),pants:ci("Blackout"),visor:oi("visor","LED visor"),hat:oi("hat","Holo crown"),back:oi("back","Bat wings"),aura:oi("aura","Lightning"),feet:oi("feet","Hover boots"),nameCol:ci("Gold")}},
+};
+const BOT_MODES={
+  off:   {n:"Off",   count:0, d:"No bots. The arena is players only."},
+  easy:  {n:"Easy",  count:3, pool:{drone:3,grunt:2},                                hp:.8, dmg:.7, resp:9, aggro:260,chip:.7, rar:{common:70,uncommon:25,rare:5,epic:0},   d:"3 bots: Glitch Drones and Null Bots. Slower to anger, softer hits, mostly common loot."},
+  normal:{n:"Normal",count:5, pool:{grunt:3,drone:2,slasher:2,gunner:2},             hp:1,  dmg:1,  resp:8, aggro:320,chip:1,  rar:{common:52,uncommon:32,rare:13,epic:3},  d:"5 bots: adds katana Code Slashers and ranged Pulse Gunners. Better odds of uncommon and rare loot."},
+  hard:  {n:"Hard",  count:7, pool:{slasher:3,gunner:3,phantom:2,brute:2,grunt:1},boss:"sentinel",hp:1.4,dmg:1.35,resp:6,aggro:420,chip:1.4,rar:{common:28,uncommon:38,rare:25,epic:9},d:"7 bots: Phantoms that blink behind you, Firewall Brutes with ground slams, and the SENTINEL Ω boss. Best loot, epic drops included."},
+};
+const R_ORDER=["common","uncommon","rare","epic"];
+const TECH_T=["chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hack","phone","floppy","miner","hdd","kbd","mouse","cable","acc"];
+let loot=[], botsFor=null;
+function botMode(){ return BOT_MODES[save.botMode]||BOT_MODES.normal; }
+function wpick(w){ const e=Object.entries(w).filter(([,v])=>v>0); let t=e.reduce((a,[,v])=>a+v,0)*Math.random(); for(const [k,v] of e){ if((t-=v)<0) return k; } return e[0][0]; }
+function lookRarity(cost){ return cost<100?"common":cost<250?"uncommon":cost<450?"rare":"epic"; }
+function lootPool(cat,r){ if(cat==="tech") return CAT.filter(i=>TECH_T.includes(i.t)&&i.r===r).map(i=>({kind:"item",id:i.id,r}));
+  if(cat==="decor") return DECOR_ITEMS.filter(i=>i.r===r).map(i=>({kind:"item",id:i.id,r}));
+  if(cat==="food") return [...FOODS,...BB_FOODS,...DRINKS].filter(i=>i.r===r).map(i=>({kind:"item",id:i.id,r}));
+  if(cat==="look"){ const out=[]; for(const k of SLOTS){ if(WARD[k].color) continue; WARD[k].opts.forEach((o,i)=>{ if(o[1]>0&&lookRarity(o[1])===r&&!isOwned(k,i)) out.push({kind:"look",k,i,r}); }); } return out; }
+  return []; }
+function rollLoot(B,M){ let r=wpick(M.rar); if(B.minR&&R_ORDER.indexOf(r)<R_ORDER.indexOf(B.minR)) r=Math.random()<.7?B.minR:"epic"; const cat=wpick(B.cats);
+  for(let k=R_ORDER.indexOf(r);k>=0;k--){ const pool=lootPool(cat,R_ORDER[k]); if(pool.length) return pool[(Math.random()*pool.length)|0]; }
+  for(const c2 of ["tech","decor","food"]){ const pool=lootPool(c2,r); if(pool.length) return pool[(Math.random()*pool.length)|0]; }
+  return {kind:"cr",amt:{common:20,uncommon:50,rare:120,epic:300}[r],r}; }
+function lootName(l){ return l.kind==="item"?BY[l.id].n:l.kind==="look"?`${WARD[l.k].opts[l.i][0]} (${WARD[l.k].n})`:`₵${l.amt}`; }
+function dropLoot(b,B,M){ const n=B.drops||1; for(let k=0;k<n;k++){ if(Math.random()>B.drop) continue; const l=rollLoot(B,M); loot.push({...l,x:clamp(b.x+rnd(-18,18),SAFE_X+20,SCENES.void.w-30),y:clamp(b.y+rnd(-6,6),LANE.top,LANE.bot),t0:T,from:B.n}); } if(loot.length>40) loot.splice(0,loot.length-40); }
+function collectLoot(l){ const c=RAR[l.r].c;
+  if(l.kind==="item"){ addItem(l.id); toast(`Loot: ${BY[l.id].n} (${l.r})`,c); }
+  else if(l.kind==="look"){ if(isOwned(l.k,l.i)){ const amt=Math.round(optCost(l.k,l.i)/2); save.credits+=amt; toast(`Already owned ${lootName(l)}: +₵${amt}`,c); } else { save.owned=save.owned||[]; save.owned.push(l.k+":"+l.i); toast(`Wardrobe unlock: ${lootName(l)}. Wear it from Character [C].`,c); } }
+  else { save.credits+=l.amt; toast(`Loot: +₵${l.amt}`,c); }
+  if(l.r==="epic") broadcastSys(`looted an EPIC ${lootName(l)} from ${l.from} in The Void`);
+  persist(); beep(l.r==="epic"?1760:l.r==="rare"?1500:1200,.06); setTimeout(()=>beep(l.r==="epic"?2200:1700,.06),70); }
+function newBot(type,x,boss){ const B=BOT_TYPES[type], M=botMode(), hp=Math.round(B.hp*(M.hp||1)); return {type,boss:!!boss,x:x!=null?x:rnd(SAFE_X+700,SCENES.void.w-120),y:rnd(LANE.top+10,LANE.bot-10),hp,max:hp,dir:-1,phase:0,cd:T+1.5,dead:false,moving:false,wt:0,blinkT:T+rnd(3,6),wind:null}; }
+function resetBots(){ const M=botMode(); bots=[]; botsFor=save.botMode||"normal"; if(!M.count) return;
+  for(let i=0;i<M.count;i++) bots.push(newBot(wpick(M.pool),SAFE_X+600+i*((SCENES.void.w-SAFE_X-760)/Math.max(1,M.count-1))));
+  if(M.boss) bots.push(newBot(M.boss,SCENES.void.w-160,true)); }
+function hitBot(b,dmg,w){ const B=BOT_TYPES[b.type]; b.hp-=dmg; b.hurtT=T; b.x=clamp(b.x+me.dir*(B.heavy?3:10),SAFE_X+20,SCENES.void.w-30); if(WSTATS[w].slow) b.slowUntil=T+WSTATS[w].slow*(B.heavy?.5:1);
+  addVfx({type:"num",x:b.x,y:b.y-84*(B.sc||1),txt:"-"+dmg,col:"#ffb84a"}); addVfx({type:"hit",x:b.x,y:b.y-36});
+  if(b.hp<=0){ const M=botMode(); b.dead=true; b.deadT=T; b.wind=null; b.respawnAt=T+(b.boss?45:M.resp||8); const ch=Math.max(1,Math.round(rnd(B.chips[0],B.chips[1]+1)*(M.chip||1))); save.chips+=ch; save.botKills=(save.botKills||0)+1;
+    persist(); toast(`${B.n} deleted. +${ch} chips`,"#38e8ff"); beep(900,.08); if(b.boss){ broadcastSys(`took down the SENTINEL Ω in The Void`); emote("cheer"); } dropLoot(b,B,M); } }
+function botHitsMe(b,B,dmg){ if(me.dead||inSafe(me.x)) return; const M=botMode(); takeDamage(Math.max(1,Math.round(dmg*(M.dmg||1))),{id:null,name:B.boss?B.n:"a "+B.n,w:"fists",from:b.x}); }
+function tickBots(){ if(me.scene!=="void") return; const M=botMode();
+  if(botsFor!==(save.botMode||"normal")) resetBots(); if(!bots.length&&M.count) resetBots();
+  for(let i=loot.length-1;i>=0;i--){ const l=loot[i]; if(T-l.t0>45){ loot.splice(i,1); continue; } if(!me.dead&&Math.abs(l.x-me.x)<30&&Math.abs(l.y-me.y)<26){ loot.splice(i,1); collectLoot(l); } }
+  for(const b of bots){ const B=BOT_TYPES[b.type];
+    if(b.dead){ if(T>b.respawnAt) Object.assign(b,newBot(b.boss?M.boss:wpick(M.pool),null,b.boss)); continue; }
+    const dx=me.x-b.x, dy=me.y-b.y, dist=Math.hypot(dx,dy*1.5), sp=B.sp*((b.slowUntil||0)>T?.45:1), chase=!me.dead&&!inSafe(me.x)&&dist<(M.aggro||320)*(b.boss?1.4:1);
+    if(b.wind){ b.moving=false; if(T<b.wind.at) continue; const wk=b.wind; b.wind=null; b.atkT=T;
+      if(wk.k==="shot"||wk.k==="volley"){ const aligned=Math.abs(me.y-b.y)<24&&(me.x-b.x)*b.dir>0&&Math.abs(me.x-b.x)<=B.range+10; spawnAtkVfx(b.boss?"wpn_rifle":"wpn_pistol",b.x,b.y,b.dir,aligned?me.x:null); atkSound("wpn_pistol",.5); if(aligned) botHitsMe(b,B,wk.k==="volley"?Math.round(B.dmg*.45):B.dmg); if(wk.k==="volley"&&wk.n>1) b.wind={k:"volley",at:T+.28,n:wk.n-1}; }
+      else if(wk.k==="slam"){ addVfx({type:"sweep",x:b.x,y:b.y+10,d:b.dir,range:B.range+14,col:"#ff5a4a"}); beep(80,.25,"sawtooth",.07); if(Math.hypot(me.x-b.x,(me.y-b.y)*1.5)<B.range+16) botHitsMe(b,B,B.dmg); }
+      continue; }
+    let tx,ty; if(chase){ if(B.kind==="ranged"){ tx=me.x-Math.sign(dx||1)*B.keep; ty=me.y; } else { tx=me.x-Math.sign(dx||1)*Math.min(30,B.range*.6); ty=me.y; } }
+    else { if(T>b.wt){ b.wx=clamp(b.x+rnd(-220,220),SAFE_X+140,SCENES.void.w-60); b.wy=rnd(LANE.top,LANE.bot); b.wt=T+rnd(2,4); } tx=b.wx; ty=b.wy; }
     const mx=tx-b.x, my=ty-b.y, md=Math.hypot(mx,my); b.moving=md>4; if(b.moving){ b.x=clamp(b.x+mx/md*sp*dt,SAFE_X+20,SCENES.void.w-30); b.y=clamp(b.y+my/md*sp*.6*dt,LANE.top,LANE.bot); b.phase+=dt*7; if(Math.abs(mx)>2) b.dir=Math.sign(mx); }
-    if(chase){ b.dir=Math.sign(dx)||1; if(dist<36&&T>b.cd){ b.cd=T+1.2; b.atkT=T; spawnAtkVfx("wpn_baton",b.x,b.y,b.dir,null); takeDamage(7,{id:null,name:"a Null Bot",w:"fists",from:b.x}); } } } }
+    if(!chase) continue; b.dir=Math.sign(dx)||1;
+    if(B.blink&&T>b.blinkT&&dist>70){ b.blinkT=T+rnd(4,6.5); addVfx({type:"hit",x:b.x,y:b.y-36}); b.x=clamp(me.x-me.dir*42,SAFE_X+20,SCENES.void.w-30); b.y=me.y; b.dir=me.x>=b.x?1:-1; b.blinkedT=T; b.cd=Math.max(b.cd,T+.45); beep(1900,.05,"sine",.04); }
+    if(T<b.cd) continue;
+    if(B.kind==="ranged"){ if(Math.abs(dx)<=B.range&&Math.abs(dy)<26){ b.wind={k:"shot",at:T+.45}; b.cd=T+B.cd; } }
+    else if(B.slam&&dist<B.range+10){ b.wind={k:"slam",at:T+.65}; b.cd=T+B.cd; }
+    else if(B.volley&&Math.abs(dx)<320&&Math.abs(dy)<30&&dist>B.range+30){ b.wind={k:"volley",at:T+.5,n:3}; b.cd=T+B.cd+.6; }
+    else if(!B.slam&&dist<B.range){ b.cd=T+B.cd; b.atkT=T; spawnAtkVfx(B.fx||"wpn_baton",b.x,b.y,b.dir,null); botHitsMe(b,B,B.dmg); } } }
+function drawVoidExtras(t){ // telegraphs, loot, bot terminal
+  for(const b of bots){ if(b.dead||!b.wind) continue; const B=BOT_TYPES[b.type], u=1-Math.max(0,(b.wind.at-T))/.65;
+    if(b.wind.k==="slam"){ ctx.save(); ctx.strokeStyle="#ff5a4a"; ctx.shadowColor="#ff5a4a"; ctx.shadowBlur=12; ctx.lineWidth=2; ctx.globalAlpha=.4+.6*u; ctx.beginPath(); ctx.ellipse(b.x,b.y,(B.range+16)*Math.min(1,u+.2),(B.range+16)*.32*Math.min(1,u+.2),0,0,7); ctx.stroke(); ctx.globalAlpha=.15*u; ctx.fillStyle="#ff5a4a"; ctx.fill(); ctx.restore(); }
+    else { ctx.save(); ctx.strokeStyle="rgba(255,90,74,.75)"; ctx.setLineDash([6,5]); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(b.x+b.dir*20,b.y-36); ctx.lineTo(b.x+b.dir*B.range,b.y-36); ctx.stroke(); ctx.restore(); } }
+  for(const l of loot){ const c=RAR[l.r].c, age=T-l.t0, by=Math.sin(t*3+l.x)*3; if(age>37&&Math.sin(t*14)<0) continue;
+    ctx.save(); if(R_ORDER.indexOf(l.r)>=2){ const g=ctx.createLinearGradient(0,l.y-80,0,l.y); g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,c); ctx.globalAlpha=.35+.15*Math.sin(t*4); ctx.fillStyle=g; ctx.fillRect(l.x-6,l.y-80,12,80); ctx.globalAlpha=1; }
+    ctx.fillStyle=c; ctx.shadowColor=c; ctx.shadowBlur=14; ctx.globalAlpha=.35; ctx.beginPath(); ctx.ellipse(l.x,l.y,16,5,0,0,7); ctx.fill(); ctx.globalAlpha=1; ctx.shadowBlur=0;
+    if(l.kind==="item") drawItem(ctx,l.id,l.x,l.y-20+by,26,t);
+    else if(l.kind==="look"){ ctx.save(); ctx.globalAlpha=.95; drawStick(ctx,l.x,l.y-4+by,.45,{dir:1,phase:0,look:{...DEFAULT_LOOK,skin:5,[l.k]:l.i}},t); ctx.restore(); }
+    else { ctx.font="bold 14px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillStyle=c; ctx.fillText("₵",l.x,l.y-14+by); }
+    ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillStyle=c; ctx.fillText(l.r.toUpperCase(),l.x,l.y-42+by); ctx.restore(); }
+  // Bot Control terminal (safe zone)
+  const M=botMode(), mc={off:"#9a8cc0",easy:"#43f0a4",normal:"#ffb84a",hard:"#ff5a4a"}[save.botMode||"normal"]||"#ffb84a";
+  ctx.fillStyle="#0b0716"; ctx.fillRect(362,150,60,92); ctx.strokeStyle=mc; ctx.strokeRect(362.5,150.5,59,91); ctx.fillStyle="#140c22"; ctx.fillRect(368,158,48,34);
+  ctx.fillStyle=mc; ctx.shadowColor=mc; ctx.shadowBlur=8; ctx.font="bold 9px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText(M.n.toUpperCase(),392,176); ctx.shadowBlur=0; ctx.font="6px 'IBM Plex Mono',monospace"; ctx.fillText(`${bots.filter(b=>!b.dead).length} ACTIVE`,392,187);
+  for(let k=0;k<4;k++){ ctx.fillStyle=k<["off","easy","normal","hard"].indexOf(save.botMode||"normal")?mc:"#2a2440"; ctx.fillRect(370+k*12,202,9,6); }
+  neonText("BOT CONTROL",392,142,8,mc,flick(77,t)); }
+function openBotControl(){ const body=panel("Bot Control","Pick how many bots you fight in The Void and how tough they are. Bots are yours alone; other players set their own mode."); currentView=null;
+  const cur=save.botMode||"normal"; const l=el("div",{class:"list"});
+  for(const [k,M] of Object.entries(BOT_MODES)){ const types=M.count?[...new Set([...Object.keys(M.pool),...(M.boss?[M.boss]:[])])].map(t=>BOT_TYPES[t].n).join(", "):"None";
+    const odds=M.rar?R_ORDER.filter(r=>M.rar[r]>0).map(r=>`${r} ${Math.round(M.rar[r]/Object.values(M.rar).reduce((a,b)=>a+b,0)*100)}%`).join(" · "):"";
+    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:k==="hard"?"r-epic":k==="normal"?"r-rare":k==="easy"?"r-uncommon":"",text:M.n+(k===cur?" (current)":"")}),el("div",{class:"sub",text:M.d}),M.count?el("div",{class:"sub",text:`Bots: ${types}`}):null,odds?el("div",{class:"sub",text:`Loot rarity: ${odds}`}):null),
+      el("button",{class:"btn"+(k===cur?"":" hot"),type:"button",text:k===cur?"Selected":"Select",disabled:k===cur?"":null,onclick:()=>{ if(T-lastHitT<4&&!inSafe(me.x)){ toast("You're in combat. Step into the safe zone first."); return; } save.botMode=k; persist(); resetBots(); loot=loot.filter(x=>T-x.t0<45); toast(`Bot mode: ${M.n}`,"#ff5a4a"); openBotControl(); }})));
+  }
+  for(const b of l.querySelectorAll("button[disabled='']")) b.disabled=true; for(const b of l.querySelectorAll("button")) if(b.getAttribute("disabled")==="null") b.removeAttribute("disabled");
+  body.append(l,el("strong",{text:"What each bot drops"}));
+  const d=el("div",{class:"list"}); const catN={tech:"tech",look:"wardrobe unlocks",decor:"apartment decor",food:"food"};
+  for(const [k,B] of Object.entries(BOT_TYPES)){ const top=Object.entries(B.cats).sort((a,b)=>b[1]-a[1]).map(([c])=>catN[c]);
+    d.append(el("div",{class:"li"},lookCanvas(B.look,40),el("div",{class:"grow"},el("div",{text:B.n+(B.boss?" (Hard mode boss)":"")}),el("div",{class:"sub",text:`${B.hp} HP · ${B.kind==="ranged"?"ranged shots":B.slam?"telegraphed ground slam":B.blink?"blinks behind you":"melee"}${B.volley?" + 3-shot volley":""} · ${B.chips[0]}–${B.chips[1]} chips`}),el("div",{class:"sub",text:`${Math.round(B.drop*100)}% drop chance${B.drops?` ×${B.drops}`:""}, mostly ${top.slice(0,2).join(" and ")}${B.minR?` · always ${B.minR} or better`:""}`})))); }
+  body.append(d,el("p",{class:"sub",text:"Drops land on the floor with a glow in their rarity color. Walk over them to collect; they vanish after 45 seconds. Wardrobe unlocks you already own pay out credits instead. Bots still count as deaths: getting deleted costs 15% of your credits and chips."})); }
 function tickVoid(){ const inV=me.scene==="void"; const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
-  if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`; if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
+  if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`+((save.botMode||"normal")!=="off"?` · Bots: ${botMode().n}`:""); if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
   if(!me.dead&&myHP<100){ const rate=inV&&inSafe(me.x)?30:(T-lastHitT>6?4:0); myHP=Math.min(100,myHP+rate*dt); }
   if(!inV&&me.blocking) setBlock(false); tickBots(); }
 function openFraggers(){ const body=panel("Top Fraggers","Player deletions in The Void. Deaths cost 15% of your credits and chips, and half goes to the killer."); currentView=null;
@@ -3248,7 +3339,7 @@ function drawVoid(t){
   const rows=Object.entries(homes).map(([id,h])=>[id,Math.floor(+h.kills)||0]).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,6);
   ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="left"; if(!rows.length){ ctx.fillStyle="#9a8cc0"; ctx.fillText("No kills yet.",218,100); ctx.fillText("Be the first.",218,112); }
   rows.forEach(([id,k],i)=>{ ctx.fillStyle=i?"#e9e2ff":"#ffb84a"; ctx.fillText(`${i+1}. ${nameOf(id).slice(0,11)}`,218,98+i*14); ctx.textAlign="right"; ctx.fillText(String(k),310,98+i*14); ctx.textAlign="left"; });
-  const fog=ctx.createLinearGradient(0,290,0,H); fog.addColorStop(0,"rgba(255,90,74,0)"); fog.addColorStop(1,"rgba(255,90,74,.12)"); ctx.fillStyle=fog; ctx.fillRect(camX,290,VW,H-290); }
+  const fog=ctx.createLinearGradient(0,290,0,H); fog.addColorStop(0,"rgba(255,90,74,0)"); fog.addColorStop(1,"rgba(255,90,74,.12)"); ctx.fillStyle=fog; ctx.fillRect(camX,290,VW,H-290); drawVoidExtras(t); }
 
 $("#btnAtk").addEventListener("pointerdown",e=>{ e.preventDefault(); voidAttack(); });
 { const bb=$("#btnBlock"); bb.addEventListener("pointerdown",e=>{ e.preventDefault(); setBlock(true); }); for(const ev of ["pointerup","pointerleave","pointercancel"]) bb.addEventListener(ev,()=>setBlock(false)); }
@@ -3410,6 +3501,7 @@ async function flush(){
 function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0;
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
   o.look=fullLook({...DEFAULT_LOOK,...(s.look||{})}); o.owned=Array.isArray(s.owned)?s.owned.filter(x=>typeof x==="string").slice(0,300):[]; o.name=cleanName(s.name||""); if(nameProblem(o.name)) o.name=""; o.handleKey=typeof s.handleKey==="string"?s.handleKey.slice(0,200):""; o.scrap=Object.fromEntries(Object.entries(s.scrap&&typeof s.scrap==="object"?s.scrap:{}).filter(([k])=>/^[0-4]$/.test(k)).map(([k,v])=>[k,Math.min(Date.now(),+v||0)])); o.quest=s.quest&&TYPE_N[s.quest.type]?{type:s.quest.type,qty:clamp(Math.floor(+s.quest.qty)||1,1,3),reward:clamp(Math.floor(+s.quest.reward)||50,1,500),done:false}:null; o.rack=(Array.isArray(s.rack)?s.rack:[]).filter(r=>r&&BY[r.id]).slice(0,4).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())})); o.jobs=(Array.isArray(s.jobs)?s.jobs:[]).filter(j=>j&&["courier","supply","build"].includes(j.kind)&&STALLS[j.to]&&(j.kind!=="courier"||STALLS[j.from])&&(j.kind!=="supply"||TYPE_N[j.t])&&(j.kind!=="build"||RECIPES.some(r=>r.k===j.k))).slice(0,JOB_MAX).map(j=>({...j,reward:clamp(Math.floor(+j.reward)||0,0,5000),chips:clamp(Math.floor(+j.chips)||0,0,200),qty:clamp(Math.floor(+j.qty)||1,1,5),minTier:clamp(Math.floor(+j.minTier)||0,0,3),label:String(j.label||"Job").slice(0,140)})); o.taken=Array.isArray(s.taken)?s.taken.filter(x=>typeof x==="string").slice(-30):[]; o.jobsDone=Math.max(0,Math.floor(+s.jobsDone)||0); o.duelWins=Math.max(0,Math.floor(+s.duelWins)||0); for(const k of ["voidKills","voidDeaths","botKills"]) o[k]=Math.max(0,Math.floor(+s[k])||0); o.decor=cleanDecor(s.decor); o.settled=Array.isArray(s.settled)?s.settled.filter(x=>typeof x==="string").slice(-80):[];
+  o.botMode=["off","easy","normal","hard"].includes(s.botMode)?s.botMode:"normal";
   o.blocked=Array.isArray(s.blocked)?s.blocked.filter(x=>typeof x==="string").slice(0,200):[];
   o.upload={cleared:Math.max(0,Math.min(10,Math.floor(+(s.upload&&s.upload.cleared))||0)),best:Math.max(0,Math.floor(+(s.upload&&s.upload.best))||0)};
   o.buffs=s.buffs&&typeof s.buffs==="object"?{speed:+s.buffs.speed||0,print:+s.buffs.print||0,luck:+s.buffs.luck||0,guard:+s.buffs.guard||0,tips:+s.buffs.tips||0}:{}; return o; }
