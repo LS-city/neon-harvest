@@ -28,7 +28,8 @@
   #nh-auth input{background:#0d0818;color:#e9e2ff;border:1px solid #3a2a5c;padding:9px 10px;text-transform:none;letter-spacing:0}
   #nh-auth input:focus-visible,#nh-auth button:focus-visible{outline:2px solid #38e8ff;outline-offset:1px}
   #nh-auth .or{display:flex;align-items:center;gap:10px;color:#9a8cc0;font-size:11px} #nh-auth .or::before,#nh-auth .or::after{content:"";flex:1;height:1px;background:#3a2a5c}
-  #nh-auth .msg{min-height:1.2em;font-size:12px;color:#ff5a4a} #nh-auth .msg.ok{color:#43f0a4}
+  #nh-auth .msg{min-height:1.2em;font-size:12px;color:#ff5a4a} #nh-auth .msg:empty{display:none}
+  #nh-auth button,#nh-auth input{touch-action:manipulation} @media (pointer:coarse){#nh-auth input{font-size:16px}#nh-auth button{min-height:44px}} #nh-auth .msg.ok{color:#43f0a4}
   #nh-auth .link{background:none;border:0;padding:0;color:#38e8ff;text-decoration:underline;font-size:12px;align-self:flex-start}
   #nh-auth .note{font-size:11px;color:#9a8cc0;text-align:center}`;
   function ensureStyle(){ if(document.getElementById("nh-auth-style")) return; const s=document.createElement("style"); s.id="nh-auth-style"; s.textContent=css; document.head.appendChild(s); }

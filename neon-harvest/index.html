@@ -191,6 +191,80 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #toast div{background:rgba(11,7,22,.92);border:1px solid var(--mag);padding:6px 12px;font-size:12px;text-align:center}
 @media (max-width:520px){.brand small{display:none}.emotes{display:none}#chatlog{width:70vw}#chatlog .ln.sysl{display:none}#chatlog.open .ln.sysl{display:block}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ===================== MOBILE (touch) LAYOUT: only applies when #game has .mobile ===================== */
+#btnMenu{display:none}
+#game.mobile{--top:calc(54px + env(safe-area-inset-top,0px));--cvh:min(86vw,54vh);background:#07040f}
+#game.mobile #overlay{z-index:15}
+#game.mobile button,#game.mobile .btn,#game.mobile .k{touch-action:manipulation}
+#game.mobile input,#game.mobile select,#game.mobile textarea{font-size:16px!important}
+#game.mobile .hud.top{padding:calc(6px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));min-height:var(--top);flex-wrap:nowrap;background:linear-gradient(rgba(7,4,15,.95),rgba(7,4,15,.75));border-bottom:1px solid var(--line);z-index:5}
+#game.mobile .brand{display:none}
+#game.mobile .stats{flex-wrap:nowrap;width:100%;align-items:center;gap:5px;min-width:0}
+#game.mobile .stats .pill{font-size:12px;padding:0 8px;height:40px;display:inline-flex;align-items:center;gap:4px;flex:none}
+#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #buffs,#game.mobile #trippill,#game.mobile #jobpill{display:none!important}
+#game.mobile #hppill{max-width:34vw;overflow:hidden;text-overflow:ellipsis}
+#game.mobile .mbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;font-size:20px;flex:none}
+#game.mobile #btnBag{margin-left:auto}
+#game.mobile #btnMsg .badge{top:-4px;right:-4px}
+#game.mobile #toast{top:calc(var(--top) + 6px);width:min(360px,92vw)}
+#game.mobile #toast div{font-size:12px;padding:6px 10px}
+#game.mobile #toast div:nth-child(n+4){display:none}
+#game.mobile #prompt{pointer-events:auto;cursor:pointer;font-size:13px;padding:10px 14px;min-height:44px;display:flex;align-items:center;gap:8px;border:1px solid var(--cyan);background:rgba(11,7,22,.94);box-shadow:0 0 14px rgba(56,232,255,.35);max-width:calc(100vw - 32px);text-align:left}
+#game.mobile #prompt[hidden]{display:none}
+#game.mobile #pad{left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));justify-content:space-between;align-items:flex-end;pointer-events:none}
+#game.mobile #pad > *{pointer-events:auto}
+#game.mobile #pad .dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:3px}
+#game.mobile #pad .dpad span{pointer-events:none}
+#game.mobile #pad .k{font-size:18px;border-radius:10px}
+#game.mobile #pad .act{width:76px;height:76px;font-size:16px;border-width:2px}
+#game.mobile #chatbar{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+#game.mobile #chatbar .emotes{display:none}
+#game.mobile #chatin{max-width:none;height:44px}
+#game.mobile #btnLog{height:44px;min-width:52px}
+#game.mobile #combat .btn{min-height:56px;min-width:76px;font-size:14px}
+#game.mobile #chatlog{font-size:13px}
+#game.mobile #chatlog.open{max-height:none}
+/* portrait: world on top, a control deck underneath so thumbs never cover the game */
+#game.mobile.portrait canvas#world{position:absolute;top:var(--top);left:0;width:100%;height:var(--cvh);border-bottom:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.6)}
+#game.mobile.portrait #prompt{top:calc(var(--top) + var(--cvh) + 10px);bottom:auto}
+#game.mobile.portrait #chatlog{top:calc(var(--top) + var(--cvh) + 64px);bottom:calc(64px + 176px + env(safe-area-inset-bottom,0px));left:12px;right:12px;width:auto;max-height:none;justify-content:flex-end;overflow:hidden}
+#game.mobile.portrait #chatlog.open{top:calc(var(--top) + var(--cvh) + 10px);bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
+#game.mobile.portrait #pad{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
+#game.mobile.portrait #combat{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(66px + 92px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-end}
+#game.mobile.portrait #invites{top:calc(var(--top) + var(--cvh) + 10px)}
+/* landscape: full-screen world, controls in the corners, chat between them */
+#game.mobile:not(.portrait) #pad{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#game.mobile:not(.portrait) #pad .dpad{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px)}
+#game.mobile:not(.portrait) #pad .act{width:68px;height:68px}
+#game.mobile:not(.portrait) #chatbar{left:calc(max(14px,env(safe-area-inset-left,0px)) + 152px);right:calc(max(14px,env(safe-area-inset-right,0px)) + 84px);width:auto;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+#game.mobile:not(.portrait) #chatlog{top:calc(var(--top) + 6px);bottom:auto;left:max(12px,env(safe-area-inset-left,0px));width:min(320px,40vw)}
+#game.mobile:not(.portrait) #chatlog.open{max-height:calc(100vh - var(--top) - 80px)}
+#game.mobile:not(.portrait) #prompt{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
+#game.mobile:not(.portrait) #combat{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+/* windows become full-screen sheets with a big close button */
+#game.mobile #overlay{padding:0;align-items:stretch;justify-content:stretch}
+#game.mobile .panel{width:100%;max-width:none;height:100%;max-height:none;border:0;box-shadow:none}
+#game.mobile .panel header{padding:calc(8px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));position:sticky;top:0;background:var(--panel);z-index:2}
+#game.mobile .panel header .btn{min-width:72px;min-height:44px;flex:none}
+#game.mobile .panel .body{padding:12px max(12px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+#game.mobile .panel .btn{min-height:44px}
+#game.mobile .panel .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+#game.mobile .panel .tabs::-webkit-scrollbar{display:none}
+#game.mobile .panel .tabs .btn{flex:none;white-space:nowrap}
+#game.mobile .panel .grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+#game.mobile .panel .li{flex-wrap:wrap}
+#game.mobile .panel .li > .row{flex-wrap:wrap}
+.mmenu{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mmenu .btn{min-height:56px;display:flex;align-items:center;gap:10px;justify-content:flex-start;font-size:14px;text-align:left}
+.mmenu .btn .ic{font-size:20px;width:26px;text-align:center}
+.mmenu .wide{grid-column:1/-1}
+.memotes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.memotes .btn{min-height:52px}
+/* title/sign-in screens: scroll instead of cutting off on short screens */
+.title{place-items:start center}
+.tcard{margin-block:auto}
+@media (max-height:480px){.tprev{width:96px;height:96px}.tcard{padding:14px 18px;gap:6px}.tlogo{font-size:24px}}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -217,6 +291,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" id="btnMsg" type="button">Messages [M]</button>
       <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
+      <button class="btn mbtn" id="btnMenu" type="button" aria-label="Menu">☰</button>
     </div>
   </div>
   <div id="toast" aria-live="polite"></div>
@@ -486,9 +561,9 @@ function renderChatLog(force){ const log=$("#chatlog"); if(!log) return; const n
     const sp=document.createElement("span"); sp.style.flex="1"; head.append(sp); const cl=document.createElement("button"); cl.className="btn"; cl.type="button"; cl.textContent="Hide"; cl.onclick=()=>{ chatOpen=false; renderChatLog(true); }; head.append(cl);
     const body=document.createElement("div"); body.className="logbody"; if(!items.length){ const e=document.createElement("div"); e.className="ln sysl"; e.textContent="Nothing here yet."; body.append(e); } for(const h of items) body.append(line(h,true));
     log.append(head,body); if(atBottom) body.scrollTop=body.scrollHeight; return; }
-  const max=chatTyping?6:(COARSE_UI()?3:4); const items=chatHist.filter(h=>chatTyping||now-h.at<(h.sys?SYS_LIFE:CHAT_LIFE)).slice(-max);
+  const deck=MOBILE&&innerHeight>innerWidth; const max=chatTyping||deck?6:(COARSE_UI()?3:4); const items=chatHist.filter(h=>chatTyping||deck||now-h.at<(h.sys?SYS_LIFE:CHAT_LIFE)).slice(-max);
   const sig="c"+items.map(h=>h.at+":"+(h.n||1)).join(","); if(force||log._sig!==sig){ log._sig=sig; log.innerHTML=""; for(const h of items) log.append(line(h,false)); }
-  for(const d of log.children){ const h=d._h; if(!h) continue; const life=h.sys?SYS_LIFE:CHAT_LIFE, left=life-(now-h.at); d.style.opacity=chatTyping?"1":String(Math.max(0,Math.min(1,left/1500))); } }
+  for(const d of log.children){ const h=d._h; if(!h) continue; const life=h.sys?SYS_LIFE:CHAT_LIFE, left=life-(now-h.at); d.style.opacity=chatTyping||(deck&&!h.sys)?"1":deck?".7":String(Math.max(0,Math.min(1,left/1500))); } }
 function COARSE_UI(){ return matchMedia("(max-width:520px)").matches; }
 setInterval(()=>renderChatLog(false),500);
 function hud(){ jobHud(); if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); }
@@ -1092,9 +1167,18 @@ const npcs={
 
 /* ============================================================ CANVAS */
 const cv=$("#world"), ctx=cv.getContext("2d"); let scale=1, VW=640, camX=0;
+const MOBILE=matchMedia("(pointer:coarse)").matches||(navigator.maxTouchPoints>0&&matchMedia("(max-width:1024px)").matches);
+function applyMobileLayout(){ const g=$("#game"); if(!g) return; g.classList.toggle("mobile",MOBILE); g.classList.toggle("portrait",MOBILE&&innerHeight>innerWidth);
+  if(MOBILE&&!g.dataset.mset){ g.dataset.mset="1";
+    const lab=(id,txt,aria)=>{ const b=$(id); if(!b) return; const bd=b.querySelector(".badge"); b.textContent=txt; if(bd) b.append(bd); b.classList.add("mbtn"); if(aria) b.setAttribute("aria-label",aria); };
+    lab("#btnBag","🎒","Stash"); lab("#btnMsg","💬","Messages");
+    const ch=document.querySelector(".pill.ch"); if(ch&&ch.firstChild&&ch.firstChild.nodeType===3) ch.firstChild.textContent="◆";
+    const cr=document.querySelector(".pill.cr"); if(cr&&cr.firstChild&&cr.firstChild.nodeType===3) cr.firstChild.textContent="₵";
+    const on=$("#online"); if(on&&on.firstChild&&on.firstChild.nodeType===3) on.firstChild.textContent="●";
+    $("#chatin").placeholder="Say something…"; const bb=$("#btnBlock"), ba=$("#btnAtk"); if(bb) bb.textContent="Block"; if(ba) ba.textContent="Attack"; } }
 function resize(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(2,window.devicePixelRatio||1); cv.width=Math.max(2,Math.round(r.width*dpr)); cv.height=Math.max(2,Math.round(r.height*dpr)); scale=cv.height/H; VW=Math.min(4000,cv.width/scale); }
 if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cv);
-window.addEventListener("resize",resize);
+applyMobileLayout(); addEventListener("resize",()=>{ applyMobileLayout(); resize(); }); addEventListener("orientationchange",()=>setTimeout(()=>{ applyMobileLayout(); resize(); },250));
 // seeded skyline
 function seeded(n){ let s=n; return ()=>((s=Math.imul(s^s>>>15,2246822507)^Math.imul(s^s>>>13,3266489909),(s^=s>>>16)>>>0)/4294967296); }
 const sky=(()=>{ const r=seeded(7),a=[]; let x=-200; while(x<5000){ const w=40+r()*90,h=80+r()*170; a.push({x,w,h,win:r()}); x+=w+4; } return a; })();
@@ -1284,7 +1368,7 @@ function stepInner(now){
   camX=clamp(me.x-VW/2,0,Math.max(0,sc.w-VW));
   // hotspot proximity
   nearHot=hotspots(me.scene).find(h=>Math.abs(h.x-me.x)<h.hw)||null;
-  const pr=$("#prompt"); if(nearHot&&$("#overlay").hidden){ const txt=(COARSE?"[USE] ":"[E] ")+nearHot.label; if(pr.textContent!==txt) pr.textContent=txt; if(pr.hidden) pr.hidden=false; } else if(!pr.hidden) pr.hidden=true;
+  const pr=$("#prompt"); if(nearHot&&$("#overlay").hidden){ const txt=(MOBILE?"▶ Tap: ":"[E] ")+nearHot.label; if(pr.textContent!==txt) pr.textContent=txt; if(pr.hidden) pr.hidden=false; } else if(!pr.hidden) pr.hidden=true;
   // peers smoothing
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
   // npcs
@@ -1331,7 +1415,7 @@ function emote(e){ me.emote={e,t:T}; pushPresence(true,{emote:{e,at:Date.now()}}
 /* ============================================================ PANELS */
 function panel(title,sub,refresh){ currentView=null; const ov=$("#overlay"); ov.innerHTML=""; ov.hidden=false; const p=document.createElement("div"); p.className="panel"; p.setAttribute("role","dialog"); p.setAttribute("aria-label",title);
   const h=document.createElement("header"); const tw=document.createElement("div"); const h2=document.createElement("h2"); h2.textContent=title; tw.appendChild(h2); if(sub){ const s=document.createElement("p"); s.className="sub"; s.textContent=sub; tw.appendChild(s); }
-  const x=document.createElement("button"); x.className="btn"; x.type="button"; x.textContent="Close [Esc]"; x.onclick=closePanel; h.append(tw,x); const _refresh=refresh;
+  const x=document.createElement("button"); x.className="btn"; x.type="button"; x.textContent=MOBILE?"✕ Close":"Close [Esc]"; x.onclick=closePanel; h.append(tw,x); const _refresh=refresh;
   const body=document.createElement("div"); body.className="body"; p.append(h,body); ov.appendChild(p); if(!_refresh) setTimeout(()=>x.focus(),0); for(const k in keys) keys[k]=false; return body; }
 function closePanel(){ currentView=null; tryOn=null; $("#overlay").hidden=true; $("#overlay").innerHTML=""; }
 $("#overlay").addEventListener("pointerdown",e=>{ if(e.target.id==="overlay") closePanel(); });
@@ -3541,7 +3625,7 @@ function openBotControl(){ const body=panel("Bot Control","Pick how many bots yo
     d.append(el("div",{class:"li"},lookCanvas(B.look,40),el("div",{class:"grow"},el("div",{text:B.n+(B.boss?" (Hard mode boss)":"")}),el("div",{class:"sub",text:`${B.hp} HP · ${B.kind==="ranged"?"ranged shots":B.slam?"telegraphed ground slam":B.blink?"blinks behind you":"melee"}${B.volley?" + 3-shot volley":""} · ${B.chips[0]}–${B.chips[1]} chips`}),el("div",{class:"sub",text:`${Math.round(B.drop*100)}% drop chance${B.drops?` ×${B.drops}`:""}, mostly ${top.slice(0,2).join(" and ")}${B.minR?` · always ${B.minR} or better`:""}`})))); }
   body.append(d,el("p",{class:"sub",text:"Drops land on the floor with a glow in their rarity color. Walk over them to collect; they vanish after 45 seconds. Wardrobe unlocks you already own pay out credits instead. Bots still count as deaths: getting deleted costs 15% of your credits and chips."})); }
 function tickVoid(){ const inV=me.scene==="void"; const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
-  if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`+((save.botMode||"normal")!=="off"?` · Bots: ${botMode().n}`:""); if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
+  if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`+(!MOBILE&&(save.botMode||"normal")!=="off"?` · Bots: ${botMode().n}`:""); if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
   if(!me.dead&&myHP<100){ const rate=inV&&inSafe(me.x)?30:(T-lastHitT>6?4:0); myHP=Math.min(100,myHP+rate*dt); }
   if(!inV&&me.blocking) setBlock(false); tickBots(); }
 function openFraggers(){ const body=panel("Top Fraggers","Player deletions in The Void. Deaths cost 15% of your credits and chips, and half goes to the killer."); currentView=null;
@@ -3589,7 +3673,7 @@ function syncPeers(list){ const best=new Map(); for(const p of list){ if(isSelf(
   for(const p of best.values()) applyPeer(p); }
 function onlinePeers(){ const byUser=new Map(); for(const [pid,p] of peers){ const k=p.by||pid; const cur=byUser.get(k); if(!cur||(p.updatedAt||0)>(cur.updatedAt||0)) byUser.set(k,{...p,pid}); } return [...byUser.values()]; }
 function updOnline(){ const pill=$("#online"); if(!ROOM){ pill.innerHTML=""; pill.append("SOLO "); pill.append(el("b",{text:"·"})); pill.title=accessNote()||"Multiplayer is off"; pill.classList.remove("on"); return; }
-  pill.classList.add("on"); pill.title="Players online now. Click to see who and where."; const b=pill.querySelector("b"); const n=String(1+onlinePeers().length); if(!b){ pill.innerHTML="ONLINE "; pill.append(el("b",{text:n})); } else if(b.textContent!==n) b.textContent=n; }
+  pill.classList.add("on"); pill.title="Players online now. Click to see who and where."; const b=pill.querySelector("b"); const n=String(1+onlinePeers().length); if(!b){ pill.innerHTML=MOBILE?"●":"ONLINE "; pill.append(el("b",{text:n})); if(MOBILE) pill.setAttribute("aria-label",`${n} online`); } else if(b.textContent!==n) b.textContent=n; }
 function whereOf(p){ if(p.s==="home") return p.home===myId?"your apartment":p.home?`${nameOf(p.home)}'s apartment`:"their apartment"; return sceneName(p.s); }
 function goToPeer(p){ if(me.scene==="void"&&T-lastHitT<6){ toast("You're in combat. Wait a few seconds."); return; } closePanel();
   if(p.s==="home"){ if(!p.home||p.home===myId) return go("home",160); return visitHome(p.home); }
@@ -3720,6 +3804,23 @@ function openChat(cid,pend){ const c=buildChats().find(x=>x.id===cid)||pend; if(
   send.onclick=doSend; inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); doSend(); } });
   body.append(el("div",{class:"chatrow"},inp,send)); setTimeout(()=>inp.focus(),30); }
 $("#btnMsg").addEventListener("click",()=>openMessages());
+$("#prompt").addEventListener("click",()=>{ if(nearHot&&$("#overlay").hidden) useHot(); });
+$("#btnMenu").addEventListener("click",()=>openMobileMenu());
+function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sceneName(me.scene)}`); currentView="menu";
+  const mk=(ic,t,fn,cls)=>el("button",{class:"btn"+(cls?" "+cls:""),type:"button",onclick:fn},el("span",{class:"ic",text:ic,"aria-hidden":"true"}),el("span",{text:t}));
+  const un=typeof unreadTotal==="function"?unreadTotal():0;
+  body.append(el("div",{class:"mmenu"},
+    mk("👤","Character",()=>{ tryOn=null; openWardrobe("name"); }), mk("🎒","Stash",()=>openStash()),
+    mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
+    mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
+    mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }),
+    mk("🚇","Metro map",()=>openMetro())));
+  body.append(el("strong",{text:"Emotes"}),el("div",{class:"memotes"},...["wave","dance","cheer","pose"].map(e2=>el("button",{class:"btn",type:"button",text:e2[0].toUpperCase()+e2.slice(1),onclick:()=>{ closePanel(); emote(e2); }}))));
+  const st=[]; const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) st.push("Boosts: "+bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "));
+  if(typeof myFx==="function"&&myFx()&&myTrip) st.push(`High: ${myTrip.name||"active"}${TRIP_LVL[myTrip.lvl||1]?" "+TRIP_LVL[myTrip.lvl||1]:""}`);
+  const jp=$("#jobpill"); if(jp&&!jp.hidden&&jp.textContent) st.push(jp.textContent);
+  if(st.length) body.append(el("strong",{text:"Status"}),...st.map(t=>el("div",{class:"pill",text:t,style:"white-space:normal;height:auto;padding:8px 10px"})));
+  if(window.claude&&window.claude.signOut) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Sign out",onclick:()=>window.claude.signOut()}))); }
 
 /* ============================================================ PERSIST */
 let saveTimer=null, lastHomeSig="";
@@ -3767,7 +3868,7 @@ async function resolveNames(ids){ if(!USER) return; try{ const ps=await USER.pro
 
 /* ============================================================ BOOT */
 resize(); hud(); requestAnimationFrame(step); renderTitle("loading");
-chatLine(null,"Welcome to Sector 9. WASD/arrows to move, E to interact, Enter to chat. Tap players to gift.","sys");
+chatLine(null,(MOBILE?"Welcome to Sector 9. Use the pad (or tap the ground) to move, tap USE or the glowing prompt to interact, and ☰ for everything else.":"Welcome to Sector 9. WASD/arrows to move, E to interact, Enter to chat. Tap players to gift."),"sys");
 setInterval(hud,1000);
 
 (async()=>{
