@@ -75,6 +75,7 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .panel header{flex:none}
 .tabs{display:flex;gap:4px;flex-wrap:wrap}
 .tabs .btn[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
+.guide h3{margin:14px 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}.guide ul{margin:0;padding-left:18px}.guide li{margin:4px 0;line-height:1.5;font-size:13px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
 .card{border:1px solid var(--line);background:#100a1d;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:0;cursor:pointer;text-align:left;color:var(--text);font-family:var(--f-ui)}
 .card:hover,.card.sel{border-color:var(--cyan)}
@@ -167,6 +168,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="pill on" id="online" type="button" title="Players online">ONLINE <b>1</b></button>
       <button class="btn" id="btnChar" type="button">Character [C]</button>
       <button class="btn" id="btnBag" type="button">Stash [I]</button>
+      <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
     </div>
   </div>
@@ -960,7 +962,7 @@ const keys={}; let dt=0, last=performance.now(), T=0, target=null, nearHot=null;
 addEventListener("keydown",e=>{ if(!$("#title").hidden){ if(e.key==="Enter"&&e.target.tagName!=="BUTTON"){ const b=$("#title .btn.hot"); if(b){ e.preventDefault(); b.click(); } } return; } if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT") return; if(!$("#overlay").hidden){ if(e.key==="Escape") closePanel(); return; }
   keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();
   if(me.scene==="void"){ const kk=e.key.toLowerCase(); if(kk==="f"){ voidAttack(); e.preventDefault(); } if(kk==="g") setBlock(true); }
-  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
+  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
 addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; if(e.key.toLowerCase()==="g") setBlock(false); });
 const releaseKeys=()=>{ for(const k in keys) keys[k]=false; };
 addEventListener("blur",releaseKeys); document.addEventListener("visibilitychange",()=>{ if(document.hidden) releaseKeys(); });
@@ -1052,6 +1054,53 @@ function panel(title,sub,refresh){ currentView=null; const ov=$("#overlay"); ov.
 function closePanel(){ currentView=null; tryOn=null; $("#overlay").hidden=true; $("#overlay").innerHTML=""; }
 $("#overlay").addEventListener("pointerdown",e=>{ if(e.target.id==="overlay") closePanel(); });
 $("#btnBag").onclick=()=>openStash(); $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
+/* ============================================================ HOW TO PLAY */
+const GUIDE={
+  start:{n:"Start here",secs:[
+    ["Controls",["Move with WASD or the arrow keys (on phones, the on-screen pad). Click or tap the ground to walk there.","Press E or Space (or USE) beside a glowing spot to interact: doors, counters, piles, terminals.","Enter opens chat. Wave, Dance, Cheer and Pose are under the chat bar.","C opens your Character (name and look), I opens your Stash, H opens this guide, Esc closes any window."]],
+    ["Your two currencies",["₵ Credits: everyday money for parts, drinks, decor, gear and Smacked Shop rewards.","Chips: the rarer currency. Epic parts, CHIP PRINT runs and many Smacked Shop rewards cost chips.","You start with ₵250, 40 chips and a few spare parts."]],
+    ["Getting around",["Sector 9 is the main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, The Third Eye club and Scrap Alley.","Take the Metro (free) from the street to Byte Market, The Grid, Smacked Shop and The Void.","Tap ONLINE at the top to see who's playing and where they are."]],
+    ["Your progress saves",["Your stash, credits, chips, apartment and pickup codes are saved to your account and follow you to any device you sign in on."]]]},
+  money:{n:"Earn ₵ credits",secs:[
+    ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Serve drinks and parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips."]],
+    ["Gigs and deliveries",["Vex at The Glitch hands out delivery jobs: bring her the parts she asks for to get credits.","Byte Market Courier Hub: new tickets every 20 minutes. Carry packages between stalls before the timer runs out, deliver parts, or fill rig commissions. Every 5th job earns a bonus part."]],
+    ["Sell what you find",["Parts Depot buys any part back at its full worth in credits.","List parts on the Trade Board (on the Sector 9 street) for other players to buy; payment lands in your gift inbox.","Byte Market stalls also buy and sell parts and rigs."]],
+    ["Win it",["Wager duels in The Grid: stake a part or PC and beat other players at Cyber Chess, Tic-Tac-Toe or Rock Paper Scissors to win theirs, then sell or keep it. Practice against the AI at any table.","Crack Encrypted Floppies for a chance at credits, chips, parts or a rare collectible."]]]},
+  chips:{n:"Earn chips",secs:[
+    ["Scrap Alley",["Dig through the five scrap piles at the east end of Sector 9. Every dig gives 2–9 chips plus 1–2 random parts and sometimes a floppy disk.","Piles refill after 90 seconds (60 seconds if you keep a Cyberdeck in your stash). A Drone in your stash adds an extra part per dig."]],
+    ["CHIP PRINT arcade",["In The Glitch. Each run costs 5 chips. Stop the print head in the bright zone three times; tighter hits print rarer chips and pay 2 chips per point (up to +18)."]],
+    ["Mining Rack",["In your apartment. Install crypto miners, Mining Rigs, Phone Farms or Quantum Rigs and they mine chips while you're offline, for up to 12 hours before the buffer fills.","Each Home Server in your stash boosts the rack 25% (up to 2). Come home and collect."]],
+    ["The Void",["Delete Null Bots in The Void for chips.","Beat other players: when a player dies they lose 15% of their credits and chips, and half of that goes to the player who got the kill."]],
+    ["Other ways",["Encrypted Floppy cracks can pay chips, and other players can trade or gift you parts worth selling."]]]},
+  items:{n:"Get every item",secs:[
+    ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
+    ["Build rigs",["Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
+    ["Gear, tech and home items",["Cyber Buys & More sells hacker tools, phones, floppies, weapons, accessories and living-room decor.","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
+    ["Look and style",["Press C to change your name, outfit, hair, colors and accessories anytime."]],
+    ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
+  places:{n:"Places",secs:[
+    ["Sector 9",["Apt 7C: stash terminal, display shelves, wardrobe, workbench, Mining Rack, living room and an intercom to invite friends.","The Glitch: bar counter, Job Board, jukebox and the CHIP PRINT arcade. The Trade Board stands outside on the street.","Parts Depot, Cyber Buys & More, Scrap Alley, and The Third Eye club with a trippy stage, DJ booth, seats and its own tech-buzz menu with effects."]],
+    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs and the Courier Hub.","The Grid: wager duels and the Top Duelists board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home."]]]},
+  social:{n:"Play with others",secs:[
+    ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes.","Invite players to your apartment from the intercom; they get a card that brings them straight to you.","Visit neighbors' doors to look at their display shelves."]],
+    ["Trade and compete",["Gift parts by tapping a player. Sell on the Trade Board. Challenge players in The Grid. Climb the Top Duelists and Top Fraggers boards."]],
+    ["Fair play",["Smacked Shop rewards are real items handed out in person. The shop owner checks every pickup code before handing anything over."]]]}
+};
+let guideTab="start";
+function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_guide_seen","1"); }catch(e){}
+  const body=panel("How to Play","Everything you can do in NEON HARVEST, and how to earn credits, chips and every item."); currentView="guide";
+  const tabs=el("div",{class:"tabs"}); for(const [k,g] of Object.entries(GUIDE)) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(guideTab===k),text:g.n,onclick:()=>openGuide(k)})); body.append(tabs);
+  const g=GUIDE[guideTab]; const wrap=el("div",{class:"guide"});
+  for(const [h,lines] of g.secs){ const ul=el("ul"); for(const t of lines) ul.append(el("li",{text:t})); wrap.append(el("h3",{text:h}),ul); }
+  body.append(wrap);
+  const keysOrder=Object.keys(GUIDE), i=keysOrder.indexOf(guideTab), nav=el("div",{class:"row"});
+  if(i>0) nav.append(el("button",{class:"btn",type:"button",text:"‹ "+GUIDE[keysOrder[i-1]].n,onclick:()=>openGuide(keysOrder[i-1])}));
+  if(i<keysOrder.length-1) nav.append(el("button",{class:"btn hot",type:"button",text:GUIDE[keysOrder[i+1]].n+" ›",onclick:()=>openGuide(keysOrder[i+1])}));
+  else nav.append(el("button",{class:"btn hot",type:"button",text:"Start playing",onclick:closePanel}));
+  body.append(nav); }
+$("#btnHelp").onclick=()=>openGuide();
+let guideAuto=(()=>{ try{ return !localStorage.getItem("nh_guide_seen"); }catch(e){ return false; } })();
+setInterval(()=>{ if(!guideAuto) return; if(!$("#title").hidden||!$("#overlay").hidden||!save||!save.name) return; guideAuto=false; openGuide("start"); },1200);
 function el(tag,props={},...kids){ const e=document.createElement(tag); for(const [k,v] of Object.entries(props)){ if(k==="class") e.className=v; else if(k==="text") e.textContent=v; else if(k.startsWith("on")) e[k]=v; else e.setAttribute(k,v); } for(const k of kids) if(k!=null) e.append(k); return e; }
 function itemCard(id,count,meta,onclick){ const it=BY[id]; const b=el("button",{class:"card r-"+it.r,type:"button",onclick}); b.append(itemCanvas(id,64), el("div",{class:"nm",text:it.n}), el("div",{class:"meta"},el("span",{class:"r-"+it.r,text:it.r}),el("span",{text:meta!=null?meta:("×"+count)}))); return b; }
 function invList(){ return Object.entries(save.inv).filter(([id,n])=>n>0&&BY[id]).sort((a,b)=>BY[b[0]].v-BY[a[0]].v); }
@@ -2695,7 +2744,7 @@ function voidAttack(){
   spawnAtkVfx(w,me.x,me.y,d,stop); atkSound(w);
   if(ROOM) ROOM.emit("atk",{w,x:Math.round(me.x),y:Math.round(me.y),d,hits:hits.filter(h=>h.kind==="p").map(h=>h.ref.by).slice(0,8),stop:stop!=null?Math.round(stop):null}).catch(()=>{});
 }
-function onAtk(m){ if(m.isMe&&m.sameTab) return; if(me.scene!=="void") return; const d=m.data||{}; const w=WSTATS[d.w]?d.w:"fists"; const q=peers.get(m.peer);
+function onAtk(m){ if(m.isMe) return; if(me.scene!=="void") return; const d=m.data||{}; const w=WSTATS[d.w]?d.w:"fists"; const q=peers.get(m.by||m.peer);
   const x=clamp(+d.x||0,0,SCENES.void.w), y=clamp(+d.y||300,LANE.top,LANE.bot), dir=d.d===-1?-1:1, stop=d.stop!=null&&Number.isFinite(+d.stop)?+d.stop:null;
   if(q){ q.emote={e:"atk",at:Date.now()}; q.dir=dir; }
   spawnAtkVfx(w,x,y,dir,stop); atkSound(w,.4);
@@ -2774,6 +2823,9 @@ function accessNote(){
   if(ACCESS.mode==="solo") return "Multiplayer isn't available in this view. Progress is kept on this device.";
   return "";
 }
+function syncPeers(list){ const best=new Map(); for(const p of list){ if(isSelf(p)||p.kind!=="viewer"||peerStale(p)) continue; const k=peerKey(p), cur=best.get(k); if(!cur||(p.updatedAt||0)>(cur.updatedAt||0)) best.set(k,p); }
+  for(const [k,q] of [...peers]) { const b=best.get(k); if(!b) peers.delete(k); else if(q.pid!==b.peer) q.updatedAt=0; }
+  for(const p of best.values()) applyPeer(p); }
 function onlinePeers(){ const byUser=new Map(); for(const [pid,p] of peers){ const k=p.by||pid; const cur=byUser.get(k); if(!cur||(p.updatedAt||0)>(cur.updatedAt||0)) byUser.set(k,{...p,pid}); } return [...byUser.values()]; }
 function updOnline(){ const pill=$("#online"); if(!ROOM){ pill.innerHTML=""; pill.append("SOLO "); pill.append(el("b",{text:"·"})); pill.title=accessNote()||"Multiplayer is off"; pill.classList.remove("on"); return; }
   pill.classList.add("on"); pill.title="Players online now. Click to see who and where."; const b=pill.querySelector("b"); const n=String(1+onlinePeers().length); if(!b){ pill.innerHTML="ONLINE "; pill.append(el("b",{text:n})); } else if(b.textContent!==n) b.textContent=n; }
@@ -2792,7 +2844,7 @@ function openOnline(){ const body=panel(ROOM?"Who's online":"Playing solo",ROOM?
     list.append(el("div",{class:"li"},lookCanvas(p.look,22),el("div",{class:"grow"},el("div",{text:(p.staff?"★ ":"")+nameOf(p.by)+(p.guest?" · guest":"")}),el("div",{class:"sub",text:`In ${whereOf(p)}${p.s==="void"&&p.hp!=null?` · HP ${p.hp}`:""}`})),row)); }
   if(!all.length) body.append(el("div",{class:"empty",text:"Nobody else is online right now. Share the game link with friends."}));
   body.append(list); }
-setInterval(()=>{ if(!ROOM) return; let list; try{ list=ROOM.peers(); }catch(e){ return; } const live=new Set(); for(const p of list){ live.add(p.peer); applyPeer(p); } for(const k of [...peers.keys()]) if(!live.has(k)) peers.delete(k); updOnline(); if(currentView==="online"&&!$("#overlay").hidden){ const a=document.activeElement; if(!(a&&a.closest&&a.closest(".panel")&&a.tagName==="BUTTON")) openOnline(); } },4000);
+setInterval(()=>{ if(!ROOM) return; let list; try{ list=ROOM.peers(); }catch(e){ return; } syncPeers(list); updOnline(); if(currentView==="online"&&!$("#overlay").hidden){ const a=document.activeElement; if(!(a&&a.closest&&a.closest(".panel")&&a.tagName==="BUTTON")) openOnline(); } },4000);
 
 $("#online").addEventListener("click",()=>openOnline());
 /* ============================================================ PERSIST */
@@ -2815,13 +2867,21 @@ if(save.name) myName=save.name;
 let lastPush=0, lastSig="";
 function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,st:(mySlot>=0||cbSlot>=0||clubSlot>=0)?1:0};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
+setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
-function applyPeer(p){ if(p.isMe&&p.sameTab) return; if(p.kind!=="viewer") return; const pr=p.presence||{}; if(!SCENES[pr.s]) return;
-  let q=peers.get(p.peer); const x=clamp(+pr.x||0,0,5000), y=clamp(+pr.y||300,LANE.top,LANE.bot);
-  if(!q){ q={by:p.by,dx:x,dy:y,phase:0}; peers.set(p.peer,q); if(p.by) resolveNames([p.by]); }
+const PEER_STALE=12e4; // a tab that hasn't checked in for this long is treated as gone
+function peerKey(p){ return p.by||p.peer; }
+function peerStale(p){ return !!(window.claude&&window.claude.provider==="firebase")&&!!p.updatedAt&&Date.now()-p.updatedAt>PEER_STALE; }
+function isSelf(p){ return p.isMe||(!!myId&&p.by===myId); }
+function applyPeer(p){ if(isSelf(p)) return false; if(p.kind!=="viewer") return false; if(peerStale(p)) return false; const pr=p.presence||{}; if(!SCENES[pr.s]) return false;
+  const key=peerKey(p); let q=peers.get(key); const x=clamp(+pr.x||0,0,5000), y=clamp(+pr.y||300,LANE.top,LANE.bot);
+  if(q&&q.pid!==p.peer&&(q.updatedAt||0)>(p.updatedAt||0)) return false; // an older tab of the same player: ignore it
+  const fresh=!q; if(!q){ q={by:p.by,dx:x,dy:y,phase:0}; peers.set(key,q); if(p.by) resolveNames([p.by]); }
+  else if(q.pid&&q.pid!==p.peer){ q.dx=x; q.dy=y; } // same player came back in a new tab: move the one figure, don't add another
+  q.pid=p.peer;
   Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null});
   if(pr.say&&typeof pr.say.text==="string") q.say={text:pr.say.text.slice(0,80),at:Math.min(Date.now(),+pr.say.at||0)};
-  if(pr.emote&&["wave","dance","cheer","pose","use"].includes(pr.emote.e)) q.emote={e:pr.emote.e,at:Math.min(Date.now(),+pr.emote.at||0),it:pr.emote.e==="use"&&BY[pr.emote.it]&&BY[pr.emote.it].t==="trip"?pr.emote.it:null}; }
+  if(pr.emote&&["wave","dance","cheer","pose","use"].includes(pr.emote.e)) q.emote={e:pr.emote.e,at:Math.min(Date.now(),+pr.emote.at||0),it:pr.emote.e==="use"&&BY[pr.emote.it]&&BY[pr.emote.it].t==="trip"?pr.emote.it:null}; return fresh; }
 async function resolveNames(ids){ if(!USER) return; try{ const ps=await USER.profiles(ids); for(const id of ids) names[id]=(ps[id]&&ps[id].name)||names[id]||"Runner"; }catch(e){} }
 
 
@@ -2870,7 +2930,7 @@ setInterval(hud,1000);
     renderTitle(save.name?"returning":"new");
   } else { chatLine(null,accessNote(),"sys"); renderTitle(ACCESS.mode==="signedout"?"signedout":"limited"); }
   if(room){ ROOM=room;
-    room.onPeers(ch=>{ for(const p of ch.joined.concat(ch.updated)) applyPeer(p); for(const p of ch.left){ peers.delete(p.peer); } for(const p of ch.joined) if(!(p.isMe&&p.sameTab)&&p.kind==="viewer") setTimeout(()=>chatLine(null,`${nameOf(p.by)} arrived in Sector 9`,"sys"),300); updOnline(); },()=>{});
+    room.onPeers(ch=>{ const arrived=[]; for(const p of ch.joined.concat(ch.updated)) if(applyPeer(p)&&ch.joined.includes(p)) arrived.push(p); try{ syncPeers(room.peers()); }catch(e){ for(const p of ch.left){ const q=peers.get(peerKey(p)); if(q&&q.pid===p.peer) peers.delete(peerKey(p)); } } for(const p of arrived) setTimeout(()=>chatLine(null,`${nameOf(p.by)} arrived in ${sceneName((p.presence||{}).s)||"Sector 9"}`,"sys"),300); updOnline(); },()=>{});
     room.on("chat",m=>{ if(m.isMe&&m.sameTab) return; const d=m.data||{}; if(typeof d.text!=="string") return; chatLine(nameOf(m.by),d.text.slice(0,80)); });
     room.on("atk",onAtk); room.on("ko",onKo);
     room.on("invite",m=>{ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; if(d.to!==myId) return; resolveNames([m.by]);

@@ -119,13 +119,18 @@
       for(const id of ids) if(!out[id]) out[id]={id,name:"",guest:false}; return out; } });
 
   /* ---------- live multiplayer (Realtime Database) ---------- */
-  const peerMap=new Map(), peerHandlers=[], topicHandlers={}; let myPres={}, presRef=null;
-  const mkPeer=(key,v)=>{ let p={}; try{ p=JSON.parse(v.p||"{}"); }catch(e){} return {peer:key,by:v.by||null,isMe:!!current&&v.by===current.uid,sameTab:key===TAB,kind:"viewer",guest:false,presence:Object.freeze(p),updatedAt:+v.t||Date.now()}; };
+  const peerMap=new Map(), peerHandlers=[], topicHandlers={}; let myPres={}, presRef=null, leaving=false;
+  const mkPeer=(key,v)=>{ let p={}; try{ p=JSON.parse(v.p||"{}"); }catch(e){} return {peer:key,by:v.by||null,isMe:!!current&&v.by===current.uid,sameTab:key===TAB,kind:"viewer",guest:false,presence:Object.freeze(p),updatedAt:v.t?(+v.t-serverOffset):Date.now()}; };
   const fire=ch=>{ const peers=[...peerMap.values()]; for(const h of peerHandlers){ try{ h({peers,...ch}); }catch(e){ console.error(e); } } };
   const writePres=()=>{ if(!current||!presRef) return Promise.resolve(); return presRef.set({by:current.uid,p:JSON.stringify(myPres),t:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{}); };
   function startPresence(){
     presRef=rt.ref("presence/"+TAB);
-    rt.ref(".info/connected").on("value",s=>{ if(s.val()===true){ presRef.onDisconnect().remove(); writePres(); } });
+    rt.ref(".info/connected").on("value",s=>{ if(s.val()===true&&!leaving){ presRef.onDisconnect().remove(); writePres(); } });
+    // If our record disappears while this tab is still open, write it back.
+    presRef.on("value",s=>{ if(!s.exists()&&current&&!leaving) writePres(); });
+    const bye=()=>{ leaving=true; try{ presRef.remove(); }catch(e){} };
+    window.addEventListener("pagehide",bye); window.addEventListener("beforeunload",bye);
+    window.addEventListener("pageshow",e=>{ if(e.persisted&&leaving){ leaving=false; writePres(); } });
     const all=rt.ref("presence");
     all.on("child_added",s=>{ const v=s.val(); if(!v) return; const p=mkPeer(s.key,v); peerMap.set(s.key,p); fire({joined:[p],left:[],updated:[]}); });
     all.on("child_changed",s=>{ const v=s.val(); if(!v) return; const p=mkPeer(s.key,v); peerMap.set(s.key,p); fire({joined:[],left:[],updated:[p]}); });
@@ -153,5 +158,5 @@
     list:async()=>({assets:[],usage:0}), delete:async id=>{ await fs.doc("assets/"+id).delete(); } });
 
   const NS={user:userNS,db:dbNS,room:roomNS,assets:assetsNS};
-  window.claude=Object.freeze({ use:async name=>{ await ready; return NS[name]||null; }, signOut:()=>auth.signOut(), provider:"firebase" });
+  window.claude=Object.freeze({ use:async name=>{ await ready; return NS[name]||null; }, signOut:async()=>{ leaving=true; try{ if(presRef) await presRef.remove(); }catch(e){} return auth.signOut(); }, provider:"firebase" });
 })();
