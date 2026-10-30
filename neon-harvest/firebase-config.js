@@ -1,13 +1,13 @@
-// Paste your Firebase web app config here (Firebase console → Project settings → Your apps → Web app → Config).
+// Firebase web app config for NEON HARVEST (project neon-harvest-ba7c6).
 // These values are safe to publish: access is controlled by firestore.rules and database.rules.json.
 window.NH_FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBYWsYE7iEEY-fnTnBqiIxv3PFn_JRyzS8",
+  authDomain: "neon-harvest-ba7c6.firebaseapp.com",
+  databaseURL: "https://neon-harvest-ba7c6-default-rtdb.firebaseio.com",
+  projectId: "neon-harvest-ba7c6",
+  storageBucket: "neon-harvest-ba7c6.firebasestorage.app",
+  messagingSenderId: "347913076098",
+  appId: "1:347913076098:web:ab96cf4e15db2156d5a39b"
 };
 
 // The only account that can run Smacked Shop and claim the name "Rassir".
