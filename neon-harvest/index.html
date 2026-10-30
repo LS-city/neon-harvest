@@ -97,6 +97,20 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 .li .grow{flex:1;min-width:0}
 .li .grow div{overflow-wrap:anywhere}
 .tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid currentColor;padding:1px 5px}
+.upl{display:block;width:100%;max-width:480px;aspect-ratio:3/2;height:auto;margin:6px auto;background:#07040f;border:1px solid var(--line);touch-action:none;outline:none}
+.upl:focus-visible{outline:2px solid var(--cyan)}
+.upl-hud{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:12px;letter-spacing:.04em}
+.upl-hud strong{color:var(--cyan)}
+.upl-msg{min-height:2.6em;text-align:center;margin:4px 0;font-size:12px;color:#e9e2ff}
+.upl-pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,40px);gap:4px;justify-content:center;margin:4px auto}
+.upl-pad [data-d=up]{grid-column:2;grid-row:1}.upl-pad [data-d=left]{grid-column:1;grid-row:2}.upl-pad [data-d=down]{grid-column:2;grid-row:2}.upl-pad [data-d=right]{grid-column:3;grid-row:2}
+.upl-pad .btn{padding:0;font-size:16px;touch-action:none}
+@media (pointer:fine){.upl-pad{display:none}}
+.upl-levels{display:flex;flex-wrap:wrap;gap:6px}
+.upl-levels .btn[aria-disabled=true]{opacity:.45}
+.upl-levels .btn.done{border-color:#43f0a4}
+.upl-h{margin:10px 0 6px;font-size:12px;letter-spacing:.08em;color:var(--cyan)}
+.upl-info p{margin:6px 0;font-size:12px;color:#c9bff0}
 #mini{width:100%;height:130px;background:#0d0818;border:1px solid var(--line)}
 #toast{position:absolute;top:calc(56px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:min(420px,90vw)}
 #invites{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(56px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px;width:min(300px,80vw);z-index:5}
@@ -345,7 +359,7 @@ function nameKey(n){ return "h"+Array.from(new TextEncoder().encode(n.toLowerCas
 let save = defaultSave();
 function defaultSave(){
   return { credits:250, chips:40, inv:{chip_cu:2,fan_80:1,ram_8:1}, display:[null,null,null,null,null,null],
-    look:{...DEFAULT_LOOK}, owned:[], name:"", handleKey:"", quest:null, scrap:{}, printBest:0, rack:[], buffs:{}, jobs:[], taken:[], jobsDone:0, duelWins:0, voidKills:0, voidDeaths:0, botKills:0, settled:[], decor:{wall:[null,null,null],floor:[null,null,null,null]}, v:5 };
+    look:{...DEFAULT_LOOK}, owned:[], name:"", handleKey:"", quest:null, scrap:{}, printBest:0, rack:[], buffs:{}, jobs:[], taken:[], jobsDone:0, duelWins:0, voidKills:0, voidDeaths:0, botKills:0, settled:[], decor:{wall:[null,null,null],floor:[null,null,null,null]}, upload:{cleared:0,best:0}, v:5 };
 }
 const me = { scene:"street", x:440+Math.random()*180, y:276+Math.random()*48, dir:1, phase:0, moving:false, emote:null, say:null, visiting:null };
 let viewHome = null;           // {owner, display, look} when visiting another home
@@ -730,7 +744,7 @@ const SCENES={
   home:{w:2100, spawn:120},
   cyberbuys:{w:1600, spawn:120},
   byte:{w:4500, spawn:140},
-  grid:{w:2600, spawn:140},
+  grid:{w:3000, spawn:140},
   smacked:{w:1600, spawn:140},
 };
 // hotspots: x center, half-width, label, act
@@ -753,6 +767,7 @@ function hotspots(sc){
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
     ...Object.entries(GAMES).map(([k,G])=>({x:G.x,hw:110,label:`Play ${G.n}`,act:()=>openTable(k)})),
     {x:2250,hw:100,label:"View the duelist leaderboard",act:()=>openLeaderboard()},
+    {x:UPL_X,hw:110,label:"Play UPLOAD",act:()=>openUpload()},
   ];
   if(sc==="smacked") return [
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
@@ -981,7 +996,7 @@ function useHot(){ if(!$("#overlay").hidden) return; if(nearHot){ beep(880,.05);
 function safeAct(h){ try{ h.act(); }catch(e){ console.error(e); toast("That didn't work. Try again."); } }
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
-  setTimeout(()=>{ go(scene,x); if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players. Practice against the AI at any table.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
+  setTimeout(()=>{ go(scene,x); if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
 function go(scene,x){ if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
@@ -1065,12 +1080,13 @@ const GUIDE={
     ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Serve drinks and parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips."]],
     ["Gigs and deliveries",["Vex at The Glitch hands out delivery jobs: bring her the parts she asks for to get credits.","Byte Market Courier Hub: new tickets every 20 minutes. Carry packages between stalls before the timer runs out, deliver parts, or fill rig commissions. Every 5th job earns a bonus part."]],
     ["Sell what you find",["Parts Depot buys any part back at its full worth in credits.","List parts on the Trade Board (on the Sector 9 street) for other players to buy; payment lands in your gift inbox.","Byte Market stalls also buy and sell parts and rigs."]],
-    ["Win it",["Wager duels in The Grid: stake a part or PC and beat other players at Cyber Chess, Tic-Tac-Toe or Rock Paper Scissors to win theirs, then sell or keep it. Practice against the AI at any table.","Crack Encrypted Floppies for a chance at credits, chips, parts or a rare collectible."]]]},
+    ["Win it",["Play UPLOAD in The Grid: the first clear of each of its 10 levels pays ₵65 up to ₵290, and replays pay ₵10.","Wager duels in The Grid: stake a part or PC and beat other players at Cyber Chess, Tic-Tac-Toe or Rock Paper Scissors to win theirs, then sell or keep it. Practice against the AI at any table.","Crack Encrypted Floppies for a chance at credits, chips, parts or a rare collectible."]]]},
   chips:{n:"Earn chips",secs:[
     ["Scrap Alley",["Dig through the five scrap piles at the east end of Sector 9. Every dig gives 2–9 chips plus 1–2 random parts and sometimes a floppy disk.","Piles refill after 90 seconds (60 seconds if you keep a Cyberdeck in your stash). A Drone in your stash adds an extra part per dig."]],
     ["CHIP PRINT arcade",["In The Glitch. Each run costs 5 chips. Stop the print head in the bright zone three times; tighter hits print rarer chips and pay 2 chips per point (up to +18)."]],
     ["Mining Rack",["In your apartment. Install crypto miners, Mining Rigs, Phone Farms or Quantum Rigs and they mine chips while you're offline, for up to 12 hours before the buffer fills.","Each Home Server in your stash boosts the rack 25% (up to 2). Come home and collect."]],
     ["The Void",["Delete Null Bots in The Void for chips.","Beat other players: when a player dies they lose 15% of their credits and chips, and half of that goes to the player who got the kill."]],
+    ["UPLOAD",["The snake-style hacking arcade at the far end of The Grid. Steer your upload through firewalls, grab every data packet, then reach the uplink port.","First clears pay 4 to 22 chips per level, gold root keys inside the game pay +1 chip each, and clearing all 10 levels wins a HALO Singularity Chip."]],
     ["Other ways",["Encrypted Floppy cracks can pay chips, and other players can trade or gift you parts worth selling."]]]},
   items:{n:"Get every item",secs:[
     ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
@@ -1080,7 +1096,7 @@ const GUIDE={
     ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
   places:{n:"Places",secs:[
     ["Sector 9",["Apt 7C: stash terminal, display shelves, wardrobe, workbench, Mining Rack, living room and an intercom to invite friends.","The Glitch: bar counter, Job Board, jukebox and the CHIP PRINT arcade. The Trade Board stands outside on the street.","Parts Depot, Cyber Buys & More, Scrap Alley, and The Third Eye club with a trippy stage, DJ booth, seats and its own tech-buzz menu with effects."]],
-    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs and the Courier Hub.","The Grid: wager duels and the Top Duelists board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home."]]]},
+    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs and the Courier Hub.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home."]]]},
   social:{n:"Play with others",secs:[
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes.","Invite players to your apartment from the intercom; they get a card that brings them straight to you.","Visit neighbors' doors to look at their display shelves."]],
     ["Trade and compete",["Gift parts by tapping a player. Sell on the Trade Board. Challenge players in The Grid. Climb the Top Duelists and Top Fraggers boards."]],
@@ -1774,7 +1790,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"}};
 function openMetro(){ const body=panel("Metro","Pick a line. Rides are free.");
   const l=el("div",{class:"list"}); for(const [k,m] of Object.entries(METRO)){ const here=me.scene===k; const b=el("button",{class:"btn"+(here?"":" hot"),type:"button",text:here?"You're here":"Ride",onclick:()=>{ closePanel(); ride(k,m.x); }}); if(here) b.disabled=true;
     const here2=onlinePeers().filter(p=>p.s===k||(k==="street"&&["bar","cyberbuys","club","home"].includes(p.s))).length;
@@ -1992,11 +2008,143 @@ function drawGrid(t){
   const lx=2250; ctx.fillStyle="#0b0716"; ctx.fillRect(lx-100,120,200,104); ctx.strokeStyle="#ffb84a"; ctx.strokeRect(lx-99.5,120.5,199,103); neonText("TOP DUELISTS",lx,112,11,"#ffb84a",1);
   ctx.font="10px 'IBM Plex Mono',monospace"; ctx.textAlign="left"; leaderboard().slice(0,6).forEach(([id,w],i)=>{ ctx.fillStyle=i===0?"#ffb84a":"#e9e2ff"; ctx.fillText(`${i+1}. ${nameOf(id).slice(0,14)}`,lx-90,140+i*14); ctx.textAlign="right"; ctx.fillText(String(w),lx+90,140+i*14); ctx.textAlign="left"; });
   if(!leaderboard().length){ ctx.fillStyle="#9a8cc0"; ctx.fillText("No duels won yet.",lx-90,150); ctx.fillText("Be the first.",lx-90,166); }
+  drawUploadCab(t);
+}
+function drawUploadCab(t){ const ux=UPL_X;
+  // records board
+  const bx=ux+150; ctx.fillStyle="#0b0716"; ctx.fillRect(bx-70,110,140,104); ctx.strokeStyle="#43f0a4"; ctx.strokeRect(bx-69.5,110.5,139,103); neonText("UPLOAD RECORDS",bx,102,9,"#43f0a4",1);
+  const rows=uplBoard().slice(0,6); ctx.font="9px 'IBM Plex Mono',monospace"; ctx.textAlign="left";
+  if(!rows.length){ ctx.fillStyle="#9a8cc0"; ctx.fillText("No uploads yet.",bx-62,132); ctx.fillText("Be the first.",bx-62,146); }
+  rows.forEach(([id,n],i)=>{ ctx.fillStyle=i?"#e9e2ff":"#43f0a4"; ctx.fillText(`${i+1}. ${nameOf(id).slice(0,10)}`,bx-62,128+i*14); ctx.textAlign="right"; ctx.fillText(n>=UPL_LEVELS.length?"ALL":`L${n}`,bx+64,128+i*14); ctx.textAlign="left"; });
+  // cabinet
+  ctx.fillStyle="#120a24"; ctx.beginPath(); ctx.moveTo(ux-46,250); ctx.lineTo(ux-46,96); ctx.lineTo(ux-36,80); ctx.lineTo(ux+36,80); ctx.lineTo(ux+46,96); ctx.lineTo(ux+46,250); ctx.fill();
+  ctx.strokeStyle="#43f0a4"; ctx.shadowColor="#43f0a4"; ctx.shadowBlur=12; ctx.lineWidth=2; ctx.strokeRect(ux-46,96,92,154); ctx.lineWidth=1; ctx.shadowBlur=0;
+  neonText("UPLOAD",ux,74,15,"#43f0a4",flick(9,t));
+  // screen with a looping snake
+  const sx=ux-34, sy=104, sw=68, sh=56; ctx.fillStyle="#04020a"; ctx.fillRect(sx,sy,sw,sh); const cell=4, cols=17, rws=14, per=2*(cols+rws)-4;
+  for(let k=0;k<9;k++){ let p=(Math.floor(t*10)-k+per*100)%per, cx, cy; if(p<cols){ cx=p; cy=0; } else if(p<cols+rws-1){ cx=cols-1; cy=p-cols+1; } else if(p<2*cols+rws-2){ cx=cols-1-(p-(cols+rws-2)); cy=rws-1; } else { cx=0; cy=rws-1-(p-(2*cols+rws-3)); }
+    ctx.fillStyle=k?`rgba(67,240,164,${1-k/10})`:"#bfffe6"; ctx.fillRect(sx+cx*cell,sy+cy*cell,cell-1,cell-1); }
+  ctx.fillStyle="#ffb84a"; ctx.fillRect(sx+30+Math.sin(t)*10,sy+26,4,4); ctx.fillStyle="#ff3fa8"; ctx.fillRect(sx+16,sy+16,12,4); ctx.fillRect(sx+40,sy+36,4,12);
+  ctx.fillStyle="#1d1236"; ctx.fillRect(ux-40,172,80,22); ctx.fillStyle="#ff3fa8"; ctx.beginPath(); ctx.arc(ux-20,183,5,0,7); ctx.fill(); ctx.fillStyle="#38e8ff"; ctx.fillRect(ux+8,180,6,6); ctx.fillRect(ux+18,180,6,6);
+  ctx.font="7px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillStyle="#9a8cc0"; ctx.fillText("HACK · GROW · UPLINK",ux,212); ctx.fillText("10 LEVELS",ux,224);
 }
 function leaderboard(){ const rows=Object.entries(homes).map(([id,h])=>[id,Math.floor(+h.wins)||0]).filter(r=>r[1]>0); if(myId&&save.duelWins&&!rows.some(r=>r[0]===myId)) rows.push([myId,save.duelWins]); return rows.sort((a,b)=>b[1]-a[1]); }
 function openLeaderboard(){ const body=panel("Top Duelists","Wins across all wager duels in The Grid."); const rows=leaderboard();
   if(!rows.length){ body.append(el("div",{class:"empty",text:"No duels won yet. Be the first."})); return; }
   const l=el("div",{class:"list"}); rows.slice(0,20).forEach(([id,w],i)=>l.append(el("div",{class:"li"},el("span",{class:"tag",text:`#${i+1}`}),el("div",{class:"grow",text:nameOf(id)+(id===myId?" (you)":"")}),el("strong",{text:`${w} win${w===1?"":"s"}`})))); body.append(l); }
+
+/* ============================================================ UPLOAD (snake hacking game in The Grid) */
+const UPL_W=24, UPL_H=16, UPL_CELL=20, UPL_X=2650, UPL_LIVES=3;
+const UPL_LEVELS=[
+  {"n":"Ping","need":5,"sp":6.0,"ice":0,"map":["........................","........................","........................","........................","........................","........................","........................","........................","....................X...","........................","........................","........................","........................","........................","........................","........................"]},
+  {"n":"Proxy","need":6,"sp":6.5,"ice":0,"map":["........................","........................","............X...........","........................","......############......","........................","........................","........................","........................","........................","........................","......############......","........................","........................","........................","........................"]},
+  {"n":"Firewall","need":7,"sp":7.0,"ice":0,"map":["........................","........................","........................","........................","........###..###........","........#......#........","........#......#........","...........X............","........................","........#......#........","........#......#........","........###..###........","........................","........................","........................","........................"]},
+  {"n":"Packet Storm","need":8,"sp":7.0,"ice":1,"map":["......#....#........#...","......#....#........#...","......#....#........#...","......#....#........#...","......#....#........#...","...........#........#...","...........#....#...#...","...........#....#...#...","...........#....#...#...","...........#....#...#...","................#.......","................#.......","......#.........#.......","......#.........#.....X.","......#.........#.......","......#.........#......."]},
+  {"n":"Honeypot","need":8,"sp":7.5,"ice":1,"map":["........................","........................","...##.....##.....##.....","...##.....##.....##.....","........................",".....................X..","........................",".............##.....##..",".............##.....##..","........................","........................","........................","...##.....##.....##.....","...##.....##.....##.....","........................","........................"]},
+  {"n":"Daemon","need":9,"sp":7.5,"ice":2,"map":["........................","............#...........","............#...........","...#######..#..#######..","............#...........","............#...........","............#...........","........................","............X...........","............#...........","............#...........","............#...........","...#######..#..#######..","............#...........","............#...........","........................"]},
+  {"n":"Black ICE","need":9,"sp":8.0,"ice":2,"map":["...........X............","........................","..#########..#########..","........................","........................",".......#........#.......",".......#........#.......","........................","........................","........................",".......#........#.......",".......#........#.......","........................","..#########..#########..","........................","........................"]},
+  {"n":"Mainframe","need":10,"sp":8.5,"ice":2,"map":["........#......#........","........#......#........","...............#........","...............#........","........#......#........","........#......#........","........#......#........","........#...............","........#............X..","........#......#........","........#......#........","........#......#........","...............#........","...............#........","........#......#........","........#......#........"]},
+  {"n":"Root Access","need":10,"sp":8.5,"ice":2,"map":["........................","..X.....................","........................","##################......","........................","........................","......##################","........................","........................","........................","##################......","........................","........................","......##################","........................","........................"]},
+  {"n":"Singularity","need":12,"sp":9.0,"ice":3,"map":["........................",".##########..##########.",".#....................#.",".#....................#.",".#......##########....#.",".#......#.............#.",".#......#.............#.",".#......#........#....#.",".#......#...X....#....#.",".#......#........#....#.",".#......#........#....#.",".#......##########....#.",".#....................#.",".#....................#.",".##########..##########.","........................"]}
+];
+const UPL_DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}, UPL_OPP={up:"down",down:"up",left:"right",right:"left"};
+function uplReward(i){ return {cr:40+25*(i+1), ch:2+2*(i+1)}; }
+function uplProg(){ if(!save.upload||typeof save.upload!=="object") save.upload={cleared:0,best:0}; return save.upload; }
+let uplKey=null, uplSel=null;
+addEventListener("keydown",e=>{ if(uplKey&&currentView==="upload"&&!$("#overlay").hidden) uplKey(e); },true);
+function uplBoard(){ const rows=Object.entries(homes).map(([id,h])=>[id,clamp(Math.floor(+h.up)||0,0,UPL_LEVELS.length)]).filter(r=>r[1]>0); const mine=uplProg().cleared; if(myId&&mine&&!rows.some(r=>r[0]===myId)) rows.push([myId,mine]); return rows.sort((a,b)=>b[1]-a[1]); }
+function openUpload(){
+  const prog=uplProg(); if(uplSel==null) uplSel=Math.min(prog.cleared,UPL_LEVELS.length-1);
+  const body=panel("UPLOAD","Hack the Grid. Steer your upload through the firewall, grab every data packet, then dive into the uplink port to clear the level."); currentView="upload";
+  const lvT=el("strong"), pkT=el("span"), lfT=el("span"), scT=el("span"); const hdr=el("div",{class:"upl-hud"},lvT,pkT,lfT,scT);
+  const c=el("canvas",{class:"upl",width:String(UPL_W*UPL_CELL),height:String(UPL_H*UPL_CELL),tabindex:"0","aria-label":"Upload game board"});
+  const msg=el("p",{class:"upl-msg",role:"status"});
+  const pad=el("div",{class:"upl-pad"}); for(const [d,t] of [["up","▲"],["left","◀"],["down","▼"],["right","▶"]]) pad.append(el("button",{class:"btn",type:"button","data-d":d,text:t,"aria-label":"Steer "+d,onpointerdown:ev=>{ ev.preventDefault(); steer(d); }}));
+  const sel=el("div",{class:"upl-levels"}); const actions=el("div",{class:"row"});
+  const info=el("div",{class:"upl-info"},
+    el("p",{text:"Arrow keys or WASD steer. Space pauses. On a phone, swipe the board or use the arrows."}),
+    el("p",{text:"Every packet makes your upload longer. Hit a firewall, the edge, ICE (red sentinels) or your own trail and you lose a life. 3 lives per run. Grab gold root keys for +1 chip."}),
+    el("p",{text:`First clear of each level pays credits and chips: from ₵${uplReward(0).cr} + ${uplReward(0).ch} chips on level 1 up to ₵${uplReward(9).cr} + ${uplReward(9).ch} chips on level 10. Clear level 10 for the first time to win a HALO Singularity Chip. Replays pay ₵10 + 1 chip.`}));
+  body.append(hdr,c,msg,pad,actions,el("h3",{class:"upl-h",text:"Levels"}),sel,info);
+  const x=c.getContext("2d");
+  let run=null, st=null, raf=0, last=performance.now(), acc=0, paused=false, flash=0;
+  const idx=(cx,cy)=>cy*UPL_W+cx;
+  function build(i){ const L=UPL_LEVELS[i]; const walls=new Set(); let exit=null;
+    L.map.forEach((row,y)=>[...row].forEach((ch,xx)=>{ if(ch==="#") walls.add(idx(xx,y)); if(ch==="X") exit=[xx,y]; }));
+    st={i,L,walls,exit,open:false,snake:[[4,8],[3,8],[2,8]],dir:"right",q:[],grow:0,got:0,pk:null,key:null,ice:[],started:false,alive:true,ticks:0,t0:0,sp:L.sp};
+    for(let k=0;k<L.ice;k++){ const cell=freeCell(p=>Math.abs(p[0]-4)+Math.abs(p[1]-8)>=9); if(cell){ const run=(dx,dy)=>{ let n=0; for(const sgn of [1,-1]){ let a=cell[0]+dx*sgn, b=cell[1]+dy*sgn; while(inb(a,b)&&!st.walls.has(idx(a,b))){ n++; a+=dx*sgn; b+=dy*sgn; } } return n; }; const h=run(1,0)>=run(0,1); const sg=Math.random()<.5?1:-1; st.ice.push({x:cell[0],y:cell[1],dx:h?sg:0,dy:h?0:sg}); } }
+    st.pk=freeCell(); paused=false; render(); }
+  function occupied(cx,cy){ if(st.walls.has(idx(cx,cy))) return true; if(st.exit&&st.exit[0]===cx&&st.exit[1]===cy) return true; if(st.snake.some(s=>s[0]===cx&&s[1]===cy)) return true; if(st.ice.some(s=>s.x===cx&&s.y===cy)) return true; if(st.pk&&st.pk[0]===cx&&st.pk[1]===cy) return true; if(st.key&&st.key.x===cx&&st.key.y===cy) return true; return false; }
+  function freeCell(ok){ const cells=[]; for(let cy=0;cy<UPL_H;cy++) for(let cx=0;cx<UPL_W;cx++) if(!occupied(cx,cy)&&(!ok||ok([cx,cy]))&&(!st.started?!(cy===8&&cx<9):true)) cells.push([cx,cy]); return cells.length?cells[(Math.random()*cells.length)|0]:null; }
+  function inb(cx,cy){ return cx>=0&&cy>=0&&cx<UPL_W&&cy<UPL_H; }
+  function startRun(i){ run={lv:i,lives:UPL_LIVES,score:0}; uplSel=i; build(i); renderSel(); setMsg("Press an arrow key, WASD, or swipe to start the upload."); hudUp(); actions.innerHTML=""; c.focus({preventScroll:true}); }
+  function steer(d){ if(!run||(!st.alive&&run.lives<=0)){ startRun(uplSel); }
+    if(!st||!st.alive) return; if(paused){ paused=false; setMsg(""); }
+    if(!st.started){ if(d===UPL_OPP[st.dir]) d=st.dir; st.started=true; st.t0=performance.now(); st.dir=d; st.q=[]; setMsg(""); beep(880,.05); return; }
+    const lastD=st.q.length?st.q[st.q.length-1]:st.dir; if(d===lastD||d===UPL_OPP[lastD]||st.q.length>=2) return; st.q.push(d); }
+  function crash(why){ st.alive=false; run.lives--; flash=1; beep(140,.25,"sawtooth",.06); setTimeout(()=>beep(90,.3,"sawtooth",.06),120); hudUp();
+    if(run.lives>0){ setMsg(`TRACE DETECTED: ${why}. ${run.lives} ${run.lives===1?"life":"lives"} left. Press a direction to retry.`); setTimeout(()=>{ if(run&&c.isConnected){ build(run.lv); hudUp(); } },650); }
+    else { const p=uplProg(); const nb=run.score>p.best; if(nb){ p.best=run.score; persist(); } setMsg(`CONNECTION LOST: ${why}. Final score ${run.score}${nb?" (new best!)":""}.`); actions.innerHTML=""; actions.append(el("button",{class:"btn hot",type:"button",text:`Retry level ${run.lv+1}`,onclick:()=>startRun(run.lv)})); }
+  }
+  function clearLevel(){ st.alive=false; const secs=(performance.now()-st.t0)/1000; const bonus=Math.max(0,Math.round(60-secs))*(st.i+1); run.score+=100*(st.i+1)+bonus;
+    const p=uplProg(); const first=st.i>=p.cleared; let pay;
+    if(first){ const r=uplReward(st.i); save.credits+=r.cr; save.chips+=r.ch; p.cleared=st.i+1; pay=`+₵${r.cr} and +${r.ch} chips`;
+      if(st.i===UPL_LEVELS.length-1){ addItem("chip_halo"); pay+=" and a HALO Singularity Chip"; broadcastSys("completed every level of UPLOAD in The Grid"); } }
+    else { save.credits+=10; save.chips+=1; pay="+₵10 and +1 chip (replay)"; }
+    if(run.score>p.best) p.best=run.score; persist(); hud(); toast(`Level ${st.i+1} uploaded: ${pay}`,"#43f0a4"); [880,1100,1320,1760].forEach((f,k)=>setTimeout(()=>beep(f,.08,"triangle"),k*90));
+    renderSel(); hudUp(); actions.innerHTML="";
+    if(st.i<UPL_LEVELS.length-1){ setMsg(`UPLOAD COMPLETE: ${st.L.n}. ${pay}. Time bonus ${bonus}. Press a direction or Next level.`); const nxt=()=>{ run.lv=st.i+1; uplSel=run.lv; build(run.lv); renderSel(); hudUp(); actions.innerHTML=""; setMsg("Press a direction to start."); };
+      actions.append(el("button",{class:"btn hot",type:"button",text:`Next level: ${UPL_LEVELS[st.i+1].n} ›`,onclick:nxt})); st.next=nxt; }
+    else { setMsg(`THE GRID IS YOURS. Every level uploaded. Final score ${run.score}. ${pay}.`); actions.append(el("button",{class:"btn hot",type:"button",text:"Play again from level 1",onclick:()=>startRun(0)})); }
+  }
+  function tick(){ st.ticks++;
+    if(st.q.length) st.dir=st.q.shift(); const [dx,dy]=UPL_DIRS[st.dir]; const h=st.snake[0]; const nx=h[0]+dx, ny=h[1]+dy;
+    if(!inb(nx,ny)) return crash("you hit the edge of the Grid");
+    if(st.walls.has(idx(nx,ny))) return crash("you hit a firewall");
+    const tailMoves=st.grow===0; const body=tailMoves?st.snake.slice(0,-1):st.snake; if(body.some(s=>s[0]===nx&&s[1]===ny)) return crash("you crossed your own trail");
+    if(st.ice.some(s=>s.x===nx&&s.y===ny)) return crash("ICE caught you");
+    st.snake.unshift([nx,ny]); if(st.grow>0) st.grow--; else st.snake.pop();
+    if(st.open&&st.exit[0]===nx&&st.exit[1]===ny) return clearLevel();
+    if(st.pk&&st.pk[0]===nx&&st.pk[1]===ny){ st.got++; st.grow+=1; st.sp+=.08; run.score+=10*(st.i+1); beep(1200,.04);
+      if(st.got>=st.L.need){ st.pk=null; st.open=true; beep(660,.08,"triangle"); setTimeout(()=>beep(990,.1,"triangle"),90); setMsg("Uplink port open. Get to the glowing port!"); }
+      else { st.pk=freeCell(); if(!st.key&&Math.random()<.22){ const k=freeCell(); if(k) st.key={x:k[0],y:k[1],until:st.ticks+Math.round(st.sp*6)}; } } hudUp(); }
+    if(st.key&&st.key.x===nx&&st.key.y===ny){ st.key=null; save.chips+=1; run.score+=50; persist(); hud(); toast("Root key: +1 chip","#ffb84a"); beep(1500,.05); setTimeout(()=>beep(1800,.05),60); hudUp(); }
+    if(st.key&&st.ticks>st.key.until) st.key=null;
+    if(st.ticks%3===0) for(const s of st.ice){ const blocked=(a,b)=>!inb(a,b)||st.walls.has(idx(a,b))||(st.exit&&st.exit[0]===a&&st.exit[1]===b)||st.snake.slice(1).some(q=>q[0]===a&&q[1]===b)||st.ice.some(o=>o!==s&&o.x===a&&o.y===b);
+      if(blocked(s.x+s.dx,s.y+s.dy)){ s.dx=-s.dx; s.dy=-s.dy; } if(!blocked(s.x+s.dx,s.y+s.dy)){ s.x+=s.dx; s.y+=s.dy; } }
+    const hh=st.snake[0]; if(st.ice.some(s=>s.x===hh[0]&&s.y===hh[1])) return crash("ICE caught you");
+  }
+  function setMsg(t){ msg.textContent=t; }
+  function hudUp(){ if(!st) return; lvT.textContent=`LEVEL ${st.i+1} · ${st.L.n.toUpperCase()}`; pkT.textContent=st.open?"PORT OPEN":`PACKETS ${st.got}/${st.L.need}`; lfT.textContent="LIVES "+"♥".repeat(Math.max(0,run?run.lives:0))+"♡".repeat(Math.max(0,UPL_LIVES-(run?run.lives:0))); scT.textContent=`SCORE ${run?run.score:0} · BEST ${uplProg().best}`; }
+  function renderSel(){ sel.innerHTML=""; const p=uplProg(); UPL_LEVELS.forEach((L,i)=>{ const locked=i>p.cleared; const b=el("button",{class:"btn"+(i<p.cleared?" done":""),type:"button","aria-pressed":String(uplSel===i),text:(locked?"🔒 ":i<p.cleared?"✓ ":"")+`${i+1}. ${L.n}`,onclick:()=>{ if(locked){ toast(`Clear level ${i} to unlock ${L.n}.`); return; } startRun(i); }}); if(locked) b.setAttribute("aria-disabled","true"); sel.append(b); }); }
+  const S=UPL_CELL;
+  function cellRect(cx,cy,pad,col){ x.fillStyle=col; x.fillRect(cx*S+pad,cy*S+pad,S-pad*2,S-pad*2); }
+  function render(){ const now=performance.now(), tt=now/1000;
+    x.fillStyle="#07040f"; x.fillRect(0,0,c.width,c.height);
+    x.strokeStyle="rgba(56,232,255,.06)"; x.lineWidth=1; x.beginPath(); for(let i=1;i<UPL_W;i++){ x.moveTo(i*S+.5,0); x.lineTo(i*S+.5,c.height); } for(let j=1;j<UPL_H;j++){ x.moveTo(0,j*S+.5); x.lineTo(c.width,j*S+.5); } x.stroke();
+    if(!st) return;
+    x.shadowColor="#ff3fa8"; x.shadowBlur=8; for(const w of st.walls){ const cx=w%UPL_W, cy=(w/UPL_W)|0; cellRect(cx,cy,1,"#5a1846"); x.strokeStyle="#ff3fa8"; x.strokeRect(cx*S+1.5,cy*S+1.5,S-3,S-3); } x.shadowBlur=0;
+    if(st.exit){ const [ex,ey]=st.exit; const cx=ex*S+S/2, cy=ey*S+S/2; if(st.open){ const r=S*.42+Math.sin(tt*8)*2; x.shadowColor="#38e8ff"; x.shadowBlur=16; x.strokeStyle="#38e8ff"; x.lineWidth=2; x.beginPath(); x.arc(cx,cy,r,0,7); x.stroke(); x.fillStyle="rgba(56,232,255,.35)"; x.beginPath(); x.arc(cx,cy,r*.6,0,7); x.fill(); x.shadowBlur=0; x.lineWidth=1; }
+      else { x.strokeStyle="rgba(56,232,255,.35)"; x.setLineDash([3,3]); x.beginPath(); x.arc(cx,cy,S*.38,0,7); x.stroke(); x.setLineDash([]); x.fillStyle="rgba(56,232,255,.4)"; x.font="10px 'IBM Plex Mono',monospace"; x.textAlign="center"; x.textBaseline="middle"; x.fillText("⏚",cx,cy+1); } }
+    if(st.pk){ const p=st.pk, s=3+Math.sin(tt*6)*1.5; x.shadowColor="#ffb84a"; x.shadowBlur=10; cellRect(p[0],p[1],s,"#ffb84a"); x.shadowBlur=0; x.fillStyle="#2a1600"; x.fillRect(p[0]*S+S/2-1,p[1]*S+s+2,2,S-s*2-4); }
+    if(st.key){ const k=st.key, blink=(st.key.until-st.ticks)<st.sp*2&&Math.sin(tt*20)<0; if(!blink){ x.save(); x.translate(k.x*S+S/2,k.y*S+S/2); x.rotate(Math.PI/4+tt); x.shadowColor="#ffe14a"; x.shadowBlur=14; x.fillStyle="#ffe14a"; x.fillRect(-5,-5,10,10); x.restore(); x.shadowBlur=0; } }
+    for(const s of st.ice){ const cx=s.x*S+S/2, cy=s.y*S+S/2; x.save(); x.translate(cx,cy); x.rotate(tt*3); x.shadowColor="#ff5a4a"; x.shadowBlur=12; x.fillStyle="#ff5a4a"; x.beginPath(); for(let k=0;k<8;k++){ const r=k%2?4:9; x.lineTo(Math.cos(k*Math.PI/4)*r,Math.sin(k*Math.PI/4)*r); } x.closePath(); x.fill(); x.restore(); x.shadowBlur=0; }
+    const n=st.snake.length; st.snake.forEach((sg,k)=>{ const head=k===0; const a=1-k/(n+4)*.7; x.shadowColor=st.alive?"#43f0a4":"#ff5a4a"; x.shadowBlur=head?14:6; cellRect(sg[0],sg[1],head?1:2.5,st.alive?(head?"#bfffe6":`rgba(67,240,164,${a})`):`rgba(255,90,74,${a})`); if(!head&&k%2===0){ x.fillStyle="rgba(7,4,15,.55)"; x.font="9px 'IBM Plex Mono',monospace"; x.textAlign="center"; x.textBaseline="middle"; x.shadowBlur=0; x.fillText((sg[0]+sg[1])%2?"1":"0",sg[0]*S+S/2,sg[1]*S+S/2+1); } });
+    x.shadowBlur=0; if(st.alive){ const h=st.snake[0], [dx,dy]=UPL_DIRS[st.dir]; x.fillStyle="#07040f"; x.fillRect(h[0]*S+S/2+dx*4-2+dy*4,h[1]*S+S/2+dy*4-2+dx*4,3,3); x.fillRect(h[0]*S+S/2+dx*4-2-dy*4,h[1]*S+S/2+dy*4-2-dx*4,3,3); }
+    if(flash>0){ x.fillStyle=`rgba(255,90,74,${flash*.35})`; x.fillRect(0,0,c.width,c.height); flash=Math.max(0,flash-.05); }
+    const banner=t=>{ x.fillStyle="rgba(7,4,15,.72)"; x.fillRect(0,c.height/2-22,c.width,44); x.fillStyle="#38e8ff"; x.shadowColor="#38e8ff"; x.shadowBlur=10; x.font="bold 15px 'IBM Plex Mono',monospace"; x.textAlign="center"; x.textBaseline="middle"; x.fillText(t,c.width/2,c.height/2); x.shadowBlur=0; };
+    if(!run) banner("PRESS A DIRECTION TO START"); else if(st.alive&&!st.started) banner(`LEVEL ${st.i+1}: ${st.L.n.toUpperCase()} · ${st.L.need} PACKETS`); else if(paused) banner("PAUSED · SPACE TO RESUME"); }
+  function loop(){ if(!c.isConnected){ cancelAnimationFrame(raf); if(uplKey===onKey) uplKey=null; return; } const now=performance.now(), dt=Math.min(.1,(now-last)/1000); last=now;
+    if(run&&st&&st.alive&&st.started&&!paused){ acc+=dt; const step=1/st.sp; let guard=0; while(acc>=step&&st.alive&&guard++<4){ acc-=step; tick(); } } else acc=0;
+    render(); raf=requestAnimationFrame(loop); }
+  const KEYMAP={arrowup:"up",w:"up",arrowdown:"down",s:"down",arrowleft:"left",a:"left",arrowright:"right",d:"right"};
+  function onKey(e){ const k=e.key.toLowerCase(); if(KEYMAP[k]){ e.preventDefault(); e.stopPropagation(); if(st&&!st.alive&&st.next&&run.lives>0){ const n=st.next; st.next=null; n(); } steer(KEYMAP[k]); }
+    else if(k===" "){ e.preventDefault(); e.stopPropagation(); if(st&&st.alive&&st.started){ paused=!paused; setMsg(paused?"Paused.":""); } } }
+  uplKey=onKey;
+  let sw=null; c.addEventListener("pointerdown",e=>{ sw=[e.clientX,e.clientY]; c.focus({preventScroll:true}); }); c.addEventListener("pointerup",e=>{ if(!sw) return; const dx=e.clientX-sw[0], dy=e.clientY-sw[1]; sw=null; if(Math.max(Math.abs(dx),Math.abs(dy))<18){ if(!run) startRun(uplSel); return; } const d=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"); if(st&&!st.alive&&st.next&&run.lives>0){ const n=st.next; st.next=null; n(); } steer(d); });
+  renderSel(); build(uplSel); run=null; lvT.textContent=`LEVEL ${uplSel+1} · ${UPL_LEVELS[uplSel].n.toUpperCase()}`; pkT.textContent=`PACKETS 0/${UPL_LEVELS[uplSel].need}`; lfT.textContent="LIVES ♥♥♥"; scT.textContent=`BEST ${prog.best}`;
+  setMsg(prog.cleared>=UPL_LEVELS.length?"Every level cleared. Replay any level for credits and chips.":`Level ${uplSel+1} is ready. Press a direction to start.`); loop();
+}
 
 /* ============================================================ SMACKED SHOP (real-life rewards, owner-run) */
 let IS_ADMIN=false, ASSETS=null;
@@ -2854,11 +3002,12 @@ async function flush(){
   const data=JSON.parse(JSON.stringify(save));
   try{ localStorage.setItem("nh_save",JSON.stringify(data)); localStorage.setItem("nh_save_uid",myId||""); }catch(e){}
   if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); }catch(e){}
-    const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,decor:save.decor,at:Date.now()}); }catch(e){} } }
+    const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,at:Date.now()}); }catch(e){} } }
 }
 function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0;
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
   o.look=fullLook({...DEFAULT_LOOK,...(s.look||{})}); o.owned=Array.isArray(s.owned)?s.owned.filter(x=>typeof x==="string").slice(0,300):[]; o.name=cleanName(s.name||""); if(nameProblem(o.name)) o.name=""; o.handleKey=typeof s.handleKey==="string"?s.handleKey.slice(0,200):""; o.scrap=Object.fromEntries(Object.entries(s.scrap&&typeof s.scrap==="object"?s.scrap:{}).filter(([k])=>/^[0-4]$/.test(k)).map(([k,v])=>[k,Math.min(Date.now(),+v||0)])); o.quest=s.quest&&TYPE_N[s.quest.type]?{type:s.quest.type,qty:clamp(Math.floor(+s.quest.qty)||1,1,3),reward:clamp(Math.floor(+s.quest.reward)||50,1,500),done:false}:null; o.rack=(Array.isArray(s.rack)?s.rack:[]).filter(r=>r&&BY[r.id]).slice(0,4).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())})); o.jobs=(Array.isArray(s.jobs)?s.jobs:[]).filter(j=>j&&["courier","supply","build"].includes(j.kind)&&STALLS[j.to]&&(j.kind!=="courier"||STALLS[j.from])&&(j.kind!=="supply"||TYPE_N[j.t])&&(j.kind!=="build"||RECIPES.some(r=>r.k===j.k))).slice(0,JOB_MAX).map(j=>({...j,reward:clamp(Math.floor(+j.reward)||0,0,5000),chips:clamp(Math.floor(+j.chips)||0,0,200),qty:clamp(Math.floor(+j.qty)||1,1,5),minTier:clamp(Math.floor(+j.minTier)||0,0,3),label:String(j.label||"Job").slice(0,140)})); o.taken=Array.isArray(s.taken)?s.taken.filter(x=>typeof x==="string").slice(-30):[]; o.jobsDone=Math.max(0,Math.floor(+s.jobsDone)||0); o.duelWins=Math.max(0,Math.floor(+s.duelWins)||0); for(const k of ["voidKills","voidDeaths","botKills"]) o[k]=Math.max(0,Math.floor(+s[k])||0); o.decor=cleanDecor(s.decor); o.settled=Array.isArray(s.settled)?s.settled.filter(x=>typeof x==="string").slice(-80):[];
+  o.upload={cleared:Math.max(0,Math.min(10,Math.floor(+(s.upload&&s.upload.cleared))||0)),best:Math.max(0,Math.floor(+(s.upload&&s.upload.best))||0)};
   o.buffs=s.buffs&&typeof s.buffs==="object"?{speed:+s.buffs.speed||0,print:+s.buffs.print||0,luck:+s.buffs.luck||0}:{}; return o; }
 try{ const s=localStorage.getItem("nh_save"); if(s) save=sanitizeSave(JSON.parse(s)); }catch(e){}
 if(save.name) myName=save.name;
