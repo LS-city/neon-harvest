@@ -1,0 +1,74 @@
+rules_version = '2';
+// NEON HARVEST: Cloud Firestore security rules.
+// Paste into Firebase console → Firestore Database → Rules, then Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function isOwner() {
+      return signedIn() && request.auth.token.email == "fouredwinx@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+
+    // Display names other players see.
+    match /profiles/{uid} { allow read: if signedIn(); allow write: if signedIn() && me() == uid; }
+
+    // Each player's private save. Nobody else can read or change it.
+    match /data/users/{uid}/{rest=**} { allow read, write: if signedIn() && me() == uid; }
+
+    // Apartments (shelves, look, decor, name, wins): readable by all, writable by the owner of the apartment.
+    match /homes/{uid} { allow read: if signedIn(); allow write: if signedIn() && me() == uid; }
+
+    // Gifts and bounties: you can only send as yourself; the sender or receiver can remove one.
+    match /gifts/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.from == me();
+      allow delete: if signedIn() && (resource.data.to == me() || resource.data.from == me());
+    }
+
+    // Trade board: you can only list as yourself; anyone can remove a listing when buying it.
+    match /market/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.seller == me();
+      allow delete: if signedIn();
+    }
+
+    // Player orders to bar/club staff.
+    match /orders/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.from == me();
+      allow delete: if signedIn() && (resource.data.to == me() || resource.data.from == me());
+    }
+
+    // Wager duels: only the two players can change a duel.
+    match /duels/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.a == me();
+      allow update: if signedIn() && (resource.data.a == me() || resource.data.b == me());
+    }
+    match /pot/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.by == me();
+      allow delete: if signedIn();
+    }
+
+    // Shared game state: shift slots, DJ track, username registry.
+    match /staff/{id} { allow read, write: if signedIn(); }
+    match /cbstaff/{id} { allow read, write: if signedIn(); }
+    match /clubstaff/{id} { allow read, write: if signedIn(); }
+    match /club/{id} { allow read, write: if signedIn(); }
+    match /handles/{id} { allow read, write: if signedIn(); }
+
+    // Smacked Shop: everyone can browse, only the owner can stock it or mark pickups.
+    match /shop/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /shopinfo/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /pickups/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /assets/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+
+    // Pickup codes: private to the player who redeemed them, plus the owner.
+    match /redeem/{uid} {
+      allow read: if signedIn() && (me() == uid || isOwner());
+      allow write: if signedIn() && me() == uid;
+    }
+  }
+}
