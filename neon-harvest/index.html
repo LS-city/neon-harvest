@@ -247,6 +247,23 @@ const DRINKS=[
   {id:"drink_shot", n:"Overclock Shot", t:"drink",r:"uncommon",v:28,col:"#ff3fa8",mix:["rum","bitters","rum"],buff:"print",desc:"Double chips from CHIP PRINT for 5 min"},
   {id:"drink_fizz", n:"Static Fizz",    t:"drink",r:"uncommon",v:32,col:"#38e8ff",mix:["soda","gin","bitters"],buff:"luck",desc:"Better salvage odds for 5 min"},
   {id:"drink_ghost",n:"Ghost Protocol", t:"drink",r:"rare",    v:70,col:"#cf72ff",mix:["glow","rum","gin"],  buff:"all",  desc:"All three effects for 5 min"},
+  {id:"drink_null", n:"Null Coffee",    t:"drink",r:"common",  v:14,col:"#b07a4a",mix:["soda","rum","soda"],   buffs:["speed"],dur:3, desc:"+30% walk speed for 3 min"},
+  {id:"drink_spritz",n:"Byte Spritz",   t:"drink",r:"common",  v:18,col:"#8fffd0",mix:["soda","glow","gin"],   buffs:["luck"], dur:3, desc:"Better salvage odds for 3 min"},
+  {id:"drink_cool", n:"Liquid Coolant", t:"drink",r:"uncommon",v:26,col:"#4aa8ff",mix:["gin","soda","glow"],   heal:30,buffs:[],      desc:"Restores 30 HP in The Void"},
+  {id:"drink_kernel",n:"Kernel Panic",  t:"drink",r:"uncommon",v:30,col:"#ff5a4a",mix:["bitters","gin","rum"], buffs:["guard"],dur:5, desc:"Take 25% less damage in The Void for 5 min"},
+  {id:"drink_daiq", n:"Datastream Daiquiri",t:"drink",r:"uncommon",v:34,col:"#f5e663",mix:["rum","glow","soda"],buffs:["print"],dur:8,desc:"Double chips from CHIP PRINT for 8 min"},
+  {id:"drink_hand", n:"Golden Handshake",t:"drink",r:"uncommon",v:38,col:"#ffb84a",mix:["rum","soda","bitters"],buffs:["tips"],dur:10,desc:"+25% tips on every shift for 10 min"},
+  {id:"drink_zero", n:"Zero Day",       t:"drink",r:"rare",    v:85,col:"#e9e2ff",mix:["bitters","glow","rum"], buffs:["speed","luck","guard"],dur:10,desc:"Speed, lucky salvage and 25% less Void damage for 10 min"},
+];
+const KITCHEN={noodle:{n:"Noodles",c:"#f5e663"},prot:{n:"Vat Protein",c:"#ff8a5a"},bun:{n:"Algae Bun",c:"#43f0a4"},sauce:{n:"Neon Sauce",c:"#ff3fa8"},kelp:{n:"Kelp Crisps",c:"#38e8ff"}};
+const FOODS=[
+  {id:"food_crisps",n:"Kelp Crisps",     t:"food",r:"common",  v:12,col:"#38e8ff",mix:["kelp","kelp","sauce"],  heal:15, buffs:["luck"], dur:3, desc:"Restores 15 HP in The Void, plus better salvage odds for 3 min"},
+  {id:"food_burger",n:"Algae Burger",    t:"food",r:"common",  v:20,col:"#43f0a4",mix:["bun","prot","sauce"],   heal:25, buffs:["speed"],dur:5, desc:"Restores 25 HP in The Void, plus +30% walk speed for 5 min"},
+  {id:"food_ramen", n:"Neon Ramen",      t:"food",r:"common",  v:24,col:"#ff3fa8",mix:["noodle","prot","sauce"],heal:35, buffs:["guard"],dur:5, desc:"Restores 35 HP in The Void, plus 25% less Void damage for 5 min"},
+  {id:"food_dump",  n:"Glitch Dumplings",t:"food",r:"uncommon",v:30,col:"#ffb84a",mix:["prot","kelp","sauce"],  heal:30, buffs:["tips"], dur:10,desc:"Restores 30 HP in The Void, plus +25% shift tips for 10 min"},
+  {id:"food_melt",  n:"Mainframe Melt",  t:"food",r:"uncommon",v:32,col:"#f5e663",mix:["bun","sauce","bun"],    heal:50, buffs:[],               desc:"Restores 50 HP in The Void"},
+  {id:"food_sushi", n:"Synth Sushi",     t:"food",r:"uncommon",v:34,col:"#ff8a5a",mix:["kelp","prot","noodle"], heal:20, buffs:["print"],dur:8, desc:"Restores 20 HP in The Void, plus double CHIP PRINT chips for 8 min"},
+  {id:"food_stack", n:"Full Stack Bowl", t:"food",r:"rare",    v:90,col:"#cf72ff",mix:["noodle","sauce","kelp"],heal:100,buffs:["guard","tips"],dur:10,desc:"Full heal in The Void, plus 25% less Void damage and +25% shift tips for 10 min"},
 ];
 const RECIPES=[
   {k:"pc",    n:"Gaming PC",        base:160,need:{mobo:1,cpu:1,gpu:1,ram:1,ssd:1,psu:1,fan:1},desc:"A full tower. Top display piece and sells high."},
@@ -262,6 +279,7 @@ const RECIPES=[
   {k:"pfarm", n:"Phone Farm",       base:150,need:{phone:3,cable:2,psu:1},desc:"Install on your home mining rack. Mines 20 chips/hr per Mk level."},
 ];
 for(const d of DRINKS) CAT.push(d);
+for(const d of FOODS) CAT.push(d);
 for(const rc of RECIPES) BY_R.forEach((r,i)=>CAT.push({id:`b_${rc.k}_${r}`,n:`${rc.n} ${MK[i]}`,t:"build",k:rc.k,r,v:Math.round(rc.base*(1+i*.8)),desc:rc.desc}));
 const ACC_ITEMS=[
   {id:"hdd_2tb",n:"Spinner 2TB HDD",t:"hdd",r:"common",v:20},{id:"hdd_12tb",n:"Vault Pro 12TB HDD",t:"hdd",r:"rare",v:95},
@@ -322,10 +340,10 @@ for(const it of [
   {id:"trip_joint",n:"Neon Joint",r:"common",v:15},{id:"trip_vape",n:"Holo Vape",r:"common",v:25},{id:"trip_gummy",n:"Overclock Gummies",r:"common",v:20},
   {id:"trip_bong",n:"Bubble Bong Hit",r:"uncommon",v:30},{id:"trip_shroom",n:"Glitch Shrooms",r:"uncommon",v:40},{id:"trip_acid",n:"Pixel Acid Tab",r:"rare",v:50},
   {id:"trip_tea",n:"Third Eye Tea",r:"epic",v:120}]) CAT.push({...it,t:"trip",desc:TRIPS[it.id].desc+" Use it inside The Third Eye club."});
-const COMP=CAT.filter(i=>!["drink","build","decor","trip"].includes(i.t));
+const COMP=CAT.filter(i=>!["drink","food","build","decor","trip"].includes(i.t));
 
 const BY = Object.fromEntries(CAT.map(i=>[i.id,i]));
-const TYPE_N = {chip:"chip",fan:"fan",mobo:"motherboard",gpu:"GPU",ram:"RAM stick",ssd:"drive",psu:"power supply",cpu:"processor",core:"core",drink:"drink",build:"rig",hdd:"hard drive",weapon:"weapon",phone:"phone",hack:"hacker tool",floppy:"floppy disk",enc:"encrypted floppy",trip:"club item",miner:"crypto miner",kbd:"keyboard",mouse:"mouse",cable:"cable",acc:"accessory",decor:"home item"};
+const TYPE_N = {chip:"chip",fan:"fan",mobo:"motherboard",gpu:"GPU",ram:"RAM stick",ssd:"drive",psu:"power supply",cpu:"processor",core:"core",drink:"drink",food:"food",build:"rig",hdd:"hard drive",weapon:"weapon",phone:"phone",hack:"hacker tool",floppy:"floppy disk",enc:"encrypted floppy",trip:"club item",miner:"crypto miner",kbd:"keyboard",mouse:"mouse",cable:"cable",acc:"accessory",decor:"home item"};
 const COLORS=["#ff3fa8","#38e8ff","#ffb84a","#7c5cff","#43f0a4","#e9e2ff","#ff5a4a","#2a2440","#f5e663","#00b3a4","#ff8ad8","#8fa3ff"];
 const COLOR_N=["Hot pink","Cyan","Amber","Violet","Toxic green","Ghost white","Signal red","Blackout","Laser yellow","Teal","Bubblegum","Periwinkle"];
 const COLOR_COST=i=>i<6?0:30;
@@ -579,6 +597,40 @@ function drawItem(c,id,cx,cy,S,t){
       c.strokeStyle=it.r==="rare"?"#ffb84a":"#ff3fa8"; c.lineWidth=S*.03; c.beginPath(); c.moveTo(S*.05,S*.15); c.lineTo(S*.2,-S*.42); c.stroke();
       if(it.id==="drink_shot"){ c.fillStyle="#ffb84a"; c.beginPath(); c.arc(-S*.2,-S*.3,S*.06,0,7); c.fill(); }
       break; }
+    case "food": { const k=it.id, fc=it.col;
+      const steam=()=>{ c.strokeStyle="rgba(233,226,255,.5)"; c.lineWidth=S*.02; for(let i=0;i<3;i++){ const u=(t*.6+i/3)%1; c.globalAlpha=1-u; c.beginPath(); const x0=-S*.14+i*S*.14; c.moveTo(x0,-S*.08-u*S*.1); c.quadraticCurveTo(x0+S*.06,-S*.16-u*S*.14,x0,-S*.24-u*S*.16); c.stroke(); } c.globalAlpha=1; };
+      if(k==="food_ramen"||k==="food_stack"){ steam();
+        c.fillStyle=k==="food_stack"?"#1d1030":"#e9e2ff"; c.beginPath(); c.moveTo(-S*.38,-S*.02); c.lineTo(S*.38,-S*.02); c.quadraticCurveTo(S*.36,S*.34,0,S*.34); c.quadraticCurveTo(-S*.36,S*.34,-S*.38,-S*.02); c.fill();
+        if(k==="food_stack"){ glow(.6+.4*Math.sin(t*2)); c.strokeStyle=fc; c.lineWidth=S*.03; c.stroke(); c.shadowBlur=0; } else { c.fillStyle="#ff3fa8"; c.fillRect(-S*.3,S*.1,S*.6,S*.03); }
+        c.fillStyle=k==="food_stack"?"#5a2a7a":"#c8562a"; c.beginPath(); c.ellipse(0,-S*.02,S*.36,S*.08,0,0,7); c.fill();
+        c.strokeStyle="#f5e663"; c.lineWidth=S*.025; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(-S*.26+i*S*.1,-S*.02); c.quadraticCurveTo(-S*.22+i*S*.1,-S*.08,-S*.18+i*S*.1,-S*.01); c.stroke(); }
+        c.fillStyle="#fff"; c.beginPath(); c.ellipse(S*.16,-S*.03,S*.08,S*.04,0,0,7); c.fill(); c.fillStyle="#ffb84a"; c.beginPath(); c.ellipse(S*.16,-S*.03,S*.035,S*.02,0,0,7); c.fill();
+        if(k==="food_stack"){ for(const [dx,cc] of [[-S*.18,"#38e8ff"],[-S*.04,"#43f0a4"]]){ c.fillStyle=cc; c.fillRect(dx,-S*.07,S*.08,S*.04); } }
+        c.strokeStyle="#d8b27a"; c.lineWidth=S*.03; c.beginPath(); c.moveTo(-S*.1,-S*.06); c.lineTo(S*.34,-S*.42); c.moveTo(-S*.04,-S*.05); c.lineTo(S*.4,-S*.36); c.stroke(); }
+      else if(k==="food_burger"){ steam();
+        c.fillStyle="#2f8f62"; c.beginPath(); c.ellipse(0,S*.22,S*.34,S*.08,0,0,7); c.fill();
+        c.fillStyle="#a24a2a"; c.fillRect(-S*.34,S*.04,S*.68,S*.12); c.fillStyle="#ff3fa8"; c.fillRect(-S*.36,S*.02,S*.72,S*.035);
+        c.fillStyle="#7cffb8"; c.beginPath(); for(let i=0;i<=8;i++){ const x=-S*.36+i*S*.09; c.lineTo(x,i%2?S*.0:-S*.035); } c.lineTo(S*.36,S*.03); c.lineTo(-S*.36,S*.03); c.fill();
+        glow(.5); c.fillStyle="#43f0a4"; c.beginPath(); c.moveTo(-S*.34,-S*.02); c.quadraticCurveTo(-S*.34,-S*.3,0,-S*.3); c.quadraticCurveTo(S*.34,-S*.3,S*.34,-S*.02); c.fill(); c.shadowBlur=0;
+        c.fillStyle="#e9e2ff"; for(const [dx,dy] of [[-.15,-.18],[0,-.23],[.14,-.16],[.06,-.1],[-.06,-.12]]) c.fillRect(dx*S,dy*S,S*.03,S*.015); }
+      else if(k==="food_crisps"){ c.save(); c.rotate(-.12);
+        glow(.5); c.fillStyle=fc; c.beginPath(); c.moveTo(-S*.26,-S*.36); c.lineTo(S*.26,-S*.36); c.lineTo(S*.3,S*.34); c.lineTo(-S*.3,S*.34); c.closePath(); c.fill(); c.shadowBlur=0;
+        c.fillStyle="#0b0716"; c.fillRect(-S*.26,-S*.36,S*.52,S*.06); c.fillRect(-S*.3,S*.28,S*.6,S*.06);
+        c.fillStyle="#0b0716"; c.font=`bold ${S*.1}px monospace`; c.textAlign="center"; c.textBaseline="middle"; c.fillText("KELP",0,-S*.06); c.fillText("CRSP",0,S*.06);
+        c.restore(); c.fillStyle="#2f8f62"; for(const [dx,dy,r] of [[-.3,-.42,.06],[-.14,-.46,.05],[.04,-.44,.06]]){ c.beginPath(); c.ellipse(dx*S,dy*S,r*S,r*S*.6,.4,0,7); c.fill(); } }
+      else if(k==="food_dump"){ steam();
+        c.fillStyle="#2a1840"; c.beginPath(); c.ellipse(0,S*.2,S*.42,S*.12,0,0,7); c.fill(); c.strokeStyle=fc; c.lineWidth=S*.02; c.stroke();
+        for(const [dx,dy] of [[-.2,.08],[.2,.08],[0,-.02]]){ const x=dx*S, y=dy*S; c.fillStyle="#f3ead8"; c.beginPath(); c.moveTo(x-S*.15,y+S*.06); c.quadraticCurveTo(x,y-S*.22,x+S*.15,y+S*.06); c.closePath(); c.fill();
+          c.strokeStyle="#c8b89a"; c.lineWidth=S*.015; for(let i=-1;i<=1;i++){ c.beginPath(); c.moveTo(x+i*S*.05,y-S*.06); c.lineTo(x+i*S*.04,y+S*.02); c.stroke(); } }
+        glow(.6); c.fillStyle=fc; c.beginPath(); c.arc(S*.3,-S*.2,S*.05,0,7); c.fill(); c.shadowBlur=0; }
+      else if(k==="food_sushi"){
+        c.fillStyle="#1d1030"; c.fillRect(-S*.44,S*.12,S*.88,S*.1); c.strokeStyle="#ff8a5a"; c.lineWidth=S*.015; c.strokeRect(-S*.44,S*.12,S*.88,S*.1);
+        [[-.27,"#38e8ff"],[0,"#ff8a5a"],[.27,"#43f0a4"]].forEach(([dx,cc],i)=>{ const x=dx*S, y=-S*.02+Math.sin(t*3+i)*S*.01; c.fillStyle="#123b2c"; c.beginPath(); c.arc(x,y,S*.13,0,7); c.fill(); c.fillStyle="#f3ead8"; c.beginPath(); c.arc(x,y,S*.1,0,7); c.fill(); glow(.5); c.fillStyle=cc; c.beginPath(); c.arc(x,y,S*.045,0,7); c.fill(); c.shadowBlur=0; }); }
+      else if(k==="food_melt"){ steam();
+        c.fillStyle="#2a1840"; c.beginPath(); c.ellipse(0,S*.24,S*.4,S*.1,0,0,7); c.fill();
+        for(const [ox,rot] of [[-S*.1,-.1],[S*.12,.15]]){ c.save(); c.translate(ox,0); c.rotate(rot); c.fillStyle="#c98a3a"; c.beginPath(); c.moveTo(-S*.2,S*.2); c.lineTo(S*.2,S*.2); c.lineTo(0,-S*.24); c.closePath(); c.fill(); c.fillStyle="#f0c46a"; c.beginPath(); c.moveTo(-S*.16,S*.17); c.lineTo(S*.16,S*.17); c.lineTo(0,-S*.18); c.closePath(); c.fill(); c.restore(); }
+        glow(.6+.4*Math.sin(t*3)); c.fillStyle=fc; c.fillRect(-S*.26,S*.14,S*.5,S*.04); for(let i=0;i<3;i++){ const h=S*(.05+.04*Math.abs(Math.sin(t*1.5+i))); c.fillRect(-S*.18+i*S*.16,S*.16,S*.03,h); } c.shadowBlur=0; }
+      break; }
     case "build": {
       const tier=TIER[it.r];
       if(it.k==="stream"){ c.fillStyle="#141022"; c.fillRect(-S*.38,-S*.3,S*.46,S*.34); c.fillStyle="#2a0f3d"; c.fillRect(-S*.35,-S*.27,S*.4,S*.28); c.fillStyle="#ff3fa8"; for(let i=0;i<4;i++) c.fillRect(-S*.32,-S*.22+i*S*.06,S*.1+((i*31+Math.floor(t*4))%5)*S*.04,S*.03);
@@ -795,7 +847,8 @@ function hotspots(sc){
   ];
   if(sc==="bar") return [
     {x:70,hw:50,label:"Exit to the street",act:()=>go("street",1760)},
-    {x:380,hw:110,label:mySlot>=0?"Work the counter (on shift)":"Order at the bar",act:()=>openCounter()},
+    {x:380,hw:110,label:mySlot>=0?"Work the counter (on shift)":"Order drinks at the bar",act:()=>{ barMenuTab="drinks"; openCounter(); }},
+    {x:635,hw:55,label:mySlot>=0?"Work the kitchen (on shift)":"Order food at the GLITCH KITCHEN",act:()=>{ barMenuTab="food"; openCounter(); }},
     {x:760,hw:50,label:"Change the jukebox track",act:()=>jukebox()},
     {x:1040,hw:60,label:"Play CHIP PRINT arcade",act:()=>openArcade()},
     {x:1330,hw:80,label:"Job board: staff shifts and gigs",act:()=>openJobBoard()},
@@ -820,7 +873,7 @@ function hotspots(sc){
 let jukeHue=320;
 const npcs={
   street:[{x:700,y:286,look:{jacket:3,visor:2,hat:1},dir:1,vx:22,min:620,max:1500,name:""},{x:2100,y:320,look:{jacket:4,visor:3,hat:4},dir:-1,vx:-18,min:1900,max:2800,name:""},{x:960,y:268,look:{jacket:2,visor:1,hat:0},dir:1,vx:0,name:"Depot clerk"}],
-  bar:[{x:380,y:262,look:{jacket:0,visor:2,hat:2},dir:1,vx:0,name:"Vex"},{x:640,y:330,look:{jacket:5,visor:3,hat:0},dir:1,vx:0,dance:true,name:""},{x:1210,y:300,look:{jacket:1,visor:1,hat:3},dir:-1,vx:0,name:""}],
+  bar:[{x:380,y:262,look:{jacket:0,visor:2,hat:2},dir:1,vx:0,name:"Vex"},{x:612,y:262,look:{jacket:3,visor:0,hat:1},dir:1,vx:0,name:"Kai"},{x:640,y:330,look:{jacket:5,visor:3,hat:0},dir:1,vx:0,dance:true,name:""},{x:1210,y:300,look:{jacket:1,visor:1,hat:3},dir:-1,vx:0,name:""}],
   home:[],
   void:[],
   club:[{x:1580,y:300,look:{skin:2,style:5,jacket:9,pants:7,visor:7,hat:1,aura:1},dir:1,vx:0,dance:true,fx:"shroom",name:""},{x:1690,y:328,look:{skin:4,style:1,jacket:10,pants:3,visor:4,hat:5},dir:-1,vx:0,dance:true,fx:"acid",name:""},
@@ -911,6 +964,13 @@ function drawBar(t){
   for(let i=0;i<14;i++){ const bx=262+i*19; ctx.fillStyle=`hsla(${(i*47+hue)%360},80%,60%,.75)`; ctx.fillRect(bx,92-(i%3)*3,8,18+(i%3)*3); ctx.fillRect(bx+2,86-(i%3)*3,4,6); ctx.fillRect(bx,132,8,18); }
   // counter
   ctx.fillStyle="#2b1a40"; ctx.fillRect(230,214,320,30); ctx.fillStyle=`hsl(${hue},100%,60%)`; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=10; ctx.fillRect(230,212,320,3); ctx.shadowBlur=0;
+  // Glitch Kitchen hatch
+  ctx.fillStyle="#0d0818"; ctx.fillRect(572,138,126,76); const kg=ctx.createLinearGradient(0,142,0,212); kg.addColorStop(0,"rgba(255,138,90,.45)"); kg.addColorStop(1,"rgba(255,184,74,.12)"); ctx.fillStyle=kg; ctx.fillRect(576,142,118,70);
+  ctx.fillStyle="#3a2a50"; ctx.fillRect(600,176,26,20); ctx.fillRect(642,180,32,16); ctx.fillStyle="#ffb84a"; ctx.fillRect(598,196,80,4);
+  for(let i=0;i<3;i++){ const u=((t*.5+i/3)%1); ctx.strokeStyle=`rgba(233,226,255,${(1-u)*.45})`; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(606+i*22,172-u*26); ctx.quadraticCurveTo(614+i*22,160-u*26,606+i*22,148-u*26); ctx.stroke(); } ctx.lineWidth=1;
+  for(const lx of [596,674]){ ctx.strokeStyle="#3a2a50"; ctx.beginPath(); ctx.moveTo(lx,138); ctx.lineTo(lx,150); ctx.stroke(); ctx.fillStyle="#ffb84a"; ctx.shadowColor="#ffb84a"; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(lx,154,5,Math.PI,0); ctx.fill(); ctx.shadowBlur=0; }
+  ctx.fillStyle="#2b1a40"; ctx.fillRect(566,214,138,28); ctx.fillStyle="#ff8a5a"; ctx.shadowColor="#ff8a5a"; ctx.shadowBlur=10; ctx.fillRect(566,212,138,3); ctx.shadowBlur=0;
+  neonText("KITCHEN",635,128,11,"#ff8a5a",flick(5,t));
   // jukebox
   ctx.fillStyle="#2a1c3c"; ctx.beginPath(); ctx.moveTo(730,242); ctx.lineTo(730,170); ctx.arc(760,170,30,Math.PI,0); ctx.lineTo(790,242); ctx.fill();
   for(let i=0;i<5;i++){ ctx.fillStyle=`hsl(${(t*120+i*60)%360},100%,60%)`; ctx.fillRect(738+i*9,210-Math.abs(Math.sin(t*8+i))*24,6,4+Math.abs(Math.sin(t*8+i))*24); }
@@ -1077,7 +1137,7 @@ const GUIDE={
     ["Getting around",["Sector 9 is the main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, The Third Eye club and Scrap Alley.","Take the Metro (free) from the street to Byte Market, The Grid, Smacked Shop and The Void.","Tap ONLINE at the top to see who's playing and where they are."]],
     ["Your progress saves",["Your stash, credits, chips, apartment and pickup codes are saved to your account and follow you to any device you sign in on."]]]},
   money:{n:"Earn ₵ credits",secs:[
-    ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Serve drinks and parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips."]],
+    ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Mix drinks, cook food from the Kitchen and hand over parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order. Golden Handshake, Glitch Dumplings and Full Stack Bowl add +25% tips.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips."]],
     ["Gigs and deliveries",["Vex at The Glitch hands out delivery jobs: bring her the parts she asks for to get credits.","Byte Market Courier Hub: new tickets every 20 minutes. Carry packages between stalls before the timer runs out, deliver parts, or fill rig commissions. Every 5th job earns a bonus part."]],
     ["Sell what you find",["Parts Depot buys any part back at its full worth in credits.","List parts on the Trade Board (on the Sector 9 street) for other players to buy; payment lands in your gift inbox.","Byte Market stalls also buy and sell parts and rigs."]],
     ["Win it",["Play UPLOAD in The Grid: the first clear of each of its 10 levels pays ₵65 up to ₵290, and replays pay ₵10.","Wager duels in The Grid: stake a part or PC and beat other players at Cyber Chess, Tic-Tac-Toe or Rock Paper Scissors to win theirs, then sell or keep it. Practice against the AI at any table.","Crack Encrypted Floppies for a chance at credits, chips, parts or a rare collectible."]]]},
@@ -1091,11 +1151,12 @@ const GUIDE={
   items:{n:"Get every item",secs:[
     ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
     ["Build rigs",["Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
+    ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu too.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
     ["Gear, tech and home items",["Cyber Buys & More sells hacker tools, phones, floppies, weapons, accessories and living-room decor.","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
     ["Look and style",["Press C to change your name, outfit, hair, colors and accessories anytime."]],
     ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
   places:{n:"Places",secs:[
-    ["Sector 9",["Apt 7C: stash terminal, display shelves, wardrobe, workbench, Mining Rack, living room and an intercom to invite friends.","The Glitch: bar counter, Job Board, jukebox and the CHIP PRINT arcade. The Trade Board stands outside on the street.","Parts Depot, Cyber Buys & More, Scrap Alley, and The Third Eye club with a trippy stage, DJ booth, seats and its own tech-buzz menu with effects."]],
+    ["Sector 9",["Apt 7C: stash terminal, display shelves, wardrobe, workbench, Mining Rack, living room and an intercom to invite friends.","The Glitch: Vex's bar counter with 11 drinks, Kai's Glitch Kitchen with 7 hot dishes, the Job Board, jukebox and the CHIP PRINT arcade. The Trade Board stands outside on the street.","Parts Depot, Cyber Buys & More, Scrap Alley, and The Third Eye club with a trippy stage, DJ booth, seats and its own tech-buzz menu with effects."]],
     ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs and the Courier Hub.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home."]]]},
   social:{n:"Play with others",secs:[
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes.","Invite players to your apartment from the intercom; they get a card that brings them straight to you.","Visit neighbors' doors to look at their display shelves."]],
@@ -1135,7 +1196,7 @@ function openStash(){
     if(HOLD_T.includes(it.t)) acts.prepend(el("button",{class:"btn hot",type:"button",text:save.look.hand===id?"Unequip from hand":"Equip in hand",onclick:()=>{ const on=save.look.hand!==id; save.look={...save.look,hand:on?id:""}; persist(); pushPresence(true); toast(on?`${it.n} equipped. Try the Pose emote.`:`${it.n} unequipped.`); openStash(); }}));
     if(it.t==="trip"){ const ub=el("button",{class:"btn hot",type:"button",text:me.scene==="club"?"Use it":"Use (inside The Third Eye only)",onclick:()=>useTrip(id)}); if(me.scene!=="club") ub.disabled=true; acts.prepend(ub); }
     if(it.t==="enc") acts.prepend(el("button",{class:"btn hot",type:"button",text:"Decrypt",onclick:()=>openDecrypt()}));
-    if(it.t==="drink") acts.prepend(el("button",{class:"btn hot",type:"button",text:"Drink it",onclick:()=>{ drinkIt(id); openStash(); }}));
+    if(it.t==="drink"||it.t==="food") acts.prepend(el("button",{class:"btn hot",type:"button",text:it.t==="food"?"Eat it":"Drink it",onclick:()=>{ consumeItem(id); openStash(); }}));
     if(it.t==="decor") acts.prepend(el("button",{class:"btn hot",type:"button",text:"Place in living room",onclick:()=>{ placeDecor(id); openStash(); }}));
     if(rigRate(id)>0) acts.prepend(el("button",{class:"btn hot",type:"button",text:"Install on mining rack",onclick:()=>{ installRig(id); openStash(); }}));
     if(it.desc) info.append(el("span",{class:"sub",text:it.desc})); if(it.t==="weapon"&&WSTATS[id]) info.append(el("span",{class:"r-uncommon",text:weaponStatText(id)}));
@@ -1357,10 +1418,19 @@ async function claimGift(doc){
 }
 
 /* ============================================================ BUFFS */
-const BUFF_N={speed:"Speed",print:"2× print chips",luck:"Lucky salvage"};
+const BUFF_N={speed:"Speed",print:"2× print chips",luck:"Lucky salvage",guard:"Void armor",tips:"+25% tips"};
 function buffOn(k){ return (+(save.buffs||{})[k]||0)>Date.now(); }
-function drinkIt(id){ const d=BY[id]; if(!d||d.t!=="drink"||!hasItem(id)) return; addItem(id,-1); const until=Date.now()+300e3; save.buffs=save.buffs||{};
-  for(const k of (d.buff==="all"?["speed","print","luck"]:[d.buff])) save.buffs[k]=until; persist(); emote("cheer"); toast(`${d.n}: ${d.desc}`,d.col); beep(500,.08); setTimeout(()=>beep(800,.1),80); }
+function menuBuffs(d){ return Array.isArray(d.buffs)?d.buffs:d.buff==="all"?["speed","print","luck"]:d.buff?[d.buff]:[]; }
+function consumeItem(id){ const d=BY[id]; if(!d||(d.t!=="drink"&&d.t!=="food")||!hasItem(id)) return false;
+  const inVoid=me.scene==="void"&&!me.dead;
+  if(d.heal&&inVoid&&T-lastHitT<3){ toast("You're under fire. Get clear for a few seconds first."); beep(160,.1); return false; }
+  addItem(id,-1); save.buffs=save.buffs||{}; const ks=menuBuffs(d), until=Date.now()+(d.dur||5)*60e3; for(const k of ks) save.buffs[k]=Math.max(+save.buffs[k]||0,until);
+  let note=d.desc;
+  if(d.heal){ if(inVoid){ const before=myHP; myHP=Math.min(100,myHP+d.heal); const got=myHP-before; note=`+${got} HP`+(ks.length?` · ${ks.map(k=>BUFF_N[k]).join(", ")} for ${d.dur||5} min`:""); addVfx({type:"num",x:me.x,y:me.y-84,txt:"+"+got,col:"#43f0a4"}); pushPresence(true); }
+    else if(!ks.length) note=`${d.t==="food"?"Tasty":"Refreshing"}. Its healing only works in The Void.`; }
+  persist(); hud(); emote("cheer"); toast(`${d.n}: ${note}`,d.col); beep(d.t==="food"?420:500,.08); setTimeout(()=>beep(d.t==="food"?640:800,.1),80); return true; }
+function drinkIt(id){ return consumeItem(id); }
+function tipMult(){ return (countBuild("stream")>0?1.25:1)*(buffOn("tips")?1.25:1); }
 
 /* ============================================================ WORKBENCH */
 function countType(t){ return Object.entries(save.inv).reduce((s,[id,n])=>s+(BY[id]&&BY[id].t===t?n:0),0); }
@@ -1463,10 +1533,12 @@ async function clockOut(){
 }
 function randomLook(){ const o={}; for(const k of SLOTS) o[k]=(Math.random()*slotLen(k))|0; if(Math.random()<.7) o.pet=0; if(Math.random()<.7) o.aura=0; return o; }
 function spawnCustomer(){ const spot=CSPOTS.find(x=>!customers.some(c=>c.spot===x&&!c.leaving)); if(spot==null) return;
-  let want; if(Math.random()<.62){ const d=DRINKS[(Math.random()*(Math.random()<.85?3:4))|0]; want={kind:"drink",id:d.id}; }
+  let want; const roll=Math.random(); if(roll<.42) want={kind:"drink",id:pickMenu(DRINKS).id}; else if(roll<.7) want={kind:"food",id:pickMenu(FOODS).id};
   else { const types=["chip","fan","ram","ssd","psu","mobo","gpu","cpu"]; want={kind:"part",t:types[(Math.random()*types.length)|0]}; }
-  const max=want.kind==="drink"?50:65; customers.push({id:Math.random().toString(36).slice(2),spot,x:60,y:272+rnd(-4,8),dir:1,phase:0,look:randomLook(),want,max,left:max,arrived:false,leaving:false,moving:true}); }
-function wantText(w){ return w.kind==="drink"?`${BY[w.id].n}, please`:`Got a ${TYPE_N[w.t]}? I'll pay`; }
+  const max=want.kind==="part"?65:want.kind==="food"?58:50; customers.push({id:Math.random().toString(36).slice(2),spot,x:60,y:272+rnd(-4,8),dir:1,phase:0,look:randomLook(),want,max,left:max,arrived:false,leaving:false,moving:true}); }
+const MENU_W={common:6,uncommon:3,rare:1};
+function pickMenu(list){ let tot=0; for(const d of list) tot+=MENU_W[d.r]||1; let r=Math.random()*tot; for(const d of list){ r-=MENU_W[d.r]||1; if(r<0) return d; } return list[0]; }
+function wantText(w){ return w.kind!=="part"?`${BY[w.id].n}, please`:`Got a ${TYPE_N[w.t]}? I'll pay`; }
 function tickCustomers(){
   if(!(me.scene==="bar")) return;
   if(shift&&T>nextCust&&customers.filter(c=>!c.leaving).length<3){ spawnCustomer(); nextCust=T+rnd(10,20); }
@@ -1476,29 +1548,33 @@ function tickCustomers(){
     if(c.arrived&&!c.leaving){ c.dir=-1; c.left-=dt; if(c.left<=0){ c.leaving=true; toast("A customer got tired of waiting and left."); beep(160,.12); } } }
   customers=customers.filter(c=>!(c.leaving&&c.x<=57));
 }
-function payShift(base,tip){ tip=Math.round(tip*(countBuild("stream")>0?1.25:1)); save.credits+=base+tip; if(shift){ shift.served++; shift.earned+=base; shift.tips+=tip; } persist(); toast(`+₵${base}${tip?` and ₵${tip} tip`:""}`,"#ffb84a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
+function payShift(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; if(shift){ shift.served++; shift.earned+=base; shift.tips+=tip; } persist(); toast(`+₵${base}${tip?` and ₵${tip} tip`:""}`,"#ffb84a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
 
 /* drink mixing minigame */
 function mixDrink(drinkId,sub,done){
-  const d=BY[drinkId]; const body=panel("Mixing · "+d.n,sub);
+  const d=BY[drinkId]; const food=d.t==="food", ING=food?KITCHEN:INGR; const body=panel((food?"Cooking · ":"Mixing · ")+d.n,sub);
   const recipe=d.mix; let poured=[], mistakes=0; const t0=performance.now();
-  const ticket=el("div",{class:"row"}); const renderTicket=()=>{ ticket.innerHTML=""; ticket.append(el("span",{class:"sub",text:"Order ticket:"})); recipe.forEach((g,i)=>ticket.append(el("span",{class:"tag",style:`color:${INGR[g].c};opacity:${i<poured.length?.35:1}`,text:`${i+1}. ${INGR[g].n}`}))); };
+  const ticket=el("div",{class:"row"}); const renderTicket=()=>{ ticket.innerHTML=""; ticket.append(el("span",{class:"sub",text:"Order ticket:"})); recipe.forEach((g,i)=>ticket.append(el("span",{class:"tag",style:`color:${ING[g].c};opacity:${i<poured.length?.35:1}`,text:`${i+1}. ${ING[g].n}`}))); };
   renderTicket();
   const cvs=el("canvas",{width:"220",height:"220",style:"width:110px;height:110px;flex:none;background:radial-gradient(circle at 50% 45%,#22163e,#0d0818 70%)"});
-  const msg=el("div",{text:"Pour the ingredients in ticket order. A wrong bottle spills the glass."});
+  const msg=el("div",{text:food?"Add the ingredients in ticket order. A wrong one ruins the plate.":"Pour the ingredients in ticket order. A wrong bottle spills the glass."});
   const serve=el("button",{class:"btn hot",type:"button",text:"Serve",disabled:""});
   body.append(ticket,el("div",{class:"detail"},cvs,el("div",{class:"info"},msg,el("div",{class:"row"},serve))));
-  const bottles=el("div",{class:"row"}); const keys5=Object.keys(INGR).sort(()=>Math.random()-.5);
-  keys5.forEach((k,i)=>bottles.append(el("button",{class:"btn",type:"button",style:`border-color:${INGR[k].c};color:${INGR[k].c}`,text:`${i+1} · ${INGR[k].n}`,onclick:()=>pour(k)})));
-  body.append(el("strong",{text:"Bottles (keys 1–5)"}),bottles);
-  function pour(k){ if(poured.length>=3) return; if(recipe[poured.length]===k){ poured.push(k); beep(500+poured.length*200,.06,"sine"); if(poured.length===3){ msg.textContent="Looks perfect. Serve it."; serve.disabled=false; serve.focus(); } }
-    else { mistakes++; poured=[]; msg.textContent=`Spilled! Wrong bottle (${mistakes} spill${mistakes>1?"s":""}). Start over.`; beep(140,.15,"sawtooth"); }
+  const bottles=el("div",{class:"row"}); const keys5=Object.keys(ING).sort(()=>Math.random()-.5);
+  keys5.forEach((k,i)=>bottles.append(el("button",{class:"btn",type:"button",style:`border-color:${ING[k].c};color:${ING[k].c}`,text:`${i+1} · ${ING[k].n}`,onclick:()=>pour(k)})));
+  body.append(el("strong",{text:food?"Ingredients (keys 1–5)":"Bottles (keys 1–5)"}),bottles);
+  function pour(k){ if(poured.length>=3) return; if(recipe[poured.length]===k){ poured.push(k); beep(500+poured.length*200,.06,"sine"); if(poured.length===3){ msg.textContent=food?"Smells perfect. Serve it.":"Looks perfect. Serve it."; serve.disabled=false; serve.focus(); } }
+    else { mistakes++; poured=[]; msg.textContent=food?`Ruined! Wrong ingredient (${mistakes} mistake${mistakes>1?"s":""}). Start over.`:`Spilled! Wrong bottle (${mistakes} spill${mistakes>1?"s":""}). Start over.`; beep(140,.15,"sawtooth"); }
     renderTicket(); }
   body.addEventListener("keydown",e=>{ const n=+e.key; if(n>=1&&n<=5){ e.preventDefault(); pour(keys5[n-1]); } });
   serve.onclick=()=>{ serve.disabled=true; done({mistakes,secs:(performance.now()-t0)/1000}); };
   const c=cvs.getContext("2d"); const anim=()=>{ if(!cvs.isConnected) return; const t=performance.now()/1000; c.clearRect(0,0,220,220);
+    if(food){ c.fillStyle="#2a1840"; c.beginPath(); c.ellipse(110,182,86,20,0,0,7); c.fill(); c.strokeStyle="#cfc6f2"; c.lineWidth=3; c.stroke();
+      poured.forEach((g,i)=>{ const y=166-i*30; c.fillStyle=poured.length===3?d.col:ING[g].c; c.globalAlpha=.85; c.beginPath(); c.ellipse(110,y,64-i*10,16,0,0,7); c.fill(); c.globalAlpha=1; });
+      if(poured.length===3){ c.strokeStyle="rgba(233,226,255,.55)"; c.lineWidth=3; for(let i=0;i<3;i++){ const u=(t*.7+i/3)%1; c.globalAlpha=1-u; c.beginPath(); c.moveTo(85+i*25,92-u*30); c.quadraticCurveTo(95+i*25,72-u*30,85+i*25,52-u*30); c.stroke(); } c.globalAlpha=1; }
+      requestAnimationFrame(anim); return; }
     c.strokeStyle="#cfc6f2"; c.lineWidth=3; c.beginPath(); c.moveTo(60,40); c.lineTo(80,190); c.lineTo(140,190); c.lineTo(160,40); c.stroke();
-    poured.forEach((g,i)=>{ const y1=190-i*45, y0=y1-45; const f=y=>60+(190-y)/150*0; c.fillStyle=poured.length===3?d.col:INGR[g].c; c.globalAlpha=.75; const lx=a=>60+(a-40)/150*20, rx=a=>160-(a-40)/150*20; c.beginPath(); c.moveTo(lx(y0)+2,y0); c.lineTo(rx(y0)-2,y0); c.lineTo(rx(y1)-2,y1); c.lineTo(lx(y1)+2,y1); c.fill(); c.globalAlpha=1; });
+    poured.forEach((g,i)=>{ const y1=190-i*45, y0=y1-45; const f=y=>60+(190-y)/150*0; c.fillStyle=poured.length===3?d.col:ING[g].c; c.globalAlpha=.75; const lx=a=>60+(a-40)/150*20, rx=a=>160-(a-40)/150*20; c.beginPath(); c.moveTo(lx(y0)+2,y0); c.lineTo(rx(y0)-2,y0); c.lineTo(rx(y1)-2,y1); c.lineTo(lx(y1)+2,y1); c.fill(); c.globalAlpha=1; });
     if(poured.length===3){ c.fillStyle="rgba(255,255,255,.7)"; for(let i=0;i<6;i++){ const by=190-((t*40+i*25)%130); c.beginPath(); c.arc(95+((i*17)%30),by,2,0,7); c.fill(); } c.strokeStyle=d.col; c.lineWidth=4; c.beginPath(); c.moveTo(130,180); c.lineTo(150,20); c.stroke(); }
     requestAnimationFrame(anim); }; anim();
 }
@@ -1521,23 +1597,23 @@ function staffConsole(refresh){ const barOrders=incomingOrders.filter(o=>o.kind!
   if(!waiting.length) body.append(el("div",{class:"empty",text:"Nobody at the counter right now. New customers walk in every 10 to 20 seconds."}));
   const list=el("div",{class:"list"});
   for(const c of waiting){ const pct=c.left/c.max; const w=c.want;
-    list.append(el("div",{class:"li"},itemCanvas(w.kind==="drink"?w.id:PARTS.find(p=>p.t===w.t).id,48),el("div",{class:"grow"},el("div",{text:wantText(w)}),el("div",{class:pct>.5?"r-uncommon":pct>.25?"":"r-epic",text:`Patience ${Math.ceil(c.left)}s · pays ${w.kind==="drink"?"₵"+BY[w.id].v:"1.3× part worth"} + tip`})),
+    list.append(el("div",{class:"li"},itemCanvas(w.kind!=="part"?w.id:PARTS.find(p=>p.t===w.t).id,48),el("div",{class:"grow"},el("div",{text:wantText(w)}),el("div",{class:pct>.5?"r-uncommon":pct>.25?"":"r-epic",text:`Patience ${Math.ceil(c.left)}s · pays ${w.kind!=="part"?"₵"+BY[w.id].v:"1.3× part worth"} + tip`})),
       el("button",{class:"btn hot",type:"button",text:"Serve",onclick:()=>serveCustomer(c)}))); }
   body.append(list);
   body.append(el("strong",{text:`Player orders (${barOrders.length})`}));
   if(!DB) body.append(el("div",{class:"empty",text:"Player orders need a signed-in claude.ai session."}));
   else if(!barOrders.length) body.append(el("div",{class:"empty",text:"No orders from players yet. Players at the counter can order from you by name."}));
   const pl=el("div",{class:"list"});
-  for(const o of barOrders){ const desc=o.kind==="drink"?BY[o.drink].n:`a ${TYPE_N[o.ptype]}`;
-    pl.append(el("div",{class:"li"},itemCanvas(o.kind==="drink"?o.drink:PARTS.find(p=>p.t===o.ptype).id,48),el("div",{class:"grow"},el("div",{text:`${nameOf(o.from)} wants ${desc}`}),el("div",{class:"r-uncommon",text:`Paid ₵${o.offer} up front`})),
+  for(const o of barOrders){ const mid=orderMenuId(o); const desc=mid?BY[mid].n:`a ${TYPE_N[o.ptype]}`;
+    pl.append(el("div",{class:"li"},itemCanvas(mid||PARTS.find(p=>p.t===o.ptype).id,48),el("div",{class:"grow"},el("div",{text:`${nameOf(o.from)} wants ${desc}`}),el("div",{class:"r-uncommon",text:`Paid ₵${o.offer} up front`})),
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Serve",onclick:()=>servePlayer(o)}),el("button",{class:"btn",type:"button",text:"Decline",onclick:()=>declineOrder(o)})))); }
   body.append(pl);
   body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Clock out",onclick:async()=>{ await clockOut(); closePanel(); }})));
 }
 function serveCustomer(c){
   const w=c.want;
-  if(w.kind==="drink") mixDrink(w.id,"A customer is waiting. Speed and accuracy earn bigger tips.",res=>{
-    if(!customers.includes(c)||c.leaving){ addItem(w.id); persist(); toast("They left before you finished. The drink went to your stash."); openCounter(); return; }
+  if(w.kind!=="part") mixDrink(w.id,"A customer is waiting. Speed and accuracy earn bigger tips.",res=>{
+    if(!customers.includes(c)||c.leaving){ addItem(w.id); persist(); toast(`They left before you finished. The ${BY[w.id].t==="food"?"food":"drink"} went to your stash.`); openCounter(); return; }
     const tip=Math.max(0,Math.round(4+(c.left/c.max)*10-res.mistakes*4)); c.leaving=true; c.happy=T; payShift(BY[w.id].v,tip); openCounter(); });
   else partPicker(w.t,"Hand over a part. Rarer parts are worth more to the buyer.",id=>{
     if(!customers.includes(c)||c.leaving){ toast("That customer already left."); openCounter(); return; }
@@ -1548,38 +1624,41 @@ async function fulfillOrder(o,itemId){
     await DB.doc("orders/"+o.id).delete();
     await DB.collection("gifts").add({to:o.from,from:myId,kind:"item",item:itemId,amount:1,note:`Served at The Glitch`,at:Date.now()});
     payShift(clamp(Math.round(+o.offer||0),0,99999),3); }
-  catch(e){ toast("Couldn't complete that order. Try again."); if(BY[itemId].t!=="drink") addItem(itemId); persist(); }
+  catch(e){ toast("Couldn't complete that order. Try again."); if(BY[itemId].t!=="drink"&&BY[itemId].t!=="food") addItem(itemId); persist(); }
   openCounter();
 }
 function servePlayer(o){
-  if(o.kind==="drink"&&BY[o.drink]) mixDrink(o.drink,`${nameOf(o.from)} ordered this. It goes straight to their stash.`,()=>fulfillOrder(o,o.drink));
+  const mid=orderMenuId(o);
+  if(mid) mixDrink(mid,`${nameOf(o.from)} ordered this. It goes straight to their stash.`,()=>fulfillOrder(o,mid));
   else if(o.kind==="part"&&TYPE_N[o.ptype]) partPicker(o.ptype,`${nameOf(o.from)} paid ₵${o.offer} for this.`,id=>{ if(!hasItem(id)) return; addItem(id,-1); persist(); fulfillOrder(o,id); });
 }
 async function declineOrder(o){
   try{ await DB.doc("orders/"+o.id).delete(); await DB.collection("gifts").add({to:o.from,from:myId,kind:"credits",amount:clamp(Math.round(+o.offer||0),0,99999),note:"Order declined, refund",at:Date.now()}); toast("Order declined. They were refunded."); }
   catch(e){ toast("Couldn't decline that order."); } openCounter();
 }
+let barMenuTab="drinks";
+function orderMenuId(o){ if(o.kind==="drink"&&BY[o.drink]&&BY[o.drink].t==="drink") return o.drink; if(o.kind==="food"&&BY[o.food]&&BY[o.food].t==="food") return o.food; return null; }
 function orderMenu(refresh){
-  const keep=document.getElementById("staffpick")?.value;
-  const body=panel("The Glitch · Bar Counter","Order from a runner on shift (cheaper, they get paid) or have Vex pour it herself.",refresh); currentView="orders";
-  const staff=activeStaff().filter(s=>s.by!==myId);
+  const keep=document.getElementById("staffpick")?.value; const food=barMenuTab==="food";
+  const body=panel(food?"The Glitch · Kitchen":"The Glitch · Bar Counter",food?"Hot food from Kai's kitchen. Order from a runner on shift (cheaper, they get paid) or have Kai cook it herself.":"Order from a runner on shift (cheaper, they get paid) or have Vex pour it herself.",refresh); currentView="orders";
+  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["drinks","Drinks"],["food","Food"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(barMenuTab===k),text:n,onclick:()=>{ barMenuTab=k; orderMenu(); }})); body.append(tabs);
+  const staff=DB?activeStaff().filter(s=>s.by!==myId):[];
   let pick=staff[0]?staff[0].by:null;
-  if(DB&&staff.length){
-    const sel=el("select",{id:"staffpick"}); staff.forEach(s=>sel.append(el("option",{value:s.by,text:nameOf(s.by)}))); if(keep&&staff.some(s=>s.by===keep)){ sel.value=keep; pick=keep; } sel.onchange=()=>pick=sel.value;
-    body.append(el("label",{class:"fld"},"Order from staff on shift",sel));
-    const dl=el("div",{class:"list"});
-    for(const d of DRINKS) dl.append(el("div",{class:"li"},itemCanvas(d.id,48),el("div",{class:"grow"},el("div",{text:d.n}),el("div",{class:"sub",text:d.desc})),el("button",{class:"btn hot",type:"button",text:`Order ₵${d.v}`,onclick:()=>placeOrder({kind:"drink",drink:d.id,offer:d.v},pick)})));
-    body.append(dl);
-    const tsel=el("select",{id:"ptype"}); ["chip","fan","ram","ssd","psu","mobo","gpu","cpu"].forEach(t=>tsel.append(el("option",{value:t,text:TYPE_N[t]})));
+  if(staff.length){ const sel=el("select",{id:"staffpick"}); staff.forEach(s=>sel.append(el("option",{value:s.by,text:nameOf(s.by)}))); if(keep&&staff.some(s=>s.by===keep)){ sel.value=keep; pick=keep; } sel.onchange=()=>pick=sel.value;
+    body.append(el("label",{class:"fld"},`Order from staff on shift (${food?"they cook":"they mix"} it, you pay menu price)`,sel)); }
+  else body.append(el("p",{class:"sub",text:DB?`No staff on shift right now, so ${food?"Kai":"Vex"} handles it at 1.5× price. Pick up a shift at the job board to earn from these orders.`:`Staff orders need a signed-in account. ${food?"Kai":"Vex"} can still serve you.`}));
+  const who=food?"Kai":"Vex", list=el("div",{class:"list"});
+  for(const d of (food?FOODS:DRINKS)){ const p=Math.round(d.v*1.5); const btns=el("div",{class:"row"});
+    if(staff.length) btns.append(el("button",{class:"btn hot",type:"button",text:`Order ₵${d.v}`,onclick:()=>placeOrder(food?{kind:"food",food:d.id,offer:d.v}:{kind:"drink",drink:d.id,offer:d.v},pick)}));
+    btns.append(el("button",{class:"btn",type:"button",text:`${who} ₵${p}`,"aria-label":`Buy ${d.n} from ${who} for ₵${p}`,onclick:()=>{ if(save.credits<p){toast("Not enough credits.");return;} save.credits-=p; addItem(d.id); persist(); toast(food?`Kai slides you a ${d.n}. It's in your stash.`:`Vex slides you a ${d.n}. It's in your stash.`,d.col); beep(900,.06); orderMenu(true); }}));
+    list.append(el("div",{class:"li"},itemCanvas(d.id,48),el("div",{class:"grow"},el("div",{class:"r-"+d.r,text:d.n}),el("div",{class:"sub",text:d.desc})),btns)); }
+  body.append(list);
+  if(!food&&staff.length){ const tsel=el("select",{id:"ptype"}); ["chip","fan","ram","ssd","psu","mobo","gpu","cpu"].forEach(t=>tsel.append(el("option",{value:t,text:TYPE_N[t]})));
     const off=el("input",{class:"num",id:"poffer",type:"number",min:"1",max:"99999",value:"50"});
     body.append(el("strong",{text:"Request a part"}),el("div",{class:"row"},el("label",{class:"fld"},"Part",tsel),el("label",{class:"fld"},"Your offer (₵)",off),
-      el("button",{class:"btn",type:"button",text:"Send request",onclick:()=>placeOrder({kind:"part",ptype:tsel.value,offer:clamp(Math.round(+off.value||0),1,99999)},pick)})));
-  } else body.append(el("div",{class:"empty",text:DB?"No staff on shift right now. Pick up a shift at the job board, or order from Vex below.":"Staff orders need a signed-in claude.ai session. Vex can still pour for you."}));
-  body.append(el("strong",{text:"Vex pours (1.5× price)"}));
-  const vr=el("div",{class:"row"}); for(const d of DRINKS){ const p=Math.round(d.v*1.5); vr.append(el("button",{class:"btn",type:"button",text:`${d.n} ₵${p}`,onclick:()=>{ if(save.credits<p){toast("Not enough credits.");return;} save.credits-=p; addItem(d.id); persist(); toast(`Vex slides you a ${d.n}. It's in your stash.`,d.col); beep(900,.06); }})); }
-  body.append(vr);
+      el("button",{class:"btn",type:"button",text:"Send request",onclick:()=>placeOrder({kind:"part",ptype:tsel.value,offer:clamp(Math.round(+off.value||0),1,99999)},pick)}))); }
   if(myOrders.length){ body.append(el("strong",{text:"Your open orders"})); const ol=el("div",{class:"list"});
-    for(const o of myOrders) ol.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:`${o.kind==="drink"?(BY[o.drink]||{}).n:o.kind==="club"?(BY[o.item]||{}).n:"a "+TYPE_N[o.ptype]} from ${nameOf(o.to)}`}),el("div",{class:"sub",text:`₵${o.offer} held until served`})),el("button",{class:"btn",type:"button",text:"Cancel",onclick:()=>cancelOrder(o)})));
+    for(const o of myOrders) ol.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:`${orderMenuId(o)?BY[orderMenuId(o)].n:o.kind==="club"?(BY[o.item]||{}).n:"a "+TYPE_N[o.ptype]} from ${nameOf(o.to)}`}),el("div",{class:"sub",text:`₵${o.offer} held until served`})),el("button",{class:"btn",type:"button",text:"Cancel",onclick:()=>cancelOrder(o)})));
     body.append(ol); }
   body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Job board: work a shift",onclick:openJobBoard})));
 }
@@ -1626,14 +1705,14 @@ const STALL_BY=Object.fromEntries(STALLS.map((s,i)=>[s.id,i]));
 const hourSeed=()=>Math.floor(Date.now()/36e5);
 function stallStock(i){
   const st=STALLS[i]; const r=seeded(hourSeed()*97+i*13+1);
-  if(st.drinks) return DRINKS.map(d=>({id:d.id,price:d.v,cur:"credits"}));
+  if(st.drinks) return [...FOODS,...DRINKS].map(d=>({id:d.id,price:d.v,cur:"credits"}));
   if(st.builds){ const out=[]; for(const rc of RECIPES){ if(rc.k==="qrig"&&r()<.6) continue; const tier=r()<.06?3:r()<.25?2:r()<.55?1:0; const id=`b_${rc.k}_${BY_R[tier]}`; out.push(tier===3?{id,price:Math.round(BY[id].v*.6),cur:"chips"}:{id,price:Math.round(BY[id].v*1.45),cur:"credits"}); } return out; }
   if(st.types){ const pool=COMP.filter(p=>st.types.includes(p.t)&&p.id!=="flop_blank").sort(()=>r()-.5).slice(0,6); for(const a of st.always||[]) if(!pool.some(p=>p.id===a)) pool.unshift(BY[a]); return pool.map(p=>p.r==="epic"?{id:p.id,price:Math.round(p.v/2*st.disc),cur:"chips"}:{id:p.id,price:Math.round(p.v*1.3*st.disc),cur:"credits"}); }
   return [];
 }
 function repoWanted(){ const r=seeded(hourSeed()*31+5); return [...new Set(PARTS.slice().sort(()=>r()-.5).map(p=>p.t))].slice(0,3); }
 function sellPrice(i,id){ const st=STALLS[i], it=BY[id]; if(!it) return 0;
-  if(st.wanted) return Math.round(it.v*(it.t!=="build"&&it.t!=="drink"&&repoWanted().includes(it.t)?1.6:1));
+  if(st.wanted) return Math.round(it.v*(it.t!=="build"&&it.t!=="drink"&&it.t!=="food"&&repoWanted().includes(it.t)?1.6:1));
   if(st.builds) return it.t==="build"?Math.round(it.v*st.buyMult):0;
   if(st.types) return st.types.includes(it.t)?Math.round(it.v*st.buyMult):0;
   return 0; }
@@ -2434,7 +2513,7 @@ function ringUp(c){
   body.append(el("div",{class:"detail"},itemCanvas(c.want,72),el("div",{class:"info"},el("strong",{text:BY[c.want].n}),el("span",{text:`Price ₵${price} · Paid ₵${paid}`}))));
   const row=el("div",{class:"row"}); for(const o of opts) row.append(el("button",{class:"btn hot",type:"button",style:"min-width:80px;font-size:16px",text:`₵${o}`,onclick:()=>{
       if(!cbCustomers.includes(c)||c.leaving){ toast("They already left."); cbHolding=null; return cbRegister(); }
-      const right=o===change; const comm=Math.max(1,Math.round(price*.15)); const tip=right?Math.round((3+(c.left/c.max)*10)*(countBuild("stream")>0?1.25:1)):0; const earned=right?comm:Math.ceil(comm/2);
+      const right=o===change; const comm=Math.max(1,Math.round(price*.15)); const tip=right?Math.round((3+(c.left/c.max)*10)*tipMult()):0; const earned=right?comm:Math.ceil(comm/2);
       save.credits+=earned+tip; cbShift.served++; cbShift.earned+=earned; cbShift.tips+=tip; c.leaving=true; c.happy=T; cbHolding=null; persist();
       if(right){ toast(`Sale! +₵${earned} commission${tip?` +₵${tip} tip`:""}`,"#43f0a4"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
       else { toast(`Wrong change (it was ₵${change}). Pix fixed it. Half commission, no tip.`,"#ff5a4a"); beep(160,.15); }
@@ -2627,7 +2706,7 @@ async function clubClockOut(){ if(clubSlot<0) return; clearInterval(clubBeat); c
   const mins=Math.floor((Date.now()-clubShift.start)/60e3), wage=clubShift.served?Math.min(150,mins*3):0; save.credits+=wage; persist();
   toast(`Shift over: ${clubShift.served} served, ₵${clubShift.earned} + ₵${clubShift.tips} tips + ₵${wage} wages`,"#cf72ff");
   for(const c of patrons) if(!c.served){ c.leaving=true; c.sat=false; } clubShift=null; clubHolding=null; pushPresence(true); }
-function clubPay(base,tip){ tip=Math.round(tip*(countBuild("stream")>0?1.25:1)); save.credits+=base+tip; if(clubShift){ clubShift.served++; clubShift.earned+=base; clubShift.tips+=tip; } persist(); toast(`+₵${base}${tip?` +₵${tip} tip`:""}`,"#cf72ff"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
+function clubPay(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; if(clubShift){ clubShift.served++; clubShift.earned+=base; clubShift.tips+=tip; } persist(); toast(`+₵${base}${tip?` +₵${tip} tip`:""}`,"#cf72ff"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
 function spawnPatron(){ const free=SEATS.map((_,i)=>i).filter(i=>!seatTaken(i)); if(!free.length) return; const seat=free[(Math.random()*free.length)|0];
   const w=[5,4,4,3,3,2,1]; let r=Math.random()*w.reduce((a,b)=>a+b,0), want=TRIP_IDS[0]; for(let i=0;i<TRIP_IDS.length;i++){ if((r-=w[i])<=0){ want=TRIP_IDS[i]; break; } }
   patrons.push({id:Math.random().toString(36).slice(2),seat,x:60,y:292,dir:1,phase:0,look:randomLook(),want,max:75,left:75,arrived:false,sat:false,leaving:false,served:false,moving:true}); }
@@ -2901,7 +2980,7 @@ function receiveHit(m,q,w){ if(me.dead||me.scene!=="void"||!q||q.s!=="void") ret
   if(peerWeapon(q)!==w) return; if(inSafe(q.x)||inSafe(me.x)) return; if(Math.abs(q.x-me.x)>st.range+70||Math.abs(q.y-me.y)>50) return;
   const k=m.by||m.peer; if(T-(lastFrom[k]===undefined?-99:lastFrom[k])<st.cd*.7) return; lastFrom[k]=T;
   takeDamage(st.dmg,{id:m.by,name:nameOf(m.by),w,from:q.x,slow:st.slow}); }
-function takeDamage(dmg,src){ if(me.dead) return; const d=me.blocking?Math.ceil(dmg*.3):dmg; myHP=Math.max(0,myHP-d); lastHitT=T; me.hurtT=T; me.seat=null; me.dancing=false;
+function takeDamage(dmg,src){ if(me.dead) return; let d=me.blocking?Math.ceil(dmg*.3):dmg; if(buffOn("guard")) d=Math.max(1,Math.round(d*.75)); myHP=Math.max(0,myHP-d); lastHitT=T; me.hurtT=T; me.seat=null; me.dancing=false;
   addVfx({type:"num",x:me.x,y:me.y-84,txt:"-"+d,col:me.blocking?"#38e8ff":"#ff5a4a"}); addVfx({type:"hit",x:me.x,y:me.y-36});
   const push=(src.from!=null?(me.x>=src.from?1:-1):-me.dir)*(me.blocking?5:14); me.x=clamp(me.x+push,SAFE_X+4,SCENES.void.w-30); if(src.slow) me.slowUntil=T+src.slow;
   beep(120,.08,"square",.06); pushPresence(true); if(myHP<=0) die(src); }
@@ -3008,7 +3087,7 @@ function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") ret
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
   o.look=fullLook({...DEFAULT_LOOK,...(s.look||{})}); o.owned=Array.isArray(s.owned)?s.owned.filter(x=>typeof x==="string").slice(0,300):[]; o.name=cleanName(s.name||""); if(nameProblem(o.name)) o.name=""; o.handleKey=typeof s.handleKey==="string"?s.handleKey.slice(0,200):""; o.scrap=Object.fromEntries(Object.entries(s.scrap&&typeof s.scrap==="object"?s.scrap:{}).filter(([k])=>/^[0-4]$/.test(k)).map(([k,v])=>[k,Math.min(Date.now(),+v||0)])); o.quest=s.quest&&TYPE_N[s.quest.type]?{type:s.quest.type,qty:clamp(Math.floor(+s.quest.qty)||1,1,3),reward:clamp(Math.floor(+s.quest.reward)||50,1,500),done:false}:null; o.rack=(Array.isArray(s.rack)?s.rack:[]).filter(r=>r&&BY[r.id]).slice(0,4).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())})); o.jobs=(Array.isArray(s.jobs)?s.jobs:[]).filter(j=>j&&["courier","supply","build"].includes(j.kind)&&STALLS[j.to]&&(j.kind!=="courier"||STALLS[j.from])&&(j.kind!=="supply"||TYPE_N[j.t])&&(j.kind!=="build"||RECIPES.some(r=>r.k===j.k))).slice(0,JOB_MAX).map(j=>({...j,reward:clamp(Math.floor(+j.reward)||0,0,5000),chips:clamp(Math.floor(+j.chips)||0,0,200),qty:clamp(Math.floor(+j.qty)||1,1,5),minTier:clamp(Math.floor(+j.minTier)||0,0,3),label:String(j.label||"Job").slice(0,140)})); o.taken=Array.isArray(s.taken)?s.taken.filter(x=>typeof x==="string").slice(-30):[]; o.jobsDone=Math.max(0,Math.floor(+s.jobsDone)||0); o.duelWins=Math.max(0,Math.floor(+s.duelWins)||0); for(const k of ["voidKills","voidDeaths","botKills"]) o[k]=Math.max(0,Math.floor(+s[k])||0); o.decor=cleanDecor(s.decor); o.settled=Array.isArray(s.settled)?s.settled.filter(x=>typeof x==="string").slice(-80):[];
   o.upload={cleared:Math.max(0,Math.min(10,Math.floor(+(s.upload&&s.upload.cleared))||0)),best:Math.max(0,Math.floor(+(s.upload&&s.upload.best))||0)};
-  o.buffs=s.buffs&&typeof s.buffs==="object"?{speed:+s.buffs.speed||0,print:+s.buffs.print||0,luck:+s.buffs.luck||0}:{}; return o; }
+  o.buffs=s.buffs&&typeof s.buffs==="object"?{speed:+s.buffs.speed||0,print:+s.buffs.print||0,luck:+s.buffs.luck||0,guard:+s.buffs.guard||0,tips:+s.buffs.tips||0}:{}; return o; }
 try{ const s=localStorage.getItem("nh_save"); if(s) save=sanitizeSave(JSON.parse(s)); }catch(e){}
 if(save.name) myName=save.name;
 
@@ -3071,7 +3150,7 @@ setInterval(hud,1000);
       if(mySlot>=0){ const mine=nx[mySlot]; if(!mine||mine.by!==myId){ mySlot=-1; clearInterval(beatTimer); shift=null; toast("Your shift slot was released."); } }
       resolveNames(nx.filter(x=>x&&x.by).map(x=>x.by)); refreshView("orders"); },()=>{});
     let firstOrders=true;
-    db.collection("orders").where("to","==",myId).onSnapshot(s=>{ incomingOrders=s.docs.map(d=>({id:d.id,...d.data()})).filter(o=>typeof o.from==="string"&&(o.kind==="club"?(BY[o.item]&&BY[o.item].t==="trip"):o.kind==="drink"?BY[o.drink]:TYPE_N[o.ptype]));
+    db.collection("orders").where("to","==",myId).onSnapshot(s=>{ incomingOrders=s.docs.map(d=>({id:d.id,...d.data()})).filter(o=>typeof o.from==="string"&&(o.kind==="club"?(BY[o.item]&&BY[o.item].t==="trip"):(o.kind==="drink"||o.kind==="food")?orderMenuId(o):TYPE_N[o.ptype]));
       if(!firstOrders) for(const ch of s.docChanges()) if(ch.type==="added"){ toast(`New order from ${nameOf(ch.doc.data().from)}. Check the counter.`,"#ffb84a"); beep(1200,.08); }
       firstOrders=false; resolveNames(incomingOrders.map(o=>o.from)); },()=>{});
     db.collection("orders").where("from","==",myId).onSnapshot(s=>{ myOrders=s.docs.map(d=>({id:d.id,...d.data()})); resolveNames(myOrders.map(o=>o.to)); refreshView("orders"); },()=>{});
