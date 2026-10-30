@@ -74,6 +74,14 @@ service cloud.firestore {
         && request.resource.data.text is string && request.resource.data.text.size() <= 200;
     }
 
+    // Linx Land: one plot per player (the document id is the player's id). Everyone can see who owns what.
+    match /land/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && me() == uid && request.resource.data.plot is int
+        && request.resource.data.plot >= 0 && request.resource.data.plot < 1000;
+      allow delete: if signedIn() && me() == uid;
+    }
+
     // Pickup codes: private to the player who redeemed them, plus the owner.
     match /redeem/{uid} {
       allow read: if signedIn() && (me() == uid || isOwner());

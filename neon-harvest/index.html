@@ -300,6 +300,7 @@ const RECIPES=[
   {k:"retro", n:"Retro Terminal",   base:110,need:{mobo:1,floppy:2,kbd:1,psu:1},desc:"Keep one in your stash: +30% decrypt success, even without a hacker tool."},
   {k:"netrun",n:"Netrunner Station",base:280,need:{cpu:1,ram:2,hack:2,acc:1},desc:"Keep one in your stash: +20% decrypt success and better decrypt loot."},
   {k:"pfarm", n:"Phone Farm",       base:150,need:{phone:3,cable:2,psu:1},desc:"Install on your home mining rack. Mines 20 chips/hr per Mk level."},
+  {k:"cminer",n:"Credit Miner",     base:170,need:{mobo:1,psu:1,cpu:1,hdd:2,fan:1},desc:"Install on your Linx Land plot to mine credits (₵) while you're away: 50/90/150/250 per hour by Mk. Separate from chip miners."},
 ];
 for(const d of DRINKS) CAT.push(d);
 const BOWL_ING={broth:{n:"Bone Broth",c:"#ffb84a"},noodle:{n:"Hand-Pulled Noodles",c:"#f5e663"},tofu:{n:"Glow Tofu",c:"#43f0a4"},chili:{n:"Chili Oil",c:"#ff5a4a"},egg:{n:"Synth Egg",c:"#e9e2ff"}};
@@ -762,6 +763,11 @@ function drawItem(c,id,cx,cy,S,t){
         c.fillStyle="#0f2318"; c.fillRect(-w*.4,h*.08,w*.5,h*.3); c.fillStyle="#24203a"; c.fillRect(w*.15,h*.08,w*.27,h*.3);
         for(let i=0;i<3;i++){ const on=Math.sin(t*8+i*2)>0; c.fillStyle=on?"#43f0a4":"#1a1428"; c.fillRect(-w*.36+i*S*.06,h*.3,S*.035,S*.035); }
         c.fillStyle="#38e8ff"; c.font=`bold ${S*.07}px monospace`; c.textAlign="center"; c.fillText("+"+Math.floor((t*3)%10),w*.28,h*.27);
+      } else if(it.k==="cminer"){ const w=S*.56,h=S*.84; c.fillStyle="#141022"; c.fillRect(-w/2,-h/2,w,h); c.strokeStyle=col; c.lineWidth=S*.02; c.strokeRect(-w/2,-h/2,w,h);
+        for(let i=0;i<4;i++){ const y=-h*.42+i*h*.17; c.fillStyle="#2a2440"; c.fillRect(-w*.42,y,w*.84,h*.13); c.fillStyle="#8d86ab"; c.beginPath(); c.arc(-w*.24,y+h*.065,h*.045,0,7); c.fill(); c.fillStyle="#0b0716"; c.save(); c.translate(-w*.24,y+h*.065); c.rotate(t*10+i); c.fillRect(-h*.04,-S*.006,h*.08,S*.012); c.restore();
+          const on=Math.sin(t*(6+i)+i*2)>0; c.fillStyle=on?"#ffb84a":"#3a2a10"; c.fillRect(w*.22,y+h*.04,S*.04,S*.04); }
+        c.fillStyle="#0b0716"; c.fillRect(-w*.42,h*.26,w*.84,h*.18); glow(1); c.fillStyle="#ffb84a"; c.font=`bold ${S*.1}px monospace`; c.textAlign="center"; c.textBaseline="middle"; c.fillText("₵"+(Math.floor(t*7)%100).toString().padStart(2,"0"),0,h*.35); c.shadowBlur=0;
+        const u=(t*.8)%1; c.globalAlpha=1-u; c.fillStyle="#ffd36a"; c.font=`bold ${S*.12}px monospace`; c.fillText("₵",w*.55,-h*.3-u*S*.2); c.globalAlpha=1;
       } else if(it.k==="server"){ const w=S*.6,h=S*.82; c.fillStyle="#141022"; c.fillRect(-w/2,-h/2,w,h);
         for(let i=0;i<5;i++){ const y=-h*.44+i*h*.18; c.fillStyle="#24203a"; c.fillRect(-w*.44,y,w*.88,h*.14); for(let j=0;j<4;j++){ const on=Math.sin(t*(5+j)+i*3+j)>.2; c.fillStyle=on?(j===0?col:"#43f0a4"):"#1a1428"; c.fillRect(w*.12+j*S*.05,y+h*.05,S*.03,S*.03);} c.fillStyle="#3d3160"; c.fillRect(-w*.38,y+h*.04,w*.35,h*.05); }
       } else if(it.k==="deck"){ c.fillStyle="#24203a"; c.beginPath(); c.moveTo(-S*.42,S*.3); c.lineTo(S*.42,S*.3); c.lineTo(S*.34,S*.08); c.lineTo(-S*.34,S*.08); c.fill();
@@ -977,6 +983,7 @@ const SCENES={
   byte:{w:4500, spawn:140},
   grid:{w:3000, spawn:140},
   smacked:{w:1600, spawn:140},
+  linx:{w:3480, spawn:140},
 };
 // hotspots: x center, half-width, label, act
 function hotspots(sc){
@@ -1004,6 +1011,11 @@ function hotspots(sc){
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
     {x:800,hw:150,label:IS_ADMIN?"Enter Smacked Shop (owner)":"Enter Smacked Shop",act:()=>openSmacked("shop")},
     {x:1325,hw:90,label:"View my pickup codes",act:()=>openSmacked("codes")},
+  ];
+  if(sc==="linx") return [
+    {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
+    ...Array.from({length:landPlotCount},(_,i)=>{ const o=landOwners()[i], mine=o&&o.by===landMe();
+      return {x:plotX(i),hw:62,label:mine?`Your plot #${i+1}: collect ₵ and manage Credit Miners`:o?`Plot #${i+1}: ${plotName(o)}'s tower`:myPlot()>=0?`Plot #${i+1} for sale (you own #${myPlot()+1})`:`Buy plot #${i+1} for ₵${LAND_PRICE.toLocaleString()}`,act:()=>openPlot(i)}; }),
   ];
   if(sc==="void") return [
     {x:120,hw:60,label:"Take the metro",act:()=>{ if(T-lastHitT<6){ toast("You're in combat. Wait a few seconds before leaving."); return; } openMetro(); }},
@@ -1056,6 +1068,7 @@ const npcs={
   bar:[{x:380,y:262,look:{jacket:0,visor:2,hat:2},dir:1,vx:0,name:"Vex"},{x:612,y:262,look:{jacket:3,visor:0,hat:1},dir:1,vx:0,name:"Kai"},{x:640,y:330,look:{jacket:5,visor:3,hat:0},dir:1,vx:0,dance:true,name:""},{x:1210,y:300,look:{jacket:1,visor:1,hat:3},dir:-1,vx:0,name:""}],
   home:[],
   void:[],
+  linx:[{x:236,y:270,look:{skin:4,style:10,jacket:16,pants:7,visor:8,hat:11,neck:5,nameCol:4},dir:1,vx:0,name:"Agent Linx"}],
   club:[{x:1580,y:300,look:{skin:2,style:5,jacket:9,pants:7,visor:7,hat:1,aura:1},dir:1,vx:0,dance:true,fx:"shroom",name:""},{x:1690,y:328,look:{skin:4,style:1,jacket:10,pants:3,visor:4,hat:5},dir:-1,vx:0,dance:true,fx:"acid",name:""},
         {x:1885,y:296,look:{skin:0,style:2,jacket:1,pants:7,visor:6,hat:9,back:5},dir:-1,vx:0,dance:true,fx:"vape",name:""},{x:1990,y:322,look:{skin:3,style:4,jacket:8,pants:7,visor:5,hat:3},dir:-1,vx:0,dance:true,fx:"eye",name:""},
         {x:540,y:300,look:{skin:1,style:3,jacket:4,pants:7,visor:1,hat:4},dir:-1,vx:0,fx:"joint",name:""}],
@@ -1236,7 +1249,7 @@ function useHot(){ if(!$("#overlay").hidden) return; if(nearHot){ beep(880,.05);
 function safeAct(h){ try{ h.act(); }catch(e){ console.error(e); toast("That didn't work. Try again."); } }
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
-  setTimeout(()=>{ go(scene,x); if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
+  setTimeout(()=>{ go(scene,x); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
 function go(scene,x){ if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
@@ -1264,7 +1277,7 @@ function stepInner(now){
   // peers smoothing
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
   // npcs
-  for(const n of npcs[me.scene]){ if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; } }
+  for(const n of (npcs[me.scene]||[])){ if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; } }
   tickCustomers(); tickJobs(); tickCb(); tickBb(); tickClub(); tickVoid();
   pushPresence(false);
   if(cv.height>4){ render(); screenFx(); }
@@ -1272,13 +1285,13 @@ function stepInner(now){
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else drawHome(T);
+  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else drawHome(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
   // entities sorted by depth
   const ents=[];
-  for(const n of npcs[me.scene]) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx,look:n.look,name:n.name,fx:n.fx||null,sit:!!n.sit,emote:n.dance?{e:"dance",t:T}:null}});
+  for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx,look:n.look,name:n.name,fx:n.fx||null,sit:!!n.sit,emote:n.dance?{e:"dance",t:T}:null}});
   for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,sit:p.s==="club"&&p.seat!=null,hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
@@ -1322,6 +1335,7 @@ const GUIDE={
   money:{n:"Earn ₵ credits",secs:[
     ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Mix drinks, cook food from the Kitchen and hand over parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order. Golden Handshake, Glitch Dumplings and Full Stack Bowl add +25% tips.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips.","Byte Bowl Noodles (Byte Market): clock in at the stall (up to 4 staff) and cook noodle bowls, bao, skewers and drinks for market shoppers. Menu price plus tips, and ₵2/min wages once you've served an order."]],
     ["Gigs and deliveries",["Vex at The Glitch hands out delivery jobs: bring her the parts she asks for to get credits.","Byte Market Courier Hub: new tickets every 20 minutes. Carry packages between stalls before the timer runs out, deliver parts, or fill rig commissions. Every 5th job earns a bonus part."]],
+    ["Credit Miners",["Buy a plot in Linx Land (Metro, ₵2,000, one per player). Build Credit Miners at your Workbench (motherboard, power supply, processor, 2 hard drives, fan) or buy them at Prebuilt Palace.","Install up to 6 on your plot. They mine 50, 90, 150 or 250 credits an hour by Mk, for up to 12 hours before the buffer fills. Visit your plot to collect."]],
     ["Sell what you find",["Parts Depot buys any part back at its full worth in credits.","List parts on the Trade Board (on the Sector 9 street) for other players to buy; payment lands in your gift inbox.","Byte Market stalls also buy and sell parts and rigs."]],
     ["Win it",["Play UPLOAD in The Grid: the first clear of each of its 10 levels pays ₵65 up to ₵290, and replays pay ₵10.","Wager duels in The Grid: stake a part or PC and beat other players at Cyber Chess, Tic-Tac-Toe or Rock Paper Scissors to win theirs, then sell or keep it. Practice against the AI at any table.","Crack Encrypted Floppies for a chance at credits, chips, parts or a rare collectible."]]]},
   chips:{n:"Earn chips",secs:[
@@ -1342,7 +1356,7 @@ const GUIDE={
   places:{n:"Places",secs:[
     ["Sector 9",["Apt 7C: stash terminal, display shelves, wardrobe, workbench, Mining Rack, living room and an intercom to invite friends.","The Glitch: Vex's bar counter with 11 drinks, Kai's Glitch Kitchen with 7 hot dishes, the Job Board, jukebox and the CHIP PRINT arcade. The Trade Board stands outside on the street.","Parts Depot, Cyber Buys & More, Scrap Alley, and The Third Eye club with a trippy stage, DJ booth, seats and its own tech-buzz menu with effects."]],
     ["The Third Eye menu",["14 club items, each with its own screen effect, body animation and boost (speed, lucky salvage, double print chips, shift tips or Void armor). They only work inside the club.","Stack the same item again to reach ×2 and then PEAK ×3: stronger visuals, longer high.","Fuse: take a different item while one is active. The right pair becomes a fusion like Forest Bloom, Turbo Cloud or Cosmic Download, with bigger effects and more boosts. Track your discoveries and hints in the Fusion Lab tab at the club bar."]],
-    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, and Byte Bowl Noodles with Gran Ko's 8 noodle-bar specials and paid shifts.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home.","Bot Control (in The Void's safe zone): Off, Easy (Glitch Drones, Null Bots), Normal (adds katana Code Slashers and ranged Pulse Gunners) or Hard (Phantoms that blink behind you, Firewall Brutes with ground slams, and the SENTINEL Ω boss). Watch for red warning rings and aim lines: step away to dodge."]]]},
+    ["Metro lines",["Linx Land: buy one plot per player for ₵2,000. Your plot becomes a drive tower with your name on top; install up to 6 Credit Miners to mine credits while you're away.","Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, and Byte Bowl Noodles with Gran Ko's 8 noodle-bar specials and paid shifts.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home.","Bot Control (in The Void's safe zone): Off, Easy (Glitch Drones, Null Bots), Normal (adds katana Code Slashers and ranged Pulse Gunners) or Hard (Phantoms that blink behind you, Firewall Brutes with ground slams, and the SENTINEL Ω boss). Watch for red warning rings and aim lines: step away to dodge."]]]},
   social:{n:"Play with others",secs:[
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes. Chat lines fade after a few seconds; tap Log next to the chat box for the full history, filtered by chat or events.","Invite players to your apartment from the intercom; they get a card that brings them straight to you.","Visit neighbors' doors to look at their display shelves."]],
     ["Private messages and groups",["Press M or tap Messages to chat privately. Tap a player (or use Who's online) and choose Message to start a one-on-one chat.","Make a group chat with up to 8 people, name it, invite more players later, or leave anytime.","Only the people in a chat can read it. Block anyone from their chat to stop seeing their messages."]],
@@ -1693,6 +1707,80 @@ function openRack(){
   else { const g2=el("div",{class:"grid"}); for(const [id,n] of rigs) g2.append(itemCard(id,n,`${rigRate(id)}/hr`,()=>installRig(id))); body.append(g2); }
 }
 function installRig(id){ if(save.rack.length>=4){ toast("All 4 rack bays are full."); return; } if(!hasItem(id)) return; addItem(id,-1); save.rack.push({id,since:Date.now()}); persist(); toast(`${BY[id].n} is mining`); beep(700,.08); if(!$("#overlay").hidden) openRack(); }
+
+/* ============================================================ LINX LAND */
+// Each player can own one plot. Ownership is shared (land/<playerId>: {plot, at, name, n, mk}); the earliest claim on a plot wins.
+// Credit Miners installed on your plot mine credits like the home rack mines chips (12-hour buffer).
+const LAND_PRICE=2000, LAND_BAYS=6, PLOT_W=150, PLOT_X0=320, LAND_MIN=20;
+let landDocs={}, landPlotCount=LAND_MIN, landWatch=false, releaseArm=0;
+function landMe(){ return myId||"local"; }
+function plotName(o){ if(!o) return "Runner"; if(o.by===landMe()) return myName||"You"; const h=homes[o.by]; if(h&&h.name) return nameOf(o.by); const n=typeof o.name==="string"?cleanName(o.name):""; return n||nameOf(o.by); }
+function plotX(i){ return PLOT_X0+i*PLOT_W; }
+function cminerRate(id){ const it=BY[id]; return it&&it.t==="build"&&it.k==="cminer"?[50,90,150,250][TIER[it.r]]:0; }
+function landOwners(){ const m={}; for(const [by,d] of Object.entries(landDocs)){ if(!d||!Number.isInteger(d.plot)||d.plot<0||d.plot>999) continue; const cur=m[d.plot]; if(!cur||(+d.at||0)<(+cur.at||0)||((+d.at||0)===(+cur.at||0)&&by<cur.by)) m[d.plot]={...d,by}; } return m; }
+function myPlot(){ for(const [p,d] of Object.entries(landOwners())) if(d.by===landMe()) return +p; return -1; }
+function updLandSize(){ const used=Object.keys(landOwners()).map(Number), max=used.length?Math.max(...used):-1; let n=LAND_MIN; while(n-used.length<3||max>=n-1) n+=10; landPlotCount=n; SCENES.linx.w=PLOT_X0+n*PLOT_W+160; }
+function landPending(){ return (save.landRigs||[]).reduce((a,r)=>a+Math.min(12,Math.max(0,(Date.now()-r.since)/36e5))*cminerRate(r.id),0); }
+function landRate(){ return (save.landRigs||[]).reduce((a,r)=>a+cminerRate(r.id),0); }
+function watchLand(db){ if(landWatch) return; landWatch=true;
+  db.collection("land").onSnapshot(sn=>{ landDocs={}; sn.docs.forEach(d=>{ landDocs[d.id]=d.data(); }); resolveNames(Object.keys(landDocs));
+    const mine=landDocs[landMe()], own=landOwners();
+    if(mine&&Number.isInteger(mine.plot)&&own[mine.plot]&&own[mine.plot].by!==landMe()){ // someone claimed this plot a moment earlier
+      DB.doc("land/"+landMe()).delete().catch(()=>{}); if(save.land&&save.land.plot===mine.plot){ save.credits+=LAND_PRICE; save.land=null; persist(); toast(`Plot #${mine.plot+1} was claimed a moment before you. ₵${LAND_PRICE} refunded; pick another plot.`,"#ffb84a"); } }
+    else if(mine&&Number.isInteger(mine.plot)&&(!save.land||save.land.plot!==mine.plot)){ save.land={plot:mine.plot,at:+mine.at||Date.now()}; persist(); }
+    updLandSize(); },()=>{}); }
+function landLocal(){ if(DB) return; landDocs={}; if(save.land&&Number.isInteger(save.land.plot)) landDocs.local={plot:save.land.plot,at:save.land.at||0,name:myName||"",n:(save.landRigs||[]).length,mk:(save.landRigs||[]).map(r=>TIER[BY[r.id].r])}; updLandSize(); }
+async function publishPlot(){ const pl=myPlot(); if(pl<0) return; const doc={plot:pl,at:(save.land&&save.land.at)||Date.now(),name:myName||"",n:(save.landRigs||[]).length,mk:(save.landRigs||[]).map(r=>TIER[BY[r.id].r])};
+  if(DB&&myId){ try{ await DB.doc("land/"+myId).set(doc); }catch(e){} } else { landDocs.local=doc; } }
+async function buyPlot(i){ if(myPlot()>=0){ toast("You already own a plot. It's one plot per player."); return; } if(landOwners()[i]){ toast("Someone already owns that plot."); return; }
+  if(save.credits<LAND_PRICE){ toast(`You need ₵${(LAND_PRICE-Math.floor(save.credits)).toLocaleString()} more.`); beep(150,.15); return; }
+  save.credits-=LAND_PRICE; const at=Date.now(); save.land={plot:i,at}; persist(); const doc={plot:i,at,name:myName||"",n:(save.landRigs||[]).length,mk:(save.landRigs||[]).map(r=>TIER[BY[r.id].r])};
+  if(DB&&myId){ try{ await DB.doc("land/"+myId).set(doc); landDocs[myId]=doc; }catch(e){ save.credits+=LAND_PRICE; save.land=null; persist(); toast("Couldn't buy that plot. You weren't charged."); return; } } else landDocs.local=doc;
+  updLandSize(); toast(`You own plot #${i+1} in Linx Land!`,"#ffd36a"); [523,659,784,1047].forEach((f,k)=>setTimeout(()=>beep(f,.1,"triangle"),k*90)); emote("cheer"); broadcastSys(`bought plot #${i+1} in Linx Land`); openPlot(i); }
+function collectLand(){ let got=0; for(const r of save.landRigs||[]){ got+=Math.min(12,Math.max(0,(Date.now()-r.since)/36e5))*cminerRate(r.id); r.since=Date.now(); } got=Math.floor(got); save.credits+=got; persist(); if(got){ toast(`Collected ₵${got.toLocaleString()} from your Credit Miners`,"#ffb84a"); beep(1000,.06); setTimeout(()=>beep(1400,.06),70); } return got; }
+function installCredit(id){ if(myPlot()<0){ toast("Buy a plot in Linx Land first."); return; } if((save.landRigs||[]).length>=LAND_BAYS){ toast(`All ${LAND_BAYS} bays are full.`); return; } if(!hasItem(id)||!cminerRate(id)) return;
+  addItem(id,-1); save.landRigs=[...(save.landRigs||[]),{id,since:Date.now()}]; persist(); publishPlot(); toast(`${BY[id].n} is mining credits`,"#ffb84a"); beep(700,.08); if(!$("#overlay").hidden&&currentView==="plot") openPlot(myPlot()); }
+async function releasePlot(){ const pl=myPlot(); if(pl<0) return; collectLand(); for(const r of save.landRigs||[]) addItem(r.id); save.landRigs=[]; const refund=Math.floor(LAND_PRICE/2); save.credits+=refund; save.land=null; persist();
+  if(DB&&myId){ try{ await DB.doc("land/"+myId).delete(); }catch(e){} delete landDocs[myId]; } else delete landDocs.local; updLandSize(); toast(`Plot #${pl+1} released. Miners returned to your stash, ₵${refund} refunded.`); closePanel(); }
+function openPlot(i){ const o=landOwners()[i], mine=o&&o.by===landMe();
+  const body=panel(`Linx Land · Plot #${i+1}`,mine?"Your tower. Install Credit Miners to earn ₵ while you're away (12-hour buffer).":o?`${plotName(o)}'s tower.`:`For sale: ₵${LAND_PRICE.toLocaleString()}. One plot per player.`); currentView="plot";
+  if(!o){ const own=myPlot(); body.append(el("p",{text:"Own this plot to build a drive tower with your name on top. Fill it with up to 6 Credit Miners; each one mines credits around the clock."}));
+    const b=el("button",{class:"btn hot",type:"button",text:own>=0?`You already own plot #${own+1}`:`Buy plot #${i+1} for ₵${LAND_PRICE.toLocaleString()}`,onclick:()=>buyPlot(i)}); if(own>=0||save.credits<LAND_PRICE) b.disabled=true;
+    body.append(el("div",{class:"row"},b,own<0&&save.credits<LAND_PRICE?el("span",{class:"r-epic",text:`You need ₵${(LAND_PRICE-Math.floor(save.credits)).toLocaleString()} more.`}):null)); return; }
+  if(!mine){ const n=Math.floor(+o.n||0); body.append(el("div",{class:"row"},el("span",{class:"pill",text:`Owner: ${plotName(o)}`}),el("span",{class:"pill",text:`${n} Credit Miner${n===1?"":"s"} running`})));
+    if(o.by!=="local"&&DB&&typeof msgOK==="function"&&msgOK()) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:`Message ${plotName(o)}`,onclick:()=>openDM(o.by)}))); return; }
+  const pend=Math.floor(landPending());
+  body.append(el("div",{class:"row"},el("span",{class:"pill cr",text:`Ready: ₵${pend.toLocaleString()}`}),el("span",{class:"pill",text:`Rate: ₵${landRate()}/hr`}),el("button",{class:"btn hot",type:"button",text:"Collect credits",onclick:()=>{ collectLand(); openPlot(i); }})));
+  const g=el("div",{class:"grid"});
+  for(let k=0;k<LAND_BAYS;k++){ const r=(save.landRigs||[])[k];
+    if(r&&BY[r.id]) g.append(itemCard(r.id,1,`₵${cminerRate(r.id)}/hr`,()=>{ collectLand(); save.landRigs.splice(k,1); addItem(r.id); persist(); publishPlot(); toast(`${BY[r.id].n} moved back to your stash`); openPlot(i); }));
+    else g.append(el("div",{class:"card",text:`Bay ${k+1}: empty`})); }
+  body.append(el("strong",{text:`Tower bays ${(save.landRigs||[]).length}/${LAND_BAYS}`}),g);
+  const rigs=invList().filter(([id])=>cminerRate(id)>0); body.append(el("strong",{text:"Install from stash"}));
+  if(!rigs.length) body.append(el("div",{class:"empty",text:"No Credit Miners in your stash. Build one at the Workbench in your apartment (motherboard, power supply, processor, 2 hard drives, fan) or buy one at Prebuilt Palace in Byte Market."}));
+  else { const g2=el("div",{class:"grid"}); for(const [id,n] of rigs) g2.append(itemCard(id,n,`₵${cminerRate(id)}/hr`,()=>installCredit(id))); body.append(g2); }
+  const rel=el("button",{class:"btn",type:"button",text:"Release this plot",onclick:()=>{ if(Date.now()-releaseArm<4000){ releasePlot(); return; } releaseArm=Date.now(); rel.textContent=`Tap again to release (refund ₵${Math.floor(LAND_PRICE/2)})`; }});
+  body.append(el("div",{class:"row"},rel)); }
+function drawLinx(t){ const W=SCENES.linx.w;
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#06141a"); g.addColorStop(.6,"#0c2a2a"); g.addColorStop(1,"#081014"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
+  const px=camX*.35; ctx.fillStyle="#0a1e24"; for(let i=-2;i<Math.ceil(W/120)+4;i++){ const bx=px+i*120, bh=60+((i*53+999)%80); ctx.fillRect(bx,240-bh-40,70,bh+40); ctx.fillStyle="rgba(67,240,164,.18)"; for(let r=0;r<4;r++) if(((i*7+r*3)%5)<3) ctx.fillRect(bx+8+r*14,240-bh-30+((i*11)%30),6,4); ctx.fillStyle="#0a1e24"; }
+  for(let k=0;k<6;k++){ const y=160+k*14; ctx.strokeStyle=`rgba(67,240,164,${.05+.02*k})`; ctx.beginPath(); ctx.moveTo(camX,y); ctx.lineTo(camX+VW,y); ctx.stroke(); }
+  ctx.fillStyle="#08161a"; ctx.fillRect(camX,240,VW,H-240); ctx.strokeStyle="rgba(67,240,164,.18)"; for(let x=Math.floor(camX/60)*60;x<camX+VW+60;x+=60){ ctx.beginPath(); ctx.moveTo(x,240); ctx.lineTo(x+(x-(camX+VW/2))*.6,H); ctx.stroke(); }
+  ctx.fillStyle="#0a0712"; ctx.fillRect(60,190,120,72); ctx.fillStyle="#43f0a4"; ctx.fillRect(56,180,128,8); neonText("◉ METRO",120,172,12,"#43f0a4",1);
+  neonText("LINX LAND",235,70,26,"#43f0a4",flick(91,t)); neonText(`PLOTS ₵${LAND_PRICE.toLocaleString()} · ONE PER RUNNER`,235,92,9,"#ffb84a",1);
+  const own=landOwners();
+  for(let i=0;i<landPlotCount;i++){ const x=plotX(i); if(x<camX-120||x>camX+VW+120) continue; const o=own[i], mine=o&&o.by===landMe();
+    ctx.fillStyle="#12302e"; ctx.fillRect(x-62,236,124,10); ctx.fillStyle="rgba(67,240,164,.35)"; ctx.fillRect(x-62,236,124,2); ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillStyle="#6fbfa8"; ctx.fillText(`#${i+1}`,x,255);
+    if(!o){ ctx.save(); ctx.setLineDash([5,5]); ctx.strokeStyle=`rgba(67,240,164,${.35+.2*Math.sin(t*2+i)})`; ctx.strokeRect(x-30.5,150.5,60,85); ctx.restore(); ctx.fillStyle="#0b0716"; ctx.fillRect(x-32,196,64,26); ctx.strokeStyle="#ffb84a"; ctx.strokeRect(x-31.5,196.5,63,25); ctx.fillStyle="#ffb84a"; ctx.font="bold 8px 'IBM Plex Mono',monospace"; ctx.fillText("FOR SALE",x,207); ctx.fillStyle="#e9e2ff"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.fillText(`₵${LAND_PRICE.toLocaleString()}`,x,217); continue; }
+    const n=clamp(Math.floor(+o.n||0),0,LAND_BAYS), mk=Array.isArray(o.mk)?o.mk:[], th=64+LAND_BAYS*13, top=236-th;
+    ctx.fillStyle="#141022"; ctx.fillRect(x-28,top,56,th); ctx.strokeStyle=mine?"#38e8ff":"#3d3160"; ctx.lineWidth=mine?2:1; ctx.strokeRect(x-28,top,56,th); ctx.lineWidth=1;
+    ctx.fillStyle="#0b0716"; ctx.fillRect(x-22,top+6,44,16); ctx.fillStyle=n?"#ffb84a":"#4a4466"; ctx.font="bold 9px 'IBM Plex Mono',monospace"; ctx.fillText(n?"₵ +"+String(Math.floor(t*5+i*3)%100).padStart(2,"0"):"IDLE",x,top+17);
+    for(let k=0;k<LAND_BAYS;k++){ const y=top+28+k*13, on=k<n; ctx.fillStyle=on?"#2a2440":"#1a1428"; ctx.fillRect(x-22,y,44,10); if(on){ const tier=clamp(Math.floor(+mk[k]||0),0,3), rc=RAR[BY_R[tier]].c; ctx.fillStyle=rc; ctx.fillRect(x-20,y+2,3,6); ctx.fillStyle="#8d86ab"; ctx.beginPath(); ctx.arc(x-6,y+5,3,0,7); ctx.fill(); const blink=Math.sin(t*(6+k)+i*2+k)>0; ctx.fillStyle=blink?"#ffb84a":"#3a2a10"; ctx.fillRect(x+12,y+3,4,4); ctx.fillStyle=blink?"#43f0a4":"#10301e"; ctx.fillRect(x+6,y+3,4,4); } }
+    ctx.strokeStyle="#8d86ab"; ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,top-12); ctx.stroke(); const on=Math.sin(t*3+i)>0; ctx.fillStyle=on?"#ff5a4a":"#3a1a20"; ctx.beginPath(); ctx.arc(x,top-13,2.5,0,7); ctx.fill();
+    const nm=plotName(o).slice(0,14), hc=homes[o.by]&&homes[o.by].look?COLORS[clamp(Math.floor(+homes[o.by].look.nameCol||1),0,COLORS.length-1)]:"#38e8ff";
+    neonText(nm,x,top-22,11,mine?"#38e8ff":(hc==="#2a2440"?"#9a8cc0":hc),1); if(mine) neonText("YOUR PLOT",x,top-36,7,"#ffd36a",1);
+    if(n){ for(let k=0;k<2;k++){ const u=(t*.5+k/2+i*.13)%1; ctx.globalAlpha=1-u; ctx.fillStyle="#ffd36a"; ctx.font="bold 11px 'IBM Plex Mono',monospace"; ctx.fillText("₵",x+20+k*8,top-u*24); } ctx.globalAlpha=1; } }
+  ctx.textAlign="left"; }
 
 /* ============================================================ BAR STAFF */
 const STAFF_MAX=4, SHIFT_STALE=180e3, CSPOTS=[290,360,430,500];
@@ -2105,7 +2193,7 @@ function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):null
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void"}[s]||"somewhere"; }
+function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -2117,7 +2205,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"}};
 function openMetro(){ const body=panel("Metro","Pick a line. Rides are free.");
   const l=el("div",{class:"list"}); for(const [k,m] of Object.entries(METRO)){ const here=me.scene===k; const b=el("button",{class:"btn"+(here?"":" hot"),type:"button",text:here?"You're here":"Ride",onclick:()=>{ closePanel(); ride(k,m.x); }}); if(here) b.disabled=true;
     const here2=onlinePeers().filter(p=>p.s===k||(k==="street"&&["bar","cyberbuys","club","home"].includes(p.s))).length;
@@ -3606,6 +3694,8 @@ function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") ret
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
   o.look=fullLook({...DEFAULT_LOOK,...(s.look||{})}); o.owned=Array.isArray(s.owned)?s.owned.filter(x=>typeof x==="string").slice(0,300):[]; o.name=cleanName(s.name||""); if(nameProblem(o.name)) o.name=""; o.handleKey=typeof s.handleKey==="string"?s.handleKey.slice(0,200):""; o.scrap=Object.fromEntries(Object.entries(s.scrap&&typeof s.scrap==="object"?s.scrap:{}).filter(([k])=>/^[0-4]$/.test(k)).map(([k,v])=>[k,Math.min(Date.now(),+v||0)])); o.quest=s.quest&&TYPE_N[s.quest.type]?{type:s.quest.type,qty:clamp(Math.floor(+s.quest.qty)||1,1,3),reward:clamp(Math.floor(+s.quest.reward)||50,1,500),done:false}:null; o.rack=(Array.isArray(s.rack)?s.rack:[]).filter(r=>r&&BY[r.id]).slice(0,4).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())})); o.jobs=(Array.isArray(s.jobs)?s.jobs:[]).filter(j=>j&&["courier","supply","build"].includes(j.kind)&&STALLS[j.to]&&(j.kind!=="courier"||STALLS[j.from])&&(j.kind!=="supply"||TYPE_N[j.t])&&(j.kind!=="build"||RECIPES.some(r=>r.k===j.k))).slice(0,JOB_MAX).map(j=>({...j,reward:clamp(Math.floor(+j.reward)||0,0,5000),chips:clamp(Math.floor(+j.chips)||0,0,200),qty:clamp(Math.floor(+j.qty)||1,1,5),minTier:clamp(Math.floor(+j.minTier)||0,0,3),label:String(j.label||"Job").slice(0,140)})); o.taken=Array.isArray(s.taken)?s.taken.filter(x=>typeof x==="string").slice(-30):[]; o.jobsDone=Math.max(0,Math.floor(+s.jobsDone)||0); o.duelWins=Math.max(0,Math.floor(+s.duelWins)||0); for(const k of ["voidKills","voidDeaths","botKills"]) o[k]=Math.max(0,Math.floor(+s[k])||0); o.decor=cleanDecor(s.decor); o.settled=Array.isArray(s.settled)?s.settled.filter(x=>typeof x==="string").slice(-80):[];
   o.botMode=["off","easy","normal","hard"].includes(s.botMode)?s.botMode:"normal";
+  o.land=s.land&&Number.isInteger(s.land.plot)&&s.land.plot>=0&&s.land.plot<1000?{plot:s.land.plot,at:+s.land.at||0}:null;
+  o.landRigs=(Array.isArray(s.landRigs)?s.landRigs:[]).filter(r=>r&&BY[r.id]&&BY[r.id].k==="cminer").slice(0,6).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())}));
   o.fusions=Array.isArray(s.fusions)?s.fusions.filter(x=>typeof x==="string"&&FUSE_BY[x]).slice(0,20):[];
   o.blocked=Array.isArray(s.blocked)?s.blocked.filter(x=>typeof x==="string").slice(0,200):[];
   o.upload={cleared:Math.max(0,Math.min(10,Math.floor(+(s.upload&&s.upload.cleared))||0)),best:Math.max(0,Math.floor(+(s.upload&&s.upload.best))||0)};
@@ -3660,7 +3750,7 @@ setInterval(hud,1000);
     db.doc("redeem/"+myId).onSnapshot(s=>{ const d=s.exists?s.data():null; myRedeem={codes:Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string").map(e=>({...e})):[]}; Promise.all(myRedeem.codes.map(e=>hashOf(e.code))).then(()=>{ checkRefunds(); refreshSmacked(); }); },()=>{});
     if(IS_ADMIN) db.collection("redeem").onSnapshot(s=>{ allRedeem={}; s.docs.forEach(d=>allRedeem[d.id]=d.data()); resolveNames(Object.keys(allRedeem)); syncSold().then(refreshSmacked); },()=>{});
     for(const field of ["a","b"]) db.collection("duels").where(field,"==",myId).onSnapshot(s=>{ for(const ch of s.docChanges()){ if(ch.type==="removed") continue; const d={id:ch.doc.id,...ch.doc.data()}; if(!GAMES[d.game]||typeof d.a!=="string"||typeof d.b!=="string") continue; duels.set(d.id,d); handleDuel(d); } },()=>{});
-    startInbox(db);
+    startInbox(db); watchLand(db);
     giftUnsub=db.collection("gifts").where("to","==",myId).onSnapshot(s=>{ for(const ch of s.docChanges()) if(ch.type==="added") claimGift(ch.doc); },()=>{});
     db.collection("clubstaff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); clubSlots=nx;
       if(clubSlot>=0){ const mine=nx[clubSlot]; if(!mine||mine.by!==myId){ clubSlot=-1; clearInterval(clubBeat); clubShift=null; clubHolding=null; toast("Your club shift slot was released."); } }
