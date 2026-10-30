@@ -65,6 +65,15 @@ service cloud.firestore {
     match /pickups/{id} { allow read: if signedIn(); allow write: if isOwner(); }
     match /assets/{id} { allow read: if signedIn(); allow write: if isOwner(); }
 
+    // Private and group messages: every member gets their own copy in their inbox.
+    // Only the inbox owner can read or delete it; anyone signed in can deliver, but only as themselves.
+    match /inbox/{uid}/msgs/{id} {
+      allow read, delete: if signedIn() && me() == uid;
+      allow create: if signedIn() && request.resource.data.by == me()
+        && request.resource.data.chat is string
+        && request.resource.data.text is string && request.resource.data.text.size() <= 200;
+    }
+
     // Pickup codes: private to the player who redeemed them, plus the owner.
     match /redeem/{uid} {
       allow read: if signedIn() && (me() == uid || isOwner());
