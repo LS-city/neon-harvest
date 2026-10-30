@@ -279,7 +279,19 @@ const RECIPES=[
   {k:"pfarm", n:"Phone Farm",       base:150,need:{phone:3,cable:2,psu:1},desc:"Install on your home mining rack. Mines 20 chips/hr per Mk level."},
 ];
 for(const d of DRINKS) CAT.push(d);
+const BOWL_ING={broth:{n:"Bone Broth",c:"#ffb84a"},noodle:{n:"Hand-Pulled Noodles",c:"#f5e663"},tofu:{n:"Glow Tofu",c:"#43f0a4"},chili:{n:"Chili Oil",c:"#ff5a4a"},egg:{n:"Synth Egg",c:"#e9e2ff"}};
+const BB_FOODS=[
+  {id:"bb_skewer",n:"Glow Tofu Skewers",     t:"food",kit:"bowl",r:"common",  v:12,col:"#43f0a4",mix:["tofu","chili","tofu"],  heal:20, buffs:[],        desc:"Restores 20 HP in The Void"},
+  {id:"bb_bao",   n:"Packet Bao",            t:"food",kit:"bowl",r:"common",  v:15,col:"#e9e2ff",mix:["tofu","chili","egg"],   heal:20, buffs:["tips"],  dur:5, desc:"Restores 20 HP in The Void, plus +25% shift tips for 5 min"},
+  {id:"bb_classic",n:"Byte Bowl Classic",    t:"food",kit:"bowl",r:"common",  v:16,col:"#ffb84a",mix:["broth","noodle","egg"], heal:25, buffs:["speed"], dur:3, desc:"Restores 25 HP in The Void, plus +30% walk speed for 3 min"},
+  {id:"bb_chili", n:"Chili Overflow Noodles",t:"food",kit:"bowl",r:"common",  v:18,col:"#ff5a4a",mix:["noodle","chili","broth"],heal:25,buffs:["luck"],  dur:5, desc:"Restores 25 HP in The Void, plus better salvage odds for 5 min"},
+  {id:"bb_rice",  n:"Kernel Fried Rice",     t:"food",kit:"bowl",r:"uncommon",v:26,col:"#f5e663",mix:["egg","tofu","chili"],   heal:35, buffs:["print"], dur:5, desc:"Restores 35 HP in The Void, plus double CHIP PRINT chips for 5 min"},
+  {id:"bb_pho",   n:"Bitstream Pho",         t:"food",kit:"bowl",r:"uncommon",v:28,col:"#d9a35a",mix:["broth","tofu","noodle"],heal:40, buffs:["guard"], dur:5, desc:"Restores 40 HP in The Void, plus 25% less Void damage for 5 min"},
+  {id:"bb_curry", n:"Overclock Curry",       t:"food",kit:"bowl",r:"uncommon",v:32,col:"#e0a020",mix:["chili","broth","tofu"], heal:45, buffs:["speed"], dur:8, desc:"Restores 45 HP in The Void, plus +30% walk speed for 8 min"},
+  {id:"bb_secret",n:"Gran Ko's Secret Broth",t:"food",kit:"bowl",r:"rare",    v:75,col:"#ffd36a",mix:["broth","broth","chili"],heal:100,buffs:["speed","luck","tips"],dur:10,desc:"Full heal in The Void, plus speed, lucky salvage and +25% shift tips for 10 min"},
+];
 for(const d of FOODS) CAT.push(d);
+for(const d of BB_FOODS) CAT.push(d);
 for(const rc of RECIPES) BY_R.forEach((r,i)=>CAT.push({id:`b_${rc.k}_${r}`,n:`${rc.n} ${MK[i]}`,t:"build",k:rc.k,r,v:Math.round(rc.base*(1+i*.8)),desc:rc.desc}));
 const ACC_ITEMS=[
   {id:"hdd_2tb",n:"Spinner 2TB HDD",t:"hdd",r:"common",v:20},{id:"hdd_12tb",n:"Vault Pro 12TB HDD",t:"hdd",r:"rare",v:95},
@@ -626,6 +638,22 @@ function drawItem(c,id,cx,cy,S,t){
       else if(k==="food_sushi"){
         c.fillStyle="#1d1030"; c.fillRect(-S*.44,S*.12,S*.88,S*.1); c.strokeStyle="#ff8a5a"; c.lineWidth=S*.015; c.strokeRect(-S*.44,S*.12,S*.88,S*.1);
         [[-.27,"#38e8ff"],[0,"#ff8a5a"],[.27,"#43f0a4"]].forEach(([dx,cc],i)=>{ const x=dx*S, y=-S*.02+Math.sin(t*3+i)*S*.01; c.fillStyle="#123b2c"; c.beginPath(); c.arc(x,y,S*.13,0,7); c.fill(); c.fillStyle="#f3ead8"; c.beginPath(); c.arc(x,y,S*.1,0,7); c.fill(); glow(.5); c.fillStyle=cc; c.beginPath(); c.arc(x,y,S*.045,0,7); c.fill(); c.shadowBlur=0; }); }
+      else if(k==="bb_skewer"){ for(const [ox,rot] of [[-S*.1,-.25],[S*.12,.2]]){ c.save(); c.translate(ox,0); c.rotate(rot); c.strokeStyle="#d8b27a"; c.lineWidth=S*.025; c.beginPath(); c.moveTo(0,S*.42); c.lineTo(0,-S*.42); c.stroke();
+          for(let i=0;i<3;i++){ glow(.5+.5*Math.sin(t*3+i)); c.fillStyle=fc; c.fillRect(-S*.08,-S*.32+i*S*.2,S*.16,S*.14); c.shadowBlur=0; c.fillStyle="#ff5a4a"; c.fillRect(-S*.08,-S*.32+i*S*.2,S*.16,S*.025); } c.restore(); } }
+      else if(k==="bb_bao"){ steam(); c.fillStyle="#7a5a3a"; c.fillRect(-S*.4,S*.12,S*.8,S*.16); c.strokeStyle="#5a3f28"; c.lineWidth=S*.015; for(let i=0;i<6;i++){ c.beginPath(); c.moveTo(-S*.4+i*S*.16,S*.12); c.lineTo(-S*.36+i*S*.16,S*.28); c.stroke(); }
+        for(const dx of [-S*.17,S*.17]){ c.fillStyle="#f3ead8"; c.beginPath(); c.ellipse(dx,S*.06,S*.17,S*.14,0,Math.PI,0); c.fill(); c.fillRect(dx-S*.17,S*.05,S*.34,S*.07); c.strokeStyle="#c8b89a"; c.lineWidth=S*.015; c.beginPath(); c.moveTo(dx-S*.03,-S*.06); c.quadraticCurveTo(dx,-S*.02,dx+S*.03,-S*.06); c.stroke(); glow(.5); c.fillStyle="#ff5a4a"; c.beginPath(); c.arc(dx,-S*.02,S*.025,0,7); c.fill(); c.shadowBlur=0; } }
+      else if(k.startsWith("bb_")){ steam(); const secret=k==="bb_secret";
+        c.fillStyle=secret?"#1d1030":"#e9e2ff"; c.beginPath(); c.moveTo(-S*.38,-S*.02); c.lineTo(S*.38,-S*.02); c.quadraticCurveTo(S*.36,S*.34,0,S*.34); c.quadraticCurveTo(-S*.36,S*.34,-S*.38,-S*.02); c.fill();
+        if(secret){ glow(.6+.4*Math.sin(t*2)); c.strokeStyle=fc; c.lineWidth=S*.03; c.stroke(); c.shadowBlur=0; } else { c.fillStyle="#ff5a4a"; for(let i=0;i<5;i++) c.fillRect(-S*.26+i*S*.12,S*.12,S*.06,S*.03); }
+        const broth={bb_classic:"#c8762a",bb_chili:"#b8261a",bb_pho:"#d9a35a",bb_curry:"#d88a10",bb_secret:"#8a5a1a",bb_rice:"#f3ead8"}[k]||fc;
+        if(k==="bb_rice"){ c.fillStyle=broth; c.beginPath(); c.ellipse(0,-S*.02,S*.34,S*.16,0,Math.PI,0); c.fill(); c.fillRect(-S*.34,-S*.03,S*.68,S*.03); for(let i=0;i<14;i++){ c.fillStyle=["#f5e663","#43f0a4","#ff8a5a"][i%3]; c.fillRect(-S*.26+((i*37)%52)/100*S,-S*.12+((i*23)%10)/100*S,S*.03,S*.03); } }
+        else { if(secret) glow(.8); c.fillStyle=broth; c.beginPath(); c.ellipse(0,-S*.02,S*.36,S*.08,0,0,7); c.fill(); c.shadowBlur=0;
+          if(k!=="bb_curry"){ c.strokeStyle="#f5e663"; c.lineWidth=S*.025; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(-S*.26+i*S*.1,-S*.02); c.quadraticCurveTo(-S*.22+i*S*.1,-S*.08,-S*.18+i*S*.1,-S*.01); c.stroke(); } }
+          if(k==="bb_classic"){ c.fillStyle="#fff"; c.beginPath(); c.ellipse(S*.16,-S*.03,S*.08,S*.04,0,0,7); c.fill(); c.fillStyle="#ffb84a"; c.beginPath(); c.ellipse(S*.16,-S*.03,S*.035,S*.02,0,0,7); c.fill(); }
+          if(k==="bb_chili") for(let i=0;i<7;i++){ c.fillStyle="#ff3f2a"; c.beginPath(); c.arc(-S*.24+i*S*.08,-S*.02+Math.sin(i*2)*S*.03,S*.018,0,7); c.fill(); }
+          if(k==="bb_pho"||k==="bb_curry") for(let i=0;i<4;i++){ glow(.4); c.fillStyle="#43f0a4"; c.fillRect(-S*.2+i*S*.12,-S*.05+(i%2)*S*.03,S*.06,S*.04); c.shadowBlur=0; }
+          if(secret) for(let i=0;i<5;i++){ const u=(t*.8+i/5)%1; c.fillStyle=`rgba(255,211,106,${1-u})`; c.beginPath(); c.arc(-S*.2+i*S*.1,-S*.06-u*S*.2,S*.02,0,7); c.fill(); } }
+        c.strokeStyle="#d8b27a"; c.lineWidth=S*.03; c.beginPath(); c.moveTo(-S*.1,-S*.06); c.lineTo(S*.34,-S*.42); c.moveTo(-S*.04,-S*.05); c.lineTo(S*.4,-S*.36); c.stroke(); }
       else if(k==="food_melt"){ steam();
         c.fillStyle="#2a1840"; c.beginPath(); c.ellipse(0,S*.24,S*.4,S*.1,0,0,7); c.fill();
         for(const [ox,rot] of [[-S*.1,-.1],[S*.12,.15]]){ c.save(); c.translate(ox,0); c.rotate(rot); c.fillStyle="#c98a3a"; c.beginPath(); c.moveTo(-S*.2,S*.2); c.lineTo(S*.2,S*.2); c.lineTo(0,-S*.24); c.closePath(); c.fill(); c.fillStyle="#f0c46a"; c.beginPath(); c.moveTo(-S*.16,S*.17); c.lineTo(S*.16,S*.17); c.lineTo(0,-S*.18); c.closePath(); c.fill(); c.restore(); }
@@ -813,7 +841,7 @@ function hotspots(sc){
   ];
   if(sc==="byte") return [
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
-    ...STALLS.map((st,i)=>({x:st.x,hw:100,label:(st.jobs?"Open the Courier Hub":st.drinks?`Eat and drink at ${st.n}`:st.wanted?`Sell to ${st.n}`:`Shop at ${st.n}`)+(jobsAtStall(i).length?" · job here":""),act:()=>openStall(i)})),
+    ...STALLS.map((st,i)=>({x:st.x,hw:100,label:(st.jobs?"Open the Courier Hub":st.drinks?(bbSlot>=0?`Work the stove at ${st.n} (on shift)`:`Eat, drink or work a shift at ${st.n}`):st.wanted?`Sell to ${st.n}`:`Shop at ${st.n}`)+(jobsAtStall(i).length?" · job here":""),act:()=>openStall(i)})),
   ];
   if(sc==="grid") return [
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
@@ -1057,7 +1085,7 @@ function safeAct(h){ try{ h.act(); }catch(e){ console.error(e); toast("That didn
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
   setTimeout(()=>{ go(scene,x); if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
-function go(scene,x){ if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
+function go(scene,x){ if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
 let loopErr=0;
@@ -1085,7 +1113,7 @@ function stepInner(now){
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
   // npcs
   for(const n of npcs[me.scene]){ if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; } }
-  tickCustomers(); tickJobs(); tickCb(); tickClub(); tickVoid();
+  tickCustomers(); tickJobs(); tickCb(); tickBb(); tickClub(); tickVoid();
   pushPresence(false);
   if(cv.height>4){ render(); screenFx(); }
   tickItemCans(T); tickLookCans(T);
@@ -1101,10 +1129,11 @@ function render(){
   for(const n of npcs[me.scene]) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx,look:n.look,name:n.name,fx:n.fx||null,sit:!!n.sit,emote:n.dance?{e:"dance",t:T}:null}});
   for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,sit:p.s==="club"&&p.seat!=null,hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
+  if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; ents.push({x:b.x,y:b.y,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:BOT_LOOK,name:"NULL BOT",hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0?"★ ":"")+(myName||"Runner"),me:true,say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0?"★ ":"")+(myName||"Runner"),me:true,say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top); drawStick(ctx,e.x,e.y,s,e.o,T);
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
@@ -1137,7 +1166,7 @@ const GUIDE={
     ["Getting around",["Sector 9 is the main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, The Third Eye club and Scrap Alley.","Take the Metro (free) from the street to Byte Market, The Grid, Smacked Shop and The Void.","Tap ONLINE at the top to see who's playing and where they are."]],
     ["Your progress saves",["Your stash, credits, chips, apartment and pickup codes are saved to your account and follow you to any device you sign in on."]]]},
   money:{n:"Earn ₵ credits",secs:[
-    ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Mix drinks, cook food from the Kitchen and hand over parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order. Golden Handshake, Glitch Dumplings and Full Stack Bowl add +25% tips.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips."]],
+    ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Mix drinks, cook food from the Kitchen and hand over parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order. Golden Handshake, Glitch Dumplings and Full Stack Bowl add +25% tips.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips.","Byte Bowl Noodles (Byte Market): clock in at the stall (up to 4 staff) and cook noodle bowls, bao, skewers and drinks for market shoppers. Menu price plus tips, and ₵2/min wages once you've served an order."]],
     ["Gigs and deliveries",["Vex at The Glitch hands out delivery jobs: bring her the parts she asks for to get credits.","Byte Market Courier Hub: new tickets every 20 minutes. Carry packages between stalls before the timer runs out, deliver parts, or fill rig commissions. Every 5th job earns a bonus part."]],
     ["Sell what you find",["Parts Depot buys any part back at its full worth in credits.","List parts on the Trade Board (on the Sector 9 street) for other players to buy; payment lands in your gift inbox.","Byte Market stalls also buy and sell parts and rigs."]],
     ["Win it",["Play UPLOAD in The Grid: the first clear of each of its 10 levels pays ₵65 up to ₵290, and replays pay ₵10.","Wager duels in The Grid: stake a part or PC and beat other players at Cyber Chess, Tic-Tac-Toe or Rock Paper Scissors to win theirs, then sell or keep it. Practice against the AI at any table.","Crack Encrypted Floppies for a chance at credits, chips, parts or a rare collectible."]]]},
@@ -1151,13 +1180,13 @@ const GUIDE={
   items:{n:"Get every item",secs:[
     ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
     ["Build rigs",["Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
-    ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu too.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
+    ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu for less, plus 8 noodle-bar specials of its own.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
     ["Gear, tech and home items",["Cyber Buys & More sells hacker tools, phones, floppies, weapons, accessories and living-room decor.","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
     ["Look and style",["Press C to change your name, outfit, hair, colors and accessories anytime."]],
     ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
   places:{n:"Places",secs:[
     ["Sector 9",["Apt 7C: stash terminal, display shelves, wardrobe, workbench, Mining Rack, living room and an intercom to invite friends.","The Glitch: Vex's bar counter with 11 drinks, Kai's Glitch Kitchen with 7 hot dishes, the Job Board, jukebox and the CHIP PRINT arcade. The Trade Board stands outside on the street.","Parts Depot, Cyber Buys & More, Scrap Alley, and The Third Eye club with a trippy stage, DJ booth, seats and its own tech-buzz menu with effects."]],
-    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs and the Courier Hub.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home."]]]},
+    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, and Byte Bowl Noodles with Gran Ko's 8 noodle-bar specials and paid shifts.","The Grid: wager duels, the Top Duelists board, and UPLOAD, a snake-style hacking arcade with 10 levels and its own records board.","Smacked Shop: real-life rewards. Redeem with chips or credits, get a pickup code, then show the code at the shop in person to collect.","The Void: PvP arena with health bars. F to attack, G to block, using fists or your equipped weapon. Die and you lose 15% and respawn at home."]]]},
   social:{n:"Play with others",secs:[
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes.","Invite players to your apartment from the intercom; they get a card that brings them straight to you.","Visit neighbors' doors to look at their display shelves."]],
     ["Trade and compete",["Gift parts by tapping a player. Sell on the Trade Board. Challenge players in The Grid. Climb the Top Duelists and Top Fraggers boards."]],
@@ -1552,7 +1581,7 @@ function payShift(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+t
 
 /* drink mixing minigame */
 function mixDrink(drinkId,sub,done){
-  const d=BY[drinkId]; const food=d.t==="food", ING=food?KITCHEN:INGR; const body=panel((food?"Cooking · ":"Mixing · ")+d.n,sub);
+  const d=BY[drinkId]; const food=d.t==="food", ING=d.kit==="bowl"?BOWL_ING:food?KITCHEN:INGR; const body=panel((food?"Cooking · ":"Mixing · ")+d.n,sub);
   const recipe=d.mix; let poured=[], mistakes=0; const t0=performance.now();
   const ticket=el("div",{class:"row"}); const renderTicket=()=>{ ticket.innerHTML=""; ticket.append(el("span",{class:"sub",text:"Order ticket:"})); recipe.forEach((g,i)=>ticket.append(el("span",{class:"tag",style:`color:${ING[g].c};opacity:${i<poured.length?.35:1}`,text:`${i+1}. ${ING[g].n}`}))); };
   renderTicket();
@@ -1705,7 +1734,7 @@ const STALL_BY=Object.fromEntries(STALLS.map((s,i)=>[s.id,i]));
 const hourSeed=()=>Math.floor(Date.now()/36e5);
 function stallStock(i){
   const st=STALLS[i]; const r=seeded(hourSeed()*97+i*13+1);
-  if(st.drinks) return [...FOODS,...DRINKS].map(d=>({id:d.id,price:d.v,cur:"credits"}));
+  if(st.drinks) return [...BB_FOODS,...FOODS,...DRINKS].map(d=>({id:d.id,price:d.v,cur:"credits"}));
   if(st.builds){ const out=[]; for(const rc of RECIPES){ if(rc.k==="qrig"&&r()<.6) continue; const tier=r()<.06?3:r()<.25?2:r()<.55?1:0; const id=`b_${rc.k}_${BY_R[tier]}`; out.push(tier===3?{id,price:Math.round(BY[id].v*.6),cur:"chips"}:{id,price:Math.round(BY[id].v*1.45),cur:"credits"}); } return out; }
   if(st.types){ const pool=COMP.filter(p=>st.types.includes(p.t)&&p.id!=="flop_blank").sort(()=>r()-.5).slice(0,6); for(const a of st.always||[]) if(!pool.some(p=>p.id===a)) pool.unshift(BY[a]); return pool.map(p=>p.r==="epic"?{id:p.id,price:Math.round(p.v/2*st.disc),cur:"chips"}:{id:p.id,price:Math.round(p.v*1.3*st.disc),cur:"credits"}); }
   return [];
@@ -1775,9 +1804,10 @@ function openJobs(){
 /* --- stall panel */
 function openStall(i,tab){
   const st=STALLS[i]; if(st.jobs) return openJobs();
+  if(st.drinks&&bbShift&&!tab) return bbConsole();
   const jobsHere=jobsAtStall(i); tab=tab||(jobsHere.length?"jobs":"buy");
   const body=panel(st.n,`${st.vendor}: "${st.line}"`);
-  const tabs=el("div",{class:"tabs"}); const tl=[["buy",st.wanted?"Wanted list":"Buy"]]; if(!st.drinks&&!st.wanted) tl.push(["sell","Sell"]); if(st.wanted) tl.push(["sell","Sell"]); if(jobsHere.length) tl.push(["jobs",`Jobs here (${jobsHere.length})`]);
+  const tabs=el("div",{class:"tabs"}); const tl=[["buy",st.wanted?"Wanted list":"Buy"]]; if(!st.drinks&&!st.wanted) tl.push(["sell","Sell"]); if(st.wanted) tl.push(["sell","Sell"]); if(st.drinks) tl.push(["shift",bbShift?"Your shift":`Work a shift (${bbActive().length}/${STAFF_MAX})`]); if(jobsHere.length) tl.push(["jobs",`Jobs here (${jobsHere.length})`]);
   tl.forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>openStall(i,k)}))); body.append(tabs);
   if(tab==="jobs"){ const l=el("div",{class:"list"}); jobsHere.forEach(j=>l.append(jobRow(j,i))); body.append(l); return; }
   if(tab==="buy"&&st.wanted){ const w=repoWanted(); body.append(el("p",{text:`This hour ${st.vendor} pays 1.6× worth for: ${w.map(t=>TYPE_N[t]).join(", ")}. Everything else sells at full worth.`}));
@@ -1787,11 +1817,70 @@ function openStall(i,tab){
     if(!inv.length){ body.append(el("div",{class:"empty",text:"Nothing in your stash this stall will buy."})); return; }
     const g=el("div",{class:"grid"}); for(const [id,n] of inv){ const pr=sellPrice(i,id); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); toast(`Sold ${BY[id].n} for ₵${pr}`); beep(700,.06); openStall(i,"sell"); })); }
     body.append(g); return; }
+  if(st.drinks&&tab==="shift") return bbShiftTab(i);
+  if(st.drinks&&tab==="buy"){ const buy=d=>{ if(save.credits<d.v){ toast(`Not enough credits. You need ${d.v-Math.floor(save.credits)} more.`); beep(150,.15); return; } save.credits-=d.v; addItem(d.id); persist(); toast(`${st.vendor} hands you ${d.n}. It's in your stash.`,d.col); beep(1200,.08); openStall(i,"buy"); };
+    for(const [h,L] of [["Gran Ko's noodle bar",BB_FOODS],["Glitch Kitchen favorites",FOODS],["Drinks",DRINKS]]){ body.append(el("strong",{text:h})); const l=el("div",{class:"list"});
+      for(const d of L) l.append(el("div",{class:"li"},itemCanvas(d.id,44),el("div",{class:"grow"},el("div",{class:"r-"+d.r,text:d.n}),el("div",{class:"sub",text:d.desc})),el("button",{class:"btn hot",type:"button",text:`₵${d.v}`,"aria-label":`Buy ${d.n} for ₵${d.v}`,onclick:()=>buy(d)})));
+      body.append(l); }
+    body.append(el("p",{class:"sub",text:"Food and drinks here cost less than at The Glitch. Eat or drink from your stash for boosts; food heals in The Void."})); return; }
   const g=el("div",{class:"grid"});
   for(const s of stallStock(i)) g.append(itemCard(s.id,1,s.cur==="chips"?`${s.price} chips`:`₵${s.price}`,()=>{ const bal=s.cur==="chips"?save.chips:save.credits; if(bal<s.price){ toast(`Not enough ${s.cur}. You need ${s.price-Math.floor(bal)} more.`); beep(150,.15); return; }
     if(s.cur==="chips") save.chips-=s.price; else save.credits-=s.price; addItem(s.id); persist(); toast(`Bought ${BY[s.id].n}`,RAR[BY[s.id].r].c); beep(1200,.08); openStall(i,"buy"); }));
   body.append(g, el("p",{class:"sub",text:`Stock changes every hour.${st.drinks?" Drinks here cost less than at The Glitch.":""}`}));
 }
+
+/* --- Byte Bowl Noodles shifts */
+let bbSlots=[null,null,null,null], bbSlot=-1, bbBeat=null, bbShift=null, bbCustomers=[], bbNext=0, bbSig="";
+const BB_SPOTS=[1530,1590,1650];
+function bbActive(){ return bbSlots.map((s,i)=>s&&s.by&&Date.now()-(+s.beat||0)<SHIFT_STALE?{slot:i,by:s.by}:null).filter(Boolean); }
+function bbShiftTab(i){ const st=STALLS[i]; if(bbShift) return bbConsole();
+  const body=panel(`${st.n} · Shifts`,`${st.vendor}: "Four stoves, never enough hands. Cook for my customers, keep the tips."`); currentView=null;
+  const tabs=el("div",{class:"tabs"}); for(const [k,l] of [["buy","Buy"],["shift",`Work a shift (${bbActive().length}/${STAFF_MAX})`]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(k==="shift"),text:l,onclick:()=>openStall(i,k)})); body.append(tabs);
+  const act=bbActive(), list=el("div",{class:"list"});
+  for(let k=0;k<STAFF_MAX;k++){ const s=act.find(a=>a.slot===k); const who=s?(s.by===myId||s.by==="local"?"You":nameOf(s.by)):null; list.append(el("div",{class:"li"},el("span",{class:"tag "+(who?"r-uncommon":""),text:`Stove ${k+1}`}),el("div",{class:"grow",text:who?`${who} · on shift`:"Open"}))); }
+  const b=el("button",{class:"btn hot",type:"button",text:act.length>=STAFF_MAX?"All stoves staffed":"Clock in for a shift",onclick:bbClockIn}); if(act.length>=STAFF_MAX) b.disabled=true;
+  body.append(el("strong",{text:`Shift staff ${act.length}/${STAFF_MAX}`}),list,el("div",{class:"row"},b),
+    el("p",{class:"sub",text:"On shift: market shoppers line up at the stall and order noodle bowls, bao, skewers and drinks. Cook each order by adding ingredients in ticket order (a wrong one ruins it). You earn the menu price plus tips for speed and accuracy, and ₵2/min wages once you've served an order. Leaving Byte Market ends your shift."})); }
+async function bbClockIn(){ if(bbSlot>=0) return;
+  if(!DB){ bbSlot=0; bbSlots[0]={by:"local",beat:Date.now()}; return bbStart(); }
+  for(let i=0;i<STAFF_MAX;i++){ const ref=DB.doc("staff/bbslot"+i);
+    try{ const l=await ref.acquire({holder:myId,ttlMs:5000}); if(!l.acquired) continue; const sn=await ref.get(); const d=sn.exists?sn.data():null;
+      if(!d||!d.by||d.by===myId||Date.now()-(+d.beat||0)>SHIFT_STALE){ await ref.set({by:myId,beat:Date.now(),since:Date.now()}); bbSlot=i; bbSlots[i]={by:myId,beat:Date.now()}; return bbStart(); } }catch(e){} }
+  toast("All 4 stoves at Byte Bowl are staffed. Try again soon."); }
+function bbStart(){ bbShift={served:0,earned:0,tips:0,start:Date.now()}; bbCustomers=[]; bbNext=T+2; clearInterval(bbBeat);
+  bbBeat=setInterval(()=>{ if(!DB&&bbSlots[0]) bbSlots[0].beat=Date.now(); if(DB&&bbSlot>=0) DB.doc("staff/bbslot"+bbSlot).update({beat:Date.now()}).catch(()=>{}); },60e3);
+  pushPresence(true); closePanel(); toast("Shift started at Byte Bowl Noodles. Shoppers will line up at the stall.","#ff5a4a"); chatLine(null,"Stand at Byte Bowl Noodles and press E to see orders, then cook each one in ticket order.","sys"); }
+async function bbClockOut(){ if(bbSlot<0) return; clearInterval(bbBeat); const slot=bbSlot; bbSlot=-1;
+  if(DB){ try{ await DB.doc("staff/bbslot"+slot).set({by:null,beat:0}); }catch(e){} } else bbSlots[0]=null;
+  const mins=Math.floor((Date.now()-bbShift.start)/60e3), wage=bbShift.served?Math.min(120,mins*2):0; save.credits+=wage; persist();
+  toast(`Shift over at Byte Bowl: served ${bbShift.served}, earned ₵${bbShift.earned} + ₵${bbShift.tips} tips + ₵${wage} wages`,"#ff5a4a");
+  bbCustomers.forEach(c=>c.leaving=true); bbShift=null; pushPresence(true); }
+function bbSpawn(){ const spot=BB_SPOTS.find(x=>!bbCustomers.some(c=>c.spot===x&&!c.leaving)); if(spot==null) return;
+  const want=Math.random()<.75?pickMenu(BB_FOODS).id:pickMenu(DRINKS).id; const side=Math.random()<.5?-1:1;
+  bbCustomers.push({id:Math.random().toString(36).slice(2),spot,home:spot+side*520,x:spot+side*520,y:286+rnd(-6,8),dir:-side,phase:0,look:randomLook(),want,max:70,left:70,arrived:false,leaving:false,moving:true}); }
+function tickBb(){ if(me.scene!=="byte") return;
+  if(bbShift&&T>bbNext&&bbCustomers.filter(c=>!c.leaving).length<3){ bbSpawn(); bbNext=T+rnd(9,16); }
+  for(const c of bbCustomers){ const tx=c.leaving?c.home:c.spot; const dx=tx-c.x; c.moving=Math.abs(dx)>2;
+    if(c.moving){ c.x+=Math.sign(dx)*Math.min(Math.abs(dx),130*dt); c.dir=Math.sign(dx); c.phase+=dt*7; } else if(!c.leaving&&!c.arrived){ c.arrived=true; beep(600,.04); }
+    if(c.arrived&&!c.leaving){ c.dir=-1; c.left-=dt; if(c.left<=0){ c.leaving=true; toast("A Byte Bowl customer got tired of waiting and left."); beep(160,.12); } } }
+  bbCustomers=bbCustomers.filter(c=>!(c.leaving&&Math.abs(c.x-c.home)<3)); }
+function bbConsole(refresh){ const i=STALL_BY.noodle, mins=Math.floor((Date.now()-bbShift.start)/60e3);
+  const body=panel(`Byte Bowl Noodles · Stove ${bbSlot+1}`,`On shift ${mins} min · served ${bbShift.served} · earned ₵${bbShift.earned} + ₵${bbShift.tips} tips`,refresh); currentView="bbconsole";
+  const waiting=bbCustomers.filter(c=>c.arrived&&!c.leaving);
+  body.append(el("strong",{text:`Waiting at the stall (${waiting.length})`}));
+  if(!waiting.length) body.append(el("div",{class:"empty",text:"Nobody at the stall right now. Shoppers stop by every 9 to 16 seconds."}));
+  const l=el("div",{class:"list"});
+  for(const c of waiting){ const pct=c.left/c.max, d=BY[c.want];
+    l.append(el("div",{class:"li"},itemCanvas(c.want,48),el("div",{class:"grow"},el("div",{text:`${d.n}, please`}),el("div",{class:pct>.5?"r-uncommon":pct>.25?"":"r-epic",text:`Patience ${Math.ceil(c.left)}s · pays ₵${d.v} + tip`})),
+      el("button",{class:"btn hot",type:"button",text:d.t==="food"?"Cook":"Mix",onclick:()=>bbServe(c)}))); }
+  body.append(l, el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Browse the menu",onclick:()=>openStall(i,"buy")}),el("button",{class:"btn",type:"button",text:"Clock out",onclick:async()=>{ await bbClockOut(); closePanel(); }}))); }
+function bbServe(c){ const d=BY[c.want];
+  mixDrink(c.want,"A shopper is waiting at the stall. Speed and accuracy earn bigger tips.",res=>{
+    if(!bbShift){ closePanel(); return; }
+    if(!bbCustomers.includes(c)||c.leaving){ addItem(c.want); persist(); toast(`They left before you finished. The ${d.t==="food"?"food":"drink"} went to your stash.`); bbConsole(); return; }
+    const tip=Math.round(Math.max(0,4+(c.left/c.max)*10-res.mistakes*4)*tipMult()); c.leaving=true; c.happy=T;
+    save.credits+=d.v+tip; bbShift.served++; bbShift.earned+=d.v; bbShift.tips+=tip; persist(); toast(`+₵${d.v}${tip?` and ₵${tip} tip`:""}`,"#ff5a4a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); bbConsole(); }); }
+setInterval(()=>{ if(currentView!=="bbconsole"||$("#overlay").hidden||!bbShift) return; const sig=JSON.stringify([bbCustomers.filter(c=>c.arrived&&!c.leaving).map(c=>c.id+":"+Math.ceil(c.left/5)),bbShift.served]); if(sig!==bbSig){ bbSig=sig; const sc=document.querySelector(".panel .body"); const top=sc?sc.scrollTop:0; bbConsole(true); const nb=document.querySelector(".panel .body"); if(nb) nb.scrollTop=top; } },1000);
 
 /* --- drawing */
 const lanterns=Array.from({length:75},(_,i)=>({x:60+i*60,h:(i*67)%360}));
@@ -1823,7 +1912,8 @@ function drawByte(t){
     if(st.jobs){ ctx.fillStyle="#0b0716"; ctx.fillRect(x-80,170,80,46); ctx.fillStyle="#f5e663"; ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="left"; ["TICKETS: 5","COURIER x2","SUPPLY x2","BUILD x1"].forEach((l,k)=>ctx.fillText(l,x-76,182+k*10));
       for(let k=0;k<4;k++){ ctx.fillStyle=["#c9a24a","#a07a3a"][k%2]; ctx.fillRect(x-90+k*24,236,20,16); ctx.fillStyle="#3a2a5c"; ctx.fillRect(x-81+k*24,236,2,16); } }
     else if(st.id==="noodle"){ ctx.fillStyle="#ff5a4a"; ctx.fillRect(x-60,206,28,18); ctx.fillStyle="#e9e2ff"; for(let k=0;k<4;k++){ const sy=200-((t*20+k*9)%30); ctx.globalAlpha=.35; ctx.beginPath(); ctx.arc(x-46+Math.sin(t*2+k)*4,sy,4+k,0,7); ctx.fill(); } ctx.globalAlpha=1;
-      drawItem(ctx,"drink_mule",x-6,238,24,t); drawItem(ctx,"drink_fizz",x+20,238,24,t+1); drawItem(ctx,"drink_ghost",x+46,238,24,t+2); }
+      drawItem(ctx,"bb_classic",x-8,238,26,t); drawItem(ctx,"bb_bao",x+20,240,24,t+1); drawItem(ctx,"drink_mule",x+46,238,22,t+2);
+      const bn=bbActive().length; ctx.fillStyle="#0b0716"; ctx.fillRect(x+64,168,40,30); ctx.strokeStyle="#ff5a4a"; ctx.strokeRect(x+64.5,168.5,39,29); ctx.fillStyle="#ff5a4a"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText(bn>=STAFF_MAX?"FULL":"HIRING",x+84,180); ctx.fillText(`STAFF ${bn}/${STAFF_MAX}`,x+84,191); }
     else { const stock=stallStock(i).slice(0,3); stock.forEach((s,k)=>drawItem(ctx,s.id,x-70+k*36,240,30,t+k)); }
     if(jobsAtStall(i).length){ ctx.fillStyle="#f5e663"; ctx.globalAlpha=.7+.3*Math.sin(t*6); ctx.beginPath(); ctx.moveTo(x-8,top-34); ctx.lineTo(x+8,top-34); ctx.lineTo(x,top-24); ctx.fill(); ctx.globalAlpha=1; }
   });
@@ -3093,7 +3183,7 @@ if(save.name) myName=save.name;
 
 /* ============================================================ PRESENCE */
 let lastPush=0, lastSig="";
-function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,st:(mySlot>=0||cbSlot>=0||clubSlot>=0)?1:0};
+function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0)?1:0};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
@@ -3146,7 +3236,7 @@ setInterval(hud,1000);
     db.collection("cbstaff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); cbSlots=nx;
       if(cbSlot>=0){ const mine=nx[cbSlot]; if(!mine||mine.by!==myId){ cbSlot=-1; clearInterval(cbBeat); cbShift=null; cbHolding=null; toast("Your register slot was released."); } }
       resolveNames(nx.filter(x=>x&&x.by).map(x=>x.by)); },()=>{});
-    db.collection("staff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); staffSlots=nx;
+    db.collection("staff").onSnapshot(s=>{ const nx=[null,null,null,null], bb=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); const b=/^bbslot([0-3])$/.exec(d.id); if(b) bb[+b[1]]=d.data(); }); staffSlots=nx; bbSlots=bb;
       if(mySlot>=0){ const mine=nx[mySlot]; if(!mine||mine.by!==myId){ mySlot=-1; clearInterval(beatTimer); shift=null; toast("Your shift slot was released."); } }
       resolveNames(nx.filter(x=>x&&x.by).map(x=>x.by)); refreshView("orders"); },()=>{});
     let firstOrders=true;
