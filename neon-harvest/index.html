@@ -56,6 +56,11 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 #chatlog .ln{background:rgba(11,7,22,.6);padding:1px 6px;width:fit-content;max-width:100%;overflow-wrap:anywhere;transition:opacity .6s}
 #chatlog .ln.sysl{font-size:11px;opacity:.9}
 canvas.dccsym{vertical-align:-3px;margin-right:4px;display:inline-block}
+.asmbins{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.asmbins .card{align-items:center;text-align:center;padding:6px}
+#game.mobile .asmbins{grid-template-columns:repeat(5,1fr);gap:4px}
+#game.mobile .asmbins .card{padding:4px;min-height:44px}
+#game.mobile .asmbins .card .meta{display:none}
 .dccgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
 .dccgrid .card{align-items:center;text-align:center}
 #chatlog .who{color:var(--mag)} #chatlog .sys{color:var(--cyan)} #chatlog .x{color:#9a8cc0;margin-left:4px}
@@ -1190,6 +1195,7 @@ const SCENES={
   street:{w:4400, spawn:520},
   club:{w:2550, spawn:120},
   vip:{w:1100, spawn:120},
+  assembly:{w:2900, spawn:140},
   void:{w:2700, spawn:140},
   bar:{w:1800, spawn:120},
   home:{w:2900, spawn:120},
@@ -1262,6 +1268,7 @@ function hotspots(sc){
     {x:1330,hw:80,label:"Job board: staff shifts and gigs",act:()=>openJobBoard()},
   ];
   if(sc==="vip") return vipHotspots();
+  if(sc==="assembly") return asmHotspots();
   if(sc==="home"){
     const vis=!!viewHome;
     return [
@@ -1477,8 +1484,8 @@ function useHot(){ if(!$("#overlay").hidden) return; if(nearHot){ beep(880,.05);
 function safeAct(h){ try{ h.act(); }catch(e){ console.error(e); toast("That didn't work. Try again."); } }
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
-  setTimeout(()=>{ go(scene,x); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
-function go(scene,x){ if(scene!=="vip") me.vip=null; homeFx={}; if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
+  setTimeout(()=>{ go(scene,x); if(scene==="assembly") chatLine(null,"Harvest Assembly: clock in at the shift board or walk into any open bay. Build what the blueprint shows, part by part, before the timer runs out. Faster builds and streaks pay more.","sys"); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
+function go(scene,x){ if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
 let loopErr=0;
@@ -1516,7 +1523,7 @@ function stepInner(now){
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else drawHome(T); if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else drawHome(T); if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
@@ -1529,7 +1536,7 @@ function render(){
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
@@ -1587,7 +1594,7 @@ const GUIDE={
     ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
     ["Build rigs",["Open the Recipe Book tab at the Workbench to see what every recipe needs, which items count for each part, and where to buy or find them.","Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
     ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu for less, plus 8 noodle-bar specials of its own.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
-    ["Gear, tech and home items",["Your apartment's living room has 8 wall and 9 floor spots. Walk up to anything you place to use it: sit on couches (+tips), nap in a hammock (+speed), train on a punching bag (+Void armor), read books (+luck), overclock a PC (2× print chips), play music, feed fish, water plants until they bloom for chips, raid the fridge for snacks and more.","Home Vibe (shown on your living-room wall) rises with rarer decor, variety, lights left on, healthy plants, a clean floor and paid room styles. It boosts your mining rack (up to +40%), lengthens every home boost and pays a daily home bonus at the Home Hub.","Backrooms: The Glitch (Neon Lounge, Server Den) and The Third Eye (Void Suite, Prism Room) each have two high-tech backrooms past the back wall. Rent one with chips for a day or a week. Keep it public, or make it private and invite who you want. Inside: seating, free drinks, music, an arcade, overclocking, decrypting and more, with boosts that beat home ones.","Data Collectors Club: an exclusive membership granted only by the game's owner. Members get an animated high-tech symbol next to their name everywhere: over their head, in chat and in Who's online.","Cyber Buys & More sells drives, cables, peripherals, wall art and furniture. Its new wing (walk past the register) adds Gadgets & Gaming (holdable gadgets like a Pocket Drone, VR Visor or Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
+    ["Gear, tech and home items",["Your apartment's living room has 8 wall and 9 floor spots. Walk up to anything you place to use it: sit on couches (+tips), nap in a hammock (+speed), train on a punching bag (+Void armor), read books (+luck), overclock a PC (2× print chips), play music, feed fish, water plants until they bloom for chips, raid the fridge for snacks and more.","Home Vibe (shown on your living-room wall) rises with rarer decor, variety, lights left on, healthy plants, a clean floor and paid room styles. It boosts your mining rack (up to +40%), lengthens every home boost and pays a daily home bonus at the Home Hub.","Harvest Assembly (Metro): a high-tech warehouse with 10 assembly bays. Clock in, then build what each blueprint shows by picking the right parts in order (tap the bins or press 1-0). You earn ₵ per build, more for speed and streaks, plus ₵3 a minute while you keep building.","Backrooms: The Glitch (Neon Lounge, Server Den) and The Third Eye (Void Suite, Prism Room) each have two high-tech backrooms past the back wall. Rent one with chips for a day or a week. Keep it public, or make it private and invite who you want. Inside: seating, free drinks, music, an arcade, overclocking, decrypting and more, with boosts that beat home ones.","Data Collectors Club: an exclusive membership granted only by the game's owner. Members get an animated high-tech symbol next to their name everywhere: over their head, in chat and in Who's online.","Cyber Buys & More sells drives, cables, peripherals, wall art and furniture. Its new wing (walk past the register) adds Gadgets & Gaming (holdable gadgets like a Pocket Drone, VR Visor or Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
     ["Look and style",["Press C to open your Character screen and change your name and look anytime.","Over 200 options: 13 tops, 12 hairstyles, 22 colors for your top, legs, hair and name, plus shoes, neck pieces, eyewear, 17 headpieces, back items, companions and auras.","Basics are free. Premium pieces cost credits once and stay unlocked, so you can swap outfits freely. Try anything on before you buy."]],
     ["From Void bots",["Every bot type has its own loot: Glitch Drones and Pulse Gunners drop mostly tech, Phantoms drop wardrobe unlocks, Firewall Brutes drop apartment decor, and the SENTINEL Ω always drops two rare-or-better items.","Hard mode gives the best rarity odds, including epic drops. Wardrobe unlocks you already own turn into credits."]],
     ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
@@ -2461,7 +2468,7 @@ function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):me.s
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land"}[s]||"somewhere"; }
+function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -2473,7 +2480,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -3235,6 +3242,107 @@ function drawLivingRoom(t){
     if(off){ ctx.save(); ctx.globalAlpha=.35; ctx.filter="grayscale(1)"; drawItem(ctx,id,p.x,p.y,96,0); ctx.restore(); return; }
     drawItem(ctx,id,p.x,p.y,96,act?t*3+i:t+i); });
 }
+/* ============================================================ HARVEST ASSEMBLY (10-bay assembly line shifts) */
+var ASM_BAYS=10, asmSlots=Array(10).fill(null), asmSlot=-1, asmBeat=null, asmShift=null, asmOrder=null, asmBins=[], asmBelt=[], asmFlash=null, asmAmb=0;
+const ASM_X=i=>440+i*240;
+const ASM_PARTS=[{t:"chip",n:"Chip",id:"chip_cu"},{t:"fan",n:"Fan",id:"fan_80"},{t:"mobo",n:"Board",id:"mb_mini"},{t:"gpu",n:"GPU",id:"gpu_k2"},{t:"ram",n:"RAM",id:"ram_8"},{t:"ssd",n:"SSD",id:"ssd_m2"},{t:"psu",n:"Power",id:"psu_650"},{t:"cpu",n:"CPU",id:"cpu_r4"},{t:"hdd",n:"HDD",id:"hdd_2tb"},{t:"cable",n:"Cable",id:"cable_usb"}];
+const ASM_ORDERS=[
+  {n:"Holo Phone",icon:"phone_slate",steps:["chip","ssd","cable"],pay:16},{n:"Smart Speaker",icon:"gad_boom",steps:["chip","cable","fan"],pay:16},
+  {n:"Pocket Drone",icon:"gad_drone",steps:["fan","fan","chip","psu"],pay:22},{n:"Cyberdeck",icon:"b_deck_common",steps:["chip","cpu","ram","ssd"],pay:24},
+  {n:"Mini PC",icon:"b_mpc_common",steps:["mobo","cpu","ram","ssd","psu"],pay:30},{n:"Home Server",icon:"b_server_common",steps:["mobo","cpu","ram","hdd","psu"],pay:30},
+  {n:"Crypto Miner",icon:"b_miner_common",steps:["mobo","gpu","gpu","psu","fan"],pay:30},{n:"Credit Miner",icon:"b_cminer_common",steps:["mobo","psu","cpu","hdd","hdd","fan"],pay:38},
+  {n:"Gaming PC",icon:"b_pc_common",steps:["mobo","cpu","ram","gpu","ssd","psu","fan"],pay:44},{n:"Streaming Rig",icon:"b_stream_common",steps:["mobo","cpu","gpu","ram","ram","ssd","cable","fan"],pay:50},
+];
+function asmSlotLive(d){ return d&&d.by&&Date.now()-(+d.beat||0)<=SHIFT_STALE; }
+function asmCrew(){ return asmSlots.filter(asmSlotLive).length+(asmSlot>=0&&!asmSlotLive(asmSlots[asmSlot])?1:0); }
+async function asmClockIn(pref){ if(asmSlot>=0){ openAsmConsole(); return; } if(mySlot>=0||cbSlot>=0||bbSlot>=0||clubSlot>=0){ toast("Finish your other shift first."); return; }
+  if(!DB){ asmSlot=Number.isInteger(pref)?pref:0; return asmStart(); }
+  const order=[...(Number.isInteger(pref)?[pref]:[]),...Array.from({length:ASM_BAYS},(_,i)=>i).filter(i=>i!==pref)];
+  for(const i of order){ const ref=DB.doc("staff/asm"+i);
+    try{ const l=await ref.acquire({holder:myId,ttlMs:5000}); if(l&&l.acquired===false) continue; const sn=await ref.get(); const d=sn.exists?sn.data():null;
+      if(!d||!d.by||d.by===myId||Date.now()-(+d.beat||0)>SHIFT_STALE){ await ref.set({by:myId,beat:Date.now(),since:Date.now()}); asmSlot=i; asmSlots[i]={by:myId,beat:Date.now()}; return asmStart(); } }catch(e){} }
+  toast("All 10 assembly bays are taken. Try again soon."); }
+function asmStart(){ asmShift={start:Date.now(),built:0,earned:0,wages:0,streak:0,best:0,lastBuild:Date.now(),fails:0}; asmOrder=null; clearInterval(asmBeat);
+  asmBeat=setInterval(()=>{ if(asmSlot<0) return; if(DB) DB.doc("staff/asm"+asmSlot).update({beat:Date.now()}).catch(()=>{});
+    if(asmShift&&Date.now()-asmShift.lastBuild<180e3){ save.credits+=3; asmShift.wages+=3; asmShift.earned+=3; persist(); hud(); } },60e3);
+  me.x=ASM_X(asmSlot); me.y=300; me.dir=1; target=null; pushPresence(true); toast(`Clocked in at Bay ${asmSlot+1}. Press E at your bay to open the assembly console.`,"#ffd36a"); beep(880,.08); openAsmConsole(); }
+async function asmClockOut(){ if(asmSlot<0) return; clearInterval(asmBeat); const slot=asmSlot; asmSlot=-1; clearInterval(asmTick); asmOrder=null;
+  if(DB){ try{ await DB.doc("staff/asm"+slot).set({by:null,beat:0}); }catch(e){} } asmSlots[slot]=null;
+  if(asmShift) chatLine(null,`Shift over at Harvest Assembly: ${asmShift.built} builds, ₵${asmShift.earned} earned (incl. ₵${asmShift.wages} wages), best streak ${asmShift.best}.`,"sys");
+  asmShift=null; pushPresence(true); if(currentView==="asm") closePanel(); }
+function asmNewOrder(){ const pool=ASM_ORDERS.filter((o,i)=>i<4+Math.min(6,Math.floor((asmShift?asmShift.built:0)/2))); const o=pool[(Math.random()*pool.length)|0];
+  asmOrder={...o,i:0,mist:0,limit:5+o.steps.length*2.2,t0:performance.now()/1000,pen:0}; asmBins=[...ASM_PARTS].sort(()=>Math.random()-.5); }
+function asmTimeLeft(){ return asmOrder?asmOrder.limit-(performance.now()/1000-asmOrder.t0)-asmOrder.pen:0; }
+let asmTick=null, asmUI=null;
+function openAsmConsole(){ if(asmSlot<0){ asmClockIn(); return; } if(Math.abs(me.x-ASM_X(asmSlot))>140){ toast(`Head to Bay ${asmSlot+1} to work.`); return; }
+  if(!asmOrder) asmNewOrder(); else { asmOrder.t0=performance.now()/1000; asmOrder.pen=0; }
+  const body=panel(`Assembly Bay ${asmSlot+1}`,""); currentView="asm"; const sub=body.parentElement.querySelector("header .sub")||null;
+  const head=el("div",{class:"detail"}), steps=el("div",{class:"row",style:"flex-wrap:wrap;gap:6px"}), bar=el("div",{style:"height:10px;background:#1a1230;border:1px solid var(--line);position:relative;overflow:hidden"}), fill=el("div",{style:"position:absolute;inset:0 auto 0 0;background:var(--cyan);width:100%"}), msg=el("div",{class:"sub",text:MOBILE?"Tap the parts in the order shown.":"Pick the parts in order. Keys 1-0 work too."}), bins=el("div",{class:"asmbins"}), stats=el("div",{class:"row",style:"flex-wrap:wrap;gap:6px"});
+  bar.append(fill); body.append(head,steps,bar,msg,bins,stats,el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Shift board",onclick:()=>openAsmBoard()}),el("button",{class:"btn",type:"button",text:"Clock out",onclick:()=>asmClockOut()})));
+  const paint=()=>{ if(!asmOrder) return; head.innerHTML=""; head.append(itemCanvas(BY[asmOrder.icon]?asmOrder.icon:"b_pc_common",56),el("div",{class:"info"},el("strong",{text:`Blueprint: ${asmOrder.n}`}),el("span",{class:"sub",text:`${asmOrder.steps.length} parts · pays ₵${asmOrder.pay}+ (speed bonus, streak ×${(1+Math.min(.5,asmShift.streak*.05)).toFixed(2)})`})));
+    steps.innerHTML=""; asmOrder.steps.forEach((t,k)=>{ const P=ASM_PARTS.find(q=>q.t===t); const c=el("div",{class:"pill"+(k===asmOrder.i?" on":""),style:k<asmOrder.i?"opacity:.45":k===asmOrder.i?"border-color:var(--amber);color:var(--amber)":""},itemCanvas(P.id,18),` ${k<asmOrder.i?"✓ ":""}${P.n}`); steps.append(c); });
+    bins.innerHTML=""; asmBins.forEach((P,k)=>{ const b=el("button",{class:"card",type:"button",onclick:()=>asmPick(P.t)},itemCanvas(P.id,40),el("div",{class:"nm",text:P.n}),el("div",{class:"meta"},el("span",{text:`[${(k+1)%10}]`}))); bins.append(b); });
+    stats.innerHTML=""; for(const t2 of [`Built ${asmShift.built}`,`Streak ${asmShift.streak}`,`Earned ₵${asmShift.earned}`,`Crew ${asmCrew()}/10`]) stats.append(el("span",{class:"pill",text:t2})); };
+  asmUI={paint,fill,msg}; paint(); clearInterval(asmTick);
+  asmTick=setInterval(()=>{ if(currentView!=="asm"||$("#overlay").hidden||!asmOrder){ clearInterval(asmTick); asmUI=null; return; } const left=asmTimeLeft(), f=Math.max(0,left/asmOrder.limit); fill.style.width=(f*100)+"%"; fill.style.background=f>.5?"var(--cyan)":f>.25?"var(--amber)":"#ff5a4a";
+    if(left<=0){ asmShift.streak=0; asmShift.fails++; msg.textContent=`Too slow! The ${asmOrder.n} was scrapped. Streak reset.`; msg.className="r-epic"; beep(140,.25,"sawtooth"); asmNewOrder(); paint(); } },100); }
+function asmPick(t){ if(!asmOrder||!asmUI) return; const need=asmOrder.steps[asmOrder.i];
+  if(t!==need){ asmOrder.mist++; asmOrder.pen+=2.5; asmUI.msg.textContent=`Wrong part! That slot needs a ${ASM_PARTS.find(q=>q.t===need).n}. −2.5s`; asmUI.msg.className="r-epic"; beep(160,.12,"square"); return; }
+  asmOrder.i++; beep(600+asmOrder.i*80,.04,"triangle"); me.emote={e:"use",t:T};
+  if(asmOrder.i>=asmOrder.steps.length){ const left=Math.max(0,asmTimeLeft()), sp=left/asmOrder.limit, perfect=!asmOrder.mist; asmShift.streak++; asmShift.best=Math.max(asmShift.best,asmShift.streak);
+    const pay=Math.round(asmOrder.pay*(1+.5*sp)*(1+Math.min(.5,(asmShift.streak-1)*.05))*(perfect?1.1:1)); save.credits+=pay; asmShift.earned+=pay; asmShift.built++; asmShift.lastBuild=Date.now(); persist(); hud();
+    asmBelt.push({id:BY[asmOrder.icon]?asmOrder.icon:"b_pc_common",x:ASM_X(asmSlot),t0:T}); asmFlash={bay:asmSlot,until:T+1.2,txt:"+₵"+pay};
+    asmUI.msg.textContent=`${perfect?"PERFECT · ":""}${asmOrder.n} shipped! +₵${pay}${sp>.5?" (fast!)":""}`; asmUI.msg.className="r-uncommon"; beep(1200,.08); setTimeout(()=>beep(1500,.1),80); asmNewOrder(); }
+  asmUI.paint(); }
+document.addEventListener("keydown",e=>{ if(currentView!=="asm"||$("#overlay").hidden) return; if(e.target&&["INPUT","TEXTAREA"].includes(e.target.tagName)) return; if(/^[0-9]$/.test(e.key)){ const k=(+e.key+9)%10; if(asmBins[k]){ e.preventDefault(); asmPick(asmBins[k].t); } } },true);
+function openAsmBoard(){ const body=panel("Harvest Assembly · Shift Board",`Crew ${asmCrew()}/10 on the line. Pay: ₵16-₵50 per build plus speed and streak bonuses, and ₵3/min while you keep building.`); currentView="asmboard";
+  const l=el("div",{class:"list"}); for(let i=0;i<ASM_BAYS;i++){ const d=asmSlots[i], mine=i===asmSlot, live=mine||asmSlotLive(d);
+    l.append(el("div",{class:"li"},el("span",{class:"tag",style:`color:${live?"var(--amber)":"var(--green,#43f0a4)"}`,text:`B${i+1}`}),el("div",{class:"grow"},el("div",{text:mine?"You":live?nameOf(d.by):"Open"}),el("div",{class:"sub",text:mine?"Your station":live?"Assembling":"Free to clock in"})),
+      ...(!live&&asmSlot<0?[el("button",{class:"btn hot",type:"button",text:"Clock in here",onclick:()=>{ closePanel(); asmClockIn(i); }})]:[]))); }
+  body.append(l);
+  if(asmSlot>=0) body.append(el("div",{class:"row"},el("span",{class:"pill on",text:`Bay ${asmSlot+1} · built ${asmShift.built} · ₵${asmShift.earned}`}),el("button",{class:"btn hot",type:"button",text:"Back to my bay",onclick:()=>{ me.x=ASM_X(asmSlot); me.y=300; openAsmConsole(); }}),el("button",{class:"btn",type:"button",text:"Clock out",onclick:()=>asmClockOut()})));
+  else body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Clock in (any open bay)",onclick:()=>{ closePanel(); asmClockIn(); }}))); }
+function asmHotspots(){ const out=[{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:250,hw:45,label:asmSlot>=0?"Shift board: crew, your earnings, clock out":"Shift board: clock in and see open bays",act:()=>openAsmBoard()}];
+  for(let i=0;i<ASM_BAYS;i++){ const d=asmSlots[i], mine=i===asmSlot, live=mine||asmSlotLive(d);
+    out.push({x:ASM_X(i),hw:100,label:mine?`Work your station (Bay ${i+1})`:live?`Bay ${i+1}: ${nameOf(d.by)} is assembling`:asmSlot>=0?`Bay ${i+1}: open`:`Bay ${i+1}: open · clock in here`,act:()=>{ if(mine) openAsmConsole(); else if(live) toast(`${nameOf(d.by)} is working Bay ${i+1}.`); else if(asmSlot>=0) toast(`You're working Bay ${asmSlot+1}.`); else asmClockIn(i); }}); }
+  return out; }
+function drawAssembly(t){ const W=SCENES.assembly.w; ctx.fillStyle="#070a0f"; ctx.fillRect(camX,0,VW,H);
+  ctx.fillStyle="#0d131b"; ctx.fillRect(0,0,W,250); for(let x=0;x<W;x+=80){ ctx.fillStyle="rgba(255,255,255,.025)"; ctx.fillRect(x,0,2,250); }
+  for(let x=0;x<W;x+=40){ ctx.fillStyle=(x/40)%2?"#ffd36a":"#0d131b"; ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(x,236); ctx.lineTo(x+20,236); ctx.lineTo(x+8,246); ctx.lineTo(x-12,246); ctx.fill(); ctx.globalAlpha=1; }
+  // ceiling trusses + lights
+  ctx.strokeStyle="#1d2633"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,10); ctx.lineTo(W,10); ctx.stroke(); ctx.lineWidth=1; for(let x=0;x<W;x+=60){ ctx.beginPath(); ctx.moveTo(x,10); ctx.lineTo(x+30,28); ctx.lineTo(x+60,10); ctx.stroke(); }
+  for(let x=200;x<W;x+=240){ ctx.fillStyle="#e9f6ff"; ctx.shadowColor="#bfe9ff"; ctx.shadowBlur=14; ctx.fillRect(x-26,30,52,4); ctx.shadowBlur=0; const g=ctx.createLinearGradient(0,34,0,250); g.addColorStop(0,"rgba(191,233,255,.08)"); g.addColorStop(1,"rgba(191,233,255,0)"); ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(x-26,34); ctx.lineTo(x+26,34); ctx.lineTo(x+90,250); ctx.lineTo(x-90,250); ctx.fill(); }
+  // background racks with crates
+  for(let x=330;x<W-260;x+=240){ ctx.fillStyle="#141c27"; ctx.fillRect(x-4,48,8,140); ctx.fillRect(x+96,48,8,140); for(let r=0;r<3;r++){ ctx.fillStyle="#1d2633"; ctx.fillRect(x-4,78+r*42,108,4); for(let c=0;c<3;c++) if(((x/240|0)+r+c)%3){ ctx.fillStyle=["#3a2a1a","#2a3340","#3d2d4f"][(r+c)%3]; ctx.fillRect(x+4+c*32,52+r*42,28,26); } } }
+  neonText("HARVEST ASSEMBLY",300,76,22,"#ffd36a",flick(77,t)); neonText("LINE 1 · 10 BAYS · AUTOMATED SHIPPING",300,98,9,"#38e8ff",1);
+  // entrance: metro + shift board + foreman
+  ctx.fillStyle="#0a0e14"; ctx.fillRect(80,150,80,96); neonText("METRO",120,142,10,"#43f0a4",1);
+  ctx.fillStyle="#101824"; ctx.fillRect(214,130,72,70); ctx.strokeStyle="#ffd36a"; ctx.strokeRect(214.5,130.5,71,69); ctx.fillStyle="#ffd36a"; ctx.font="bold 9px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("SHIFT",250,150); ctx.fillText("BOARD",250,162); ctx.fillStyle="#43f0a4"; ctx.fillText(`CREW ${asmCrew()}/10`,250,184);
+  drawStick(ctx,300,250,.8,{dir:-1,phase:0,moving:false,look:{skin:2,style:17,jacket:8,pants:7,visor:4,hat:4,back:0,pet:0,aura:0,nameCol:2},name:"Foreman Rusk"},t);
+  // conveyor belt
+  const b0=330, b1=W-180; ctx.fillStyle="#1d2633"; for(let x=b0;x<b1;x+=120) ctx.fillRect(x,214,6,32); ctx.fillStyle="#222b38"; ctx.fillRect(b0,196,b1-b0,18); ctx.fillStyle="#0b0f15"; ctx.fillRect(b0,199,b1-b0,12);
+  ctx.fillStyle="rgba(255,255,255,.07)"; for(let x=b0+((t*60)%24);x<b1;x+=24) ctx.fillRect(x,199,10,12); ctx.fillStyle="#3a4556"; for(let x=b0;x<b1;x+=40){ ctx.beginPath(); ctx.arc(x,213,3,0,7); ctx.fill(); }
+  // ambient crates from other occupied bays
+  if(T>asmAmb){ asmAmb=T+2.5; for(let i=0;i<ASM_BAYS;i++){ if(i===asmSlot) continue; if(asmSlotLive(asmSlots[i])&&Math.random()<.3) asmBelt.push({id:ASM_ORDERS[(Math.random()*ASM_ORDERS.length)|0].icon,x:ASM_X(i),t0:T,crate:true}); } }
+  asmBelt=asmBelt.filter(c=>c.x<b1+20); for(const c of asmBelt){ c.x+=60*dt; if(c.crate){ ctx.fillStyle="#6b4a2a"; ctx.fillRect(c.x-11,180,22,18); ctx.strokeStyle="#3a2814"; ctx.strokeRect(c.x-10.5,180.5,21,17); ctx.fillStyle="#ffd36a"; ctx.fillRect(c.x-3,186,6,2); } else drawItem(ctx,BY[c.id]?c.id:"b_pc_common",c.x,186,26,t); }
+  // stations
+  for(let i=0;i<ASM_BAYS;i++){ const x=ASM_X(i), d=asmSlots[i], mine=i===asmSlot, live=mine||asmSlotLive(d), col=mine?"#38e8ff":live?"#ffb84a":"#43f0a4";
+    // robot arm
+    const sw=live?Math.sin(t*3+i):Math.sin(t*.4+i)*.2; ctx.strokeStyle="#5a6577"; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(x,34); ctx.lineTo(x,62); ctx.lineTo(x+30*sw,110); ctx.lineTo(x+18*sw,150+(live?Math.abs(Math.sin(t*3+i))*24:0)); ctx.stroke(); ctx.lineWidth=1; ctx.fillStyle="#8a95a8"; ctx.beginPath(); ctx.arc(x,62,5,0,7); ctx.arc(x+30*sw,110,4,0,7); ctx.fill();
+    const cx=x+18*sw, cy=150+(live?Math.abs(Math.sin(t*3+i))*24:0); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx-6,cy); ctx.lineTo(cx-4,cy+8); ctx.moveTo(cx+6,cy); ctx.lineTo(cx+4,cy+8); ctx.stroke(); ctx.lineWidth=1;
+    // monitor
+    ctx.fillStyle="#0a0e14"; ctx.fillRect(x-70,112,52,34); ctx.strokeStyle=col; ctx.strokeRect(x-69.5,112.5,51,33); ctx.fillStyle=col; ctx.font="bold 8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText(`BAY ${i+1}`,x-44,124); ctx.fillStyle="#cfc6e8"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.fillText(mine?"YOU":live?nameOf(d.by).slice(0,9).toUpperCase():"OPEN",x-44,136);
+    if(mine&&asmOrder){ ctx.fillStyle="#1a1230"; ctx.fillRect(x-66,140,44,3); ctx.fillStyle=col; ctx.fillRect(x-66,140,44*Math.max(0,asmTimeLeft()/asmOrder.limit),3); }
+    // workbench
+    ctx.fillStyle="#1d2633"; ctx.fillRect(x-60,222,120,8); ctx.fillRect(x-56,230,6,16); ctx.fillRect(x+50,230,6,16); ctx.fillStyle="#2a3340"; for(let k=0;k<4;k++) ctx.fillRect(x-54+k*28,214,22,8);
+    ctx.fillStyle=col; ctx.globalAlpha=.8; ctx.beginPath(); ctx.arc(x+52,118,3.5,0,7); ctx.fill(); ctx.globalAlpha=1;
+    if(asmFlash&&asmFlash.bay===i&&asmFlash.until>T){ const u=1-(asmFlash.until-T)/1.2; ctx.globalAlpha=1-u; neonText(asmFlash.txt,x,170-u*30,12,"#43f0a4",1); ctx.globalAlpha=1; } }
+  // shipping dock
+  const dx=W-160; ctx.fillStyle="#0a0e14"; ctx.fillRect(dx,96,140,150); ctx.fillStyle="#1d2633"; for(let k=0;k<12;k++) ctx.fillRect(dx+4,100+k*12+((t*8)%12)*0,132,9); ctx.strokeStyle="#ffd36a"; ctx.strokeRect(dx+.5,96.5,139,149); neonText("SHIPPING",dx+70,86,11,"#ffd36a",1);
+  for(let k=0;k<5;k++){ ctx.fillStyle=k%2?"#6b4a2a":"#5a3e22"; ctx.fillRect(dx-40+(k%3)*22,224-Math.floor(k/3)*20,20,20); }
+  // floor + bays
+  for(let y=246;y<H;y+=24) for(let x=Math.floor(camX/64)*64;x<camX+VW;x+=64){ ctx.fillStyle=((x/64+y/24)%2)?"#10161e":"#0d1219"; ctx.fillRect(x,y,64,24); }
+  for(let i=0;i<ASM_BAYS;i++){ const x=ASM_X(i), mine=i===asmSlot, live=mine||asmSlotLive(asmSlots[i]); ctx.strokeStyle=mine?"#38e8ff":"#ffd36a"; ctx.globalAlpha=live?.7:.35; ctx.setLineDash([8,6]); ctx.strokeRect(x-100,254,200,90); ctx.setLineDash([]); ctx.globalAlpha=.25; ctx.fillStyle=mine?"#38e8ff":"#ffd36a"; ctx.font="bold 18px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText(`BAY ${i+1}`,x,336); ctx.globalAlpha=1; } }
 /* ============================================================ BACKROOMS (rentable VIP rooms in The Glitch and The Third Eye) */
 const VIP_ROOMS=[
   {id:"neon",n:"Neon Lounge",venue:"bar",door:1530,price:40,col:"#ff3fa8",d:"Velvet booths, a private smart bar, a holo jukebox and an arcade cabinet.",feats:[{x:250,k:"seat",item:"dec_couch",v:"Sink into the velvet booth"},{x:420,k:"seat",item:"dec_beanbag",v:"Flop on the beanbag"},{x:600,k:"bar",item:"dec_robot",v:"Order from the smart bar (free)"},{x:780,k:"music",item:"dec_jukebox",v:"Play the holo jukebox"},{x:960,k:"arcade",item:"dec_arcade",v:"Play the arcade (UPLOAD)"}]},
@@ -4440,7 +4548,7 @@ if(save.name) myName=save.name;
 
 /* ============================================================ PRESENCE */
 let lastPush=0, lastSig="";
-function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0)?1:0};
+function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
@@ -4501,7 +4609,7 @@ setInterval(hud,1000);
     db.collection("cbstaff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); cbSlots=nx;
       if(cbSlot>=0){ const mine=nx[cbSlot]; if(!mine||mine.by!==myId){ cbSlot=-1; clearInterval(cbBeat); cbShift=null; cbHolding=null; toast("Your register slot was released."); } }
       resolveNames(nx.filter(x=>x&&x.by).map(x=>x.by)); },()=>{});
-    db.collection("staff").onSnapshot(s=>{ const nx=[null,null,null,null], bb=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); const b=/^bbslot([0-3])$/.exec(d.id); if(b) bb[+b[1]]=d.data(); }); staffSlots=nx; bbSlots=bb;
+    db.collection("staff").onSnapshot(s=>{ const nx=[null,null,null,null], bb=[null,null,null,null], asmNext=Array(ASM_BAYS).fill(null); s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); const b=/^bbslot([0-3])$/.exec(d.id); if(b) bb[+b[1]]=d.data(); const am=/^asm([0-9])$/.exec(d.id); if(am) asmNext[+am[1]]=d.data(); }); asmSlots=asmNext; if(currentView==="asmboard"&&!$("#overlay").hidden) openAsmBoard(); staffSlots=nx; bbSlots=bb;
       if(mySlot>=0){ const mine=nx[mySlot]; if(!mine||mine.by!==myId){ mySlot=-1; clearInterval(beatTimer); shift=null; toast("Your shift slot was released."); } }
       resolveNames(nx.filter(x=>x&&x.by).map(x=>x.by)); refreshView("orders"); },()=>{});
     let firstOrders=true;
