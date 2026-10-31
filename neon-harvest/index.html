@@ -564,7 +564,7 @@ const WARD={
   hairCol:{n:"Hair color",color:true},
   hat:   {n:"Head",   opts:[["None",0],["Beanie",0],["Mohawk",50],["Halo",300],["Cap",0],["Headphones",90],["Top hat",120],["Crown",500],["Horns",160],["Antenna",70],["Bandana",40],["Bucket hat",60],["Cat ears",110],["Bunny ears",110],["Wizard hat",200],["Space helmet",350],["Holo crown",450],["Party hat",30],["Beret",50],["Visor cap",60],["Ninja hood",80],["Fedora",90],["Cowboy hat",110],["Flower crown",120],["Pirate hat",140]]},
   back:  {n:"Back",   opts:[["None",0],["Backpack",40],["Katana",180],["Jetpack",350],["Cape",140],["Neon wings",600],["Guitar",160],["Twin swords",220],["Holo banner",240],["Energy tail",300],["Bat wings",380],["Angel wings",450],["Mech arms",500],["Quiver",120],["Riot shield",200],["Hoverboard",260],["Speaker rig",300],["Cyber spine",340],["Butterfly wings",420],["Dragon wings",650]]},
-  pet:   {n:"Companion",opts:[["None",0],["Mini drone",200],["Pixel cat",250],["Plasma orb",300],["Neon koi",400],["Pixel slime",200],["Ghost",260],["Cyber owl",320],["Robo dog",350],["Data jellyfish",380],["Mini dragon",600],["Pixel bird",220],["Bat",240],["Snake bot",300],["Fire spirit",400],["Mini UFO",450],["Neon fox",500]]},
+  pet:   {n:"Companion",opts:[["None",0],["Mini drone",200],["Pixel cat",250],["Plasma orb",300],["Neon koi",400],["Pixel slime",200],["Ghost",260],["Cyber owl",320],["Robo dog",350],["Data jellyfish",380],["Mini dragon",600],["Pixel bird",220],["Bat",240],["Snake bot",300],["Fire spirit",400],["Mini UFO",450],["Neon fox",500],["Glitch bunny",240],["Robo penguin",260],["Byte hamster",280],["Mech spider",320],["Circuit monkey",340],["Rock golem",360],["Hover turtle",380],["Neon butterfly",300],["Star sprite",420],["Cyber axolotl",460],["Holo whale",520],["Pocket phoenix",650]]},
   aura:  {n:"Aura",   opts:[["None",0],["Sparks",150],["Glitch",250],["Rain cloud",120],["Floor ring",80],["Flames",450],["Pixel snow",140],["Music notes",160],["Hearts",180],["Cherry blossoms",220],["Shadow smoke",260],["Lightning",300],["Orbit rings",320],["Bubbles",100],["Stars",180],["Binary rain",200],["Vapor trail",220],["Golden glow",350],["Rainbow",400],["Black hole",500]]},
   nameCol:{n:"Name color",color:true},
 };
@@ -1137,8 +1137,10 @@ function drawStick(c,x,y,s,o,t){
   // ---- rain cloud aura
   if(aura==="Rain cloud"){ c.fillStyle="#4a4466"; for(const [cx,r] of [[-6,6],[0,8],[7,6]]){ c.beginPath(); c.arc(cx,head-30,r,0,7); c.fill(); } c.strokeStyle="rgba(150,190,255,.7)"; c.lineWidth=1; c.beginPath(); for(let i=0;i<5;i++){ const ry=head-22+((t*40+i*7)%22); c.moveTo(-8+i*4,ry); c.lineTo(-9+i*4,ry+4); } c.stroke(); }
   // ---- companion
-  if(pet!=="None"){ const px=-dir*24, py=(pet==="Pixel cat"||pet==="Pixel slime"||pet==="Robo dog"||pet==="Snake bot"||pet==="Neon fox")?0:-44+Math.sin(t*2.5)*4;
-    c.save(); c.translate(px,py);
+  if(pet!=="None"){ const px=-dir*24, py=PET_GROUND.includes(pet)?0:-44+Math.sin(t*2.5)*4;
+    const pa=em&&em.startsWith("pet")?em:null, pu=pa&&o.emote?t-o.emote.t:0;
+    c.save(); c.translate(px,py); if(pa==="petplay"){ c.translate(0,-Math.abs(Math.sin(pu*7))*10); c.rotate(Math.min(1,pu/1.2)*Math.PI*2*(pu<1.2?1:0)); } if(pa==="petpat") c.scale(1+.12*Math.sin(pu*12),1-.08*Math.sin(pu*12)); if(pa==="petfeed") c.translate(0,Math.abs(Math.sin(pu*14))*1.5);
+    if(o.petGlow){ c.save(); c.globalAlpha=.25+.15*Math.sin(t*3); const g2=c.createRadialGradient(0,-4,1,0,-4,14); g2.addColorStop(0,"#ffd36a"); g2.addColorStop(1,"rgba(255,211,106,0)"); c.fillStyle=g2; c.beginPath(); c.arc(0,-4,14,0,7); c.fill(); c.restore(); }
     if(pet==="Mini drone"){ c.fillStyle="#3d3456"; c.fillRect(-5,-2,10,4); c.fillStyle="rgba(200,200,255,.35)"; c.beginPath(); c.ellipse(-6,-4,5,1.5,0,0,7); c.ellipse(6,-4,5,1.5,0,0,7); c.fill(); const on=Math.sin(t*8)>0; c.fillStyle=on?JC:"#1a1428"; c.fillRect(-1,-1,2,2); }
     else if(pet==="Pixel cat"){ const st=o.moving?Math.sin(o.phase*3):0; c.fillStyle="#e9e2ff"; c.fillRect(-6,-7,10,5); c.fillRect(dir>0?2:-8,-11,6,5); c.fillRect(dir>0?3:-7,-13,1.5,2); c.fillRect(dir>0?6:-4,-13,1.5,2); c.fillRect(-5,-2,1.5,2+st); c.fillRect(1,-2,1.5,2-st); c.strokeStyle="#e9e2ff"; c.lineWidth=1.5; c.beginPath(); c.moveTo(dir>0?-6:4,-6); c.quadraticCurveTo(dir>0?-11:9,-8,dir>0?-10:8,-13+Math.sin(t*3)*2); c.stroke(); c.fillStyle="#43f0a4"; c.fillRect(dir>0?5:-6,-10,1.2,1.2); }
     else if(pet==="Plasma orb"){ c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=14; c.beginPath(); c.arc(0,0,4+Math.sin(t*6),0,7); c.fill(); c.shadowBlur=0; c.strokeStyle=JC; c.lineWidth=1; c.beginPath(); c.ellipse(0,0,8,3,t*2,0,7); c.stroke(); }
@@ -1155,8 +1157,16 @@ function drawStick(c,x,y,s,o,t){
     else if(pet==="Fire spirit"){ for(let k=0;k<3;k++){ c.fillStyle=["#ff5a4a","#ffb84a","#f5e663"][k]; c.shadowColor="#ff5a4a"; c.shadowBlur=10; const r=5-k*1.4; c.beginPath(); c.moveTo(-r,2); c.quadraticCurveTo(Math.sin(t*9+k)*2,-r*2.6,r,2); c.arc(0,2,r,0,Math.PI); c.fill(); } c.shadowBlur=0; c.fillStyle="#0b0716"; c.fillRect(dir*1.5-.6,-1,1.2,1.4); c.fillRect(dir*-1-.6,-1,1.2,1.4); }
     else if(pet==="Mini UFO"){ c.fillStyle="rgba(168,232,255,.6)"; c.beginPath(); c.arc(0,-2,3.4,Math.PI,0); c.fill(); c.fillStyle="#8a90a6"; c.beginPath(); c.ellipse(0,0,8,2.6,0,0,7); c.fill(); for(let k=0;k<4;k++){ c.fillStyle=((t*6|0)%4)===k?"#43f0a4":"#2a2440"; c.fillRect(-6+k*4,-.5,1.5,1.5); } c.fillStyle="rgba(67,240,164,.15)"; c.beginPath(); c.moveTo(-3,2); c.lineTo(3,2); c.lineTo(7,40); c.lineTo(-7,40); c.fill(); }
     else if(pet==="Neon fox"){ const st=o.moving?Math.sin(o.phase*3):0; c.fillStyle="#ff8a3a"; c.shadowColor="#ff8a3a"; c.shadowBlur=6; c.fillRect(-6,-8,11,5); c.fillRect(dir>0?3:-9,-12,6,5); c.beginPath(); c.moveTo(dir>0?3.5:-8.5,-12); c.lineTo(dir>0?4.5:-7.5,-15); c.lineTo(dir>0?5.5:-6.5,-12); c.moveTo(dir>0?7:-5,-12); c.lineTo(dir>0?8:-4,-15); c.lineTo(dir>0?9:-3,-12); c.fill(); c.fillRect(-5,-3,1.6,3+st); c.fillRect(2,-3,1.6,3-st); c.beginPath(); c.moveTo(-dir*6,-7); c.quadraticCurveTo(-dir*13,-14+Math.sin(t*4)*2,-dir*10,-4); c.fill(); c.shadowBlur=0; c.fillStyle="#ece6ff"; c.beginPath(); c.arc(-dir*11.5,-8+Math.sin(t*4),1.6,0,7); c.fill(); }
+    else if(PET_ART[pet]) PET_ART[pet](c,dir,t,o,JC);
     else if(pet==="Neon koi"){ const sw2=Math.sin(t*6)*3; c.fillStyle="#ff8ad8"; c.shadowColor="#ff8ad8"; c.shadowBlur=8; c.beginPath(); c.ellipse(0,0,7,3.5,0,0,7); c.fill(); c.beginPath(); c.moveTo(-dir*6,0); c.lineTo(-dir*11,-3+sw2); c.lineTo(-dir*11,3+sw2); c.fill(); c.shadowBlur=0; c.fillStyle="#fff"; c.fillRect(dir*4-1,-1.5,1.5,1.5); }
     c.restore(); }
+  if(pet!=="None"&&em&&em.startsWith("pet")){ const pu=t-o.emote.t, ppx=-dir*24, ppy=PET_GROUND.includes(pet)?-8:-48; c.save();
+    if(em==="petpat"){ for(let k=0;k<3;k++){ const u=(pu*.8+k/3)%1; c.globalAlpha=1-u; c.fillStyle="#ff3fa8"; c.save(); c.translate(ppx-6+k*6,ppy-8-u*18); c.beginPath(); c.moveTo(0,2.5); c.bezierCurveTo(-4,-1,-2,-4,0,-1.5); c.bezierCurveTo(2,-4,4,-1,0,2.5); c.fill(); c.restore(); } }
+    else if(em==="petfeed"){ for(let k=0;k<5;k++){ const u=(pu*1.4+k/5)%1; c.globalAlpha=1-u; c.fillStyle=k%2?"#ffb84a":"#f5e663"; c.fillRect(ppx-6+k*3,ppy-2-u*10+u*u*16,2,2); } }
+    else if(em==="petplay"){ c.fillStyle="#f5e663"; for(let k=0;k<4;k++){ const a=pu*6+k*1.57; c.globalAlpha=.8; c.fillRect(ppx+Math.cos(a)*12,ppy-4+Math.sin(a)*8,2,2); } }
+    else if(em==="petability"){ c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=10; c.lineWidth=1.5; c.globalAlpha=Math.max(0,1-pu/1.5); c.beginPath(); c.arc(ppx,ppy-4,6+pu*18,0,7); c.stroke(); }
+    c.restore(); }
+  if(o.petSay&&t-o.petSay.t<3.5){ const ppx=-dir*24, ppy=PET_GROUND.includes(pet)?-22:-62; c.save(); c.font="7px 'IBM Plex Mono',monospace"; c.textAlign="center"; const w2=Math.min(90,c.measureText(o.petSay.text).width+8); c.fillStyle="rgba(11,7,22,.9)"; c.strokeStyle=JC; c.lineWidth=.8; c.fillRect(ppx-w2/2,ppy-9,w2,11); c.strokeRect(ppx-w2/2+.5,ppy-8.5,w2-1,10); c.fillStyle="#fff"; c.fillText(o.petSay.text.slice(0,22),ppx,ppy-1); c.restore(); }
   if(o.hurt&&t-o.hurt<.18){ c.fillStyle="rgba(255,60,60,.5)"; c.beginPath(); c.ellipse(0,(hip+head)/2,13,30,0,0,7); c.fill(); }
   if(FX) fxFront(c,FX,dir,hip,sh,head,t); if(em==="use") useFx(c,o,dir,head,t);
   if(aura==="Bubbles"){ c.strokeStyle="rgba(168,232,255,.75)"; c.lineWidth=.8; for(let i=0;i<6;i++){ const u=(t*.35+i/6)%1; c.globalAlpha=1-u; c.beginPath(); c.arc(-16+((i*23)%32)+Math.sin(t*2+i)*3,-6-u*70,1.5+(i%3),0,7); c.stroke(); } c.globalAlpha=1; }
@@ -1465,7 +1475,7 @@ const keys={}; let dt=0, last=performance.now(), T=0, target=null, nearHot=null;
 addEventListener("keydown",e=>{ if(!$("#title").hidden){ if(e.key==="Enter"&&e.target.tagName!=="BUTTON"){ const b=$("#title .btn.hot"); if(b){ e.preventDefault(); b.click(); } } return; } if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"){ if(e.key==="Escape"&&!$("#overlay").hidden&&e.target.closest&&e.target.closest("#overlay")) closePanel(); return; } if(!$("#overlay").hidden){ if(e.key==="Escape") closePanel(); return; }
   keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();
   if(me.scene==="void"){ const kk=e.key.toLowerCase(); if(kk==="f"){ voidAttack(); e.preventDefault(); } if(kk==="g") setBlock(true); }
-  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="t"||e.key==="T") openFastTravel(); if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
+  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="t"||e.key==="T") openFastTravel(); if(e.key==="p"||e.key==="P") openCompanion(); if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
 addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; if(e.key.toLowerCase()==="g") setBlock(false); });
 const releaseKeys=()=>{ for(const k in keys) keys[k]=false; };
 addEventListener("blur",releaseKeys); document.addEventListener("visibilitychange",()=>{ if(document.hidden) releaseKeys(); });
@@ -1501,7 +1511,7 @@ function stepInner(now){
   if(me.dead){ ix=0; iy=0; target=null; }
   if(ix||iy) target=null;
   if(target){ const dx=target.x-me.x, dy=target.y-me.y; const d=Math.hypot(dx,dy); if(d<6){ const u=target.use; target=null; if(u&&$("#overlay").hidden){ beep(880,.05); safeAct(u); } } else { ix=dx/d; iy=dy/d; } }
-  let sp=buffOn("speed")?195:150; if(me.blocking||(me.slowUntil||0)>T) sp*=.5; if(me.dead) sp=0; me.moving=!!(ix||iy)&&$("#overlay").hidden;
+  let sp=(buffOn("speed")?195:150)*(1+petTrait("speed")/100); if(me.blocking||(me.slowUntil||0)>T) sp*=.5; if(me.dead) sp=0; me.moving=!!(ix||iy)&&$("#overlay").hidden;
   if(me.seat!=null&&me.moving){ me.seat=null; pushPresence(true); }
   if(me.seat!=null){ me.moving=false; me.x=SEATS[me.seat].x; me.y=SEATS[me.seat].y; }
   if(me.homeSit&&(me.moving||(me.scene!=="home"&&me.scene!=="vip"))){ me.homeSit=null; pushPresence(true); }
@@ -1536,7 +1546,7 @@ function render(){
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),petSay:me.petSay,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
@@ -1598,7 +1608,8 @@ const GUIDE={
     ["Cyber Buys & More (Sector 9)",["Six aisles: Drives & Cables, Peripherals, Wall Art & Signs, Furniture & Lighting, then past the register, the new wing: Gadgets & Gaming (12 holdable gadgets like a Pocket Drone, VR Visor Rig and Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Epic items cost chips, everything else credits."]],
     ["Weapons (Volt Armory, Byte Market)",["20 weapons from Laser Knife to the Singularity Gun, each with its own damage, reach, speed and attack effect. Some hit everyone in range, pierce, or slow targets. The Armory shows 10 each hour; bots can drop them too.","Equip one in your hand from Character → Hand. Use Pose to show it off."]],
     ["Food and drinks",["11 drinks from Vex and 7 dishes from Kai at The Glitch (1.5× price; menu price from a runner on shift). Byte Bowl Noodles sells the full menu for less plus 8 specials of its own.","Eat or drink from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips or Void armor (25% less damage). Food heals in The Void when you're clear of a fight."]],
-    ["Look and style",["Press C anytime. Over 270 options: 16 body styles, 20 tops, 20 hairstyles, 12 shoes, 14 neck pieces, 20 eyewear, 25 headpieces, 20 back items, 17 companions, 20 auras and 22 colors for top, legs, hair and name.","Basics are free. Premium pieces cost credits once and stay unlocked. Try anything on before you buy."]],
+    ["Companions",["28 companions (Character → Companion), each with its own personality, a passive trait (like +2 chips per Scrap dig, +15% tips, 12% less Void damage, +10% mining, faster walking or HP regen) and a special ability on a cooldown (fetch a part, bring a snack, dig up chips or credits, heal, or a boost).","Press P (☰ → Companion on phones) to pet, play with or feed your companion, or use its ability. Other players see it react. Bonding (0–100) unlocks tiers: Soulbound companions get a golden glow, a 50% stronger trait and 30% shorter ability cooldowns."]],
+    ["Look and style",["Press C anytime. Over 270 options: 16 body styles, 20 tops, 20 hairstyles, 12 shoes, 14 neck pieces, 20 eyewear, 25 headpieces, 20 back items, 28 companions, 20 auras and 22 colors for top, legs, hair and name.","Basics are free. Premium pieces cost credits once and stay unlocked. Try anything on before you buy."]],
     ["From Void bots",["7 bot types with their own loot: tech and gear, weapons, gadgets, apartment decor, food and wardrobe unlocks, from common to epic. Hard mode has the best odds and the SENTINEL Ω always drops two rare-or-better items. Walk over a drop within 45 seconds to grab it."]],
     ["From other players",["Buy on the Trade Board, win in Grid duels, or receive gifts. Tap any player to send one."]]]},
   home:{n:"Your apartment",secs:[
@@ -1716,7 +1727,7 @@ function openWardrobe(tab="name",firstRun=false){
     const l={...tryOn,[tab]:i}; const cvs=lookCanvas(l,64); const own=isOwned(tab,i), cur=fullLook(save.look)[tab]===i, sel=tryOn[tab]===i;
     const card=el("button",{class:"card"+(sel?" sel":""),type:"button","aria-pressed":String(sel),onclick:()=>{ tryOn[tab]=i; openWardrobe(tab,firstRun); }});
     if(WARD[tab].color){ const sw=el("div",{style:`height:6px;background:${COLORS[i]}`}); card.append(cvs,sw); } else card.append(cvs);
-    card.append(el("div",{class:"nm",text:optName(tab,i)}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",text:cur?"Wearing":own?"Owned":`₵${optCost(tab,i)}`}),el("span",{text:sel&&!cur?"Trying":""})));
+    card.append(el("div",{class:"nm",text:optName(tab,i)}),...(tab==="pet"&&PETS[optName(tab,i)]?[el("div",{class:"r-uncommon",style:"font-size:10px;line-height:1.2",text:PETS[optName(tab,i)].trait.short})]:[]),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",text:cur?"Wearing":own?"Owned":`₵${optCost(tab,i)}`}),el("span",{text:sel&&!cur?"Trying":""})));
     g.append(card);
   }
   body.append(g);
@@ -1749,7 +1760,7 @@ function scrapCD(){ return countBuild("deck")>0?60e3:90e3; }
 function scrapLeft(i){ return Math.max(0,((save.scrap[i]||0)+scrapCD()-Date.now())/1000); }
 function scrapReady(i){ return scrapLeft(i)<=0; }
 function dig(i){ if(!scrapReady(i)){ toast(`This pile is picked clean. Back in ${Math.ceil(scrapLeft(i))}s.`); return; }
-  save.scrap[i]=Date.now(); const finds=[]; const n=1+(Math.random()<.35?1:0)+(countBuild("drone")>0?1:0); for(let k=0;k<n;k++){ const id=rollItem(buffOn("luck")?.8:.15); addItem(id); finds.push(id); } if(Math.random()<.3){ const fl=Math.random()<.6?"enc_flop":["flop_blank","flop_blank","flop_os","flop_bp","flop_rom"][(Math.random()*5)|0]; addItem(fl); finds.push(fl); } const ch=(Math.random()*8|0)+2; save.chips+=ch; persist();
+  save.scrap[i]=Date.now(); const finds=[]; const n=1+(Math.random()<.35?1:0)+(countBuild("drone")>0?1:0); for(let k=0;k<n;k++){ const id=rollItem(buffOn("luck")?.8:Math.min(.8,.15+petTrait("luck")/100)); addItem(id); finds.push(id); } if(Math.random()<.3){ const fl=Math.random()<.6?"enc_flop":["flop_blank","flop_blank","flop_os","flop_bp","flop_rom"][(Math.random()*5)|0]; addItem(fl); finds.push(fl); } const ch=(Math.random()*8|0)+2+petTrait("dig"); save.chips+=ch; persist();
   for(const id of finds) toast(`Salvaged ${BY[id].n} (${BY[id].r})`,RAR[BY[id].r].c); toast(`+${ch} chips`); emote("cheer"); beep(500,.08,"triangle"); setTimeout(()=>beep(900,.08,"triangle"),90);
   if(finds.some(id=>BY[id].r==="epic")) broadcastSys(`found an EPIC ${BY[finds.find(id=>BY[id].r==="epic")].n} in Scrap Alley`);
   checkQuestToast(); }
@@ -1769,7 +1780,7 @@ function openArcade(){
     if(run.hits.length>=3){ run.on=false; const pts=run.hits.reduce((a,b)=>a+b,0); save.printBest=Math.max(save.printBest,pts);
       const r=pts>=9?"epic":pts>=7?"rare":pts>=4?"uncommon":pts>=2?"common":null;
       if(r){ const pool=CAT.filter(i=>i.t==="chip"&&i.r===r); const id=pool[0].id; addItem(id); toast(`Printed ${BY[id].n}!`,RAR[r].c); if(r==="epic") broadcastSys(`printed a HALO Singularity Chip at the arcade`); } else toast("Misprint. The plate jammed.");
-      const bonus=pts*2*(buffOn("print")?2:1); save.chips+=bonus; persist(); status.textContent=`Score ${pts}/9 · +${bonus} chips · Best ${save.printBest}`; go.disabled=false; checkQuestToast(); }
+      const bonus=pts*2*(buffOn("print")?2:1)+petTrait("print"); save.chips+=bonus; persist(); status.textContent=`Score ${pts}/9 · +${bonus} chips · Best ${save.printBest}`; go.disabled=false; checkQuestToast(); }
     else { run.zone={a:rnd(40,480),w:Math.max(50,120-run.hits.length*30)}; run.v*=1.25; } };
   go.onclick=()=>{ if(save.chips<5){ toast("You need 5 chips to run a print."); return;} save.chips-=5; hud(); go.disabled=true; run={on:true,p:20,v:420,hits:[],zone:{a:rnd(120,440),w:120}}; c.focus(); };
   c.tabIndex=0; c.addEventListener("pointerdown",hit);
@@ -1888,7 +1899,7 @@ function consumeItem(id){ const d=BY[id]; if(!d||(d.t!=="drink"&&d.t!=="food")||
     else if(!ks.length) note=`${d.t==="food"?"Tasty":"Refreshing"}. Its healing only works in The Void.`; }
   persist(); hud(); emote("cheer"); toast(`${d.n}: ${note}`,d.col); beep(d.t==="food"?420:500,.08); setTimeout(()=>beep(d.t==="food"?640:800,.1),80); return true; }
 function drinkIt(id){ return consumeItem(id); }
-function tipMult(){ return (countBuild("stream")>0?1.25:1)*(buffOn("tips")?1.25:1); }
+function tipMult(){ return (countBuild("stream")>0?1.25:1)*(buffOn("tips")?1.25:1)*(1+petTrait("tips")/100); }
 
 /* ============================================================ WORKBENCH */
 function countType(t){ return Object.entries(save.inv).reduce((s,[id,n])=>s+(BY[id]&&BY[id].t===t?n:0),0); }
@@ -1974,7 +1985,7 @@ function doBuild(rec,mode,stage){
 /* ============================================================ MINING RACK */
 function rigRate(id){ const it=BY[id]; if(!it) return 0; if(it.t==="miner") return it.rate||0; if(it.t!=="build") return 0; const base=it.k==="miner"?30:it.k==="qrig"?150:it.k==="pfarm"?20:0; return base*(1+TIER[it.r]); }
 function serverBoost(){ return 1+.25*Math.min(2,countBuild("server")); }
-function rigPending(s){ return Math.min(12,Math.max(0,(Date.now()-s.since)/36e5))*rigRate(s.id)*serverBoost()*vibeBoost(); }
+function rigPending(s){ return Math.min(12,Math.max(0,(Date.now()-s.since)/36e5))*rigRate(s.id)*serverBoost()*vibeBoost()*(1+petTrait("mine")/100); }
 function rackPending(){ return (save.rack||[]).reduce((a,s)=>a+rigPending(s),0); }
 function collectRack(){ let got=0; for(const s of save.rack){ got+=rigPending(s); s.since=Date.now(); } got=Math.floor(got); save.chips+=got; persist(); if(got) { toast(`Collected ${got} chips from the rack`,"#38e8ff"); beep(1000,.06); } return got; }
 function openRack(){
@@ -3253,6 +3264,89 @@ function drawLivingRoom(t){
     if(off){ ctx.save(); ctx.globalAlpha=.35; ctx.filter="grayscale(1)"; drawItem(ctx,id,p.x,p.y,96,0); ctx.restore(); return; }
     drawItem(ctx,id,p.x,p.y,96,act?t*3+i:t+i); });
 }
+/* ============================================================ COMPANIONS: traits, abilities, bonding */
+var PET_GROUND=["Pixel cat","Pixel slime","Robo dog","Snake bot","Neon fox","Glitch bunny","Robo penguin","Byte hamster","Mech spider","Circuit monkey","Rock golem"];
+var PETS={
+  "Mini drone":{p:"Curious and buzzy. Scans everything.",trait:{k:"dig",v:1,short:"+1 chip per Scrap dig"},ab:{k:"fetch",n:"Salvage Sweep",cd:120,d:"Finds a random part"},say:["Bzzt! Scanning…","Target acquired!","*whirr*"]},
+  "Pixel cat":{p:"Aloof, secretly loving. Naps on keyboards.",trait:{k:"luck",v:8,short:"Luckier Scrap finds"},ab:{k:"fetch",n:"Hairball Treasure",cd:150,d:"Coughs up a random part"},say:["mrrp.","*purrs in 8-bit*","Feed me, human."]},
+  "Plasma orb":{p:"Hums with raw energy. Hard to read.",trait:{k:"print",v:3,short:"+3 chips per CHIP PRINT"},ab:{k:"buff",b:"print",n:"Overcharge",cd:60,d:"2× print chips for 10 min"},say:["*hummmm*","…crackle…","ZAP!"]},
+  "Neon koi":{p:"Calm and lucky. Swims through the air.",trait:{k:"tips",v:12,short:"+12% shift tips"},ab:{k:"credits",lo:25,hi:60,n:"Lucky Coin",cd:60,d:"Brings ₵25–60"},say:["blub.","*bubbles*","Good fortune!"]},
+  "Pixel slime":{p:"Squishy, hungry, always happy.",trait:{k:"regen",v:2,short:"+2 HP/s regen in The Void"},ab:{k:"heal",v:30,n:"Gel Patch",cd:4,d:"Heals 30 HP in The Void"},say:["*squish*","blorp!","nom nom"]},
+  "Ghost":{p:"Shy prankster from the old net.",trait:{k:"guard",v:8,short:"8% less Void damage"},ab:{k:"buff",b:"guard",n:"Phase Shield",cd:45,d:"Void armor for 10 min"},say:["boo…","*fades in*","I see dead pixels"]},
+  "Cyber owl":{p:"Wise night-shift worker.",trait:{k:"mine",v:8,short:"+8% Mining Rack chips"},ab:{k:"buff",b:"luck",n:"Night Vision",cd:45,d:"Lucky salvage for 10 min"},say:["hoo-hoo.","Systems nominal.","*blinks*"]},
+  "Robo dog":{p:"Loyal, energetic, loves fetch.",trait:{k:"speed",v:8,short:"+8% walk speed"},ab:{k:"fetch",n:"Fetch!",cd:90,d:"Fetches a random part"},say:["Woof.exe!","*wags tail*","Good boy online!"]},
+  "Data jellyfish":{p:"Drifts dreamily through data streams.",trait:{k:"mine",v:10,short:"+10% Mining Rack chips"},ab:{k:"chips",lo:4,hi:10,n:"Data Bloom",cd:60,d:"Finds 4–10 chips"},say:["~drift~","*glows*","0101…"]},
+  "Mini dragon":{p:"Fierce, proud, tiny.",trait:{k:"bot",v:3,short:"+3 chips per bot deleted"},ab:{k:"buff",b:"guard",n:"Dragon Scales",cd:40,d:"Void armor for 10 min"},say:["RAWR!","*puffs smoke*","Fear me!"]},
+  "Pixel bird":{p:"Chirpy messenger, never still.",trait:{k:"speed",v:6,short:"+6% walk speed"},ab:{k:"buff",b:"speed",n:"Tailwind",cd:40,d:"Speed boost for 10 min"},say:["tweet!","chirp chirp","*flaps*"]},
+  "Bat":{p:"Night owl's cousin. Loves the club.",trait:{k:"tips",v:10,short:"+10% shift tips"},ab:{k:"buff",b:"tips",n:"Night Shift",cd:45,d:"+25% tips for 10 min"},say:["*squeak*","Party time!","…flap flap"]},
+  "Snake bot":{p:"Sly coder. Slithers through firewalls.",trait:{k:"asm",v:8,short:"+8% Assembly pay"},ab:{k:"chips",lo:3,hi:8,n:"Byte Siphon",cd:60,d:"Siphons 3–8 chips"},say:["sssudo…","*hiss*","Access granted"]},
+  "Fire spirit":{p:"Warm-hearted and a little reckless.",trait:{k:"bot",v:2,short:"+2 chips per bot deleted"},ab:{k:"heal",v:40,n:"Warm Glow",cd:5,d:"Heals 40 HP in The Void"},say:["*crackle*","Stay warm!","FWOOSH"]},
+  "Mini UFO":{p:"Visitor from another server.",trait:{k:"dig",v:2,short:"+2 chips per Scrap dig"},ab:{k:"fetch",n:"Tractor Beam",cd:100,d:"Beams up a random part"},say:["Take me to your router.","*beep boop*","☄"]},
+  "Neon fox":{p:"Clever trickster. Always has a plan.",trait:{k:"tips",v:15,short:"+15% shift tips"},ab:{k:"credits",lo:40,hi:90,n:"Sly Deal",cd:75,d:"Hustles ₵40–90"},say:["*yip!*","Got a deal for you.","Heh."]},
+  "Glitch bunny":{p:"Hops between frames. Very fast.",trait:{k:"speed",v:10,short:"+10% walk speed"},ab:{k:"snack",n:"Carrot Cache",cd:150,d:"Brings a random snack"},say:["*hop hop*","Gl-gl-glitch!","nibble"]},
+  "Robo penguin":{p:"Chill engineer. Waddles with purpose.",trait:{k:"asm",v:10,short:"+10% Assembly pay"},ab:{k:"snack",n:"Cold Storage",cd:120,d:"Brings a chilled drink or snack"},say:["*waddle*","Stay frosty.","Noot!"]},
+  "Byte hamster":{p:"Runs the wheel that powers your rack.",trait:{k:"mine",v:12,short:"+12% Mining Rack chips"},ab:{k:"chips",lo:5,hi:12,n:"Cheek Stash",cd:75,d:"Finds 5–12 chips"},say:["*squeak squeak*","Running!","Stuffed cheeks!"]},
+  "Mech spider":{p:"Precise, quiet, eight-legged builder.",trait:{k:"asm",v:12,short:"+12% Assembly pay"},ab:{k:"fetch",n:"Web Salvage",cd:90,d:"Weaves up a random part"},say:["*click click*","Building…","Eight legs, zero bugs."]},
+  "Circuit monkey":{p:"Mischievous tinkerer. Steals shiny things.",trait:{k:"dig",v:2,short:"+2 chips per Scrap dig"},ab:{k:"credits",lo:30,hi:70,n:"Pickpocket",cd:70,d:"Finds ₵30–70"},say:["ook ook!","*swings*","Shiny!"]},
+  "Rock golem":{p:"Slow, steady, unbreakable friend.",trait:{k:"guard",v:12,short:"12% less Void damage"},ab:{k:"heal",v:35,n:"Stone Skin",cd:5,d:"Heals 35 HP in The Void"},say:["…rumble…","STRONG.","*crunch*"]},
+  "Hover turtle":{p:"Ancient, patient, surprisingly fast.",trait:{k:"regen",v:3,short:"+3 HP/s regen in The Void"},ab:{k:"buff",b:"guard",n:"Shell Mode",cd:35,d:"Void armor for 10 min"},say:["Slow and steady.","*jets hum*","…"]},
+  "Neon butterfly":{p:"Delicate dreamer. Brings good luck.",trait:{k:"luck",v:12,short:"Much luckier Scrap finds"},ab:{k:"buff",b:"luck",n:"Pollen Glow",cd:40,d:"Lucky salvage for 10 min"},say:["*flutter*","✿","so pretty!"]},
+  "Star sprite":{p:"A tiny star that fell into the grid.",trait:{k:"print",v:4,short:"+4 chips per CHIP PRINT"},ab:{k:"chips",lo:6,hi:14,n:"Wish Upon",cd:90,d:"Grants 6–14 chips"},say:["✦ twinkle ✦","Make a wish!","*sparkles*"]},
+  "Cyber axolotl":{p:"Regenerates anything. Smiles a lot.",trait:{k:"regen",v:4,short:"+4 HP/s regen in The Void"},ab:{k:"heal",v:50,n:"Regrow",cd:6,d:"Heals 50 HP in The Void"},say:["*smiles*","bloop :)","Regenerating!"]},
+  "Holo whale":{p:"Gentle giant (in miniature). Sings data songs.",trait:{k:"mine",v:15,short:"+15% Mining Rack chips"},ab:{k:"credits",lo:50,hi:110,n:"Whale Song",cd:90,d:"Brings ₵50–110"},say:["♪ wooooo ♪","*spouts*","Deep data…"]},
+  "Pocket phoenix":{p:"Reborn from every crash. Burns bright.",trait:{k:"bot",v:4,short:"+4 chips per bot deleted"},ab:{k:"heal",v:100,n:"Rebirth Flame",cd:10,d:"Full heal in The Void"},say:["*SCREE*","From the ashes!","Burn bright!"]},
+};
+var PET_TIERS=[[0,"New friend"],[25,"Friendly"],[50,"Loyal"],[75,"Soulbound"]];
+function curPet(){ const n=WARD.pet.opts[fullLook(save.look).pet][0]; return n==="None"?null:n; }
+function petBond(n){ return Math.max(0,Math.min(100,+((save.petData||{}).bond||{})[n]||0)); }
+function petTierOf(b){ let k=0; PET_TIERS.forEach(([m],i)=>{ if(b>=m) k=i; }); return k; }
+function petTier(){ const n=curPet(); return n?petTierOf(petBond(n)):0; }
+function petTrait(k){ const n=curPet(); if(!n||!PETS[n]||PETS[n].trait.k!==k) return 0; const v=PETS[n].trait.v; return petTier()>=3?Math.round(v*1.5*10)/10:v; }
+function petData(){ save.petData=save.petData||{}; save.petData.bond=save.petData.bond||{}; save.petData.cd=save.petData.cd||{}; save.petData.gain=save.petData.gain||{}; return save.petData; }
+function petSay(text){ me.petSay={text,t:T}; }
+function bondUp(n,amt,key){ const d=petData(), now=Date.now(), gk=n+":"+key; if((+d.gain[gk]||0)>now) return 0; d.gain[gk]=now+(key==="feed"?20:5)*6e4; const before=petBond(n); d.bond[n]=Math.min(100,before+amt); const tb=petTierOf(before), ta=petTierOf(d.bond[n]); if(ta>tb){ toast(`${n} is now ${PET_TIERS[ta][1]}!${ta===3?" Golden glow, 50% stronger trait and faster abilities unlocked.":""}`,"#ffd36a"); beep(1400,.12); } persist(); return d.bond[n]-before; }
+function petAct(kind){ const n=curPet(); if(!n){ toast("You don't have a companion. Pick one in Character → Companion."); return; } const P=PETS[n]; const d=petData(), now=Date.now();
+  if(kind==="pat"){ emote("petpat"); const g=bondUp(n,4,"pat"); petSay(P.say[(Math.random()*P.say.length)|0]); beep(1300,.05,"triangle"); toast(g?`You pet your ${n}. Bond +${g}.`:`Your ${n} loves the attention.`); }
+  else if(kind==="play"){ emote("petplay"); const g=bondUp(n,3,"play"); petSay(["Again!","Wheee!","*does a flip*"][(Math.random()*3)|0]); beep(900,.06,"triangle"); setTimeout(()=>beep(1200,.06,"triangle"),90); toast(g?`You play with your ${n}. Bond +${g}.`:`Your ${n} does a trick!`); }
+  else if(kind==="feed"){ const food=invList().find(([id])=>["food","drink"].includes(BY[id].t)); if(!food){ toast("You need food or a drink in your stash. Try The Glitch or Byte Bowl Noodles."); return; } if(((+d.gain[n+":feed"]||0)>now)){ toast(`Your ${n} is still full. Try again in ${Math.ceil((d.gain[n+":feed"]-now)/6e4)} min.`); return; } addItem(food[0],-1); emote("petfeed"); const g=bondUp(n,10,"feed"); petSay("nom nom nom"); beep(700,.05); toast(`Your ${n} ate the ${BY[food[0]].n}. Bond +${g}.`,"#43f0a4"); }
+  else if(kind==="ability"){ const A=P.ab, cdk=n, left=(+d.cd[cdk]||0)-now; if(left>0){ toast(`${A.n} recharges in ${left>6e4?Math.ceil(left/6e4)+" min":Math.ceil(left/1000)+" s"}.`); return; }
+    if(A.k==="heal"&&me.scene!=="void"){ toast(`${A.n} only works in The Void.`); return; } if(A.k==="heal"&&myHP>=100){ toast("You're already at full HP."); return; }
+    let msg="";
+    if(A.k==="fetch"){ const pool=CAT.filter(i=>TECH_T.includes(i.t)&&(i.r==="common"||i.r==="uncommon")&&!["miner"].includes(i.t)); const it=pool[(Math.random()*pool.length)|0]; addItem(it.id,1); msg=`fetched a ${it.n}`; }
+    else if(A.k==="snack"){ const pool=[...FOODS,...BB_FOODS,...DRINKS].filter(i=>i.r!=="epic"); const it=pool[(Math.random()*pool.length)|0]; addItem(it.id,1); msg=`brought you a ${it.n}`; }
+    else if(A.k==="chips"){ const v=A.lo+((Math.random()*(A.hi-A.lo+1))|0); save.chips+=v; msg=`found ${v} chips`; }
+    else if(A.k==="credits"){ const v=A.lo+((Math.random()*(A.hi-A.lo+1))|0); save.credits+=v; msg=`brought ₵${v}`; }
+    else if(A.k==="buff"){ save.buffs=save.buffs||{}; save.buffs[A.b]=Math.max(+save.buffs[A.b]||0,now+10*6e4); msg=`gave you ${BUFF_N[A.b]} for 10 min`; }
+    else if(A.k==="heal"){ const before=myHP; myHP=Math.min(100,myHP+A.v); addVfx({type:"num",x:me.x,y:me.y-84,txt:"+"+Math.round(myHP-before),col:"#43f0a4"}); msg=`healed you ${Math.round(myHP-before)} HP`; }
+    d.cd[cdk]=now+A.cd*6e4*(1-.1*petTier()); emote("petability"); petSay(A.n+"!"); bondUp(n,2,"ability"); persist(); hud(); beep(1100,.08); setTimeout(()=>beep(1600,.1),90); toast(`${A.n}: your ${n} ${msg}.`,"#43f0a4"); }
+  if(currentView==="companion"&&!$("#overlay").hidden) openCompanion(); }
+function openCompanion(){ const n=curPet(); const body=panel(n?`Companion · ${n}`:"Companions",n?PETS[n].p:"Pick a companion in Character → Companion. Each one has a trait and a special ability."); currentView="companion";
+  if(!n){ body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Choose a companion",onclick:()=>{ tryOn=null; openWardrobe("pet"); }})));
+    const l=el("div",{class:"list"}); for(const [k,P] of Object.entries(PETS)) l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:k}),el("div",{class:"sub",text:`${P.trait.short} · ${P.ab.n}: ${P.ab.d}`})))); body.append(l); return; }
+  const P=PETS[n], b=petBond(n), tier=petTierOf(b), d=petData(), now=Date.now(), left=(+d.cd[n]||0)-now, nxt=PET_TIERS[tier+1];
+  const pv=lookCanvas(save.look,110); pv.style.cssText="width:140px;height:140px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
+  const bar=el("div",{style:"height:8px;background:#1a1230;border:1px solid var(--line);position:relative"},el("div",{style:`position:absolute;inset:0 auto 0 0;width:${b}%;background:${tier>=3?"#ffd36a":"var(--mag)"}`}));
+  body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:`${PET_TIERS[tier][1]} · Bond ${b}/100`}),bar,el("span",{class:"sub",text:nxt?`${nxt[0]-b} more bond to reach ${nxt[1]}.`:"Max bond. Soulbound perks active."}),
+    el("span",{class:"r-uncommon",text:`Trait: ${P.trait.short}${tier>=3?" (×1.5 Soulbound)":""}`}),el("span",{class:"r-rare",text:`Ability: ${P.ab.n} · ${P.ab.d}`}))));
+  body.append(el("strong",{text:"Interact"}));
+  const ab=el("button",{class:"btn hot",type:"button",text:left>0?`${P.ab.n} (${left>6e4?Math.ceil(left/6e4)+"m":Math.ceil(left/1000)+"s"})`:`Use ${P.ab.n}`,onclick:()=>petAct("ability")}); if(left>0) ab.disabled=true;
+  body.append(el("div",{class:"row",style:"flex-wrap:wrap"},el("button",{class:"btn",type:"button",text:"🤚 Pet",onclick:()=>petAct("pat")}),el("button",{class:"btn",type:"button",text:"🎾 Play",onclick:()=>petAct("play")}),el("button",{class:"btn",type:"button",text:"🍜 Feed",onclick:()=>petAct("feed")}),ab));
+  body.append(el("p",{class:"sub",text:"Bond grows by petting (+4), playing (+3), feeding a food or drink from your stash (+10) and using its ability (+2). Petting and playing count once every 5 minutes, feeding every 20. Tiers: Friendly 25, Loyal 50, Soulbound 75 (golden glow, trait ×1.5, cooldowns −30%). Each tier also cuts ability cooldowns by 10%."}));
+  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Switch companion",onclick:()=>{ tryOn=null; openWardrobe("pet"); }}))); }
+var PET_ART={
+  "Glitch bunny":(c,dir,t,o,JC)=>{ const hop=Math.abs(Math.sin(t*5))*(o.moving?5:2); c.translate(0,-hop); const off=Math.sin(t*13)>.85?1.5:0; for(const [col,dx] of [["rgba(56,232,255,.6)",-off],["rgba(255,63,168,.6)",off],["#ece6ff",0]]){ c.fillStyle=col; c.beginPath(); c.ellipse(dx,-5,5,4,0,0,7); c.fill(); c.beginPath(); c.arc(dx+dir*4,-9,3,0,7); c.fill(); c.fillRect(dx+dir*3-1,-17,1.6,7); c.fillRect(dx+dir*5-1,-16,1.6,6); } c.fillStyle="#ff3fa8"; c.fillRect(dir*5.5-.5,-10,1,1); },
+  "Robo penguin":(c,dir,t,o,JC)=>{ const w=o.moving?Math.sin(t*10)*.15:0; c.rotate(w); c.fillStyle="#2a2440"; c.beginPath(); c.ellipse(0,-7,5,7,0,0,7); c.fill(); c.fillStyle="#ece6ff"; c.beginPath(); c.ellipse(dir*1,-6,3,5,0,0,7); c.fill(); c.fillStyle="#ffb84a"; c.beginPath(); c.moveTo(dir*4,-11); c.lineTo(dir*7,-10); c.lineTo(dir*4,-9); c.fill(); c.fillRect(-3,-1,2,1.5); c.fillRect(1,-1,2,1.5); c.fillStyle=JC; c.fillRect(dir*2-.5,-12,1.4,1.4); c.fillStyle="#8a90a6"; c.fillRect(-1,-15,2,2); },
+  "Byte hamster":(c,dir,t,o,JC)=>{ const roll=o.moving?t*8*dir:0; c.strokeStyle="rgba(168,232,255,.6)"; c.lineWidth=1; c.beginPath(); c.arc(0,-7,7,0,7); c.stroke(); c.save(); c.translate(0,-7); c.rotate(roll); c.strokeStyle="rgba(168,232,255,.25)"; c.beginPath(); c.moveTo(-7,0); c.lineTo(7,0); c.stroke(); c.restore(); c.fillStyle="#ffb87a"; c.beginPath(); c.ellipse(0,-6,4,3.2,0,0,7); c.fill(); c.fillStyle="#fff"; c.beginPath(); c.arc(dir*2.5,-5.5,1.6,0,7); c.fill(); c.fillStyle="#0b0716"; c.fillRect(dir*2-.5,-8,1,1); },
+  "Mech spider":(c,dir,t,o,JC)=>{ c.strokeStyle="#8a90a6"; c.lineWidth=1; for(let k=0;k<4;k++) for(const sd of [-1,1]){ const ph=Math.sin(t*(o.moving?14:3)+k+(sd>0?1.5:0))*1.5; c.beginPath(); c.moveTo(sd*2,-5); c.lineTo(sd*(5+k),-8+ph); c.lineTo(sd*(6+k*1.5),0); c.stroke(); } c.fillStyle="#3d3456"; c.beginPath(); c.ellipse(0,-5,4,3,0,0,7); c.fill(); c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=6; c.fillRect(dir*2-1,-6,1.2,1.2); c.fillRect(dir*3.2-1,-6,1.2,1.2); c.shadowBlur=0; },
+  "Circuit monkey":(c,dir,t,o,JC)=>{ const sw=Math.sin(t*4)*3; c.strokeStyle="#7a4a2a"; c.lineWidth=1.6; c.beginPath(); c.moveTo(-dir*3,-5); c.quadraticCurveTo(-dir*10,-6+sw,-dir*9,-14); c.stroke(); c.fillStyle="#7a4a2a"; c.beginPath(); c.ellipse(0,-6,4,4.5,0,0,7); c.fill(); c.beginPath(); c.arc(dir*2,-12,3.5,0,7); c.fill(); c.fillStyle="#e8c39a"; c.beginPath(); c.arc(dir*3,-11.5,2,0,7); c.fill(); c.strokeStyle=JC; c.lineWidth=.7; c.beginPath(); c.moveTo(-2,-7); c.lineTo(0,-5); c.lineTo(2,-7); c.stroke(); c.fillStyle="#0b0716"; c.fillRect(dir*3-.5,-13,1,1); },
+  "Rock golem":(c,dir,t,o,JC)=>{ const st=o.moving?Math.abs(Math.sin(t*6))*1.5:0; c.fillStyle="#5a5468"; c.fillRect(-5,-11+st,10,8); c.fillRect(-6,-4,4,4); c.fillRect(2,-4,4,4); c.fillStyle="#6e6880"; c.fillRect(-3,-16+st,6,5); c.fillStyle="#43f0a4"; c.shadowColor="#43f0a4"; c.shadowBlur=6; c.fillRect(dir*1-1,-14+st,1.6,1.6); c.fillRect(-4,-8+st,2,1); c.fillRect(1,-6+st,3,1); c.shadowBlur=0; },
+  "Hover turtle":(c,dir,t,o,JC)=>{ c.fillStyle="#2f8a4a"; c.beginPath(); c.ellipse(0,0,7,4.5,0,Math.PI,0); c.fill(); c.strokeStyle="#43f0a4"; c.lineWidth=.7; c.beginPath(); c.moveTo(-4,0); c.lineTo(-2,-3); c.lineTo(2,-3); c.lineTo(4,0); c.stroke(); c.fillStyle="#8fd08a"; c.beginPath(); c.arc(dir*8,-1,2.2,0,7); c.fill(); c.fillStyle="#38e8ff"; c.globalAlpha=.5+.4*Math.sin(t*12); c.beginPath(); c.moveTo(-4,1); c.lineTo(-2,5+Math.random()*2); c.lineTo(0,1); c.moveTo(1,1); c.lineTo(3,5+Math.random()*2); c.lineTo(5,1); c.fill(); c.globalAlpha=1; },
+  "Neon butterfly":(c,dir,t,o,JC)=>{ const f=Math.abs(Math.sin(t*9)); for(const sd of [-1,1]){ c.fillStyle=JC; c.globalAlpha=.75; c.shadowColor=JC; c.shadowBlur=8; c.beginPath(); c.ellipse(sd*4*f,-2,4*f+.5,3.2,sd*.4,0,7); c.fill(); c.fillStyle="#ff8ad8"; c.beginPath(); c.ellipse(sd*3*f,2,2.6*f+.4,2.2,-sd*.4,0,7); c.fill(); } c.globalAlpha=1; c.shadowBlur=0; c.fillStyle="#2a2440"; c.fillRect(-.6,-4,1.2,8); },
+  "Star sprite":(c,dir,t,o,JC)=>{ c.rotate(Math.sin(t*2)*.3); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=10; c.beginPath(); for(let k=0;k<10;k++){ const r=k%2?2.6:6, a=-Math.PI/2+k*Math.PI/5; c.lineTo(Math.cos(a)*r,Math.sin(a)*r); } c.fill(); c.shadowBlur=0; c.fillStyle="#0b0716"; c.fillRect(-2,-1,1,1.4); c.fillRect(1,-1,1,1.4); c.restore(); c.save(); for(let k=0;k<4;k++){ const u=(t*.8+k/4)%1; c.globalAlpha=1-u; c.fillStyle="#fff2a8"; c.fillRect(-dir*24+dir*(6+u*14),-44+u*6+Math.sin(t*3+k)*2,1.5,1.5); } },
+  "Cyber axolotl":(c,dir,t,o,JC)=>{ c.strokeStyle="rgba(168,232,255,.4)"; c.lineWidth=.8; c.beginPath(); c.arc(0,0,9,0,7); c.stroke(); const sw=Math.sin(t*5)*1.5; c.fillStyle="#ff9ad5"; c.beginPath(); c.ellipse(0,0,5,2.6,0,0,7); c.fill(); c.beginPath(); c.moveTo(-dir*4,0); c.lineTo(-dir*8,-2+sw); c.lineTo(-dir*8,2+sw); c.fill(); c.beginPath(); c.arc(dir*4,-.5,2.6,0,7); c.fill(); c.strokeStyle="#ff3fa8"; c.lineWidth=1; for(const k of [-1,0,1]){ c.beginPath(); c.moveTo(dir*3,-2); c.lineTo(dir*2-k*1.5,-5.5); c.stroke(); } c.fillStyle="#0b0716"; c.fillRect(dir*5-.5,-1.5,1,1); },
+  "Holo whale":(c,dir,t,o,JC)=>{ c.fillStyle="rgba(106,168,255,.75)"; c.shadowColor="#6aa8ff"; c.shadowBlur=8; c.beginPath(); c.ellipse(0,0,8,4,0,0,7); c.fill(); c.beginPath(); c.moveTo(-dir*7,0); c.lineTo(-dir*12,-3+Math.sin(t*4)*1.5); c.lineTo(-dir*12,3+Math.sin(t*4)*1.5); c.fill(); c.shadowBlur=0; c.fillStyle="#ece6ff"; c.beginPath(); c.ellipse(dir*1,2,5,1.4,0,0,Math.PI); c.fill(); c.fillStyle="#0b0716"; c.fillRect(dir*5-.5,-1.5,1,1); if(Math.sin(t*1.2)>.6){ c.fillStyle="rgba(168,232,255,.8)"; for(let k=0;k<3;k++) c.fillRect(dir*2+(k-1)*2,-6-((t*12+k*3)%6),1.2,1.2); } },
+  "Pocket phoenix":(c,dir,t,o,JC)=>{ const f=Math.sin(t*10)*3; c.fillStyle="#ff5a4a"; c.shadowColor="#ffb84a"; c.shadowBlur=10; c.beginPath(); c.ellipse(0,0,4,2.8,0,0,7); c.fill(); c.beginPath(); c.arc(dir*4,-2,2.2,0,7); c.fill(); for(const sd of [-1,1]){ c.fillStyle=sd>0?"#ffb84a":"#ff8a3a"; c.beginPath(); c.moveTo(0,-1); c.lineTo(-dir*3+sd*2,-8+f*sd*.3-f); c.lineTo(dir*2,-1); c.fill(); } for(let k=0;k<3;k++){ c.fillStyle=k%2?"#f5e663":"#ff5a4a"; c.globalAlpha=.8; c.beginPath(); c.moveTo(-dir*3,0); c.lineTo(-dir*(9+k*2),-1+k*1.5+Math.sin(t*12+k)); c.lineTo(-dir*3,1.5); c.fill(); } c.globalAlpha=1; c.shadowBlur=0; c.fillStyle="#f5e663"; c.beginPath(); c.moveTo(dir*6,-2); c.lineTo(dir*8,-1.5); c.lineTo(dir*6,-1); c.fill(); },
+};
 /* ============================================================ HARVEST ASSEMBLY (10-bay assembly line shifts) */
 var ASM_BAYS=10, asmSlots=Array(10).fill(null), asmSlot=-1, asmBeat=null, asmShift=null, asmOrder=null, asmBins=[], asmBelt=[], asmFlash=null, asmAmb=0;
 const ASM_X=i=>440+i*240;
@@ -3301,7 +3395,7 @@ function asmPick(t){ if(!asmOrder||!asmUI) return; const need=asmOrder.steps[asm
   if(t!==need){ asmOrder.mist++; asmOrder.pen+=2.5; asmUI.msg.textContent=`Wrong part! That slot needs a ${ASM_PARTS.find(q=>q.t===need).n}. −2.5s`; asmUI.msg.className="r-epic"; beep(160,.12,"square"); return; }
   asmOrder.i++; beep(600+asmOrder.i*80,.04,"triangle"); me.emote={e:"use",t:T};
   if(asmOrder.i>=asmOrder.steps.length){ const left=Math.max(0,asmTimeLeft()), sp=left/asmOrder.limit, perfect=!asmOrder.mist; asmShift.streak++; asmShift.best=Math.max(asmShift.best,asmShift.streak);
-    const pay=Math.round(asmOrder.pay*(1+.5*sp)*(1+Math.min(.5,(asmShift.streak-1)*.05))*(perfect?1.1:1)); save.credits+=pay; asmShift.earned+=pay; asmShift.built++; asmShift.lastBuild=Date.now(); persist(); hud();
+    const pay=Math.round((1+petTrait("asm")/100)*asmOrder.pay*(1+.5*sp)*(1+Math.min(.5,(asmShift.streak-1)*.05))*(perfect?1.1:1)); save.credits+=pay; asmShift.earned+=pay; asmShift.built++; asmShift.lastBuild=Date.now(); persist(); hud();
     asmBelt.push({id:BY[asmOrder.icon]?asmOrder.icon:"b_pc_common",x:ASM_X(asmSlot),t0:T}); asmFlash={bay:asmSlot,until:T+1.2,txt:"+₵"+pay};
     asmUI.msg.textContent=`${perfect?"PERFECT · ":""}${asmOrder.n} shipped! +₵${pay}${sp>.5?" (fast!)":""}`; asmUI.msg.className="r-uncommon"; beep(1200,.08); setTimeout(()=>beep(1500,.1),80); asmNewOrder(); }
   asmUI.paint(); }
@@ -4236,7 +4330,7 @@ function receiveHit(m,q,w){ if(me.dead||me.scene!=="void"||!q||q.s!=="void") ret
   if(peerWeapon(q)!==w) return; if(inSafe(q.x)||inSafe(me.x)) return; if(Math.abs(q.x-me.x)>st.range+70||Math.abs(q.y-me.y)>50) return;
   const k=m.by||m.peer; if(T-(lastFrom[k]===undefined?-99:lastFrom[k])<st.cd*.7) return; lastFrom[k]=T;
   takeDamage(st.dmg,{id:m.by,name:nameOf(m.by),w,from:q.x,slow:st.slow}); }
-function takeDamage(dmg,src){ if(me.dead) return; let d=me.blocking?Math.ceil(dmg*.3):dmg; if(buffOn("guard")) d=Math.max(1,Math.round(d*.75)); myHP=Math.max(0,myHP-d); lastHitT=T; me.hurtT=T; me.seat=null; me.dancing=false;
+function takeDamage(dmg,src){ if(me.dead) return; let d=me.blocking?Math.ceil(dmg*.3):dmg; if(petTrait("guard")) d=Math.max(1,Math.round(d*(1-petTrait("guard")/100))); if(buffOn("guard")) d=Math.max(1,Math.round(d*.75)); myHP=Math.max(0,myHP-d); lastHitT=T; me.hurtT=T; me.seat=null; me.dancing=false;
   addVfx({type:"num",x:me.x,y:me.y-84,txt:"-"+d,col:me.blocking?"#38e8ff":"#ff5a4a"}); addVfx({type:"hit",x:me.x,y:me.y-36});
   const push=(src.from!=null?(me.x>=src.from?1:-1):-me.dir)*(me.blocking?5:14); me.x=clamp(me.x+push,SAFE_X+4,SCENES.void.w-30); if(src.slow) me.slowUntil=T+src.slow;
   beep(120,.08,"square",.06); pushPresence(true); if(myHP<=0) die(src); }
@@ -4298,7 +4392,7 @@ function resetBots(){ const M=botMode(); bots=[]; botsFor=save.botMode||"normal"
   if(M.boss) bots.push(newBot(M.boss,SCENES.void.w-160,true)); }
 function hitBot(b,dmg,w){ const B=BOT_TYPES[b.type]; b.hp-=dmg; b.hurtT=T; b.x=clamp(b.x+me.dir*(B.heavy?3:10),SAFE_X+20,SCENES.void.w-30); if(WSTATS[w].slow) b.slowUntil=T+WSTATS[w].slow*(B.heavy?.5:1);
   addVfx({type:"num",x:b.x,y:b.y-84*(B.sc||1),txt:"-"+dmg,col:"#ffb84a"}); addVfx({type:"hit",x:b.x,y:b.y-36});
-  if(b.hp<=0){ const M=botMode(); b.dead=true; b.deadT=T; b.wind=null; b.respawnAt=T+(b.boss?45:M.resp||8); const ch=Math.max(1,Math.round(rnd(B.chips[0],B.chips[1]+1)*(M.chip||1))); save.chips+=ch; save.botKills=(save.botKills||0)+1;
+  if(b.hp<=0){ const M=botMode(); b.dead=true; b.deadT=T; b.wind=null; b.respawnAt=T+(b.boss?45:M.resp||8); const ch=Math.max(1,Math.round(rnd(B.chips[0],B.chips[1]+1)*(M.chip||1)))+petTrait("bot"); save.chips+=ch; save.botKills=(save.botKills||0)+1;
     persist(); toast(`${B.n} deleted. +${ch} chips`,"#38e8ff"); beep(900,.08); if(b.boss){ broadcastSys(`took down the SENTINEL Ω in The Void`); emote("cheer"); } dropLoot(b,B,M); } }
 function botHitsMe(b,B,dmg){ if(me.dead||inSafe(me.x)) return; const M=botMode(); takeDamage(Math.max(1,Math.round(dmg*(M.dmg||1))),{id:null,name:B.boss?B.n:"a "+B.n,w:"fists",from:b.x}); }
 function tickBots(){ if(me.scene!=="void") return; const M=botMode();
@@ -4353,7 +4447,7 @@ function openBotControl(){ const body=panel("Bot Control","Pick how many bots yo
   body.append(d,el("p",{class:"sub",text:"Drops land on the floor with a glow in their rarity color. Walk over them to collect; they vanish after 45 seconds. Wardrobe unlocks you already own pay out credits instead. Bots still count as deaths: getting deleted costs 15% of your credits and chips."})); }
 function tickVoid(){ const inV=me.scene==="void"; const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
   if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`+(!MOBILE&&(save.botMode||"normal")!=="off"?` · Bots: ${botMode().n}`:""); if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
-  if(!me.dead&&myHP<100){ const rate=inV&&inSafe(me.x)?30:(T-lastHitT>6?4:0); myHP=Math.min(100,myHP+rate*dt); }
+  if(!me.dead&&myHP<100){ const rate=inV&&inSafe(me.x)?30:(T-lastHitT>6?4+petTrait("regen"):0); myHP=Math.min(100,myHP+rate*dt); }
   if(!inV&&me.blocking) setBlock(false); tickBots(); }
 function openFraggers(){ const body=panel("Top Fraggers","Player deletions in The Void. Deaths cost 15% of your credits and chips, and half goes to the killer."); currentView=null;
   body.append(el("div",{class:"row"},el("span",{class:"pill",text:`Your kills: ${save.voidKills||0}`}),el("span",{class:"pill",text:`Deaths: ${save.voidDeaths||0}`}),el("span",{class:"pill",text:`Bots deleted: ${save.botKills||0}`}),el("span",{class:"pill",text:`Your weapon: ${myWeapon()==="fists"?"Fists":BY[myWeapon()].n}`})));
@@ -4541,7 +4635,7 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
     mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
     mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
     mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }),
-    mk("🚇","Fast travel",()=>openFastTravel()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
+    mk("🚇","Fast travel",()=>openFastTravel()), mk("🐾","Companion",()=>openCompanion()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
   body.append(el("strong",{text:"Emotes"}),el("div",{class:"memotes"},...["wave","dance","cheer","pose"].map(e2=>el("button",{class:"btn",type:"button",text:e2[0].toUpperCase()+e2.slice(1),onclick:()=>{ closePanel(); emote(e2); }}))));
   const st=[]; const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) st.push("Boosts: "+bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "));
   if(typeof myFx==="function"&&myFx()&&myTrip) st.push(`High: ${myTrip.name||"active"}${TRIP_LVL[myTrip.lvl||1]?" "+TRIP_LVL[myTrip.lvl||1]:""}`);
@@ -4589,7 +4683,7 @@ function applyPeer(p){ if(isSelf(p)) return false; if(p.kind!=="viewer") return 
   q.pid=p.peer;
   Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null,hs:pr.hs===1});
   if(pr.say&&typeof pr.say.text==="string") q.say={text:pr.say.text.slice(0,80),at:Math.min(Date.now(),+pr.say.at||0)};
-  if(pr.emote&&["wave","dance","cheer","pose","use"].includes(pr.emote.e)) q.emote={e:pr.emote.e,at:Math.min(Date.now(),+pr.emote.at||0),it:pr.emote.e==="use"&&BY[pr.emote.it]&&BY[pr.emote.it].t==="trip"?pr.emote.it:null}; return fresh; }
+  if(pr.emote&&["wave","dance","cheer","pose","use","petpat","petplay","petfeed","petability"].includes(pr.emote.e)) q.emote={e:pr.emote.e,at:Math.min(Date.now(),+pr.emote.at||0),it:pr.emote.e==="use"&&BY[pr.emote.it]&&BY[pr.emote.it].t==="trip"?pr.emote.it:null}; return fresh; }
 async function resolveNames(ids){ if(!USER) return; try{ const ps=await USER.profiles(ids); for(const id of ids) names[id]=(ps[id]&&ps[id].name)||names[id]||"Runner"; }catch(e){} }
 
 
