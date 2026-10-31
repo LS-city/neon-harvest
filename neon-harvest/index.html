@@ -205,7 +205,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile .brand{display:none}
 #game.mobile .stats{flex-wrap:nowrap;width:100%;align-items:center;gap:5px;min-width:0}
 #game.mobile .stats .pill{font-size:12px;padding:0 8px;height:40px;display:inline-flex;align-items:center;gap:4px;flex:none}
-#game.mobile #btnAdmin,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #buffs,#game.mobile #trippill,#game.mobile #jobpill{display:none!important}
+#game.mobile #btnAdmin,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #buffs,#game.mobile #trippill,#game.mobile #jobpill{display:none!important}
 #game.mobile #hppill{max-width:34vw;overflow:hidden;text-overflow:ellipsis}
 #game.mobile .mbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;font-size:20px;flex:none}
 #game.mobile #btnBag{margin-left:auto}
@@ -319,6 +319,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" id="btnChar" type="button">Character [C]</button>
       <button class="btn" id="btnBag" type="button">Stash [I]</button>
       <button class="btn" id="btnMsg" type="button">Messages [M]</button>
+      <button class="btn" id="btnTravel" type="button" title="Fast travel anywhere (T)">Fast Travel [T]</button>
       <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
       <button class="btn hot" id="btnAdmin" type="button" hidden>Admin</button>
@@ -1453,7 +1454,7 @@ const keys={}; let dt=0, last=performance.now(), T=0, target=null, nearHot=null;
 addEventListener("keydown",e=>{ if(!$("#title").hidden){ if(e.key==="Enter"&&e.target.tagName!=="BUTTON"){ const b=$("#title .btn.hot"); if(b){ e.preventDefault(); b.click(); } } return; } if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"){ if(e.key==="Escape"&&!$("#overlay").hidden&&e.target.closest&&e.target.closest("#overlay")) closePanel(); return; } if(!$("#overlay").hidden){ if(e.key==="Escape") closePanel(); return; }
   keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();
   if(me.scene==="void"){ const kk=e.key.toLowerCase(); if(kk==="f"){ voidAttack(); e.preventDefault(); } if(kk==="g") setBlock(true); }
-  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
+  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="t"||e.key==="T") openFastTravel(); if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
 addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; if(e.key.toLowerCase()==="g") setBlock(false); });
 const releaseKeys=()=>{ for(const k in keys) keys[k]=false; };
 addEventListener("blur",releaseKeys); document.addEventListener("visibilitychange",()=>{ if(document.hidden) releaseKeys(); });
@@ -1563,7 +1564,7 @@ const GUIDE={
   start:{n:"Start here",secs:[
     ["Controls",["Move with WASD or the arrow keys (on phones, the on-screen pad). Click or tap the ground to walk there.","Press E or Space (or USE) beside a glowing spot to interact: doors, counters, piles, terminals.","Enter opens chat. Wave, Dance, Cheer and Pose are under the chat bar.","C opens your Character (name and look), I opens your Stash, H opens this guide, Esc closes any window."]],
     ["Your two currencies",["₵ Credits: everyday money for parts, drinks, decor, gear and Smacked Shop rewards.","Chips: the rarer currency. Epic parts, CHIP PRINT runs and many Smacked Shop rewards cost chips.","You start with ₵250, 40 chips and a few spare parts."]],
-    ["Getting around",["Sector 9 is the main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, The Third Eye club and Scrap Alley.","Take the Metro (free) from the street to Byte Market, The Grid, Smacked Shop and The Void.","Tap ONLINE at the top to see who's playing and where they are."]],
+    ["Getting around",["Sector 9 is the main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, The Third Eye club and Scrap Alley.","Take the Metro (free) from the street to Byte Market, The Grid, Smacked Shop and The Void.","Fast Travel: press T (or the Fast Travel button; on phones it's in the ☰ menu) to jump straight to any Metro line or key spot like your apartment, The Glitch, Scrap Alley or the Volt Armory. You can't fast travel mid-fight in The Void.","Tap ONLINE at the top to see who's playing and where they are."]],
     ["Your progress saves",["Your stash, credits, chips, apartment and pickup codes are saved to your account and follow you to any device you sign in on."]]]},
   money:{n:"Earn ₵ credits",secs:[
     ["Work shifts",["The Glitch: clock in at the Job Board (up to 4 staff). Mix drinks, cook food from the Kitchen and hand over parts to NPCs and players for pay and tips, plus ₵2/min wages once you've served an order. Golden Handshake, Glitch Dumplings and Full Stack Bowl add +25% tips.","Cyber Buys & More: work a register selling drives, keyboards, cables and home items for commission and tips.","The Third Eye: work the club bar serving the menu for pay and tips.","Byte Bowl Noodles (Byte Market): clock in at the stall (up to 4 staff) and cook noodle bowls, bao, skewers and drinks for market shoppers. Menu price plus tips, and ₵2/min wages once you've served an order."]],
@@ -2469,11 +2470,41 @@ function openIntercom(){
 
 /* ============================================================ METRO */
 const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"}};
-function openMetro(){ const body=panel("Metro","Pick a line. Rides are free.");
-  const l=el("div",{class:"list"}); for(const [k,m] of Object.entries(METRO)){ const here=me.scene===k; const b=el("button",{class:"btn"+(here?"":" hot"),type:"button",text:here?"You're here":"Ride",onclick:()=>{ closePanel(); ride(k,m.x); }}); if(here) b.disabled=true;
+function openMetro(){ openFastTravel(); }
+const FT_SPOTS=[
+  {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
+  {g:"Sector 9",n:"The Glitch bar",d:"Drinks, Kai's kitchen, bar shifts",s:"bar",x:120},
+  {g:"Sector 9",n:"Parts Depot",d:"Buy and sell PC parts",s:"street",x:960},
+  {g:"Sector 9",n:"Cyber Buys & More",d:"Peripherals, decor, gadgets, Smart Home",s:"cyberbuys",x:120},
+  {g:"Sector 9",n:"Trade Board",d:"Player listings",s:"street",x:2400},
+  {g:"Sector 9",n:"Scrap Alley",d:"Dig scrap piles for free parts",s:"street",x:3000},
+  {g:"Sector 9",n:"The Third Eye club",d:"Club items, dance floor, DJ booth",s:"club",x:120},
+  {g:"Hot spots",n:"Byte Bowl Noodles",d:"Byte Market food stand and shifts",s:"byte",x:1600},
+  {g:"Hot spots",n:"Courier Hub",d:"Byte Market delivery jobs",s:"byte",x:3140},
+  {g:"Hot spots",n:"Volt Armory",d:"Weapons for The Void",s:"byte",x:4240},
+  {g:"Hot spots",n:"UPLOAD arcade",d:"Snake-style hacking levels at The Grid",s:"grid",x:()=>UPL_X},
+  {g:"Hot spots",n:"Your Linx Land plot",d:"Collect ₵ from your Credit Miners",s:"linx",x:()=>myPlot()>=0?plotX(myPlot()):140,need:()=>myPlot()>=0},
+];
+function ftBlocked(){ if(me.dead) return "You can't travel while you're deleted."; if(me.scene==="void"&&T-lastHitT<6&&!inSafe(me.x)) return "You're in combat. Step into the safe zone or wait a few seconds."; return null; }
+function fastTravel(scene,x,label,home){ const why=ftBlocked(); if(why){ toast(why); return; } closePanel();
+  if(METRO[scene]&&x===METRO[scene].x&&!home){ ride(scene,x); return; }
+  const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .25s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--mag);letter-spacing:.1em;z-index:12";
+  ov.textContent="FAST TRAVEL › "+String(label||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(520,.1,"triangle"); setTimeout(()=>beep(780,.12,"triangle"),110);
+  setTimeout(()=>{ if(home||scene==="home"){ viewHome=null; me.visiting=null; } go(scene,x); target=null; ov.style.opacity="0"; setTimeout(()=>ov.remove(),300); },300); }
+function openFastTravel(){ const body=panel("Fast Travel","Jump anywhere in the city. Free and instant."+(MOBILE?"":" Press T anytime.")); currentView=null;
+  const why=ftBlocked(); if(why) body.append(el("div",{class:"r-epic",text:why}));
+  const where=(s,x)=>me.scene===s&&Math.abs(me.x-x)<160&&(s!=="home"||!me.visiting);
+  body.append(el("strong",{text:"Metro lines"}));
+  const l=el("div",{class:"list"}); for(const [k,m] of Object.entries(METRO)){ const here=me.scene===k; const b=el("button",{class:"btn"+(here?"":" hot"),type:"button",text:here?"You're here":"Ride",onclick:()=>fastTravel(k,m.x,m.n)}); if(here) b.disabled=true;
     const here2=onlinePeers().filter(p=>p.s===k||(k==="street"&&["bar","cyberbuys","club","home"].includes(p.s))).length;
     l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:var(--cyan)",text:"◉"}),el("div",{class:"grow"},el("div",{text:m.n+(here2?` · ${here2} player${here2>1?"s":""}`:"")}),el("div",{class:"sub",text:m.d})),b)); }
-  body.append(l); }
+  body.append(l);
+  for(const g of ["Sector 9","Hot spots"]){ body.append(el("strong",{text:g})); const l2=el("div",{class:"list"});
+    for(const sp of FT_SPOTS.filter(q=>q.g===g&&(!q.need||q.need()))){ const x=typeof sp.x==="function"?sp.x():sp.x, here=where(sp.s,x);
+      const b=el("button",{class:"btn"+(here?"":" hot"),type:"button",text:here?"You're here":"Go",onclick:()=>fastTravel(sp.s,x,sp.n,sp.home)}); if(here) b.disabled=true;
+      l2.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:var(--mag)",text:"➤"}),el("div",{class:"grow"},el("div",{text:sp.n}),el("div",{class:"sub",text:sp.d})),b)); }
+    body.append(l2); } }
+$("#btnTravel").onclick=()=>openFastTravel();
 
 /* ============================================================ THE GRID: GAME LOGIC */
 const GAMES={chess:{n:"Cyber Chess",x:620,col:"#38e8ff",rules:"King-capture chess: no check or checkmate. Capture the enemy king to win. Pawns auto-promote to queens. No castling or en passant. 150 moves without a winner is a draw."},
@@ -4266,7 +4297,7 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
     mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
     mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
     mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }),
-    mk("🚇","Metro map",()=>openMetro()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
+    mk("🚇","Fast travel",()=>openFastTravel()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
   body.append(el("strong",{text:"Emotes"}),el("div",{class:"memotes"},...["wave","dance","cheer","pose"].map(e2=>el("button",{class:"btn",type:"button",text:e2[0].toUpperCase()+e2.slice(1),onclick:()=>{ closePanel(); emote(e2); }}))));
   const st=[]; const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) st.push("Boosts: "+bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "));
   if(typeof myFx==="function"&&myFx()&&myTrip) st.push(`High: ${myTrip.name||"active"}${TRIP_LVL[myTrip.lvl||1]?" "+TRIP_LVL[myTrip.lvl||1]:""}`);
