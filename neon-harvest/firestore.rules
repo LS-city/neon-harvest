@@ -82,6 +82,9 @@ service cloud.firestore {
       allow delete: if signedIn() && me() == uid;
     }
 
+    // Data Collectors Club: everyone can see who is a member; only the owner can grant, change or remove.
+    match /dcc/{uid} { allow read: if signedIn(); allow write: if isOwner(); }
+
     // Pickup codes: private to the player who redeemed them, plus the owner.
     match /redeem/{uid} {
       allow read: if signedIn() && (me() == uid || isOwner());

@@ -55,6 +55,9 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
   max-height:120px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;pointer-events:none;font-size:12px}
 #chatlog .ln{background:rgba(11,7,22,.6);padding:1px 6px;width:fit-content;max-width:100%;overflow-wrap:anywhere;transition:opacity .6s}
 #chatlog .ln.sysl{font-size:11px;opacity:.9}
+canvas.dccsym{vertical-align:-3px;margin-right:4px;display:inline-block}
+.dccgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.dccgrid .card{align-items:center;text-align:center}
 #chatlog .who{color:var(--mag)} #chatlog .sys{color:var(--cyan)} #chatlog .x{color:#9a8cc0;margin-left:4px}
 #chatlog.open{max-height:min(46vh,320px);width:min(380px,calc(100vw - 32px));pointer-events:auto;background:rgba(11,7,22,.94);border:1px solid var(--line);padding:6px;justify-content:flex-start;z-index:6}
 #chatlog.open .ln{background:none;padding:1px 2px}
@@ -202,7 +205,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile .brand{display:none}
 #game.mobile .stats{flex-wrap:nowrap;width:100%;align-items:center;gap:5px;min-width:0}
 #game.mobile .stats .pill{font-size:12px;padding:0 8px;height:40px;display:inline-flex;align-items:center;gap:4px;flex:none}
-#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #buffs,#game.mobile #trippill,#game.mobile #jobpill{display:none!important}
+#game.mobile #btnAdmin,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #buffs,#game.mobile #trippill,#game.mobile #jobpill{display:none!important}
 #game.mobile #hppill{max-width:34vw;overflow:hidden;text-overflow:ellipsis}
 #game.mobile .mbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;font-size:20px;flex:none}
 #game.mobile #btnBag{margin-left:auto}
@@ -318,6 +321,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" id="btnMsg" type="button">Messages [M]</button>
       <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
+      <button class="btn hot" id="btnAdmin" type="button" hidden>Admin</button>
       <button class="btn mbtn" id="btnMenu" type="button" aria-label="Menu">☰</button>
     </div>
   </div>
@@ -597,12 +601,12 @@ function hasItem(id){ return (save.inv[id]||0)>0 }
 function toast(msg,color){ const d=document.createElement("div"); d.textContent=msg; if(color) d.style.borderColor=color; const tb=$("#toast"); tb.appendChild(d); while(tb.children.length>4) tb.firstChild.remove(); setTimeout(()=>d.remove(),3200); }
 const chatHist=[]; let chatOpen=false, chatFilter="all", chatTyping=false;
 const CHAT_LIFE=14000, SYS_LIFE=7000;
-function chatLine(who,text,cls){ const now=Date.now(), last=chatHist[chatHist.length-1]; text=String(text);
+function chatLine(who,text,cls,by){ const now=Date.now(), last=chatHist[chatHist.length-1]; text=String(text);
   if(last&&!who&&!last.who&&last.text===text&&now-last.at<15000){ last.n=(last.n||1)+1; last.at=now; renderChatLog(true); return; }
-  chatHist.push({who:who||null,text,cls:cls||(who?"":"sys"),at:now,sys:!who}); if(chatHist.length>150) chatHist.shift(); renderChatLog(true); }
+  chatHist.push({who:who||null,by:by||null,text,cls:cls||(who?"":"sys"),at:now,sys:!who}); if(chatHist.length>150) chatHist.shift(); renderChatLog(true); }
 function renderChatLog(force){ const log=$("#chatlog"); if(!log) return; const now=Date.now(); log.classList.toggle("open",chatOpen); const lb=$("#btnLog"); if(lb) lb.setAttribute("aria-pressed",String(chatOpen));
   const line=(h,full)=>{ const d=document.createElement("div"); d.className="ln"+(h.sys?" sysl":""); if(full){ const tm=document.createElement("span"); tm.className="t"; const dt2=new Date(h.at); tm.textContent=String(dt2.getHours()).padStart(2,"0")+":"+String(dt2.getMinutes()).padStart(2,"0"); d.append(tm); }
-    if(h.who){ const w=document.createElement("span"); w.className="who"; w.textContent=h.who+": "; d.append(w); } const t=document.createElement("span"); if(h.cls) t.className=h.cls; t.textContent=h.text; d.append(t); if(h.n>1){ const x=document.createElement("span"); x.className="x"; x.textContent="×"+h.n; d.append(x); } d._h=h; return d; };
+    if(h.who){ const w=document.createElement("span"); w.className="who"; w.textContent=h.who+": "; const si=h.by?dccSym(h.by):-1; if(si>=0) d.append(dccCanvas(si,12)); d.append(w); } const t=document.createElement("span"); if(h.cls) t.className=h.cls; t.textContent=h.text; d.append(t); if(h.n>1){ const x=document.createElement("span"); x.className="x"; x.textContent="×"+h.n; d.append(x); } d._h=h; return d; };
   if(chatOpen){ const items=chatHist.filter(h=>chatFilter==="all"||(chatFilter==="chat"?!h.sys:h.sys)).slice(-100); const sig="o"+chatFilter+items.length+":"+(items.length?items[items.length-1].at+":"+(items[items.length-1].n||1):"");
     if(!force&&log._sig===sig) return; log._sig=sig; const body0=log.querySelector(".logbody"); const atBottom=!body0||body0.scrollHeight-body0.scrollTop-body0.clientHeight<24;
     log.innerHTML=""; const head=document.createElement("div"); head.className="loghead";
@@ -1164,7 +1168,8 @@ function drawStick(c,x,y,s,o,t){
   // ---- labels (unscaled)
   c.save(); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace";
   const top=(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
-  if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; c.fillText(o.name,x,y-(top+bob)*s); c.globalAlpha=1; }
+  if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; c.fillText(o.name,x,y-(top+bob)*s); c.globalAlpha=1;
+    if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; } }
   if(o.hp!=null&&!o.dead){ const bw=36, bx=x-bw/2, by2=y-(top+bob)*s+4, r=clamp(o.hp,0,100)/100; c.fillStyle="rgba(0,0,0,.75)"; c.fillRect(bx-1,by2-1,bw+2,6); c.fillStyle=r>.5?"#43f0a4":r>.25?"#ffb84a":"#ff5a4a"; c.fillRect(bx,by2,bw*r,4); }
   if(o.say&&t-o.say.t<6){ const txt=String(o.say.text).slice(0,80); c.font="11px 'IBM Plex Mono',monospace"; const w=Math.min(200,c.measureText(txt).width+14);
     const by=y-(top+18+bob)*s; c.fillStyle="rgba(11,7,22,.92)"; c.strokeStyle="#ff3fa8"; c.lineWidth=1; c.fillRect(x-w/2,by-14,w,20); c.strokeRect(x-w/2+.5,by-13.5,w-1,19);
@@ -1513,13 +1518,13 @@ function render(){
   // entities sorted by depth
   const ents=[];
   for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx,look:n.look,name:n.name,fx:n.fx||null,sit:!!n.sit,emote:n.dance?{e:"dance",t:T}:null}});
-  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,sit:(p.s==="club"&&p.seat!=null)||(p.s==="home"&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
+  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,sit:(p.s==="club"&&p.seat!=null)||(p.s==="home"&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0?"★ ":"")+(myName||"Runner"),me:true,say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),say:me.say,emote:me.emote,fx:myFx(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
@@ -1534,7 +1539,7 @@ function nameOf(by){ if(!by) return "Runner"; if(by===myId) return myName||"Runn
 $("#chatin").addEventListener("focus",()=>{ chatTyping=true; renderChatLog(true); }); $("#chatin").addEventListener("blur",()=>{ chatTyping=false; renderChatLog(true); });
 $("#btnLog").addEventListener("click",()=>{ chatOpen=!chatOpen; renderChatLog(true); });
 $("#chatin").addEventListener("keydown",e=>{ if(e.key==="Enter"){ const v=e.target.value.trim().slice(0,80); if(v){ sayText(v); } e.target.value=""; e.target.blur(); } if(e.key==="Escape") e.target.blur(); });
-function sayText(v){ me.say={text:v,t:T}; chatLine(myName||"Runner",v); pushPresence(true,{say:{text:v,at:Date.now()}}); if(ROOM) ROOM.emit("chat",{text:v,s:me.scene}).catch(()=>{}); beep(990,.04); }
+function sayText(v){ me.say={text:v,t:T}; chatLine(myName||"Runner",v,undefined,myId); pushPresence(true,{say:{text:v,at:Date.now()}}); if(ROOM) ROOM.emit("chat",{text:v,s:me.scene}).catch(()=>{}); beep(990,.04); }
 document.querySelectorAll("[data-emote]").forEach(b=>b.onclick=()=>emote(b.dataset.emote));
 function emote(e){ me.emote={e,t:T}; pushPresence(true,{emote:{e,at:Date.now()}}); }
 
@@ -1577,7 +1582,7 @@ const GUIDE={
     ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
     ["Build rigs",["Open the Recipe Book tab at the Workbench to see what every recipe needs, which items count for each part, and where to buy or find them.","Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
     ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu for less, plus 8 noodle-bar specials of its own.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
-    ["Gear, tech and home items",["Your apartment's living room has 8 wall and 9 floor spots. Walk up to anything you place to use it: sit on couches (+tips), nap in a hammock (+speed), train on a punching bag (+Void armor), read books (+luck), overclock a PC (2× print chips), play music, feed fish, water plants until they bloom for chips, raid the fridge for snacks and more.","Home Vibe (shown on your living-room wall) rises with rarer decor, variety, lights left on, healthy plants, a clean floor and paid room styles. It boosts your mining rack (up to +40%), lengthens every home boost and pays a daily home bonus at the Home Hub.","Cyber Buys & More sells drives, cables, peripherals, wall art and furniture. Its new wing (walk past the register) adds Gadgets & Gaming (holdable gadgets like a Pocket Drone, VR Visor or Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
+    ["Gear, tech and home items",["Your apartment's living room has 8 wall and 9 floor spots. Walk up to anything you place to use it: sit on couches (+tips), nap in a hammock (+speed), train on a punching bag (+Void armor), read books (+luck), overclock a PC (2× print chips), play music, feed fish, water plants until they bloom for chips, raid the fridge for snacks and more.","Home Vibe (shown on your living-room wall) rises with rarer decor, variety, lights left on, healthy plants, a clean floor and paid room styles. It boosts your mining rack (up to +40%), lengthens every home boost and pays a daily home bonus at the Home Hub.","Data Collectors Club: an exclusive membership granted only by the game's owner. Members get an animated high-tech symbol next to their name everywhere: over their head, in chat and in Who's online.","Cyber Buys & More sells drives, cables, peripherals, wall art and furniture. Its new wing (walk past the register) adds Gadgets & Gaming (holdable gadgets like a Pocket Drone, VR Visor or Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
     ["Look and style",["Press C to open your Character screen and change your name and look anytime.","Over 200 options: 13 tops, 12 hairstyles, 22 colors for your top, legs, hair and name, plus shoes, neck pieces, eyewear, 17 headpieces, back items, companions and auras.","Basics are free. Premium pieces cost credits once and stay unlocked, so you can swap outfits freely. Try anything on before you buy."]],
     ["From Void bots",["Every bot type has its own loot: Glitch Drones and Pulse Gunners drop mostly tech, Phantoms drop wardrobe unlocks, Firewall Brutes drop apartment decor, and the SENTINEL Ω always drops two rare-or-better items.","Hard mode gives the best rarity odds, including epic drops. Wardrobe unlocks you already own turn into credits."]],
     ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
@@ -1677,6 +1682,7 @@ function openWardrobe(tab="name",firstRun=false){
       else { status.textContent=res; status.className="r-epic"; } };
     btn.onclick=doIt; inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); doIt(); } });
     body.append(el("label",{class:"fld"},"Username",el("div",{class:"row"},inp,btn)),status);
+    if(dccActive(myId)){ const d=dcc[myId]; body.append(el("div",{class:"detail"},dccCanvas(d.sym,40),el("div",{class:"info"},el("strong",{text:"Data Collectors Club member"}),el("span",{class:"sub",text:`${DCC_SYMS[d.sym].n} symbol · ${d.until?"active until "+new Date(d.until).toLocaleDateString():"no expiration"}`})))); }
     if(firstRun) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Skip for now",onclick:closePanel})));
     setTimeout(()=>inp.focus(),30);
     return;
@@ -3186,6 +3192,80 @@ function drawLivingRoom(t){
     if(off){ ctx.save(); ctx.globalAlpha=.35; ctx.filter="grayscale(1)"; drawItem(ctx,id,p.x,p.y,96,0); ctx.restore(); return; }
     drawItem(ctx,id,p.x,p.y,96,act?t*3+i:t+i); });
 }
+/* ============================================================ ADMIN + DATA COLLECTORS CLUB */
+const DCC_SYMS=[{n:"Data Core",c:"#38e8ff"},{n:"Neural Link",c:"#ff3fa8"},{n:"Holo Diamond",c:"#a8e8ff"},{n:"Quantum Orbit",c:"#7c5cff"},{n:"Cipher Eye",c:"#43f0a4"},{n:"Circuit Crown",c:"#ffd36a"},{n:"Signal Wave",c:"#ff8a3a"},{n:"Glitch Star",c:"#ff5a4a"},{n:"Firewall Shield",c:"#00e0c0"},{n:"Binary Chip",c:"#cf72ff"}];
+let dcc={}, dccSeen=false;
+function dccActive(uid){ const d=uid&&dcc[uid]; return !!(d&&d.on===true&&(!d.until||d.until>Date.now())); }
+function dccSym(uid){ return dccActive(uid)?dcc[uid].sym:-1; }
+function dccStatus(uid){ const d=dcc[uid]; if(!d) return {txt:"Not a member",cls:"sub"}; if(!d.on) return {txt:"Off",cls:"sub"}; if(d.until&&d.until<=Date.now()) return {txt:"Expired "+new Date(d.until).toLocaleDateString(),cls:"r-epic"}; return {txt:d.until?"Active until "+new Date(d.until).toLocaleDateString():"Active · no expiration",cls:"r-uncommon"}; }
+function drawDccSym(c,i,x,y,s,t){ const S=DCC_SYMS[i]; if(!S) return; const col=S.c; c.save(); c.translate(x,y); c.lineCap="round"; c.lineJoin="round"; c.strokeStyle=c.fillStyle=col; c.shadowColor=col; c.shadowBlur=s*1.2; c.lineWidth=Math.max(1,s*.18);
+  const P=(n,r,rot)=>{ c.beginPath(); for(let k=0;k<n;k++){ const a=rot+k/n*Math.PI*2; c.lineTo(Math.cos(a)*r,Math.sin(a)*r); } c.closePath(); };
+  if(i===0){ P(6,s,t*.8); c.stroke(); c.globalAlpha=.55+.45*Math.sin(t*4); c.beginPath(); c.arc(0,0,s*.38,0,7); c.fill(); }
+  else if(i===1){ const pts=[[-s*.8,s*.55],[s*.8,s*.55],[0,-s*.85]]; c.beginPath(); pts.forEach(([a,b],k)=>k?c.lineTo(a,b):c.moveTo(a,b)); c.closePath(); c.globalAlpha=.6; c.stroke(); c.globalAlpha=1; for(const [a,b] of pts){ c.beginPath(); c.arc(a,b,s*.22,0,7); c.fill(); } const u=(t*.9)%1, k=Math.floor(u*3), f=u*3-k, A=pts[k], B=pts[(k+1)%3]; c.fillStyle="#fff"; c.beginPath(); c.arc(A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f,s*.17,0,7); c.fill(); }
+  else if(i===2){ const w=s*(.35+.55*Math.abs(Math.cos(t*1.6))); c.beginPath(); c.moveTo(0,-s); c.lineTo(w,-s*.25); c.lineTo(0,s); c.lineTo(-w,-s*.25); c.closePath(); c.globalAlpha=.35; c.fill(); c.globalAlpha=1; c.stroke(); c.beginPath(); c.moveTo(-w,-s*.25); c.lineTo(w,-s*.25); c.stroke(); }
+  else if(i===3){ c.beginPath(); c.arc(0,0,s*.25,0,7); c.fill(); for(const r of [-.6,.6]){ c.save(); c.rotate(r); c.beginPath(); c.ellipse(0,0,s,s*.38,0,0,7); c.globalAlpha=.7; c.stroke(); c.restore(); } c.globalAlpha=1; const a=t*3; c.fillStyle="#fff"; const ex=Math.cos(a)*s, ey=Math.sin(a)*s*.38; c.beginPath(); c.arc(ex*Math.cos(.6)-ey*Math.sin(.6),ex*Math.sin(.6)+ey*Math.cos(.6),s*.16,0,7); c.fill(); }
+  else if(i===4){ c.beginPath(); c.moveTo(-s,0); c.quadraticCurveTo(0,-s*1.1,s,0); c.quadraticCurveTo(0,s*1.1,-s,0); c.closePath(); c.stroke(); const ix=Math.sin(t*1.8)*s*.35, bl=Math.sin(t*.9)>.96; c.beginPath(); c.arc(ix,0,bl?s*.08:s*.32,0,7); c.fill(); c.fillStyle="#fff"; c.beginPath(); c.arc(ix,0,s*.1,0,7); c.fill(); }
+  else if(i===5){ c.beginPath(); c.moveTo(-s,s*.6); c.lineTo(-s,-s*.3); c.lineTo(-s*.45,s*.1); c.lineTo(0,-s*.75); c.lineTo(s*.45,s*.1); c.lineTo(s,-s*.3); c.lineTo(s,s*.6); c.closePath(); c.stroke(); [[-s,-s*.3],[0,-s*.75],[s,-s*.3]].forEach(([a,b],k)=>{ c.globalAlpha=.4+.6*Math.max(0,Math.sin(t*4-k*1.2)); c.beginPath(); c.arc(a,b,s*.2,0,7); c.fill(); }); c.globalAlpha=1; c.fillRect(-s*.5,s*.28,s,s*.12); }
+  else if(i===6){ c.beginPath(); c.arc(0,s*.55,s*.2,0,7); c.fill(); for(let k=1;k<=3;k++){ c.globalAlpha=Math.max(.15,Math.sin(t*4-k*.9)); c.beginPath(); c.arc(0,s*.55,s*.42*k,-Math.PI*.78,-Math.PI*.22); c.stroke(); } }
+  else if(i===7){ const j=Math.sin(t*13)*Math.sin(t*7)>.4?s*.18:0; const star=()=>{ c.beginPath(); for(let k=0;k<10;k++){ const r=k%2?s*.42:s, a=-Math.PI/2+k*Math.PI/5; c.lineTo(Math.cos(a)*r,Math.sin(a)*r); } c.closePath(); };
+    c.shadowBlur=0; c.globalAlpha=.7; c.save(); c.translate(-j,0); c.fillStyle="#38e8ff"; star(); c.fill(); c.restore(); c.save(); c.translate(j,0); c.fillStyle="#ff3fa8"; star(); c.fill(); c.restore(); c.globalAlpha=1; c.shadowBlur=s; c.fillStyle=col; c.rotate(Math.sin(t*1.2)*.12); star(); c.fill(); }
+  else if(i===8){ c.beginPath(); c.moveTo(0,-s); c.lineTo(s*.85,-s*.6); c.lineTo(s*.7,s*.35); c.quadraticCurveTo(s*.3,s*.85,0,s); c.quadraticCurveTo(-s*.3,s*.85,-s*.7,s*.35); c.lineTo(-s*.85,-s*.6); c.closePath(); c.globalAlpha=.25; c.fill(); c.globalAlpha=1; c.stroke(); c.save(); c.clip(); const sy=-s+((t*1.2)%1)*2*s; c.fillStyle="#fff"; c.globalAlpha=.8; c.fillRect(-s,sy,2*s,s*.16); c.restore(); }
+  else if(i===9){ c.strokeRect(-s*.62,-s*.62,s*1.24,s*1.24); for(let k=-1;k<=1;k++){ for(const [a,b,w,h] of [[k*s*.38-s*.06,-s,s*.12,s*.3],[k*s*.38-s*.06,s*.7,s*.12,s*.3],[-s,k*s*.38-s*.06,s*.3,s*.12],[s*.7,k*s*.38-s*.06,s*.3,s*.12]]) c.fillRect(a,b,w,h); }
+    c.shadowBlur=s*.6; c.font=`bold ${Math.max(5,s*1.05)}px monospace`; c.textAlign="center"; c.textBaseline="middle"; c.fillText(((t*2)|0)%2?"1":"0",0,s*.06); }
+  c.restore(); }
+function dccCanvas(i,px){ const cv=document.createElement("canvas"); cv.className="dccsym"; cv.width=px*2; cv.height=px*2; cv.style.width=cv.style.height=px+"px"; cv.dataset.sym=i; cv.setAttribute("aria-label",DCC_SYMS[i].n+" symbol"); paintDcc(cv); return cv; }
+function paintDcc(cv){ const c=cv.getContext("2d"), w=cv.width; c.clearRect(0,0,w,w); drawDccSym(c,+cv.dataset.sym,w/2,w/2,w*.34,performance.now()/1000); }
+setInterval(()=>{ for(const cv of document.querySelectorAll("canvas.dccsym")) if(cv.isConnected) paintDcc(cv); },90);
+function updAdminBtn(){ const b=$("#btnAdmin"); if(b) b.hidden=!IS_ADMIN; }
+$("#btnAdmin").onclick=()=>openAdmin();
+let dccTab="dcc", dccQ="";
+function refreshAdmin(){ if(currentView==="admin") openAdmin(dccTab); }
+function adminPlayers(){ const ids=new Set([...Object.keys(homes||{}),...Object.keys(dcc)]); for(const p of peers.values()) if(p.by) ids.add(p.by); if(myId) ids.add(myId); return [...ids].filter(Boolean); }
+function openAdmin(tab){ if(!IS_ADMIN){ toast("Admins only."); return; } dccTab=tab||dccTab; const body=panel("Admin Panel","Owner-only tools. Only your account can see or use these."); currentView="admin";
+  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["symbols","Symbols"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
+  if(!DB){ body.append(el("div",{class:"empty",text:"Sign in with the owner account to manage memberships."})); return; }
+  if(dccTab==="symbols"){ body.append(el("p",{class:"sub",text:"The 10 Data Collectors Club symbols. Pick one per member when you grant or edit a membership."})); const g=el("div",{class:"dccgrid"}); DCC_SYMS.forEach((S,i)=>g.append(el("div",{class:"card"},dccCanvas(i,46),el("div",{class:"nm",text:S.n})))); body.append(g); return; }
+  if(dccTab==="members"){ const ids=Object.keys(dcc).sort((a,b)=>(dccActive(b)-dccActive(a))||((dcc[a].until||9e15)-(dcc[b].until||9e15)));
+    if(!ids.length){ body.append(el("div",{class:"empty",text:"No members yet. Grant one from the Data Collectors Club tab."})); return; }
+    const l=el("div",{class:"list"}); for(const id of ids){ const d=dcc[id], st=dccStatus(id);
+      l.append(el("div",{class:"li"},dccCanvas(d.sym,28),el("div",{class:"grow"},el("div",{text:nameOf(id)}),el("div",{class:st.cls,text:st.txt})),el("div",{class:"row"},
+        el("button",{class:"btn"+(d.on?"":" hot"),type:"button",text:d.on?"Turn off":"Turn on",onclick:()=>saveDcc(id,{...d,on:!d.on})}),
+        el("button",{class:"btn",type:"button",text:"Manage",onclick:()=>openDccEdit(id)})))); }
+    body.append(l); return; }
+  body.append(el("p",{class:"sub",text:"Grant the Data Collectors Club to any player, choose their symbol, set an expiration date, and switch it on or off at any time. Only your account can make these changes."}));
+  const q=el("input",{class:"num",type:"search",placeholder:"Search players by name",value:dccQ,autocomplete:"off",style:"min-width:0;flex:1"}); q.addEventListener("input",()=>{ dccQ=q.value; draw(); }); body.append(el("div",{class:"row"},q));
+  const l=el("div",{class:"list"}); body.append(l);
+  function draw(){ l.innerHTML=""; const qq=dccQ.trim().toLowerCase(); const ids=adminPlayers().filter(id=>!qq||nameOf(id).toLowerCase().includes(qq)).sort((a,b)=>(!!dcc[b]-!!dcc[a])||nameOf(a).localeCompare(nameOf(b))).slice(0,80);
+    if(!ids.length){ l.append(el("div",{class:"empty",text:"No players match. Players appear here once they've saved a game or come online."})); return; }
+    for(const id of ids){ const st=dccStatus(id), h=(homes||{})[id], lk=h&&h.look?h.look:(id===myId?save.look:null); const on=[...peers.values()].some(p=>p.by===id)||id===myId;
+      l.append(el("div",{class:"li"},lk?lookCanvas(validLook?validLook(lk):lk,26):el("span",{class:"tag",text:"?"}),el("div",{class:"grow"},el("div",{},...(dccSym(id)>=0?[dccCanvas(dccSym(id),14)]:[]),nameOf(id)+(id===myId?" (you)":"")),el("div",{class:st.cls,text:st.txt+(on?" · online":"")})),
+        el("button",{class:"btn"+(dcc[id]?"":" hot"),type:"button",text:dcc[id]?"Manage":"Grant",onclick:()=>openDccEdit(id)}))); } }
+  draw(); setTimeout(()=>{ if(dccQ) q.focus(); },0); }
+function ymd(ms){ const d=new Date(ms); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function openDccEdit(id){ if(!IS_ADMIN) return; const cur=dcc[id]; const dr={on:cur?cur.on:true,sym:cur?cur.sym:0,until:cur?cur.until:Date.now()+30*864e5};
+  const body=panel(`Data Collectors Club · ${nameOf(id)}`,cur?"Edit this membership.":"Grant a new membership."); currentView="admin-edit";
+  const prev=el("div",{class:"detail"}); body.append(prev);
+  const paintPrev=()=>{ prev.innerHTML=""; prev.append(dccCanvas(dr.sym,44),el("div",{class:"info"},el("strong",{text:`${nameOf(id)} · ${DCC_SYMS[dr.sym].n}`}),el("span",{class:dr.on?"r-uncommon":"sub",text:(dr.on?"On":"Off")+" · "+(dr.until?"expires "+new Date(dr.until).toLocaleDateString():"no expiration")}))); };
+  const tg=el("div",{class:"row"}); const bOn=el("button",{class:"btn",type:"button",text:"Membership ON"}), bOff=el("button",{class:"btn",type:"button",text:"Membership OFF"});
+  const syncTg=()=>{ bOn.setAttribute("aria-pressed",String(dr.on)); bOff.setAttribute("aria-pressed",String(!dr.on)); bOn.className="btn"+(dr.on?" hot":""); bOff.className="btn"+(!dr.on?" hot":""); paintPrev(); };
+  bOn.onclick=()=>{ dr.on=true; syncTg(); }; bOff.onclick=()=>{ dr.on=false; syncTg(); }; tg.append(bOn,bOff); body.append(el("strong",{text:"Status"}),tg);
+  body.append(el("strong",{text:"Symbol"})); const g=el("div",{class:"dccgrid"}); const cards=DCC_SYMS.map((S,i)=>{ const c=el("button",{class:"card",type:"button",onclick:()=>{ dr.sym=i; cards.forEach((x,j)=>{ x.classList.toggle("sel",j===i); x.setAttribute("aria-pressed",String(j===i)); }); paintPrev(); }},dccCanvas(i,40),el("div",{class:"nm",text:S.n})); c.classList.toggle("sel",i===dr.sym); c.setAttribute("aria-pressed",String(i===dr.sym)); return c; }); cards.forEach(c=>g.append(c)); body.append(g);
+  body.append(el("strong",{text:"Expiration"}));
+  const date=el("input",{class:"num",type:"date",value:dr.until?ymd(dr.until):"",min:ymd(Date.now()),style:"min-width:0;flex:1"}); const never=el("input",{type:"checkbox"}); never.checked=!dr.until;
+  const setUntil=ms=>{ dr.until=ms; never.checked=!ms; date.value=ms?ymd(ms):""; date.disabled=!ms; paintPrev(); };
+  date.addEventListener("change",()=>{ if(!date.value) return; const [y,m,d]=date.value.split("-").map(Number); setUntil(new Date(y,m-1,d,23,59,59).getTime()); });
+  never.addEventListener("change",()=>setUntil(never.checked?0:Date.now()+30*864e5)); date.disabled=!dr.until;
+  body.append(el("div",{class:"row"},date,el("label",{class:"row",style:"gap:6px;align-items:center"},never,el("span",{text:"No expiration"}))));
+  const endOf=ms=>{ const b=new Date(ms); return new Date(b.getFullYear(),b.getMonth(),b.getDate(),23,59,59).getTime(); };
+  body.append(el("div",{class:"row"},...[["7 days",7],["30 days",30],["90 days",90],["1 year",365]].map(([n,dd])=>el("button",{class:"btn",type:"button",text:n,title:`${n} from today`,onclick:()=>setUntil(endOf(Date.now()+dd*864e5))})),
+    ...(cur&&cur.until?[el("button",{class:"btn",type:"button",text:"Extend +30 days",onclick:()=>setUntil(endOf(Math.max(Date.now(),dr.until||Date.now())+30*864e5))})]:[])));
+  body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:cur?"Save changes":"Grant membership",onclick:async()=>{ if(await saveDcc(id,dr)) openAdmin("dcc"); }}),
+    ...(cur?[el("button",{class:"btn",type:"button",text:"Remove membership",onclick:async()=>{ try{ await DB.doc("dcc/"+id).delete(); delete dcc[id]; toast(`${nameOf(id)} removed from the Data Collectors Club.`); openAdmin("dcc"); }catch(e){ toast("Couldn't remove it: "+(e&&e.message||"permission denied")); } }})]:[]),
+    el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openAdmin("dcc")})));
+  syncTg(); }
+async function saveDcc(id,dr){ if(!IS_ADMIN||!DB) return false; const rec={on:!!dr.on,sym:Math.max(0,Math.min(DCC_SYMS.length-1,dr.sym|0)),until:dr.until?Math.floor(dr.until):0,at:Date.now(),by:myId||""};
+  try{ await DB.doc("dcc/"+id).set(rec); dcc[id]={on:rec.on,sym:rec.sym,until:rec.until,at:rec.at}; toast(`${nameOf(id)}: Data Collectors Club ${rec.on?"ON":"OFF"}${rec.until?" until "+new Date(rec.until).toLocaleDateString():""}.`,"#43f0a4"); beep(1100,.08); if(currentView==="admin") refreshAdmin(); return true; }
+  catch(e){ toast("Couldn't save: "+(e&&e.message||"permission denied")); return false; } }
 /* ============================================================ APARTMENT: room styles, Home Vibe, interactive decor */
 const ROOM_STYLES={
   wall:{n:"Wallpaper",opts:[["Midnight plum",0],["Neon grid",150],["Exposed brick",120],["Wood panels",180],["Circuit board",250],["Graffiti",220],["Holo waves",300],["Starfield",400]]},
@@ -4046,12 +4126,12 @@ function openOnline(){ const body=panel(ROOM?"Who's online":"Playing solo",ROOM?
   if(!ROOM){ body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:"Why can't I see other players?"}),el("span",{text:accessNote()}))));
     if(IS_ADMIN) body.append(el("p",{class:"sub",text:"You own this game: invite players by email from the Share menu so they can join multiplayer and save."})); return; }
   const list=el("div",{class:"list"}); const all=onlinePeers().sort((a,b)=>whereOf(a).localeCompare(whereOf(b)));
-  list.append(el("div",{class:"li"},lookCanvas(save.look,22),el("div",{class:"grow"},el("div",{text:`${myName||"You"} (you)`}),el("div",{class:"sub",text:`In ${me.scene==="home"?(me.visiting?`${nameOf(me.visiting)}'s apartment`:"your apartment"):sceneName(me.scene)}`}))));
+  list.append(el("div",{class:"li"},lookCanvas(save.look,22),el("div",{class:"grow"},el("div",{},...(dccSym(myId)>=0?[dccCanvas(dccSym(myId),14)]:[]),`${myName||"You"} (you)`),el("div",{class:"sub",text:`In ${me.scene==="home"?(me.visiting?`${nameOf(me.visiting)}'s apartment`:"your apartment"):sceneName(me.scene)}`}))));
   for(const p of all){ const same=p.s===me.scene&&(p.home||null)===curHomeKey(); const row=el("div",{class:"row"});
     if(!same) row.append(el("button",{class:"btn hot",type:"button",text:"Go there",onclick:()=>goToPeer(p)})); else row.append(el("span",{class:"pill on",text:"Here with you"}));
     if(p.by&&DB&&msgOK()) row.append(el("button",{class:"btn",type:"button",text:"Message",onclick:()=>openDM(p.by)}));
     if(p.by&&DB) row.append(el("button",{class:"btn",type:"button",text:"Invite over",onclick:()=>inviteToHome(p.by)}));
-    list.append(el("div",{class:"li"},lookCanvas(p.look,22),el("div",{class:"grow"},el("div",{text:(p.staff?"★ ":"")+nameOf(p.by)+(p.guest?" · guest":"")}),el("div",{class:"sub",text:`In ${whereOf(p)}${p.s==="void"&&p.hp!=null?` · HP ${p.hp}`:""}`})),row)); }
+    list.append(el("div",{class:"li"},lookCanvas(p.look,22),el("div",{class:"grow"},el("div",{},...(dccSym(p.by)>=0?[dccCanvas(dccSym(p.by),14)]:[]),(p.staff?"★ ":"")+nameOf(p.by)+(p.guest?" · guest":"")),el("div",{class:"sub",text:`In ${whereOf(p)}${p.s==="void"&&p.hp!=null?` · HP ${p.hp}`:""}`})),row)); }
   if(!all.length) body.append(el("div",{class:"empty",text:"Nobody else is online right now. Share the game link with friends."}));
   body.append(list); }
 setInterval(()=>{ if(!ROOM) return; let list; try{ list=ROOM.peers(); }catch(e){ return; } syncPeers(list); updOnline(); if(currentView==="online"&&!$("#overlay").hidden){ const a=document.activeElement; if(!(a&&a.closest&&a.closest(".panel")&&a.tagName==="BUTTON")) openOnline(); } },4000);
@@ -4178,7 +4258,7 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
     mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
     mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
     mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }),
-    mk("🚇","Metro map",()=>openMetro())));
+    mk("🚇","Metro map",()=>openMetro()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
   body.append(el("strong",{text:"Emotes"}),el("div",{class:"memotes"},...["wave","dance","cheer","pose"].map(e2=>el("button",{class:"btn",type:"button",text:e2[0].toUpperCase()+e2.slice(1),onclick:()=>{ closePanel(); emote(e2); }}))));
   const st=[]; const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) st.push("Boosts: "+bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "));
   if(typeof myFx==="function"&&myFx()&&myTrip) st.push(`High: ${myTrip.name||"active"}${TRIP_LVL[myTrip.lvl||1]?" "+TRIP_LVL[myTrip.lvl||1]:""}`);
@@ -4239,12 +4319,15 @@ setInterval(hud,1000);
   const cl=window.claude; if(!cl||!cl.use){ ACCESS.mode="solo"; updOnline(); chatLine(null,accessNote(),"sys"); renderTitle(save.name?"limited":"signedout"); return; }
   const [u,db,room]=await Promise.all([cl.use("user"),cl.use("db"),cl.use("room")].map(p=>p.catch(()=>null)));
   USER=u;
-  if(u){ try{ IS_ADMIN=!!(await u.isOwner()); }catch(e){} try{ myId=await u.id(); if(!save.name) myName=(await u.name())||"Runner"; if(myId) names[myId]=myName; }catch(e){} }
+  if(u){ try{ IS_ADMIN=!!(await u.isOwner()); }catch(e){} updAdminBtn(); try{ myId=await u.id(); if(!save.name) myName=(await u.name())||"Runner"; if(myId) names[myId]=myName; }catch(e){} }
   let canWrite=true; if(u&&myId){ try{ const c=await u.can("data.write"); canWrite=c!==false; }catch(e){} }
   ACCESS.mode=!db?"signedout":!myId?"limited":!canWrite?"readonly":room?"full":"full";
   if(db&&myId&&canWrite){ DB=db;
     try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ save=sanitizeSave(snap.data()); hud(); } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
     db.collection("market").orderBy("at","desc").limit(60).onSnapshot(s=>{ market=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>BY[m.item]&&typeof m.seller==="string"&&+m.price>0); const ids=[...new Set(market.map(m=>m.seller))]; resolveNames(ids);  refreshView("trade");},()=>{});
+    db.collection("dcc").onSnapshot(s=>{ const was=dccActive(myId); dcc={}; s.docs.forEach(d=>{ const v=d.data()||{}; dcc[d.id]={on:v.on===true,until:+v.until||0,sym:Math.max(0,Math.min(DCC_SYMS.length-1,Math.floor(+v.sym||0))),at:+v.at||0}; }); resolveNames(Object.keys(dcc));
+      if(!was&&dccActive(myId)&&dccSeen){ toast(`Welcome to the Data Collectors Club! Your ${DCC_SYMS[dccSym(myId)].n} symbol now shows next to your name.`,"#43f0a4"); beep(1200,.12); } dccSeen=true;
+      if(currentView&&currentView.startsWith("admin")&&!$("#overlay").hidden&&!(document.activeElement&&["INPUT","SELECT"].includes(document.activeElement.tagName))) refreshAdmin(); },()=>{});
     db.collection("homes").limit(100).onSnapshot(s=>{ homes={}; s.docs.forEach(d=>homes[d.id]=d.data()); resolveNames(Object.keys(homes)); if(viewHome&&homes[viewHome.owner]){ const h=homes[viewHome.owner]; viewHome.display=Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null); viewHome.label=nameOf(viewHome.owner); } },()=>{});
     for(const x of save.settled||[]) settled.add(x);
     // Smacked Shop
@@ -4277,7 +4360,7 @@ setInterval(hud,1000);
   } else { chatLine(null,accessNote(),"sys"); renderTitle(ACCESS.mode==="signedout"?"signedout":"limited"); }
   if(room){ ROOM=room;
     room.onPeers(ch=>{ const arrived=[]; for(const p of ch.joined.concat(ch.updated)) if(applyPeer(p)&&ch.joined.includes(p)) arrived.push(p); try{ syncPeers(room.peers()); }catch(e){ for(const p of ch.left){ const q=peers.get(peerKey(p)); if(q&&q.pid===p.peer) peers.delete(peerKey(p)); } } for(const p of arrived) setTimeout(()=>chatLine(null,`${nameOf(p.by)} arrived in ${sceneName((p.presence||{}).s)||"Sector 9"}`,"sys"),300); updOnline(); },()=>{});
-    room.on("chat",m=>{ if(m.isMe&&m.sameTab) return; const d=m.data||{}; if(typeof d.text!=="string") return; chatLine(nameOf(m.by),d.text.slice(0,80)); });
+    room.on("chat",m=>{ if(m.isMe&&m.sameTab) return; const d=m.data||{}; if(typeof d.text!=="string") return; chatLine(nameOf(m.by),d.text.slice(0,80),undefined,m.by); });
     room.on("atk",onAtk); room.on("ko",onKo);
     room.on("invite",m=>{ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; if(d.to!==myId) return; resolveNames([m.by]);
       card(`${nameOf(m.by)} invited you to their apartment.`,[["Go there",()=>{ closePanel(); if(me.scene==="bar"&&mySlot>=0) clockOut(); visitHome(m.by); },true],["Not now",null]],90e3); });
