@@ -104,6 +104,7 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .panel .sub{color:var(--dim);font-size:12px;margin:2px 0 0}
 .panel .body{padding:12px 14px;overflow:auto;display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0;flex:1 1 auto;overscroll-behavior:contain}
 .panel header{flex:none}
+.panel .body > *{flex-shrink:0}
 .tabs{display:flex;gap:4px;flex-wrap:wrap}
 .tabs .btn[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
 .guide h3{margin:14px 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}.guide ul{margin:0;padding-left:18px}.guide li{margin:4px 0;line-height:1.5;font-size:13px}
@@ -252,6 +253,32 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile .panel .tabs::-webkit-scrollbar{display:none}
 #game.mobile .panel .tabs .btn{flex:none;white-space:nowrap}
 #game.mobile .panel .grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+#game.mobile .panel .tabs{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);padding-right:28px}
+#game.mobile .panel .tabs.end{-webkit-mask-image:none;mask-image:none}
+#game.mobile .wtop{position:sticky;top:-12px;z-index:1;background:var(--panel);margin:-12px -12px 0;padding:8px 12px 8px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line);box-shadow:0 6px 12px -6px #000}
+#game.mobile .wtop .detail{padding:6px;gap:10px;align-items:center;flex-wrap:nowrap}
+#game.mobile .wtop .detail canvas{width:88px!important;height:88px!important}
+#game.mobile .wtop .info{gap:4px;min-width:0;flex:1}
+#game.mobile .wtop .info .sub{display:none}
+#game.mobile .wtop .info .row{gap:6px;flex-wrap:wrap}
+#game.mobile .wtop .info .row{flex-wrap:wrap}
+#game.mobile .wtop .info .row .btn{padding:6px 8px;font-size:13px;min-height:44px;flex:1 1 auto;white-space:nowrap}
+#game.mobile .wtop .info .row .btn.hot{flex:2 1 auto}
+#game.mobile .wtop .info .r-epic{font-size:12px}
+#game.mobile .wtop .info strong{font-size:14px}
+#game.mobile .wgrid{grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px}
+#game.mobile .wgrid .card{padding:6px;min-height:44px}
+#game.mobile .wgrid .card canvas{width:100%!important;height:auto!important;aspect-ratio:1}
+#game.mobile .wgrid .card .nm{font-size:12px;line-height:1.2}
+#game.mobile .wgrid .card .meta{font-size:11px}
+#game.mobile:not(.portrait) .wtop{flex-direction:row;align-items:center;gap:10px;padding:6px 12px}
+#game.mobile:not(.portrait) .wtop .detail{flex:0 1 auto;max-width:52%;border:0;padding:0}
+#game.mobile:not(.portrait) .wtop .tabs{flex:1 1 0;min-width:0}
+#game.mobile:not(.portrait) .wtop .info strong,#game.mobile:not(.portrait) .wtop .info .r-epic{display:none}
+#game.mobile:not(.portrait) .wtop .info .row{flex-wrap:nowrap}
+#game.mobile:not(.portrait) .wtop .detail canvas{width:52px!important;height:52px!important}
+#game.mobile:not(.portrait) .panel header{padding-top:calc(4px + env(safe-area-inset-top,0px));padding-bottom:4px}
+#game.mobile:not(.portrait) .wtop .info .row .btn{min-height:36px;padding:4px 10px}
 #game.mobile .panel .li{flex-wrap:wrap}
 #game.mobile .panel .li > .row{flex-wrap:wrap}
 .mmenu{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -1413,12 +1440,19 @@ document.querySelectorAll("[data-emote]").forEach(b=>b.onclick=()=>emote(b.datas
 function emote(e){ me.emote={e,t:T}; pushPresence(true,{emote:{e,at:Date.now()}}); }
 
 /* ============================================================ PANELS */
-function panel(title,sub,refresh){ currentView=null; const ov=$("#overlay"); ov.innerHTML=""; ov.hidden=false; const p=document.createElement("div"); p.className="panel"; p.setAttribute("role","dialog"); p.setAttribute("aria-label",title);
+let panelFresh=0; const freshTab=f=>()=>{ panelFresh=1; f(); };
+function panel(title,sub,refresh){ currentView=null; const ov=$("#overlay");
+  { const ob=ov.hidden?null:ov.querySelector(".panel .body"), ot=ov.hidden?null:ov.querySelector(".panel .tabs"); const same=ob&&ov.querySelector(".panel")?.getAttribute("aria-label")===title;
+    const fresh=panelFresh; panelFresh=0;
+    if(same){ const top=ob.scrollTop, tl=ot?ot.scrollLeft:0; setTimeout(()=>{ const nb=ov.querySelector(".panel .body"), nt=ov.querySelector(".panel .tabs"); if(nb&&!refresh&&!fresh) nb.scrollTop=top; if(nt){ nt.scrollLeft=tl; tabEdge(nt); } },0); }
+    else setTimeout(()=>{ const nt=ov.querySelector(".panel .tabs"); if(nt){ const on=nt.querySelector('[aria-pressed="true"]'); if(on&&on.offsetLeft+on.offsetWidth>nt.clientWidth) nt.scrollLeft=on.offsetLeft-16; tabEdge(nt); } },0); } ov.innerHTML=""; ov.hidden=false; const p=document.createElement("div"); p.className="panel"; p.setAttribute("role","dialog"); p.setAttribute("aria-label",title);
   const h=document.createElement("header"); const tw=document.createElement("div"); const h2=document.createElement("h2"); h2.textContent=title; tw.appendChild(h2); if(sub){ const s=document.createElement("p"); s.className="sub"; s.textContent=sub; tw.appendChild(s); }
   const x=document.createElement("button"); x.className="btn"; x.type="button"; x.textContent=MOBILE?"✕ Close":"Close [Esc]"; x.onclick=closePanel; h.append(tw,x); const _refresh=refresh;
   const body=document.createElement("div"); body.className="body"; p.append(h,body); ov.appendChild(p); if(!_refresh) setTimeout(()=>x.focus(),0); for(const k in keys) keys[k]=false; return body; }
+function tabEdge(t){ if(!t||t._edge) { if(t) t.classList.toggle("end",t.scrollLeft+t.clientWidth>=t.scrollWidth-4); return; } t._edge=1; const f=()=>t.classList.toggle("end",t.scrollLeft+t.clientWidth>=t.scrollWidth-4); t.addEventListener("scroll",f,{passive:true}); f(); }
 function closePanel(){ currentView=null; tryOn=null; $("#overlay").hidden=true; $("#overlay").innerHTML=""; }
 $("#overlay").addEventListener("pointerdown",e=>{ if(e.target.id==="overlay") closePanel(); });
+$("#overlay").addEventListener("click",e=>{ if(e.target.closest&&e.target.closest(".panel .tabs")) panelFresh=1; setTimeout(()=>{ panelFresh=0; },0); },true);
 $("#btnBag").onclick=()=>openStash(); $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
 /* ============================================================ HOW TO PLAY */
 const GUIDE={
@@ -1511,7 +1545,7 @@ function openShelves(){
 function isOwned(k,i){ if(k==="hand") return true; return optCost(k,i)===0||(save.owned||[]).includes(k+":"+i); }
 let tryOn=null;
 function openWardrobe(tab="name",firstRun=false){
-  const body=panel(firstRun?"Create your runner":"Character",firstRun?"Pick a name and a look. You can change both any time from the Character button.":"Your name and look are what other players see on the street.");
+  const body=panel(firstRun?"Create your runner":"Character",MOBILE?null:firstRun?"Pick a name and a look. You can change both any time from the Character button.":"Your name and look are what other players see on the street.");
   if(!tryOn) tryOn={...fullLook(save.look)};
   const top=el("div",{class:"detail"}); const pv=lookCanvas(tryOn,110); pv.style.cssText="width:140px;height:140px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)"; pv._walk=false;
   pv.addEventListener("pointerdown",()=>{ pv._dir=-(pv._dir||1); });
@@ -1519,19 +1553,19 @@ function openWardrobe(tab="name",firstRun=false){
   const nm=el("strong",{text:myName}); nm.style.color=COLORS[tryOn.nameCol]; info.append(nm,el("span",{class:"sub",text:"Tap the preview to turn around."}));
   const changed=[...SLOTS,"hand"].filter(k=>tryOn[k]!==fullLook(save.look)[k]);
   const cost=changed.reduce((a,k)=>a+(isOwned(k,tryOn[k])?0:optCost(k,tryOn[k])),0);
-  const wear=el("button",{class:"btn hot",type:"button",text:!changed.length?"Wearing this look":cost?`Buy new items & wear (₵${cost})`:"Wear this look",onclick:()=>{
+  const wear=el("button",{class:"btn hot",type:"button",text:!changed.length?(MOBILE?"Wearing":"Wearing this look"):cost?(MOBILE?`Buy & wear ₵${cost}`:`Buy new items & wear (₵${cost})`):(MOBILE?"Wear look":"Wear this look"),onclick:()=>{
     if(cost>save.credits){ toast(`You need ₵${cost-Math.floor(save.credits)} more.`); beep(150,.15); return; }
     save.credits-=cost; save.owned=save.owned||[]; for(const k of changed) if(!isOwned(k,tryOn[k])) save.owned.push(k+":"+tryOn[k]);
     save.look={...tryOn}; persist(); pushPresence(true); emote("cheer"); toast(cost?`New gear bought for ₵${cost}`:"Look updated"); beep(1100,.08); openWardrobe(tab,firstRun); }});
   if(!changed.length) wear.disabled=true;
-  const reset=el("button",{class:"btn",type:"button",text:"Undo try-on",onclick:()=>{ tryOn={...fullLook(save.look)}; openWardrobe(tab,firstRun); }});
-  const rand=el("button",{class:"btn",type:"button",text:"Random (owned only)",onclick:()=>{ for(const k of SLOTS){ const own=[...Array(slotLen(k)).keys()].filter(i=>isOwned(k,i)); tryOn[k]=own[(Math.random()*own.length)|0]; } openWardrobe(tab,firstRun); }});
-  info.append(el("div",{class:"row"},wear,reset,rand)); if(changed.length&&cost) info.append(el("span",{class:"r-epic",text:`Trying on ${changed.length} change${changed.length>1?"s":""} · ₵${cost} to unlock`}));
-  top.append(pv,info); body.append(top);
-  const tabs=el("div",{class:"tabs"}); tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab==="name"),text:"Name",onclick:()=>openWardrobe("name",firstRun)}));
-  for(const k of SLOTS) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:WARD[k].n,onclick:()=>openWardrobe(k,firstRun)}));
-  tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab==="hand"),text:"Hand",onclick:()=>openWardrobe("hand",firstRun)}));
-  body.append(tabs);
+  const reset=el("button",{class:"btn",type:"button",text:MOBILE?"Undo":"Undo try-on",onclick:()=>{ tryOn={...fullLook(save.look)}; openWardrobe(tab,firstRun); }});
+  const rand=el("button",{class:"btn",type:"button",text:MOBILE?"🎲 Random":"Random (owned only)",onclick:()=>{ for(const k of SLOTS){ const own=[...Array(slotLen(k)).keys()].filter(i=>isOwned(k,i)); tryOn[k]=own[(Math.random()*own.length)|0]; } openWardrobe(tab,firstRun); }});
+  info.append(el("div",{class:"row"},wear,reset,rand)); if(changed.length&&cost) info.append(el("span",{class:"r-epic",text:MOBILE?`${changed.length} new item${changed.length>1?"s":""} · ₵${cost}`:`Trying on ${changed.length} change${changed.length>1?"s":""} · ₵${cost} to unlock`}));
+  top.append(pv,info); const wtop=el("div",{class:"wtop"},top); body.append(wtop);
+  const tabs=el("div",{class:"tabs"}); tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab==="name"),text:"Name",onclick:freshTab(()=>openWardrobe("name",firstRun))}));
+  for(const k of SLOTS) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:WARD[k].n,onclick:freshTab(()=>openWardrobe(k,firstRun))}));
+  tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab==="hand"),text:"Hand",onclick:freshTab(()=>openWardrobe("hand",firstRun))}));
+  wtop.append(tabs);
   if(tab==="name"){
     const inp=el("input",{class:"num",id:"handle",maxlength:"32",value:save.name||"",placeholder:"e.g. Byte Witch, N30N_K1D, ★Ronin★",autocomplete:"off",style:"min-width:0;flex:1"});
     const status=el("div",{class:"sub",text:DB?"3 to 16 characters. Letters, numbers, spaces, symbols and emoji all work. Names are first come, first served.":"3 to 16 characters. Sign in on claude.ai to reserve a name across players."});
@@ -1549,7 +1583,7 @@ function openWardrobe(tab="name",firstRun=false){
     return;
   }
   if(tab==="hand"){ handTab(body,firstRun); return; }
-  const g=el("div",{class:"grid"});
+  const g=el("div",{class:"grid wgrid"});
   for(let i=0;i<slotLen(tab);i++){
     const l={...tryOn,[tab]:i}; const cvs=lookCanvas(l,64); const own=isOwned(tab,i), cur=fullLook(save.look)[tab]===i, sel=tryOn[tab]===i;
     const card=el("button",{class:"card"+(sel?" sel":""),type:"button","aria-pressed":String(sel),onclick:()=>{ tryOn[tab]=i; openWardrobe(tab,firstRun); }});
@@ -3102,7 +3136,7 @@ function openDecrypt(){
 }
 /* --- hand tab in Character */
 function handTab(body,firstRun){
-  const own=invList().filter(([id])=>HOLD_T.includes(BY[id].t)); const g=el("div",{class:"grid"});
+  const own=invList().filter(([id])=>HOLD_T.includes(BY[id].t)); const g=el("div",{class:"grid wgrid"});
   const mk=(id,label,meta,metaClass)=>{ const l={...tryOn,hand:id}; const sel=(tryOn.hand||"")===id, cur=(fullLook(save.look).hand||"")===id;
     const card=el("button",{class:"card"+(sel?" sel":""),type:"button","aria-pressed":String(sel),onclick:()=>{ tryOn.hand=id; openWardrobe("hand",firstRun); }});
     card.append(lookCanvas(l,64),el("div",{class:"nm",text:label}),el("div",{class:"meta"},el("span",{class:cur?"r-uncommon":metaClass||"",text:cur?"Equipped":meta}),el("span",{text:sel&&!cur?"Trying":""}))); return card; };
