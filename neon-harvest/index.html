@@ -761,7 +761,7 @@ function hud(){ jobHud(); if(save.look&&save.look.hand&&!hasItem(save.look.hand)
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
 function beep(f=660,d=.06,type="square",vol=.05){ if(!soundOn||!AC) return; const o=AC.createOscillator(),g=AC.createGain(); o.type=type;o.frequency.value=f; g.gain.setValueAtTime(vol,AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+d); }
-function startMusic(){ if(musicTimer||!AC) return; const notes=[220,262,330,392,330,262,196,247]; let i=0; startClubSeq(); musicTimer=setInterval(()=>{ if(!soundOn||me.scene==="club") return; const inBar=me.scene==="bar"; beep(notes[i%8]*(inBar?1:.5),.18,"sawtooth",inBar?.025:.012); if(i%4===0) beep(55,.25,"triangle",inBar?.06:.03); i++; },220); }
+function startMusic(){ if(musicTimer||!AC) return; const notes=[220,262,330,392,330,262,196,247]; let i=0; startClubSeq(); musicTimer=setInterval(()=>{ if(!soundOn||me.scene==="club"||me.scene==="bar") return; const inBar=me.scene==="bar"; beep(notes[i%8]*(inBar?1:.5),.18,"sawtooth",inBar?.025:.012); if(i%4===0) beep(55,.25,"triangle",inBar?.06:.03); i++; },220); }
 $("#btnSnd").onclick=()=>{ soundOn=!soundOn; try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); AC.resume(); startMusic(); }catch(e){} $("#btnSnd").textContent=soundOn?"Sound on":"Sound off"; $("#btnSnd").setAttribute("aria-pressed",String(soundOn)); };
 
 /* ============================================================ ITEM ART */
@@ -1404,7 +1404,7 @@ function hotspots(sc){
     {x:70,hw:50,label:"Exit to the street",act:()=>go("street",1760)},
     {x:380,hw:110,label:mySlot>=0?"Work the counter (on shift)":"Order drinks at the bar",act:()=>{ barMenuTab="drinks"; openCounter(); }},
     {x:635,hw:55,label:mySlot>=0?"Work the kitchen (on shift)":"Order food at the GLITCH KITCHEN",act:()=>{ barMenuTab="food"; openCounter(); }},
-    {x:760,hw:50,label:"Change the jukebox track",act:()=>jukebox()},
+    {x:760,hw:50,label:"Jukebox: pick the track",act:()=>jukebox()},
     {x:1040,hw:60,label:"Play CHIP PRINT arcade",act:()=>openArcade()},
     ...VIP_ROOMS.filter(r=>r.venue==="bar").map(r=>({x:r.door,hw:55,label:vipDoorLabel(r),act:()=>openVipDoor(r.id)})),
     {x:1330,hw:80,label:"Job board: staff shifts and gigs",act:()=>openJobBoard()},
@@ -1751,7 +1751,7 @@ const GUIDE={
     ["Home Vibe",["Shown on your living-room wall, from Bare up to Legendary. It rises with rarer decor, a variety of item types, lights left on, healthy plants, a fresh clean and paid room styles.","It pays off: up to +40% on your Mining Rack, +1 minute on every home boost for each 5 vibe, and a daily home bonus of ₵20 × vibe (up to ₵1,500) every 20 hours at the Home Hub."]],
     ["Visitors",["Invite players over from the intercom or Who's online. Visitors see your decor, room style, lights and plants, and can sit on your couches and play your music. Only you can water plants, raid the fridge or flip switches."]]]},
   places:{n:"Places",secs:[
-    ["Sector 9",["The Glitch: Vex's bar (11 drinks), Kai's Kitchen (7 dishes), the Job Board, jukebox, CHIP PRINT arcade and two backrooms.","Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley, and The Third Eye club with its stage, DJ booth, seats, club bar and two backrooms."]],
+    ["Sector 9",["The Glitch: Vex's bar (11 drinks), Kai's Kitchen (7 dishes), the Job Board, a jukebox with 13 tracks (₵5 a play, everyone in the bar hears it), CHIP PRINT arcade and two backrooms.","Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley, and The Third Eye club with its stage, a DJ booth with 13 tracks (synthwave, house, deep house, techno, acid, tech house, minimal and more; ₵10 a request), seats, club bar and two backrooms."]],
     ["Backrooms (The Glitch and The Third Eye)",["Four rentable high-tech rooms behind each venue's back wall: Neon Lounge (40 chips/day) and Server Den (60) at The Glitch, Void Suite (60) and Prism Room (80) at The Third Eye. A week costs 5 days' price. One room per player at a time.","Keep it public, or make it private and invite players to your guest list; uninvited people are moved out. Inside: seating, free drinks from the bar, music and party lights, an arcade, an overclock server, a decrypt terminal, a laser dance floor and more, with boosts that last longer than home ones."]],
     ["The Third Eye menu",["34 club items, each with its own screen effect, body animation and boost. They only work inside the club.","Take the same item again for ×2 and then PEAK ×3. Take the right different item while one is active to fuse them into one of 22 fusions with bigger effects and more boosts. Every recipe is listed under My club items at the club bar (with a one-tap Mix it when you own both), and the Fusion Lab tracks your discoveries."]],
     ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, Byte Bowl Noodles, Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons).","The Grid: wager duels, the Top Duelists board and the UPLOAD arcade.","Harvest Assembly: the 10-bay assembly line (see Earn ₵ credits).","Linx Land: plots and Credit Miners (see Earn ₵ credits).","Smacked Shop: real-life rewards for Data Collectors Club members (see Play with others).","The Void: PvP arena with health bars. The safe zone by the Metro heals you and has Bot Control (Off, Easy, Normal, Hard). Watch for red warning rings and aim lines and step away to dodge. Getting deleted costs 15% and sends you home."]]]},
@@ -1935,7 +1935,14 @@ function openBartender(){
   body.append(el("div",{class:"row"},
     el("button",{class:"btn",type:"button",text:"Buy a round · ₵15 (everyone here cheers)",onclick:()=>{ if(save.credits<15){toast("Not enough credits.");return;} save.credits-=15; persist(); emote("cheer"); sayText("Next round's on me!"); closePanel(); }})));
 }
-function jukebox(){ jukeHue=(jukeHue+67)%360; toast("Jukebox: new track queued"); if(!soundOn) toast("Turn sound on (top right) to hear it"); beep(523,.08); setTimeout(()=>beep(659,.08),90); setTimeout(()=>beep(784,.12),180); }
+function trackHue(tr){ const h=tr.col.replace("#",""); const r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255, mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn; if(!d) return 260; let hh=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4; return Math.round((hh*60+360)%360); }
+function jukebox(){ const body=panel("Glitch Jukebox","Pick the track for The Glitch. Everyone in the bar hears it. ₵5 a play."); currentView="jukebox";
+  if(!soundOn) body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Turn sound on",onclick:()=>{ $("#btnSnd").click(); jukebox(); }})));
+  const l=el("div",{class:"list"}); TRACKS.forEach((tr,i)=>{ const now=i===barTrack;
+    l.append(el("div",{class:"li"},el("span",{class:"tag",style:`color:${tr.col}`,text:`${tr.bpm} BPM`}),el("div",{class:"grow"},el("div",{text:tr.n}),el("div",{class:"sub",text:now?`Now playing${barTrackBy?` · picked by ${nameOf(barTrackBy)}`:""}`:tr.vibe})),now?el("span",{class:"pill on",text:"PLAYING"}):el("button",{class:"btn hot",type:"button",text:"Play ₵5",onclick:()=>pickJuke(i)}))); });
+  body.append(l); }
+async function pickJuke(i){ if(save.credits<5){ toast("You need ₵5 for the jukebox."); return; } save.credits-=5; persist(); hud(); barTrack=i; barTrackBy=myId; step16=0; jukeHue=trackHue(TRACKS[i]);
+  if(DB){ try{ await DB.doc("club/glitchjuke").set({track:i,by:myId||"",at:Date.now()}); }catch(e){} } toast(`Jukebox: ${TRACKS[i].n}`,TRACKS[i].col); if(!soundOn) toast("Turn sound on (top right) to hear it"); beep(523,.08); setTimeout(()=>beep(659,.08),90); setTimeout(()=>beep(784,.12),180); jukebox(); }
 
 /* ============================================================ SOCIAL: DB */
 let market=[], homes={}, giftUnsub=null;
@@ -4051,7 +4058,18 @@ const TRACKS=[
   {n:"Neon Drive",bpm:118,col:"#ff3fa8",wall:"sun",vibe:"Synthwave cruise in A minor",prog:[[57,60,64],[53,57,60],[48,52,55],[55,59,62]]},
   {n:"Chrome Dreams",bpm:100,col:"#38e8ff",wall:"eq",vibe:"Slow retrowave with big pads",prog:[[50,53,57],[46,50,53],[53,57,60],[48,52,55]]},
   {n:"Third Eye Theme",bpm:128,col:"#cf72ff",wall:"kaleido",acid:true,vibe:"Acid bassline at house tempo",prog:[[52,55,59],[48,52,55],[55,59,62],[50,54,57]]},
+  {n:"Concrete Pulse",bpm:130,style:"techno",col:"#ff5a4a",wall:"lasers",vibe:"Techno · driving warehouse kick and rumble bass",prog:[[45,48,52],[45,48,52],[43,46,50],[43,46,50]]},
+  {n:"Midnight Garage",bpm:124,style:"house",col:"#ffb84a",wall:"eq",vibe:"House · classic piano stabs and open hats",prog:[[57,60,64],[55,59,62],[53,57,60],[52,55,59]]},
+  {n:"Deep Signal",bpm:120,style:"deep",col:"#38e8ff",wall:"tunnel",vibe:"Deep house · warm chords and sub bass",prog:[[50,53,57,60],[48,52,55,59],[46,50,53,57],[45,48,52,55]]},
+  {n:"Acid Rain 9",bpm:134,style:"techno",acid:true,col:"#43f0a4",wall:"lasers",vibe:"Acid techno · squelchy 303 line",prog:[[45,48,52],[45,48,52],[48,52,55],[43,47,50]]},
+  {n:"Sector 9 Groove",bpm:125,style:"techhouse",col:"#ff3fa8",wall:"strobe",vibe:"Tech house · shuffled hats and rolling bass",prog:[[52,55,59],[52,55,59],[50,53,57],[48,52,55]]},
+  {n:"Minimal Ghost",bpm:126,style:"minimal",col:"#c9d3e0",wall:"tunnel",vibe:"Minimal techno · clicks, rims and space",prog:[[47,50,54],[47,50,54],[45,48,52],[45,48,52]]},
+  {n:"Hyperdrive",bpm:140,style:"techno",hard:true,col:"#7c5cff",wall:"tunnel",vibe:"Hard techno · fast and relentless",prog:[[43,46,50],[43,46,50],[41,44,48],[44,48,51]]},
+  {n:"Sunset Terrace",bpm:118,style:"deep",col:"#ff8a3a",wall:"sun",vibe:"Deep house · sunset chords",prog:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]]},
+  {n:"Disco Chrome",bpm:122,style:"house",disco:true,col:"#f5e663",wall:"strobe",vibe:"Disco house · filtered funk and claps",prog:[[55,59,62],[57,60,64],[53,57,60],[55,59,62]]},
+  {n:"Electric Ritual",bpm:136,style:"electro",col:"#cf72ff",wall:"lasers",vibe:"Peak-time techno · hypnotic arpeggios",prog:[[49,52,56],[49,52,56],[47,51,54],[45,49,52]]},
 ];
+let barTrack=4, barTrackBy=null;
 let clubTrack=0, clubTrackBy=null, myTrip=null;
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function myFx(){ return myTrip&&myTrip.until>Date.now()?myTrip.fx:null; }
@@ -4223,13 +4241,34 @@ function tone(type,f,at,dur,vol,cut,q){ const o=AC.createOscillator(),fl=AC.crea
 function kick(at){ const o=AC.createOscillator(),g=AC.createGain(); o.frequency.setValueAtTime(150,at); o.frequency.exponentialRampToValueAtTime(42,at+.14); g.gain.setValueAtTime(.5,at); g.gain.exponentialRampToValueAtTime(.001,at+.32); o.connect(g).connect(master); o.start(at); o.stop(at+.35); }
 function hat(at,v,len){ const s=AC.createBufferSource(); s.buffer=noise(); const f=AC.createBiquadFilter(); f.type="highpass"; f.frequency.value=7500; const g=AC.createGain(); g.gain.setValueAtTime(v,at); g.gain.exponentialRampToValueAtTime(.001,at+(len||.05)); s.connect(f).connect(g).connect(master); s.start(at); s.stop(at+(len||.05)+.02); }
 function snare(at){ const s=AC.createBufferSource(); s.buffer=noise(); const f=AC.createBiquadFilter(); f.type="bandpass"; f.frequency.value=1800; const g=AC.createGain(); g.gain.setValueAtTime(.18,at); g.gain.exponentialRampToValueAtTime(.001,at+.18); s.connect(f).connect(g).connect(master); s.start(at); s.stop(at+.2); tone("triangle",190,at,.12,.08,2000); }
-function playStep(tr,s,at,sp){ const chord=tr.prog[Math.floor(s/16)%4];
+function playGenre(tr,s,at,sp){ const chord=tr.prog[Math.floor(s/16)%4], root=chord[0], st=tr.style, sw=(s%2===1&&(st==="house"||st==="techhouse"||st==="deep"))?sp*.14:0, a=at+sw;
+  if(s%4===0) kick(at);
+  if(st==="house"){ if(s%8===4) snare(at); if(s%4===2) hat(a,.07,.12); else if(s%2===1) hat(a,.025);
+    if(s%4===2) tone("sawtooth",mtof(root-24+(s%16===14?12:0)),a,sp*1.6,.11,500);
+    if([2,5,10,13].includes(s%16)) for(const m of chord) tone("square",mtof(m+12),a,sp*1.2,.018,tr.disco?1200+900*Math.sin(s/9):3000);
+    if(tr.disco&&s%8===6) tone("sawtooth",mtof(root+24+[0,7,12,7][(s/8|0)%4]),a,sp*.8,.02,2600);
+    if(s%32===0) for(const m of chord) tone("triangle",mtof(m),at,sp*30,.02,1400); }
+  else if(st==="deep"){ if(s%8===4) hat(at,.05,.05); if(s%4===2) hat(a,.035,.09); if(s%16===7||s%16===14) hat(a,.02);
+    if(s%8===0||s%16===11) tone("sine",mtof(root-24),at,sp*3,.18,300); if(s%16===6||s%16===12) for(const m of chord) tone("triangle",mtof(m+12),a,sp*1.6,.022,1800);
+    if(s%16===0) for(const m of chord) tone("triangle",mtof(m),at,sp*15,.03,1200); }
+  else if(st==="techno"||st==="electro"){ hat(at,s%4===2?.06:.02,s%4===2?.1:.03); if(s%8===4&&tr.hard) snare(at);
+    if(s%4!==0) tone("sawtooth",mtof(root-24),at,sp*.7,tr.hard?.09:.07,260+(s%4)*60);
+    if(s%16===0||s%16===10) tone("square",mtof(root+12),at,sp*.6,.025,1600);
+    if(tr.acid&&s%2===0){ const pat=[0,0,12,0,3,0,12,10,0,7,0,12,0,3,15,0]; tone("sawtooth",mtof(root-12+pat[(s/2)%16]),at,sp*1.4,.07,300+1100*(.5+.5*Math.sin(s/7)),16); }
+    if(st==="electro") tone("square",mtof(chord[s%chord.length]+24),at,sp*.7,.016,2400+800*Math.sin(s/11));
+    if(s%64===0) for(const m of chord) tone("triangle",mtof(m),at,sp*60,.015,900); }
+  else if(st==="techhouse"){ if(s%8===4) snare(at); if(s%4===3) hat(a,.06,.06); else if(s%2===1) hat(a,.02);
+    const bp=[0,null,12,null,0,7,null,10,0,null,12,0,null,7,10,null][s%16]; if(bp!==null) tone("sawtooth",mtof(root-24+bp),a,sp*.8,.1,700);
+    if(s%16===14) tone("square",mtof(root+19),a,sp*.5,.02,2200); if(s%32===0) for(const m of chord) tone("triangle",mtof(m+12),at,sp*16,.02,1600); }
+  else if(st==="minimal"){ if(s%2===1) hat(at,.018,.015); if([3,7,11,14].includes(s%16)) tone("triangle",mtof(root+31),at,sp*.3,.03,5000);
+    if(s%8===6) tone("sine",mtof(root-24),at,sp*1.4,.16,240); if(s%32===0) tone("triangle",mtof(root+24),at,sp*8,.025,3000); if(s%32===20) tone("triangle",mtof(chord[2]+24),at,sp*6,.02,3000); } }
+function playStep(tr,s,at,sp){ if(tr.style) return playGenre(tr,s,at,sp); const chord=tr.prog[Math.floor(s/16)%4];
   if(s%4===0) kick(at); if(s%8===4) snare(at); if(s%2===1) hat(at,.035); if(tr.acid&&s%4===2) hat(at,.06,.14);
   if(s%2===0){ const pat=[0,0,12,0,7,0,12,10]; const n=chord[0]-24+(tr.acid?pat[(s/2)%8]:(s%8===6?12:0)); tone("sawtooth",mtof(n),at,sp*1.7,.1,tr.acid?350+900*(.5+.5*Math.sin(s/5)):650,tr.acid?14:1); }
   tone("square",mtof(chord[[0,1,2,1][s%4]]+12),at,sp*.85,.022,2400);
   if(s%16===0) for(const m of chord) tone("triangle",mtof(m),at,sp*15,.028,1600); }
 function startClubSeq(){ if(seqTimer||!AC) return; master=AC.createGain(); master.gain.value=.5; master.connect(AC.destination); nextNote=AC.currentTime+.1;
-  seqTimer=setInterval(()=>{ if(!soundOn||me.scene!=="club"){ nextNote=AC.currentTime+.05; return; } const tr=TRACKS[clubTrack], sp=60/tr.bpm/4;
+  seqTimer=setInterval(()=>{ if(!soundOn||(me.scene!=="club"&&me.scene!=="bar")){ nextNote=AC.currentTime+.05; return; } const inBar=me.scene==="bar", tr=TRACKS[inBar?barTrack:clubTrack]||TRACKS[0], sp=60/tr.bpm/4; master.gain.value=inBar?.32:.5;
     while(nextNote<AC.currentTime+.12){ playStep(tr,step16,nextNote,sp); nextNote+=sp; step16=(step16+1)%64; } },25); }
 
 /* --- screen effects for the local player */
@@ -4370,6 +4409,9 @@ function drawClub(t){
   if(tr.wall==="sun"){ const g=ctx.createLinearGradient(0,wy0,0,cyw+30); g.addColorStop(0,"#ffb84a"); g.addColorStop(1,"#ff3fa8"); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cxw,cyw+30,60+pulse*6,Math.PI,0); ctx.fill(); ctx.fillStyle="#05030a"; for(let y=cyw-10;y<cyw+30;y+=8) ctx.fillRect(cxw-70,y+((t*10)%8),140,2.5);
     ctx.strokeStyle="rgba(56,232,255,.6)"; for(let i=0;i<8;i++){ const y=cyw+30+Math.pow((i+(t*1.5)%1)/8,1.8)*80; ctx.beginPath(); ctx.moveTo(wx0,y); ctx.lineTo(wx1,y); ctx.stroke(); } for(let i=-8;i<=8;i++){ ctx.beginPath(); ctx.moveTo(cxw+i*14,cyw+30); ctx.lineTo(cxw+i*70,wy1); ctx.stroke(); } }
   else if(tr.wall==="eq"){ for(let i=0;i<28;i++){ const h=(.25+.75*Math.abs(Math.sin(i*.7+t*3+Math.sin(beat+i))))*(wy1-wy0-20)*(.6+.4*pulse); ctx.fillStyle=`hsl(${190+i*4},100%,${50+pulse*15}%)`; ctx.fillRect(wx0+8+i*19.6,wy1-10-h,14,h); } }
+  else if(tr.wall==="lasers"){ ctx.globalCompositeOperation="lighter"; for(let i=0;i<10;i++){ const a=Math.sin(t*(.8+i*.13)+i)*.9+(i%2?.3:-.3); ctx.strokeStyle=i%2?tr.col:"#38e8ff"; ctx.globalAlpha=.55+.4*pulse; ctx.lineWidth=1.5+pulse*2; ctx.beginPath(); ctx.moveTo(cxw+(i-4.5)*12,wy1); ctx.lineTo(cxw+(i-4.5)*12+Math.sin(a)*400,wy1-Math.cos(a)*220); ctx.stroke(); } ctx.globalAlpha=1; ctx.fillStyle=tr.col; for(let i=0;i<10;i++) ctx.fillRect(cxw+(i-4.5)*12-3,wy1-6,6,6); }
+  else if(tr.wall==="tunnel"){ ctx.globalCompositeOperation="lighter"; for(let r=0;r<10;r++){ const u=((r/10+t*tr.bpm/480)%1), w=(wx1-wx0)*u*u, h=(wy1-wy0)*u*u; ctx.strokeStyle=tr.col; ctx.globalAlpha=u*(.5+.5*pulse); ctx.lineWidth=1+u*3; ctx.strokeRect(cxw-w/2,cyw-h/2,w,h); } ctx.globalAlpha=1; }
+  else if(tr.wall==="strobe"){ const on=ph<.12; ctx.fillStyle=on?"rgba(255,255,255,.55)":"rgba(0,0,0,0)"; ctx.fillRect(wx0,wy0,wx1-wx0,wy1-wy0); for(let i=0;i<14;i++){ const lit=((beat+i)%4)===0; ctx.fillStyle=lit?tr.col:"#1a1428"; ctx.shadowColor=tr.col; ctx.shadowBlur=lit?18:0; ctx.beginPath(); ctx.arc(wx0+20+i*((wx1-wx0-40)/13),cyw+Math.sin(i+t)*18,lit?14:9,0,7); ctx.fill(); } ctx.shadowBlur=0; }
   else { ctx.globalCompositeOperation="lighter"; for(let r=1;r<=7;r++){ ctx.save(); ctx.translate(cxw,cyw); ctx.rotate(t*.4*(r%2?1:-1)+r); ctx.strokeStyle=`hsla(${(t*80+r*45)%360},100%,60%,.7)`; ctx.lineWidth=2+pulse*2; ctx.beginPath(); const n=6+r%3, R=r*12+pulse*6; for(let j=0;j<=n;j++){ const a=j/n*Math.PI*2; if(j) ctx.lineTo(Math.cos(a)*R,Math.sin(a)*R); else ctx.moveTo(Math.cos(a)*R,Math.sin(a)*R); } ctx.stroke(); ctx.restore(); } ctx.globalCompositeOperation="source-over"; }
   ctx.restore(); ctx.strokeStyle="#2a2440"; ctx.lineWidth=4; ctx.strokeRect(wx0,wy0,wx1-wx0,wy1-wy0); ctx.lineWidth=1;
   // truss + speakers
@@ -4868,6 +4910,7 @@ setInterval(hud,1000);
     db.collection("clubstaff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); clubSlots=nx;
       if(clubSlot>=0){ const mine=nx[clubSlot]; if(!mine||mine.by!==myId){ clubSlot=-1; clearInterval(clubBeat); clubShift=null; clubHolding=null; toast("Your club shift slot was released."); } }
       resolveNames(nx.filter(x=>x&&x.by).map(x=>x.by)); },()=>{});
+    db.doc("club/glitchjuke").onSnapshot(s=>{ const d=s.exists?s.data():null; const i=d?Math.floor(+d.track):-1; if(d&&i>=0&&i<TRACKS.length){ if(i!==barTrack&&me.scene==="bar") step16=0; barTrack=i; jukeHue=trackHue(TRACKS[i]); barTrackBy=typeof d.by==="string"&&d.by?d.by:null; if(barTrackBy) resolveNames([barTrackBy]); if(currentView==="jukebox"&&!$("#overlay").hidden) jukebox(); } },()=>{});
     db.doc("club/stage").onSnapshot(s=>{ const d=s.exists?s.data():null; const i=d?Math.floor(+d.track):-1; if(d&&i>=0&&i<TRACKS.length){ if(i!==clubTrack) step16=0; clubTrack=i; clubTrackBy=typeof d.by==="string"&&d.by?d.by:null; if(clubTrackBy) resolveNames([clubTrackBy]); } },()=>{});
     db.collection("cbstaff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); cbSlots=nx;
       if(cbSlot>=0){ const mine=nx[cbSlot]; if(!mine||mine.by!==myId){ cbSlot=-1; clearInterval(cbBeat); cbShift=null; cbHolding=null; toast("Your register slot was released."); } }
