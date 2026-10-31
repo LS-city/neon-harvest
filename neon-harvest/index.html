@@ -1188,9 +1188,10 @@ const H=360;                  // logical height
 const LANE={top:262,bot:338};
 const SCENES={
   street:{w:4400, spawn:520},
-  club:{w:2200, spawn:120},
+  club:{w:2550, spawn:120},
+  vip:{w:1100, spawn:120},
   void:{w:2700, spawn:140},
-  bar:{w:1500, spawn:120},
+  bar:{w:1800, spawn:120},
   home:{w:2900, spawn:120},
   cyberbuys:{w:2200, spawn:120},
   byte:{w:4500, spawn:140},
@@ -1242,6 +1243,7 @@ function hotspots(sc){
     {x:390,hw:150,label:clubSlot>=0?(clubHolding?`Holding ${BY[clubHolding.id].n} for Seat ${clubHolding.seat+1}`:"Work the club bar (on shift)"):"Club bar: menu, orders, shifts",act:()=>openClubCounter()},
     ...SEATS.map((st,i)=>({x:st.x,hw:24,label:seatLabel(i),act:()=>seatAct(i)})),
     {x:1590,hw:120,label:"Dance on the stage floor",act:()=>startDancing()},
+    ...VIP_ROOMS.filter(r=>r.venue==="club").map(r=>({x:r.door,hw:55,label:vipDoorLabel(r),act:()=>openVipDoor(r.id)})),
     {x:1770,hw:50,label:"DJ booth: request a track",act:()=>openDJ()},
     {x:1940,hw:110,label:"Dance on the stage floor",act:()=>startDancing()},
   ];
@@ -1256,8 +1258,10 @@ function hotspots(sc){
     {x:635,hw:55,label:mySlot>=0?"Work the kitchen (on shift)":"Order food at the GLITCH KITCHEN",act:()=>{ barMenuTab="food"; openCounter(); }},
     {x:760,hw:50,label:"Change the jukebox track",act:()=>jukebox()},
     {x:1040,hw:60,label:"Play CHIP PRINT arcade",act:()=>openArcade()},
+    ...VIP_ROOMS.filter(r=>r.venue==="bar").map(r=>({x:r.door,hw:55,label:vipDoorLabel(r),act:()=>openVipDoor(r.id)})),
     {x:1330,hw:80,label:"Job board: staff shifts and gigs",act:()=>openJobBoard()},
   ];
+  if(sc==="vip") return vipHotspots();
   if(sc==="home"){
     const vis=!!viewHome;
     return [
@@ -1370,9 +1374,9 @@ function drawStreet(t){
 function drawBar(t){
   const hue=jukeHue; ctx.fillStyle="#120a20"; ctx.fillRect(camX,0,VW,H);
   // back wall
-  ctx.fillStyle="#1d0f2e"; ctx.fillRect(0,0,1500,240); ctx.fillStyle="rgba(0,0,0,.25)"; for(let x=0;x<1500;x+=26) ctx.fillRect(x,0,1,240);
+  const BW=SCENES.bar.w; ctx.fillStyle="#1d0f2e"; ctx.fillRect(0,0,BW,240); ctx.fillStyle="rgba(0,0,0,.25)"; for(let x=0;x<BW;x+=26) ctx.fillRect(x,0,1,240);
   // light strips
-  for(let x=0;x<1500;x+=100){ ctx.fillStyle=`hsla(${(hue+x*.2+t*30)%360},100%,60%,.85)`; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=12; ctx.fillRect(x+10,24,70,3); ctx.shadowBlur=0; }
+  for(let x=0;x<BW;x+=100){ ctx.fillStyle=`hsla(${(hue+x*.2+t*30)%360},100%,60%,.85)`; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=12; ctx.fillRect(x+10,24,70,3); ctx.shadowBlur=0; }
   neonText("THE GLITCH",700,80,30,`hsl(${hue},100%,65%)`,flick(2,t));
   // door
   ctx.fillStyle="#0a0612"; ctx.fillRect(40,150,60,92); neonText("EXIT",70,142,10,"#43f0a4",1);
@@ -1474,7 +1478,7 @@ function safeAct(h){ try{ h.act(); }catch(e){ console.error(e); toast("That didn
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
   setTimeout(()=>{ go(scene,x); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
-function go(scene,x){ if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
+function go(scene,x){ if(scene!=="vip") me.vip=null; homeFx={}; if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
 let loopErr=0;
@@ -1493,7 +1497,7 @@ function stepInner(now){
   let sp=buffOn("speed")?195:150; if(me.blocking||(me.slowUntil||0)>T) sp*=.5; if(me.dead) sp=0; me.moving=!!(ix||iy)&&$("#overlay").hidden;
   if(me.seat!=null&&me.moving){ me.seat=null; pushPresence(true); }
   if(me.seat!=null){ me.moving=false; me.x=SEATS[me.seat].x; me.y=SEATS[me.seat].y; }
-  if(me.homeSit&&(me.moving||me.scene!=="home")){ me.homeSit=null; pushPresence(true); }
+  if(me.homeSit&&(me.moving||(me.scene!=="home"&&me.scene!=="vip"))){ me.homeSit=null; pushPresence(true); }
   if(me.homeSit){ me.moving=false; me.x=me.homeSit.x; me.y=272; }
   if(me.trainUntil>T&&T-(me.lastPunch||0)>.32){ me.lastPunch=T; me.emote={e:"atk",t:T}; beep(110+Math.random()*40,.04,"square",.03); }
   if(me.moving){ const n=Math.hypot(ix,iy)||1; me.x=clamp(me.x+ix/n*sp*dt,30,sc.w-30); me.y=clamp(me.y+iy/n*sp*.6*dt,LANE.top,LANE.bot); if(ix) me.dir=ix>0?1:-1; me.phase+=dt*7; }
@@ -1512,14 +1516,14 @@ function stepInner(now){
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else drawHome(T);
+  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else drawHome(T); if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
   // entities sorted by depth
   const ents=[];
   for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx,look:n.look,name:n.name,fx:n.fx||null,sit:!!n.sit,emote:n.dance?{e:"dance",t:T}:null}});
-  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,sit:(p.s==="club"&&p.seat!=null)||(p.s==="home"&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
+  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
@@ -1583,7 +1587,7 @@ const GUIDE={
     ["Parts",["Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips.","Scrap Alley digs and CHIP PRINT runs drop parts and chips for free.","Byte Market NPC stalls sell parts, full prebuilt PCs and miners."]],
     ["Build rigs",["Open the Recipe Book tab at the Workbench to see what every recipe needs, which items count for each part, and where to buy or find them.","Use the Workbench in your apartment to combine parts into PCs, Mining Rigs, Cyberdecks, Drones, Home Servers, Quantum Rigs and more. Better parts make a higher Mk.","Rigs can be displayed, gifted, traded, installed in the Mining Rack or taken apart again."]],
     ["Food and drinks",["Order drinks from Vex at the bar and food from Kai at the Glitch Kitchen (1.5× price), or order from a runner on shift at menu price. Byte Bowl Noodles in Byte Market sells the full menu for less, plus 8 noodle-bar specials of its own.","Drink or eat from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips, or Void armor (25% less damage).","Food and Liquid Coolant restore HP in The Void. Eat when you're clear of a fight for a few seconds; Full Stack Bowl is a full heal."]],
-    ["Gear, tech and home items",["Your apartment's living room has 8 wall and 9 floor spots. Walk up to anything you place to use it: sit on couches (+tips), nap in a hammock (+speed), train on a punching bag (+Void armor), read books (+luck), overclock a PC (2× print chips), play music, feed fish, water plants until they bloom for chips, raid the fridge for snacks and more.","Home Vibe (shown on your living-room wall) rises with rarer decor, variety, lights left on, healthy plants, a clean floor and paid room styles. It boosts your mining rack (up to +40%), lengthens every home boost and pays a daily home bonus at the Home Hub.","Data Collectors Club: an exclusive membership granted only by the game's owner. Members get an animated high-tech symbol next to their name everywhere: over their head, in chat and in Who's online.","Cyber Buys & More sells drives, cables, peripherals, wall art and furniture. Its new wing (walk past the register) adds Gadgets & Gaming (holdable gadgets like a Pocket Drone, VR Visor or Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
+    ["Gear, tech and home items",["Your apartment's living room has 8 wall and 9 floor spots. Walk up to anything you place to use it: sit on couches (+tips), nap in a hammock (+speed), train on a punching bag (+Void armor), read books (+luck), overclock a PC (2× print chips), play music, feed fish, water plants until they bloom for chips, raid the fridge for snacks and more.","Home Vibe (shown on your living-room wall) rises with rarer decor, variety, lights left on, healthy plants, a clean floor and paid room styles. It boosts your mining rack (up to +40%), lengthens every home boost and pays a daily home bonus at the Home Hub.","Backrooms: The Glitch (Neon Lounge, Server Den) and The Third Eye (Void Suite, Prism Room) each have two high-tech backrooms past the back wall. Rent one with chips for a day or a week. Keep it public, or make it private and invite who you want. Inside: seating, free drinks, music, an arcade, overclocking, decrypting and more, with boosts that beat home ones.","Data Collectors Club: an exclusive membership granted only by the game's owner. Members get an animated high-tech symbol next to their name everywhere: over their head, in chat and in Who's online.","Cyber Buys & More sells drives, cables, peripherals, wall art and furniture. Its new wing (walk past the register) adds Gadgets & Gaming (holdable gadgets like a Pocket Drone, VR Visor or Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Equip a weapon or holdable item from your Character screen. Use Pose to show it off.","Decorate your living room with wall art and furniture; visitors see it all."]],
     ["Look and style",["Press C to open your Character screen and change your name and look anytime.","Over 200 options: 13 tops, 12 hairstyles, 22 colors for your top, legs, hair and name, plus shoes, neck pieces, eyewear, 17 headpieces, back items, companions and auras.","Basics are free. Premium pieces cost credits once and stay unlocked, so you can swap outfits freely. Try anything on before you buy."]],
     ["From Void bots",["Every bot type has its own loot: Glitch Drones and Pulse Gunners drop mostly tech, Phantoms drop wardrobe unlocks, Firewall Brutes drop apartment decor, and the SENTINEL Ω always drops two rare-or-better items.","Hard mode gives the best rarity odds, including epic drops. Wardrobe unlocks you already own turn into credits."]],
     ["From other players",["Buy listings on the Trade Board, win them in Grid duels, or receive them as gifts. Tap any player to send a gift."]]]},
@@ -2453,11 +2457,11 @@ function card(html,actions,ttl=60e3){ const box=$("#invites"); const c=document.
   c.append(row); box.append(c); while(box.children.length>3) box.firstChild.remove(); beep(1046,.08); setTimeout(()=>beep(1318,.08),90); if(ttl) setTimeout(()=>c.remove(),ttl); return c; }
 
 /* ============================================================ APARTMENT INVITES */
-function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):null; }
+function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):me.scene==="vip"?"vip:"+(me.vip||""):null; }
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land"}[s]||"somewhere"; }
+function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -3231,6 +3235,113 @@ function drawLivingRoom(t){
     if(off){ ctx.save(); ctx.globalAlpha=.35; ctx.filter="grayscale(1)"; drawItem(ctx,id,p.x,p.y,96,0); ctx.restore(); return; }
     drawItem(ctx,id,p.x,p.y,96,act?t*3+i:t+i); });
 }
+/* ============================================================ BACKROOMS (rentable VIP rooms in The Glitch and The Third Eye) */
+const VIP_ROOMS=[
+  {id:"neon",n:"Neon Lounge",venue:"bar",door:1530,price:40,col:"#ff3fa8",d:"Velvet booths, a private smart bar, a holo jukebox and an arcade cabinet.",feats:[{x:250,k:"seat",item:"dec_couch",v:"Sink into the velvet booth"},{x:420,k:"seat",item:"dec_beanbag",v:"Flop on the beanbag"},{x:600,k:"bar",item:"dec_robot",v:"Order from the smart bar (free)"},{x:780,k:"music",item:"dec_jukebox",v:"Play the holo jukebox"},{x:960,k:"arcade",item:"dec_arcade",v:"Play the arcade (UPLOAD)"}]},
+  {id:"den",n:"Server Den",venue:"bar",door:1690,price:60,col:"#43f0a4",d:"A hacker hideout: overclock rig, decrypt terminal, data wall and lounge seating.",feats:[{x:250,k:"seat",item:"dec_chair",v:"Sit in the command chair"},{x:420,k:"tech",item:"dec_server",v:"Overclock the private server"},{x:600,k:"hack",item:"dec_stand",v:"Use the decrypt terminal"},{x:780,k:"tv",item:"dec_tv",wall:true,v:"Check the data wall"},{x:960,k:"seat",item:"dec_couch",v:"Kick back on the couch"}]},
+  {id:"suite",n:"Void Suite",venue:"club",door:2210,price:60,col:"#7c5cff",d:"Zero-gravity chill: hanging pod, holo starfield, private aquarium and bonsai garden.",feats:[{x:240,k:"nap",item:"dec_hammock",v:"Float in the chill pod"},{x:420,k:"seat",item:"dec_couch",v:"Sink into the lounge"},{x:600,k:"fish",item:"dec_tank",v:"Feed the void fish"},{x:780,k:"chill",item:"dec_bonsai",v:"Meditate by the bonsai"},{x:960,k:"music",item:"dec_speaker",v:"Turn up the ambient speakers"}]},
+  {id:"prism",n:"Prism Room",venue:"club",door:2390,price:80,col:"#38e8ff",d:"A private laser dance floor, drum kit, bottle service and party lighting.",feats:[{x:240,k:"seat",item:"dec_couch",v:"Grab a seat in the booth"},{x:420,k:"bar",item:"dec_fridge",v:"Bottle service (free drink)"},{x:640,k:"dance",item:null,v:"Dance on the prism floor"},{x:860,k:"music",item:"dec_drums",v:"Play the drum kit"},{x:1010,k:"music",item:"dec_jukebox",v:"Spin the prism jukebox"}]},
+];
+const VIP_BY=Object.fromEntries(VIP_ROOMS.map(r=>[r.id,r]));
+const VIP_ACT={seat:{buff:"tips",min:20,cd:30,txt:"VIP rested"},nap:{buff:"speed",min:20,cd:30,txt:"Floating"},tech:{buff:"print",min:15,cd:120,txt:"Overclocked"},music:{buff:"speed",min:15,cd:20,txt:"In the groove"},fish:{buff:"luck",min:15,cd:60,txt:"Calm"},chill:{buff:"luck",min:20,cd:45,txt:"Zen"},dance:{buff:"tips",min:15,cd:30,txt:"Showstopper"}};
+let vipRooms={}, vipSeen=false;
+function vipActive(id){ const v=vipRooms[id]; return !!(v&&v.by&&v.until>Date.now()); }
+function vipMine(id){ return vipActive(id)&&vipRooms[id].by===myId; }
+function vipCanEnter(id){ if(!vipActive(id)) return false; const v=vipRooms[id]; return v.by===myId||v.open||v.invites.includes(myId)||IS_ADMIN; }
+function myVipRoom(){ return VIP_ROOMS.find(r=>vipMine(r.id))||null; }
+function vipLeft(id){ const mins=Math.max(0,Math.ceil((vipRooms[id].until-Date.now())/6e4)), h=Math.floor(mins/60), m=mins%60; return h>=24?`${Math.floor(h/24)}d ${h%24}h left`:h?`${h}h ${m}m left`:`${m}m left`; }
+function vipDoorLabel(r){ if(!vipActive(r.id)) return `${r.n} backroom: rent for ${r.price} chips/day`; const v=vipRooms[r.id]; if(v.by===myId) return `${r.n}: your backroom`; return `${r.n}: ${nameOf(v.by)}'s backroom (${v.open?"public":v.invites.includes(myId)?"private, you're invited":"private"})`; }
+function enterVip(id){ const R=VIP_BY[id]; if(!R) return; if(!vipCanEnter(id)){ toast(vipActive(id)?"That backroom is private. Ask the renter for an invite.":"That backroom isn't rented right now."); return; }
+  if(me.scene!==R.venue&&typeof ftBlocked==="function"&&ftBlocked()){ toast(ftBlocked()); return; }
+  closePanel(); me.vip=null; go("vip",140); me.vip=id; pushPresence(true); beep(660,.08,"triangle"); setTimeout(()=>beep(990,.1,"triangle"),100);
+  const v=vipRooms[id]; chatLine(null,`${R.n}: ${v.by===myId?"your":nameOf(v.by)+"'s"} backroom · ${v.open?"public":"private"}. Walk up to anything to use it.`,"sys"); }
+function leaveVip(){ const R=VIP_BY[me.vip]; me.homeSit=null; go(R?R.venue:"bar",R?R.door:120); }
+function vipCheckAccess(){ if(me.scene!=="vip") return; const id=me.vip; if(!VIP_BY[id]) return leaveVip(); if(!vipCanEnter(id)){ toast(vipActive(id)?"The renter made this backroom private.":"The backroom rental ended."); leaveVip(); } }
+setInterval(vipCheckAccess,2000);
+let vipPanel=null;
+function refreshVipPanel(){ if(vipPanel) vipPanel(); }
+async function rentVip(id,days){ const R=VIP_BY[id]; const cost=days>=7?R.price*5:R.price*days; if(!DB||!myId){ toast("Renting a backroom needs a signed-in session."); return; }
+  const mine=myVipRoom(); if(mine&&mine.id!==id){ toast(`You already rent the ${mine.n}. One backroom at a time.`); return; }
+  if(save.chips<cost){ toast(`You need ${cost-Math.floor(save.chips)} more chips.`); beep(150,.15); return; }
+  const extend=vipMine(id); if(!extend&&vipActive(id)){ toast("Someone else just rented it."); return refreshVipPanel(); }
+  const ref=DB.doc("viprooms/"+id); let lock=null;
+  try{ if(typeof ref.acquire==="function"&&!(window.claude&&window.claude.provider==="firebase")){ lock=await ref.acquire({holder:myId,ttlMs:6000}); if(lock&&lock.acquired===false){ toast("Someone else is renting it right now. Try again in a few seconds."); return; } } }catch(e){}
+  try{ const cur=await ref.get(); const c=cur&&cur.exists?cur.data():null; if(c&&c.by&&c.by!==myId&&+c.until>Date.now()){ toast("Someone else just rented it."); return refreshVipPanel(); } }catch(e){}
+  const base=extend?vipRooms[id].until:Date.now(), v=extend?vipRooms[id]:{open:true,invites:[]};
+  const rec={by:myId,until:base+days*864e5,open:v.open!==false,invites:(v.invites||[]).slice(0,40),at:Date.now()};
+  save.chips-=cost; persist(); hud();
+  try{ await DB.doc("viprooms/"+id).set(rec); vipRooms[id]={...rec}; }catch(e){ save.chips+=cost; persist(); hud(); toast("Couldn't rent it (someone may have beaten you to it). You weren't charged."); return refreshVipPanel(); }
+  setTimeout(async()=>{ try{ const chk=await DB.doc("viprooms/"+id).get(); const c=chk&&chk.exists?chk.data():null; if(c&&c.by!==myId){ save.chips+=cost; persist(); hud(); toast(`${R.n} went to another player first. Refunded ${cost} chips.`); } }catch(e){} },1500);
+  toast(extend?`${R.n} extended by ${days} day${days>1?"s":""}.`:`You rented the ${R.n} for ${days} day${days>1?"s":""}!`,"#43f0a4"); beep(1200,.1); refreshVipPanel(); }
+async function vipUpdate(id,patch){ if(!vipMine(id)) return; const rec={...vipRooms[id],...patch,at:Date.now()}; try{ await DB.doc("viprooms/"+id).set(rec); vipRooms[id]=rec; refreshVipPanel(); }catch(e){ toast("Couldn't save the room settings."); } }
+function openVipDoor(id){ const R=VIP_BY[id]; const draw=()=>{ const body=panel(`${R.n} · backroom`,`${sceneName(R.venue)} · ${R.d}`); currentView="vip:"+id;
+    const feats=el("div",{class:"row",style:"flex-wrap:wrap;gap:6px"}); for(const f of R.feats) feats.append(el("span",{class:"pill",text:f.v.replace(/ \(free\)| \(UPLOAD\)/,"")})); body.append(feats);
+    if(!vipActive(id)){ body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:"Available to rent"}),el("span",{text:`${R.price} chips for 1 day, or ${R.price*5} chips for 7 days. You have ${Math.floor(save.chips)} chips.`}),el("span",{class:"sub",text:"You choose who gets in: leave it public, or make it private and invite players. One backroom per player at a time."}))));
+      const mine=myVipRoom(); if(mine) body.append(el("div",{class:"r-epic",text:`You already rent the ${mine.n}.`}));
+      body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:`Rent 1 day · ${R.price} chips`,onclick:()=>rentVip(id,1)}),el("button",{class:"btn",type:"button",text:`Rent 7 days · ${R.price*5} chips`,onclick:()=>rentVip(id,7)})));
+      if(IS_ADMIN) body.append(el("p",{class:"sub",text:"Owner: you can enter any rented backroom, even private ones."})); return; }
+    const v=vipRooms[id];
+    if(v.by===myId){ body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:"Your backroom"}),el("span",{class:"r-uncommon",text:`${v.open?"Public: anyone can come in":"Private: invited players only"} · ${vipLeft(id)}`}))));
+      body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Enter",onclick:()=>enterVip(id)}),el("button",{class:"btn",type:"button",text:"Room controls",onclick:()=>openVipControls(id)}),el("button",{class:"btn",type:"button",text:`Extend +1 day · ${R.price} chips`,onclick:()=>rentVip(id,1)}))); return; }
+    const ok=vipCanEnter(id);
+    body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:`Rented by ${nameOf(v.by)}`}),el("span",{class:ok?"r-uncommon":"r-epic",text:v.open?"Public: come on in.":v.invites.includes(myId)?"Private, but you're on the guest list.":IS_ADMIN?"Private (you can enter as the owner).":"Private: invited guests only. Ask "+nameOf(v.by)+" for an invite."}),el("span",{class:"sub",text:vipLeft(id)}))));
+    const b=el("button",{class:"btn hot",type:"button",text:ok?"Enter":"🔒 Locked",onclick:()=>enterVip(id)}); if(!ok) b.disabled=true; body.append(el("div",{class:"row"},b)); };
+  vipPanel=draw; draw(); }
+function openVipControls(id){ const R=VIP_BY[id]; const draw=()=>{ if(!vipMine(id)){ closePanel(); return; } const v=vipRooms[id]; const body=panel(`${R.n} · room controls`,`${vipLeft(id)}. Changes apply instantly.`); currentView="vip:ctl";
+    body.append(el("strong",{text:"Who can come in"})); const bPub=el("button",{class:"btn"+(v.open?" hot":""),type:"button","aria-pressed":String(v.open),text:"Public: anyone",onclick:()=>vipUpdate(id,{open:true})}), bPri=el("button",{class:"btn"+(!v.open?" hot":""),type:"button","aria-pressed":String(!v.open),text:"Private: invite only",onclick:()=>vipUpdate(id,{open:false})});
+    body.append(el("div",{class:"row"},bPub,bPri)); if(!v.open) body.append(el("p",{class:"sub",text:"Anyone inside who isn't on your guest list gets moved back out."}));
+    body.append(el("strong",{text:`Guest list (${v.invites.length})`})); const gl=el("div",{class:"list"});
+    if(!v.invites.length) gl.append(el("div",{class:"empty",text:"Nobody yet. Invite players below."}));
+    for(const g of v.invites) gl.append(el("div",{class:"li"},el("div",{class:"grow",text:nameOf(g)}),el("button",{class:"btn",type:"button",text:"Remove",onclick:()=>vipUpdate(id,{invites:v.invites.filter(x=>x!==g)})}))); body.append(gl);
+    body.append(el("strong",{text:"Invite players"})); const il=el("div",{class:"list"}); const cand=new Map(); for(const p of onlinePlayers()) cand.set(p.by,true); for(const k of Object.keys(homes||{})) if(!cand.has(k)) cand.set(k,false);
+    const list=[...cand.entries()].filter(([k])=>k!==myId&&!v.invites.includes(k)).sort((a,b)=>(b[1]-a[1])||nameOf(a[0]).localeCompare(nameOf(b[0]))).slice(0,40);
+    if(!list.length) il.append(el("div",{class:"empty",text:"No other players to invite yet."}));
+    for(const [k,on] of list) il.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:nameOf(k)}),el("div",{class:on?"r-uncommon":"sub",text:on?"Online now":"Offline"})),el("button",{class:"btn hot",type:"button",text:on?"Invite & notify":"Add to guest list",onclick:async()=>{ await vipUpdate(id,{invites:[...v.invites,k].slice(0,40)}); if(on&&ROOM) ROOM.emit("invite",{to:k,vip:id}).catch(()=>{}); toast(`${nameOf(k)} is on your guest list${on?" and got an invite":""}.`); }}))); body.append(il);
+    body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:`Extend +1 day · ${R.price} chips`,onclick:()=>rentVip(id,1)}),el("button",{class:"btn",type:"button",text:"Give up the room",onclick:async()=>{ if(!confirmGive){ confirmGive=true; toast("Tap again to give it up (no refund)."); setTimeout(()=>confirmGive=false,4000); return; } confirmGive=false; await vipUpdate(id,{until:Date.now()-1}); toast(`You gave up the ${R.n}.`); closePanel(); }})));
+  }; vipPanel=draw; draw(); }
+let confirmGive=false;
+function vipHotspots(){ const R=VIP_BY[me.vip]; if(!R) return [{x:70,hw:50,label:"Leave",act:()=>leaveVip()}];
+  const out=[{x:70,hw:45,label:`Back to ${sceneName(R.venue)}`,act:()=>leaveVip()}];
+  if(vipMine(R.id)) out.push({x:135,hw:18,label:"Room controls: public/private, guest list",act:()=>openVipControls(R.id)});
+  R.feats.forEach((f,i)=>out.push({x:f.x,hw:f.k==="dance"?90:55,label:me.homeSit&&me.homeSit.key==="v"+i?"Stand up (or just walk away)":f.v,act:()=>useVip(i)})); return out; }
+function useVip(i){ const R=VIP_BY[me.vip]; if(!R) return; const f=R.feats[i], key="v"+i, now=Date.now(); save.vipCd=save.vipCd||{};
+  const fx=(k,sec)=>{ homeFx[key]={k,until:T+sec,x:f.x,y:f.wall?96:206}; };
+  const buff=info=>{ const ck=R.id+":"+f.k, left=(+save.vipCd[ck]||0)-now; if(left>0){ toast(`Ready again in ${Math.ceil(left/60e3)} min.`); return; }
+    save.buffs=save.buffs||{}; save.buffs[info.buff]=Math.max(+save.buffs[info.buff]||0,now+info.min*60e3); save.vipCd[ck]=now+info.cd*60e3; persist(); hud(); toast(`${info.txt}: ${BUFF_N[info.buff]} for ${info.min} min.`,"#43f0a4"); beep(990,.08); };
+  if(me.homeSit&&me.homeSit.key===key){ me.homeSit=null; pushPresence(true); return; }
+  switch(f.k){
+    case "seat": case "nap": me.homeSit={key,x:f.x,nap:f.k==="nap"}; me.x=f.x; me.y=272; target=null; pushPresence(true); fx(f.k,6); buff(VIP_ACT[f.k]); break;
+    case "bar": { const ck=R.id+":bar", left=(+save.vipCd[ck]||0)-now; if(left>0){ toast(`The bar's restocking. Next free drink in ${Math.ceil(left/6e4)} min.`); break; } const pool=DRINKS.filter(d=>d.r!=="epic"); const got=pool[(Math.random()*pool.length)|0]; addItem(got.id,1); save.vipCd[ck]=now+2*36e5; persist(); fx("butler",4); me.emote={e:"use",t:T}; toast(`On the house: a ${got.n}. It's in your stash.`,"#43f0a4"); beep(880,.06); break; }
+    case "music": fx("music",30); playTune(f.item); me.emote={e:"dance",t:T}; buff(VIP_ACT.music); break;
+    case "dance": fx("music",20); if(typeof startDancing==="function") startDancing(); else emote("dance"); buff(VIP_ACT.dance); break;
+    case "arcade": fx("arcade",4); openUpload(); break;
+    case "tech": fx("tech",12); me.emote={e:"use",t:T}; buff(VIP_ACT.tech); break;
+    case "hack": fx("tech",6); openDecrypt(); break;
+    case "tv": fx("tv",8); openTV(); break;
+    case "fish": fx("fish",15); buff(VIP_ACT.fish); break;
+    case "chill": fx("plant",6); me.emote={e:"use",t:T}; buff(VIP_ACT.chill); break;
+  } }
+function drawVipDoors(t){ for(const R of VIP_ROOMS.filter(r=>r.venue===me.scene)){ const x=R.door, act=vipActive(R.id), v=vipRooms[R.id], mine=vipMine(R.id), canIn=act&&vipCanEnter(R.id);
+    ctx.fillStyle="#08050f"; ctx.fillRect(x-34,128,68,118); ctx.strokeStyle=R.col; ctx.shadowColor=R.col; ctx.shadowBlur=10; ctx.lineWidth=2; ctx.strokeRect(x-34,128,68,118); ctx.shadowBlur=0; ctx.lineWidth=1;
+    ctx.fillStyle="rgba(255,255,255,.04)"; for(let k=0;k<5;k++) ctx.fillRect(x-28,136+k*20,56,2);
+    const lc=!act?"#43f0a4":mine?"#38e8ff":canIn?"#ffb84a":"#ff5a4a"; ctx.fillStyle=lc; ctx.shadowColor=lc; ctx.shadowBlur=10; ctx.beginPath(); ctx.arc(x+24,188,3.5+Math.sin(t*3)*.6,0,7); ctx.fill(); ctx.shadowBlur=0;
+    neonText(R.n.toUpperCase(),x,110,9,R.col,flick(R.door,t)); ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillStyle="#cfc6e8";
+    ctx.fillText(!act?`FOR RENT · ${R.price} CHIPS`:mine?"YOUR ROOM":(v.open?"PUBLIC · ":"🔒 PRIVATE · ")+nameOf(v.by).slice(0,12),x,123);
+    const n=[...peers.values()].filter(p=>p.s==="vip"&&p.home==="vip:"+R.id).length; if(n){ ctx.fillStyle="#ff8ad8"; ctx.fillText(`${n} inside`,x,240); } } }
+function drawVip(t){ const R=VIP_BY[me.vip]||VIP_ROOMS[0], W=SCENES.vip.w, v=vipRooms[R.id], party=partyOn(); ctx.fillStyle="#07040d"; ctx.fillRect(camX,0,VW,H);
+  if(R.id==="neon"){ ctx.fillStyle="#1a0820"; ctx.fillRect(0,0,W,250); for(let x=0;x<W;x+=60){ ctx.fillStyle="rgba(255,63,168,.06)"; ctx.fillRect(x,0,30,250); } for(let x=40;x<W;x+=140){ ctx.fillStyle=party?`hsl(${(t*160+x)%360},100%,60%)`:"#ff3fa8"; ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=14; ctx.fillRect(x,14,80,3); ctx.shadowBlur=0; } ctx.fillStyle="#2a0d30"; ctx.fillRect(150,150,780,96); }
+  else if(R.id==="den"){ ctx.fillStyle="#04140c"; ctx.fillRect(0,0,W,250); ctx.font="10px monospace"; ctx.textAlign="center"; for(let c=0;c<W/18;c++){ const sp=20+(c*37)%40; for(let k=0;k<8;k++){ const y=((t*sp+c*53+k*28)%270)-10; ctx.fillStyle=`rgba(67,240,164,${.08+.25*(k===7)})`; ctx.fillText(((c*7+k+(t*3|0))%2)?"1":"0",c*18+9,y); } } }
+  else if(R.id==="suite"){ const g=ctx.createLinearGradient(0,0,0,250); g.addColorStop(0,"#0c0620"); g.addColorStop(1,"#1d0f3a"); ctx.fillStyle=g; ctx.fillRect(0,0,W,250); for(let i=0;i<90;i++){ const h=(i*7919)%997; ctx.fillStyle="#fff"; ctx.globalAlpha=.25+.75*Math.abs(Math.sin(t*.8+h)); ctx.fillRect((h*13)%W,(h*7)%240,h%4?1:2,h%4?1:2); } ctx.globalAlpha=1; const ng=ctx.createRadialGradient(700,90,10,700,90,180); ng.addColorStop(0,"rgba(124,92,255,.35)"); ng.addColorStop(1,"rgba(124,92,255,0)"); ctx.fillStyle=ng; ctx.fillRect(500,0,400,250); }
+  else { ctx.fillStyle="#05050a"; ctx.fillRect(0,0,W,250); ctx.save(); ctx.globalCompositeOperation="lighter"; for(let k=0;k<6;k++){ const a=Math.sin(t*(.6+k*.13)+k)*.9, ox=200+k*140; ctx.strokeStyle=`hsla(${(k*60+t*(party?140:40))%360},100%,60%,.35)`; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(ox,0); ctx.lineTo(ox+Math.sin(a)*400,260); ctx.stroke(); } ctx.restore(); }
+  neonText(R.n.toUpperCase(),W/2,98,18,R.col,1);
+  if(v) neonText(`${v.by===myId?"YOUR ROOM":"HOSTED BY "+nameOf(v.by).toUpperCase()} · ${v.open?"PUBLIC":"PRIVATE"} · ${vipActive(R.id)?vipLeft(R.id).toUpperCase():"ENDED"}`,W/2,120,9,"#cfc6e8",1);
+  ctx.fillStyle="#08050f"; ctx.fillRect(40,150,60,96); neonText("EXIT",70,142,10,"#43f0a4",1);
+  if(vipMine(R.id)){ ctx.fillStyle="#1a1230"; ctx.fillRect(124,160,24,40); ctx.fillStyle=R.col; ctx.fillRect(128,166,16,3); ctx.fillRect(128,172,10,2); neonText("CTRL",136,154,7,R.col,1); }
+  for(let y=246;y<H;y+=24) for(let x=Math.floor(camX/48)*48;x<camX+VW;x+=48){ ctx.fillStyle=((x/48+y/24)%2)?"#0e0a18":"#0a0712"; ctx.fillRect(x,y,48,24); }
+  R.feats.forEach((f,i)=>{ const act=homeFx["v"+i]&&homeFx["v"+i].until>T;
+    if(f.k==="dance"){ for(let r=0;r<4;r++) for(let c=0;c<8;c++){ const lit=((c+r+((t*(party?6:3))|0))%3)===0; ctx.fillStyle=lit?`hsla(${(c*45+r*30+t*60)%360},100%,60%,.55)`:"rgba(255,255,255,.04)"; ctx.fillRect(f.x-96+c*24,252+r*20,22,18); } return; }
+    if(f.item) drawItem(ctx,f.item,f.x,f.wall?96:206,f.wall?78:96,act?t*3+i:t+i); });
+  drawHomeFx(t); }
 /* ============================================================ ADMIN + DATA COLLECTORS CLUB */
 const DCC_SYMS=[{n:"Data Core",c:"#38e8ff"},{n:"Neural Link",c:"#ff3fa8"},{n:"Holo Diamond",c:"#a8e8ff"},{n:"Quantum Orbit",c:"#7c5cff"},{n:"Cipher Eye",c:"#43f0a4"},{n:"Circuit Crown",c:"#ffd36a"},{n:"Signal Wave",c:"#ff8a3a"},{n:"Glitch Star",c:"#ff5a4a"},{n:"Firewall Shield",c:"#00e0c0"},{n:"Binary Chip",c:"#cf72ff"}];
 let dcc={}, dccSeen=false;
@@ -3855,8 +3966,8 @@ function drawClubFront(t){
   ctx.globalAlpha=.12; ctx.fillStyle="#cf72ff"; ctx.fillRect(x0,266,w,50); ctx.globalAlpha=1; }
 function drawClub(t){
   const tr=TRACKS[clubTrack], bp=Date.now()/(60000/tr.bpm), ph=bp%1, pulse=Math.pow(1-ph,3), beat=Math.floor(bp);
-  ctx.fillStyle="#0a0512"; ctx.fillRect(camX,0,VW,H); ctx.fillStyle="#140a22"; ctx.fillRect(0,0,2200,250);
-  for(let x=0;x<2200;x+=48){ ctx.fillStyle="rgba(207,114,255,.035)"; ctx.fillRect(x,0,24,250); }
+  ctx.fillStyle="#0a0512"; ctx.fillRect(camX,0,VW,H); ctx.fillStyle="#140a22"; ctx.fillRect(0,0,SCENES.club.w,250);
+  for(let x=0;x<SCENES.club.w;x+=48){ ctx.fillStyle="rgba(207,114,255,.035)"; ctx.fillRect(x,0,24,250); }
   for(let x=60;x<1400;x+=170){ ctx.fillStyle="#cf72ff"; ctx.shadowColor="#cf72ff"; ctx.shadowBlur=14; ctx.fillRect(x,10,90,3); ctx.shadowBlur=0; }
   // door + menu board
   ctx.fillStyle="#0a0510"; ctx.fillRect(40,150,60,96); neonText("EXIT",70,142,10,"#43f0a4",1);
@@ -4329,7 +4440,7 @@ if(save.name) myName=save.name;
 
 /* ============================================================ PRESENCE */
 let lastPush=0, lastSig="";
-function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:me.scene==="home"&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0)?1:0};
+function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0)?1:0};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
@@ -4364,6 +4475,10 @@ setInterval(hud,1000);
   if(db&&myId&&canWrite){ DB=db;
     try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ save=sanitizeSave(snap.data()); hud(); } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
     db.collection("market").orderBy("at","desc").limit(60).onSnapshot(s=>{ market=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>BY[m.item]&&typeof m.seller==="string"&&+m.price>0); const ids=[...new Set(market.map(m=>m.seller))]; resolveNames(ids);  refreshView("trade");},()=>{});
+    db.collection("viprooms").onSnapshot(s=>{ const prev=vipRooms; vipRooms={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(!VIP_BY[d.id]) return; vipRooms[d.id]={by:typeof v.by==="string"?v.by:"",until:+v.until||0,open:v.open!==false,invites:Array.isArray(v.invites)?v.invites.filter(x=>typeof x==="string").slice(0,40):[],at:+v.at||0}; });
+      resolveNames(Object.values(vipRooms).map(v=>v.by).filter(Boolean));
+      for(const [id,v] of Object.entries(vipRooms)){ const was=prev[id]; if(vipSeen&&myId&&v.by!==myId&&vipActive(id)&&v.invites.includes(myId)&&!(was&&was.invites.includes(myId)&&was.by===v.by)) chatLine(null,`${nameOf(v.by)} added you to the guest list for the ${VIP_BY[id].n} backroom at ${sceneName(VIP_BY[id].venue)}.`,"sys"); }
+      vipSeen=true; vipCheckAccess(); if(currentView&&currentView.startsWith("vip")&&!$("#overlay").hidden&&!(document.activeElement&&document.activeElement.tagName==="INPUT")) refreshVipPanel(); },()=>{});
     db.collection("dcc").onSnapshot(s=>{ const was=dccActive(myId); dcc={}; s.docs.forEach(d=>{ const v=d.data()||{}; dcc[d.id]={on:v.on===true,until:+v.until||0,sym:Math.max(0,Math.min(DCC_SYMS.length-1,Math.floor(+v.sym||0))),at:+v.at||0}; }); resolveNames(Object.keys(dcc));
       if(!was&&dccActive(myId)&&dccSeen){ toast(`Welcome to the Data Collectors Club! Your ${DCC_SYMS[dccSym(myId)].n} symbol now shows next to your name.`,"#43f0a4"); beep(1200,.12); } dccSeen=true; refreshSmacked();
       if(currentView&&currentView.startsWith("admin")&&!$("#overlay").hidden&&!(document.activeElement&&["INPUT","SELECT"].includes(document.activeElement.tagName))) refreshAdmin(); },()=>{});
@@ -4402,6 +4517,7 @@ setInterval(hud,1000);
     room.on("chat",m=>{ if(m.isMe&&m.sameTab) return; const d=m.data||{}; if(typeof d.text!=="string") return; chatLine(nameOf(m.by),d.text.slice(0,80),undefined,m.by); });
     room.on("atk",onAtk); room.on("ko",onKo);
     room.on("invite",m=>{ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; if(d.to!==myId) return; resolveNames([m.by]);
+      if(typeof d.vip==="string"&&VIP_BY[d.vip]){ const R=VIP_BY[d.vip]; card(`${nameOf(m.by)} invited you to the ${R.n} backroom at ${sceneName(R.venue)}.`,[["Go there",()=>{ closePanel(); enterVip(R.id); },true],["Not now",null]],120e3); return; }
       card(`${nameOf(m.by)} invited you to their apartment.`,[["Go there",()=>{ closePanel(); if(me.scene==="bar"&&mySlot>=0) clockOut(); visitHome(m.by); },true],["Not now",null]],90e3); });
     room.on("news",m=>{ if(m.isMe&&m.sameTab) return; const d=m.data||{}; if(typeof d.text!=="string") return; chatLine(null,`${nameOf(m.by)} ${d.text.slice(0,90)}`,"sys"); });
     for(const p of room.peers()) applyPeer(p); updOnline(); pushPresence(true);

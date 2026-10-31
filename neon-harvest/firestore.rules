@@ -82,6 +82,16 @@ service cloud.firestore {
       allow delete: if signedIn() && me() == uid;
     }
 
+    // Backrooms (rentable rooms in The Glitch and The Third Eye). Only the current renter can change a room;
+    // anyone can take it over once the rental has run out.
+    match /viprooms/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.by == me();
+      allow update: if signedIn() && request.resource.data.by == me()
+        && (resource.data.by == me() || resource.data.until < request.time.toMillis());
+      allow delete: if false;
+    }
+
     // Data Collectors Club: everyone can see who is a member; only the owner can grant, change or remove.
     match /dcc/{uid} { allow read: if signedIn(); allow write: if isOwner(); }
 
