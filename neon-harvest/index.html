@@ -1221,7 +1221,7 @@ function hotspots(sc){
   ];
   if(sc==="smacked") return [
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
-    {x:800,hw:150,label:IS_ADMIN?"Enter Smacked Shop (owner)":"Enter Smacked Shop",act:()=>openSmacked("shop")},
+    {x:800,hw:150,label:IS_ADMIN?"Enter Smacked Shop (owner)":dccActive(myId)?"Enter Smacked Shop (members redeem)":"Enter Smacked Shop (members only)",act:()=>openSmacked("shop")},
     {x:1325,hw:90,label:"View my pickup codes",act:()=>openSmacked("codes")},
   ];
   if(sc==="linx") return [
@@ -1594,7 +1594,7 @@ const GUIDE={
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes. Chat lines fade after a few seconds; tap Log next to the chat box for the full history, filtered by chat or events.","Invite players to your apartment from the intercom; they get a card that brings them straight to you.","Visit neighbors' doors to look at their display shelves."]],
     ["Private messages and groups",["Press M or tap Messages to chat privately. Tap a player (or use Who's online) and choose Message to start a one-on-one chat.","Make a group chat with up to 8 people, name it, invite more players later, or leave anytime.","Only the people in a chat can read it. Block anyone from their chat to stop seeing their messages."]],
     ["Trade and compete",["Gift parts by tapping a player. Sell on the Trade Board. Challenge players in The Grid. Climb the Top Duelists and Top Fraggers boards."]],
-    ["Fair play",["Smacked Shop rewards are real items handed out in person. The shop owner checks every pickup code before handing anything over."]]]}
+    ["Fair play",["Smacked Shop rewards are real items handed out in person. The shop owner checks every pickup code before handing anything over.","Smacked Shop rewards can only be redeemed by Data Collectors Club members. Anyone can browse, and your existing pickup codes stay valid if your membership ends."]]]}
 };
 let guideTab="start";
 function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_guide_seen","1"); }catch(e){}
@@ -2852,30 +2852,38 @@ function openSmacked(tab="shop"){
   if(shopInfo.text) body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:"Pickup info"}),el("span",{style:"white-space:pre-wrap",text:shopInfo.text}))));
   if(tab==="admin"&&IS_ADMIN) return adminTools(body);
   if(tab==="codes") return myCodesView(body);
+  body.append(smackedGate());
   const live=shopItems.filter(i=>i.active).sort((a,b)=>a.order-b.order||a.title.localeCompare(b.title));
   if(!live.length){ body.append(el("div",{class:"empty",text:IS_ADMIN?"Your shop is empty. Open Owner tools to add your first item.":"The shelves are empty right now. New rewards drop here when the owner stocks them."})); return; }
   const g=el("div",{class:"grid",style:"grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"});
-  for(const it of live){ const left=remaining(it); const c=el("button",{class:"card",type:"button",onclick:()=>redeemConfirm(it)}); c.append(itemVisual(it,96),el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:it.cur==="chips"?"r-rare":"r-common",style:it.cur==="credits"?"color:var(--amber)":"",text:it.cur==="chips"?`${it.price} chips`:`₵${it.price}`}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
+  const okRedeem=canRedeem(); for(const it of live){ const left=remaining(it); const c=el("button",{class:"card",type:"button",onclick:()=>redeemConfirm(it)}); if(!okRedeem) c.append(el("div",{class:"r-epic",style:"font-size:10px",text:"🔒 Members only"})); c.append(itemVisual(it,96),el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:it.cur==="chips"?"r-rare":"r-common",style:it.cur==="credits"?"color:var(--amber)":"",text:it.cur==="chips"?`${it.price} chips`:`₵${it.price}`}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
   body.append(g);
 }
+function canRedeem(){ return IS_ADMIN||dccActive(myId); }
+function smackedGate(){ if(IS_ADMIN) return el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:"Members-only rewards"}),el("span",{class:"sub",text:"Only Data Collectors Club members can redeem here. You can always redeem as the owner. Grant memberships from the Admin Panel."})));
+  if(dccActive(myId)){ const d=dcc[myId]; return el("div",{class:"detail"},dccCanvas(d.sym,32),el("div",{class:"info"},el("strong",{text:"Data Collectors Club member"}),el("span",{class:"r-uncommon",text:"You can redeem Smacked Shop rewards"+(d.until?` until ${new Date(d.until).toLocaleDateString()}.`:".")}))); }
+  const d=dcc[myId]; const why=d&&d.on&&d.until&&d.until<=Date.now()?`Your membership expired on ${new Date(d.until).toLocaleDateString()}.`:d&&!d.on?"Your membership is switched off right now.":"You're not a member yet.";
+  return el("div",{class:"detail",style:"border-color:var(--mag)"},el("div",{class:"info"},el("strong",{text:"🔒 Members only: Data Collectors Club"}),el("span",{text:`Smacked Shop rewards can only be redeemed by Data Collectors Club members. ${why} Membership is granted by the game's owner.`}),el("span",{class:"sub",text:"You can still browse what's in stock, and any pickup codes you already have stay valid."}))); }
 function redeemConfirm(it){
   const body=panel("Redeem: "+it.title,"This is a real item. After redeeming you get a pickup code to show in person."); currentView=null;
   const bal=it.cur==="chips"?save.chips:save.credits; const left=remaining(it);
   body.append(el("div",{class:"detail"},(()=>{ const v=itemVisual(it,120); v.style.width="140px"; v.style.flex="none"; return v; })(),el("div",{class:"info"},el("strong",{text:it.title}),it.desc?el("span",{style:"white-space:pre-wrap",text:it.desc}):null,
     el("span",{text:`Price: ${it.cur==="chips"?it.price+" chips":"₵"+it.price}`}),el("span",{class:"sub",text:`You have ${Math.floor(bal).toLocaleString()} ${it.cur}. ${left} left in stock.`}))));
   const go=el("button",{class:"btn hot",type:"button",text:`Redeem for ${it.cur==="chips"?it.price+" chips":"₵"+it.price}`,onclick:()=>redeemItem(it,go)});
-  if(bal<it.price||!left) go.disabled=true;
+  if(bal<it.price||!left||!canRedeem()) go.disabled=true; if(!canRedeem()) go.textContent="🔒 Members only";
+  if(!canRedeem()) body.append(smackedGate());
   body.append(el("div",{class:"row"},go,el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openSmacked("shop")})));
   if(bal<it.price) body.append(el("div",{class:"r-epic",text:`You need ${Math.ceil(it.price-bal)} more ${it.cur}.`}));
 }
 async function redeemItem(it,btn){
+  if(!canRedeem()){ toast("Smacked Shop rewards are for Data Collectors Club members only."); return openSmacked("shop"); }
   const fresh=shopItems.find(x=>x.id===it.id); if(!fresh||!fresh.active||!remaining(fresh)){ toast("That reward just sold out."); return openSmacked("shop"); }
   const bal=it.cur==="chips"?save.chips:save.credits; if(bal<it.price) return;
   btn.disabled=true; if(it.cur==="chips") save.chips-=it.price; else save.credits-=it.price; persist();
   const code=genCode(); const entry={code,item:it.id,title:it.title,price:it.price,cur:it.cur,at:Date.now()};
   const codes=[...(myRedeem.codes||[]),entry].slice(-100);
   try{ await DB.doc("redeem/"+myId).set({name:myName||"Runner",codes}); myRedeem={...myRedeem,codes}; await hashOf(code); }
-  catch(e){ if(it.cur==="chips") save.chips+=it.price; else save.credits+=it.price; persist(); toast("The redemption didn't go through. You weren't charged."); btn.disabled=false; return; }
+  catch(e){ if(it.cur==="chips") save.chips+=it.price; else save.credits+=it.price; persist(); toast(e&&/permission/i.test(String(e.code||e.message||""))?"Redemption refused: Data Collectors Club membership required. You weren't charged.":"The redemption didn't go through. You weren't charged."); btn.disabled=false; return; }
   beep(1200,.08); setTimeout(()=>beep(1600,.12),90); emote("cheer");
   const body=panel("Redeemed!","Show this code at Smacked Shop to pick up your item. It's also saved under My pickup codes."); currentView=null;
   const codeEl=el("div",{class:"bigcode",text:code});
@@ -4326,7 +4334,7 @@ setInterval(hud,1000);
     try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ save=sanitizeSave(snap.data()); hud(); } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
     db.collection("market").orderBy("at","desc").limit(60).onSnapshot(s=>{ market=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>BY[m.item]&&typeof m.seller==="string"&&+m.price>0); const ids=[...new Set(market.map(m=>m.seller))]; resolveNames(ids);  refreshView("trade");},()=>{});
     db.collection("dcc").onSnapshot(s=>{ const was=dccActive(myId); dcc={}; s.docs.forEach(d=>{ const v=d.data()||{}; dcc[d.id]={on:v.on===true,until:+v.until||0,sym:Math.max(0,Math.min(DCC_SYMS.length-1,Math.floor(+v.sym||0))),at:+v.at||0}; }); resolveNames(Object.keys(dcc));
-      if(!was&&dccActive(myId)&&dccSeen){ toast(`Welcome to the Data Collectors Club! Your ${DCC_SYMS[dccSym(myId)].n} symbol now shows next to your name.`,"#43f0a4"); beep(1200,.12); } dccSeen=true;
+      if(!was&&dccActive(myId)&&dccSeen){ toast(`Welcome to the Data Collectors Club! Your ${DCC_SYMS[dccSym(myId)].n} symbol now shows next to your name.`,"#43f0a4"); beep(1200,.12); } dccSeen=true; refreshSmacked();
       if(currentView&&currentView.startsWith("admin")&&!$("#overlay").hidden&&!(document.activeElement&&["INPUT","SELECT"].includes(document.activeElement.tagName))) refreshAdmin(); },()=>{});
     db.collection("homes").limit(100).onSnapshot(s=>{ homes={}; s.docs.forEach(d=>homes[d.id]=d.data()); resolveNames(Object.keys(homes)); if(viewHome&&homes[viewHome.owner]){ const h=homes[viewHome.owner]; viewHome.display=Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null); viewHome.label=nameOf(viewHome.owner); } },()=>{});
     for(const x of save.settled||[]) settled.add(x);

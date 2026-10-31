@@ -86,9 +86,22 @@ service cloud.firestore {
     match /dcc/{uid} { allow read: if signedIn(); allow write: if isOwner(); }
 
     // Pickup codes: private to the player who redeemed them, plus the owner.
+    // Adding a NEW code (redeeming) needs an active Data Collectors Club membership (or the owner).
+    // Anyone can still update their existing codes (refund flags) without adding new ones.
+    function dccDoc() { return get(/databases/$(database)/documents/dcc/$(request.auth.uid)).data; }
+    function isMember() {
+      return exists(/databases/$(database)/documents/dcc/$(request.auth.uid))
+        && dccDoc().on == true && (dccDoc().until == 0 || dccDoc().until > request.time.toMillis());
+    }
+    function addsCode() {
+      return request.resource.data.codes.size() > (resource == null ? 0 : resource.data.codes.size())
+        || (resource != null && request.resource.data.codes.size() > 0
+            && request.resource.data.codes[request.resource.data.codes.size() - 1].code
+               != resource.data.codes[resource.data.codes.size() - 1].code);
+    }
     match /redeem/{uid} {
       allow read: if signedIn() && (me() == uid || isOwner());
-      allow write: if signedIn() && me() == uid;
+      allow write: if signedIn() && me() == uid && (!addsCode() || isMember() || isOwner());
     }
   }
 }
