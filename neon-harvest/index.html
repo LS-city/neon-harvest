@@ -189,10 +189,10 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #online{font-family:var(--f-ui);font-size:13px;color:var(--text);cursor:pointer} #online:hover{border-color:var(--cyan)}
 #hppill{--hp:100%;background:linear-gradient(90deg,rgba(67,240,164,.4) var(--hp),rgba(21,14,38,.82) var(--hp));font-weight:600;min-width:72px}
 #hppill[data-low="1"]{background:linear-gradient(90deg,rgba(255,90,74,.55) var(--hp),rgba(21,14,38,.82) var(--hp))}
-#combat{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:4}
+#combat,#clubBtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:4}
 #combat .btn{font-family:var(--f-display);font-size:13px;padding:12px 16px;touch-action:none}
 #combat .atk{border-color:#ff5a4a;color:#fff;box-shadow:0 0 14px rgba(255,90,74,.45) inset}
-@media (pointer:coarse){#combat{right:calc(max(16px,env(safe-area-inset-right,0px)) + 214px);bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
+@media (pointer:coarse){#combat,#clubBtn{right:calc(max(16px,env(safe-area-inset-right,0px)) + 214px);bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
 #deathov{position:absolute;inset:0;z-index:18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;background:radial-gradient(circle,rgba(120,0,20,.6),rgba(5,0,8,.94));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #deathov .dtitle{font-family:var(--f-display);font-size:clamp(44px,12vw,96px);color:#ff5a4a;text-shadow:3px 0 #38e8ff,-3px 0 #ff3fa8;animation:dglitch .25s steps(2) infinite}
 @keyframes dglitch{50%{transform:translateX(3px) skewX(-6deg)}}
@@ -239,7 +239,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile.portrait #chatlog{top:calc(var(--top) + var(--cvh) + 64px);bottom:calc(64px + 176px + env(safe-area-inset-bottom,0px));left:12px;right:12px;width:auto;max-height:none;justify-content:flex-end;overflow:hidden}
 #game.mobile.portrait #chatlog.open{top:calc(var(--top) + var(--cvh) + 10px);bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
 #game.mobile.portrait #pad{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
-#game.mobile.portrait #combat{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(66px + 92px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-end}
+#game.mobile.portrait #combat,#game.mobile.portrait #clubBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(66px + 92px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-end}
 #game.mobile.portrait #invites{top:calc(var(--top) + var(--cvh) + 10px)}
 /* landscape: full-screen world, controls in the corners, chat between them */
 #game.mobile:not(.portrait) #pad{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
@@ -249,7 +249,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile:not(.portrait) #chatlog{top:calc(var(--top) + 6px);bottom:auto;left:max(12px,env(safe-area-inset-left,0px));width:min(320px,40vw)}
 #game.mobile:not(.portrait) #chatlog.open{max-height:calc(100vh - var(--top) - 80px)}
 #game.mobile:not(.portrait) #prompt{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
-#game.mobile:not(.portrait) #combat{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+#game.mobile:not(.portrait) #combat,#game.mobile:not(.portrait) #clubBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 /* windows become full-screen sheets with a big close button */
 #game.mobile #overlay{padding:0;align-items:stretch;justify-content:stretch}
 #game.mobile .panel{width:100%;max-width:none;height:100%;max-height:none;border:0;box-shadow:none}
@@ -353,6 +353,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" type="button" data-emote="pose">Pose</button>
     </div>
   </div>
+  <div id="clubBtn" hidden><button class="btn hot" id="btnClubItems" type="button">💊 My club items</button></div>
   <div id="combat" hidden><button class="btn" id="btnBlock" type="button">Block [G]</button><button class="btn atk" id="btnAtk" type="button">Attack [F]</button></div>
   <div id="deathov" hidden></div>
   <div id="overlay" hidden></div>
@@ -4546,16 +4547,28 @@ function tripIntensity(){ return myTrip?[1,1,1.4,1.8][myTrip.lvl||1]:1; }
 function fusionRecipes(){ const wrap=el("div",{style:"display:flex;flex-direction:column;gap:8px"}); const known=save.fusions||[];
   wrap.append(el("strong",{text:`Fusion recipes (${FUSIONS.length})`}),el("p",{class:"sub",text:"Take the first item, then the second while it's still active (order doesn't matter). Mix it uses both for you, in the club."}));
   const l=el("div",{class:"list"}); const sorted=[...FUSIONS].sort((a,b)=>((hasItem(b.a)&&hasItem(b.b))-(hasItem(a.a)&&hasItem(a.b)))||0);
-  for(const F of sorted){ const ready=hasItem(F.a)&&hasItem(F.b)&&(F.a!==F.b), got=known.includes(F.key);
+  for(const F of sorted){ const ready=canMix(F), got=known.includes(F.key);
     const row=el("div",{class:"li"},itemCanvas(F.a,30),el("span",{class:"tag",text:"+"}),itemCanvas(F.b,30),el("div",{class:"grow"},el("div",{class:got?"r-epic":"",text:`${BY[F.a].n} + ${BY[F.b].n} = ${F.n}${got?" ✓":""}`}),el("div",{class:"sub",text:`${F.buffs.map(b=>BUFF_N[b]).join(", ")} · ${Math.round(F.dur/60)} min · ${F.desc}`})));
-    if(ready){ const b=el("button",{class:"btn hot",type:"button",text:"Mix it",onclick:()=>{ if(me.scene!=="club"){ toast("Mix it inside The Third Eye."); return; } useTrip(F.a); setTimeout(()=>{ if(hasItem(F.b)) useTrip(F.b); },1700); }}); row.append(b); }
+    if(ready){ const b=el("button",{class:"btn hot",type:"button",text:"Mix",onclick:()=>mixFusion(F)}); row.append(b); }
     else row.append(el("span",{class:"sub",style:"white-space:nowrap",text:`${hasItem(F.a)?"✓":"✗"} ${hasItem(F.b)?"✓":"✗"}`}));
     l.append(row); }
   wrap.append(l); return wrap; }
+function canMix(F){ if(!F||F.a===F.b) return (save.inv[F.a]||0)>=2; return hasItem(F.a)&&hasItem(F.b); }
+function knownMixesFor(id){ const known=save.fusions||[]; return FUSIONS.filter(F=>known.includes(F.key)&&(F.a===id||F.b===id)&&canMix(F)); }
+function mixFusion(F,onDone){ if(!F) return; if(me.scene!=="club"){ toast("Mix it inside The Third Eye."); return; } if(!canMix(F)){ toast(`You need ${BY[F.a].n} and ${BY[F.b].n}.`); return; }
+  const cur=myTrip&&myTrip.until>Date.now()?myTrip:null; if(cur&&cur.id==="trip_god"){ toast("The God Particle won't share your mind. Nothing else takes hold."); return; }
+  addItem(F.a,-1); addItem(F.b,-1); persist(); closePanel(); me.dancing=false; me.emote={e:"use",t:T,it:F.a}; pushPresence(true,{emote:{e:"use",at:Date.now(),it:F.a}}); beep(300,.2,"triangle"); setTimeout(()=>beep(450,.2,"triangle"),300);
+  toast(`Mixing ${BY[F.a].n} + ${BY[F.b].n}…`,"#ffd36a");
+  setTimeout(()=>{ myTrip={fx:TRIPS[F.a].fx,id:F.a,name:BY[F.a].n,lvl:1,until:Date.now()+60e3}; applyTrip(F.b); onDone&&onDone(); },1500); }
 function tripList(onUse){ const own=invList().filter(([id])=>BY[id].t==="trip"); const wrap=el("div",{class:"list"});
   if(!own.length){ wrap.append(el("div",{class:"empty",text:"You don't have any club items. Buy them at the club bar."})); return wrap; }
-  for(const [id,n] of own) wrap.append(el("div",{class:"li"},itemCanvas(id,44),el("div",{class:"grow"},el("div",{text:`${BY[id].n} ×${n}`}),el("div",{class:"sub",text:TRIPS[id].desc})),el("button",{class:"btn hot",type:"button",text:"Use",onclick:()=>{ useTrip(id); onUse&&onUse(); }})));
+  for(const [id,n] of own){ const mixes=knownMixesFor(id); const acts=el("div",{class:"row",style:"flex-wrap:wrap;justify-content:flex-end;gap:4px;flex:none;max-width:52%"});
+    acts.append(el("button",{class:"btn hot",type:"button",text:"Use",onclick:()=>{ useTrip(id); onUse&&onUse(); }}));
+    for(const F of mixes){ const other=F.a===id?F.b:F.a; acts.append(el("button",{class:"btn",type:"button",title:`${BY[F.a].n} + ${BY[F.b].n} = ${F.n}`,style:"border-color:#ffd36a;color:#ffd36a",text:`⚗ Mix + ${BY[other].n} → ${F.n}`,onclick:()=>{ mixFusion(F); onUse&&onUse(); }})); }
+    wrap.append(el("div",{class:"li"},itemCanvas(id,44),el("div",{class:"grow"},el("div",{text:`${BY[id].n} ×${n}`}),el("div",{class:"sub",text:TRIPS[id].desc}),mixes.length?el("div",{class:"sub",style:"color:#ffd36a",text:`Fuses into: ${mixes.map(F=>F.n).join(", ")}`}):""),acts)); }
+  const known=(save.fusions||[]).length; wrap.append(el("p",{class:"sub",text:known?"⚗ Mix buttons appear on items when you own both halves of a fusion you've discovered. One tap uses both.":"Discover a fusion by taking one club item, then another while it's still active. After that, a ⚗ Mix button shows up here whenever you own both halves."}));
   return wrap; }
+function openMyClubItems(){ const own=invList().filter(([id])=>BY[id].t==="trip").reduce((a,[,n])=>a+n,0); const body=panel(`My club items (${own})`,"Use or mix your club items anywhere in The Third Eye."); currentView="myclub"; body.append(tripList(),fusionRecipes()); }
 
 
 /* ============================================================ GOD PARTICLE + ELYSIUM */
@@ -4757,6 +4770,7 @@ function drawElyExtras(t){ const W=ELY.W;
   elyFx=elyFx.filter(p=>T-p.t0<1.4); for(const p of elyFx){ const u=T-p.t0; ctx.globalAlpha=1-u/1.4; ctx.fillStyle=p.col; ctx.fillRect(p.x+p.vx*u,p.y+p.vy*u+40*u*u,2,2); } ctx.globalAlpha=1; }
 
 npcs.ascend=[{x:ELY.bar-80,y:262,look:{jacket:5,pants:5,visor:1,hat:0,back:Math.max(0,WARD.back.opts.findIndex(o=>o[0]==="Angel wings")),aura:Math.max(0,WARD.aura.opts.findIndex(o=>o[0]==="Golden glow"))},dir:1,vx:0,name:"Seraphine",fx:"god"},{x:ELY.bar+80,y:262,look:{jacket:18,pants:7,visor:3,hat:0,back:Math.max(0,WARD.back.opts.findIndex(o=>o[0]==="Bat wings")),aura:Math.max(0,WARD.aura.opts.findIndex(o=>o[0]==="Flames"))},dir:-1,vx:0,name:"Malakai",dk:"horns"}];
+document.getElementById("btnClubItems").addEventListener("click",()=>{ beep(700,.05); openMyClubItems(); });
 /* --- seating */
 function seatTaken(i){ return patrons.some(c=>c.seat===i&&!c.leaving)||[...peers.values()].some(p=>p.s==="club"&&p.seat===i)||me.seat===i; }
 function seatLabel(i){ const pc=patrons.find(c=>c.seat===i&&c.arrived&&!c.leaving);
@@ -5318,7 +5332,7 @@ function openBotControl(){ const body=panel("Bot Control","Pick how many bots yo
   for(const [k,B] of Object.entries(BOT_TYPES)){ const top=Object.entries(B.cats).sort((a,b)=>b[1]-a[1]).map(([c])=>catN[c]);
     d.append(el("div",{class:"li"},lookCanvas(B.look,40),el("div",{class:"grow"},el("div",{text:B.n+(B.boss?" (Hard mode boss)":"")}),el("div",{class:"sub",text:`${B.hp} HP · ${B.kind==="ranged"?"ranged shots":B.slam?"telegraphed ground slam":B.blink?"blinks behind you":"melee"}${B.volley?" + 3-shot volley":""} · ${B.chips[0]}–${B.chips[1]} chips`}),el("div",{class:"sub",text:`${Math.round(B.drop*100)}% drop chance${B.drops?` ×${B.drops}`:""}, mostly ${top.slice(0,2).join(" and ")}${B.minR?` · always ${B.minR} or better`:""}`})))); }
   body.append(d,el("p",{class:"sub",text:"Drops land on the floor with a glow in their rarity color. Walk over them to collect; they vanish after 45 seconds. Wardrobe unlocks you already own pay out credits instead. Bots still count as deaths: getting deleted costs 15% of your credits and chips."})); }
-function tickVoid(){ const inV=me.scene==="void"; const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
+function tickVoid(){ const inV=me.scene==="void"; { const cbb=$("#clubBtn"), inC=me.scene==="club"&&$("#overlay").hidden; if(cbb&&cbb.hidden===inC) cbb.hidden=!inC; } const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
   if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`+(!MOBILE&&(save.botMode||"normal")!=="off"?` · Bots: ${botMode().n}`:""); if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
   if(inV&&!me.dead&&(me.burnUntil||0)>T&&T>=(me.burnNext||0)){ me.burnNext=T+.5; if(inSafe(me.x)) me.burnUntil=0; else { myHP=Math.max(0,myHP-2); lastHitT=T; addVfx({type:"burn",x:me.x,y:me.y}); addVfx({type:"num",x:me.x,y:me.y-84,txt:"-2",col:"#ff8a3a"}); if(myHP<=0) die(me.burnSrc||{}); } }
   if(!inV) me.burnUntil=0;
