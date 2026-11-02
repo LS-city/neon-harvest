@@ -35,7 +35,7 @@ The config values are safe to publish. Access is controlled by the security rule
 
 ## Smacked Shop rewards and profit
 
-- **Reward Points (RP)** are the only way to pay at Smacked Shop. Only Data Collectors Club members earn them, and only from work: bar, store, club and noodle shifts, courier deliveries, quests and the assembly line. Parts orders and credits from miners, duels, the Void, gifts, trades and selling parts never turn into points, and points can't be traded or gifted.
+- **Reward Points (RP)** are the only way to pay at Smacked Shop. Only Data Collectors Club members earn them, and only from work: bar, store, club and noodle shifts, the assembly line, Courier Hub package runs, story quests and Story Mode. Parts orders, rig commissions and credits from miners, duels, the Void, gifts, trades and selling parts never turn into points, and points can't be traded or gifted.
 - **Monthly reward limit.** When you stock an item, enter what it costs you in dollars. Each member can redeem at most $14 of real cost per calendar month (UTC) by default. This limit is checked by the Firestore rules, not just the game, so even a player who cheats their point balance can't take more than the limit.
 - **Profit settings** (Smacked Shop → Owner tools → Profit settings) let you change the membership price, the monthly limit, how many points equal $1, and the daily point limit. It shows your worst-case profit per member; at $50 with a $14 limit that's about 69%.
 - Items stocked before this update have no cost yet and show "Not priced yet" until you edit them and enter what they cost you.
