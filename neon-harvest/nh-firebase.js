@@ -83,7 +83,7 @@
   /* ---------- 21+ age check: asked once per account, before the game loads ---------- */
   // Only "confirmed 21+" and the time are stored, in the player's private save area. The birth date itself is never saved.
   function ageGate(u){ return new Promise(async resolve=>{
-    const ref=fs.doc("data/users/"+u.uid+"/age/check"), memo="nh_age_ok_"+u.uid;
+    const memo="nh_age_ok_"+u.uid; let ref=null; try{ ref=fs.doc("data/users/"+u.uid+"/agecheck"); }catch(e){}
     try{ if(localStorage.getItem(memo)==="1") return resolve(true); }catch(e){}
     try{ const s=await ref.get(); if(s.exists&&s.data().ok===true){ try{ localStorage.setItem(memo,"1"); }catch(e){} return resolve(true); } }catch(e){}
     ensureStyle(); if(ov) ov.remove();
@@ -97,7 +97,7 @@
       const y=+m[1], mo=+m[2], d=+m[3], now=new Date(); let age=now.getFullYear()-y; if(now.getMonth()+1<mo||(now.getMonth()+1===mo&&now.getDate()<d)) age--;
       if(age<21){ card.innerHTML=""; card.append(h("div",{class:"logo",text:"NEON HARVEST"}),h("div",{class:"sub",text:"21+ ONLY"}),
           h("p",{text:"Sorry, NEON HARVEST is only for players 21 and older."}),h("button",{type:"button",text:"Sign out",onclick:()=>auth.signOut()})); return; }
-      go.disabled=true; try{ await ref.set({ok:true,at:Date.now()}); }catch(err){ msg.textContent="Couldn't save that. Check your connection and try again."; go.disabled=false; return; }
+      go.disabled=true; try{ if(ref) await ref.set({ok:true,at:Date.now()}); }catch(err){ /* saved on this device below; never block an adult over a failed save */ }
       try{ localStorage.setItem(memo,"1"); }catch(e){} hideAuth(); resolve(true); };
     card.append(h("div",{class:"logo",text:"NEON HARVEST"}),h("div",{class:"sub",text:"21+ ONLY"}),
       h("p",{text:"NEON HARVEST is for adults 21 and older. Confirm your date of birth to continue. You'll only be asked once."}),form,msg,

@@ -20,7 +20,7 @@ The config values are safe to publish. Access is controlled by the security rule
 
 ## Adults only (21+)
 
-After signing in, each new account confirms its date of birth once. Only "confirmed 21+" and the time are saved (in `data/users/{uid}/age/check`, private to that player), never the birth date. Anyone under 21 is shown a message and can only sign out. This is a self-confirmation, so also check a photo ID at every Smacked Shop pickup.
+After signing in, each new account confirms its date of birth once. Only "confirmed 21+" and the time are saved (in `data/users/{uid}/agecheck`, private to that player), never the birth date. Anyone under 21 is shown a message and can only sign out. This is a self-confirmation, so also check a photo ID at every Smacked Shop pickup.
 
 ## Owner powers
 
