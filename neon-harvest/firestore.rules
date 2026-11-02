@@ -109,9 +109,34 @@ service cloud.firestore {
             && request.resource.data.codes[request.resource.data.codes.size() - 1].code
                != resource.data.codes[resource.data.codes.size() - 1].code);
     }
+    // Monthly reward limit. Every new code must carry the item's real cost in cents (as stocked by the owner),
+    // and the player's running total for this calendar month (UTC) can't go over shopinfo/econ.capc (default $14).
+    // Players can't lower or reset their own total: any write that doesn't add a code must leave it unchanged.
+    function econCap() {
+      return exists(/databases/$(database)/documents/shopinfo/econ)
+        ? get(/databases/$(database)/documents/shopinfo/econ).data.get('capc', 1400) : 1400;
+    }
+    function thisMonth() { return string(request.time.year()) + '-' + string(request.time.month()); }
+    function prevSpent() {
+      return (resource != null && resource.data.get('month', '') == thisMonth()) ? resource.data.get('spentc', 0) : 0;
+    }
+    function newCode() { return request.resource.data.codes[request.resource.data.codes.size() - 1]; }
+    function withinLimit() {
+      return newCode().cents is int && newCode().cents > 0 && newCode().item is string
+        && exists(/databases/$(database)/documents/shop/$(newCode().item))
+        && get(/databases/$(database)/documents/shop/$(newCode().item)).data.get('cents', 0) == newCode().cents
+        && request.resource.data.month == thisMonth()
+        && request.resource.data.spentc == prevSpent() + newCode().cents
+        && request.resource.data.spentc <= econCap();
+    }
+    function keepsTotals() {
+      return request.resource.data.get('month', '') == (resource == null ? '' : resource.data.get('month', ''))
+        && request.resource.data.get('spentc', 0) == (resource == null ? 0 : resource.data.get('spentc', 0));
+    }
     match /redeem/{uid} {
       allow read: if signedIn() && (me() == uid || isOwner());
-      allow write: if signedIn() && me() == uid && (!addsCode() || isMember() || isOwner());
+      allow write: if signedIn() && me() == uid
+        && ((addsCode() && (isMember() || isOwner()) && withinLimit()) || (!addsCode() && keepsTotals()));
     }
   }
 }

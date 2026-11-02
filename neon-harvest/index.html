@@ -39,7 +39,7 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .stats{display:flex;gap:6px;flex-wrap:wrap}
 .pill{background:rgba(21,14,38,.82);border:1px solid var(--line);padding:4px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill b{font-weight:600}
-.pill.cr b{color:var(--amber)} .pill.ch b{color:var(--cyan)} .pill.on b{color:var(--c-uncommon)}
+.pill.cr b{color:var(--amber)} .pill.rp b{color:var(--c-uncommon)} #game.mobile #rppill{display:none!important} .pill.ch b{color:var(--cyan)} .pill.on b{color:var(--c-uncommon)}
 .btn{font-family:var(--f-ui);font-size:12px;background:var(--panel);color:var(--text);border:1px solid var(--line);padding:6px 10px;cursor:pointer}
 .btn:hover{border-color:var(--cyan);color:#fff}
 .btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
@@ -351,6 +351,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
     <div class="stats">
       <span class="pill cr">₵ <b id="credits">0</b></span>
       <span class="pill ch">CHIPS <b id="chips">0</b></span>
+      <span class="pill rp" id="rppill" hidden title="Reward Points: earned by members from work, spent at Smacked Shop">RP <b id="rp">0</b></span>
       <span class="pill" id="hppill" hidden></span>
       <span class="pill" id="jobpill" hidden></span>
       <span class="pill" id="buffs" hidden></span>
@@ -919,7 +920,7 @@ function nameKey(n){ return "h"+Array.from(new TextEncoder().encode(n.toLowerCas
 let save = defaultSave();
 function defaultSave(){
   return { credits:250, chips:40, inv:{chip_cu:2,fan_80:1,ram_8:1}, display:[null,null,null,null,null,null],
-    look:{...DEFAULT_LOOK}, story:{paidC:0,paidCh:0,endings:[],run:null,runs:0}, owned:[], name:"", handleKey:"", quest:null, scrap:{}, printBest:0, rack:[], buffs:{}, jobs:[], taken:[], jobsDone:0, duelWins:0, voidKills:0, voidDeaths:0, botKills:0, settled:[], decor:{wall:Array(8).fill(null),floor:Array(9).fill(null)}, room:{wall:0,floor:0,light:0}, roomOwned:[], home:{cd:{},off:[],plants:{},clean:0,bonusAt:0}, upload:{cleared:0,best:0}, v:5 };
+    look:{...DEFAULT_LOOK}, story:{paidC:0,paidCh:0,endings:[],run:null,runs:0}, owned:[], name:"", handleKey:"", quest:null, scrap:{}, printBest:0, rack:[], buffs:{}, jobs:[], taken:[], jobsDone:0, duelWins:0, voidKills:0, voidDeaths:0, botKills:0, settled:[], decor:{wall:Array(8).fill(null),floor:Array(9).fill(null)}, room:{wall:0,floor:0,light:0}, roomOwned:[], home:{cd:{},off:[],plants:{},clean:0,bonusAt:0}, upload:{cleared:0,best:0}, rp:0, rpDay:{d:"",n:0}, v:5 };
 }
 const me = { scene:"street", x:440+Math.random()*180, y:276+Math.random()*48, dir:1, phase:0, moving:false, emote:null, say:null, visiting:null };
 let viewHome = null;           // {owner, display, look} when visiting another home
@@ -959,7 +960,7 @@ function renderChatLog(force){ const log=$("#chatlog"); if(!log) return; const n
   for(const d of log.children){ const h=d._h; if(!h) continue; const life=h.sys?SYS_LIFE:CHAT_LIFE, left=life-(now-h.at); d.style.opacity=chatTyping||(deck&&!h.sys)?"1":deck?".7":String(Math.max(0,Math.min(1,left/1500))); } }
 function COARSE_UI(){ return matchMedia("(max-width:520px)").matches; }
 setInterval(()=>renderChatLog(false),500);
-function hud(){ jobHud(); if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); }
+function hud(){ jobHud(); if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); const rpp=$("#rppill"); if(rpp){ rpp.hidden=!(myId&&(dccActive(myId)||(+save.rp||0)>0)); $("#rp").textContent=Math.floor(+save.rp||0).toLocaleString(); } }
 
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
@@ -2055,8 +2056,8 @@ const GUIDE={
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes. Chat lines fade after a few seconds; tap Log for the full history, filtered by chat or events.","Invite players to your apartment from the intercom or to your backroom from its room controls; they get a card that brings them straight to you."]],
     ["Private messages and groups",["Press M or tap Messages to chat privately. Tap a player (or use Who's online) and choose Message.","Group chats hold up to 8 people: name it, invite more later, or leave anytime. Only members can read a chat. Block anyone to stop seeing their messages."]],
     ["Trade and compete",["Gift parts by tapping a player, sell on the Trade Board, challenge players in The Grid, and climb the Top Duelists and Top Fraggers boards."]],
-    ["Data Collectors Club",["An exclusive membership granted only by the game's owner, for a set time. Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members can redeem Smacked Shop rewards."]],
-    ["Smacked Shop (Metro)",["Real-life rewards. Members redeem with chips or credits and get a pickup code, then show the code at the shop in person to collect. Anyone can browse.","The owner checks every pickup code before handing anything over. Codes you already have stay valid even if your membership ends, and cancelled codes are refunded automatically."]]]}
+    ["Data Collectors Club",["An exclusive membership granted only by the game's owner, for a set time. Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members can redeem Smacked Shop rewards.","Members earn Reward Points from work: bar, store, club and noodle shifts, courier deliveries, quests and the assembly line. Parts orders, and credits that were mined, won, traded, gifted or earned selling parts, don't count. There is a daily point limit and a monthly reward limit."]],
+    ["Smacked Shop (Metro)",["Real-life rewards. Members redeem with Reward Points (RP) and get a pickup code, then show the code at the shop in person to collect. Anyone can browse.","The owner checks every pickup code before handing anything over. Codes you already have stay valid even if your membership ends, and cancelled codes are refunded automatically."]]]}
 };
 let guideTab="start";
 function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_guide_seen","1"); }catch(e){}
@@ -2277,7 +2278,7 @@ function openBartender(){
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Take a job",onclick:()=>{ save.quest=newQuest(); persist(); openBartender(); }}))); }
   else { const have=questCount(q); body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:`Deliver ${q.qty} ${TYPE_N[q.type]}${q.qty>1?"s":""}`}),el("span",{text:`You have ${have}/${q.qty}. Lowest-worth parts are handed over first.`}),el("span",{class:"r-uncommon",text:`Reward ₵${q.reward} + a mystery crate (better odds of rare)`}))));
     const turn=el("button",{class:"btn hot",type:"button",text:"Hand over parts",onclick:()=>{ let need=q.qty; for(const it of CAT.filter(i=>i.t===q.type).sort((a,b)=>a.v-b.v)){ while(need>0&&(save.inv[it.id]||0)>0){ addItem(it.id,-1); need--; } }
-      save.credits+=q.reward; const id=rollItem(1.2); addItem(id); save.quest=null; persist(); toast(`Job done: +₵${q.reward}`,"#ffb84a"); toast(`Crate: ${BY[id].n} (${BY[id].r})`,RAR[BY[id].r].c); beep(1300,.1); openBartender(); }});
+      save.credits+=q.reward; earnRP(q.reward); const id=rollItem(1.2); addItem(id); save.quest=null; persist(); toast(`Job done: +₵${q.reward}`,"#ffb84a"); toast(`Crate: ${BY[id].n} (${BY[id].r})`,RAR[BY[id].r].c); beep(1300,.1); openBartender(); }});
     if(have<q.qty) turn.disabled=true;
     body.append(el("div",{class:"row"},turn,el("button",{class:"btn",type:"button",text:"Drop this job",onclick:()=>{ save.quest=null; persist(); openBartender(); }}))); }
   body.append(el("div",{class:"row"},
@@ -2680,7 +2681,7 @@ function startShift(){ shift={served:0,earned:0,tips:0,start:Date.now()}; custom
 async function clockOut(){
   if(!onShift()) return; clearInterval(beatTimer); const slot=mySlot; mySlot=-1;
   if(DB){ try{ await DB.doc("staff/slot"+slot).set({by:null,beat:0}); }catch(e){} } else staffSlots[0]=null;
-  const mins=Math.floor((Date.now()-shift.start)/60e3); const wage=shift.served?Math.min(120,mins*2):0; save.credits+=wage; persist();
+  const mins=Math.floor((Date.now()-shift.start)/60e3); const wage=shift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage); persist();
   toast(`Shift over: served ${shift.served}, earned ₵${shift.earned} + ₵${shift.tips} tips + ₵${wage} wages`,"#ffb84a");
   customers.forEach(c=>c.leaving=true); shift=null; pushPresence(true);
 }
@@ -2701,7 +2702,7 @@ function tickCustomers(){
     if(c.arrived&&!c.leaving){ c.dir=-1; c.left-=dt; if(c.left<=0){ c.leaving=true; toast("A customer got tired of waiting and left."); beep(160,.12); } } }
   customers=customers.filter(c=>!(c.leaving&&c.x<=57));
 }
-function payShift(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; if(shift){ shift.served++; shift.earned+=base; shift.tips+=tip; } persist(); toast(`+₵${base}${tip?` and ₵${tip} tip`:""}`,"#ffb84a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
+function payShift(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; earnRP(base+tip); if(shift){ shift.served++; shift.earned+=base; shift.tips+=tip; } persist(); toast(`+₵${base}${tip?` and ₵${tip} tip`:""}`,"#ffb84a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
 
 /* drink mixing minigame */
 function mixDrink(drinkId,sub,done){
@@ -2889,7 +2890,7 @@ function activeJob(id){ return (save.jobs||[]).find(j=>j.id===id); }
 function acceptJob(o){ if(save.jobs.length>=JOB_MAX){ toast(`You can hold ${JOB_MAX} jobs at once. Finish or drop one first.`); return; }
   save.jobs.push({...o,picked:false,deadline:0}); save.taken=[...(save.taken||[]),o.id].slice(-30); persist(); toast("Job accepted: "+o.label,"#f5e663"); beep(900,.06); }
 function dropJob(j,msg){ save.jobs=save.jobs.filter(x=>x!==j); persist(); if(msg) toast(msg); }
-function finishJob(j){ save.credits+=j.reward; save.chips+=j.chips||0; save.jobsDone=(save.jobsDone||0)+1; dropJob(j); toast(`Job done: +₵${j.reward}${j.chips?` +${j.chips} chips`:""}`,"#f5e663"); emote("cheer"); beep(1300,.08); setTimeout(()=>beep(1700,.1),90);
+function finishJob(j){ save.credits+=j.reward; if(!(j.t&&j.qty)) earnRP(j.reward); /* parts orders pay no RP: parts can come from duels, miners or trades */ save.chips+=j.chips||0; save.jobsDone=(save.jobsDone||0)+1; dropJob(j); toast(`Job done: +₵${j.reward}${j.chips?` +${j.chips} chips`:""}`,"#f5e663"); emote("cheer"); beep(1300,.08); setTimeout(()=>beep(1700,.1),90);
   if(save.jobsDone%5===0){ const id=rollItem(1.5); addItem(id); persist(); toast(`Dispatch bonus for ${save.jobsDone} jobs: ${BY[id].n}`,RAR[BY[id].r].c); } }
 function tickJobs(){ for(const j of save.jobs||[]) if(j.kind==="courier"&&j.picked&&Date.now()>j.deadline){ dropJob(j,"The package timed out. Courier job failed."); beep(140,.2,"sawtooth"); break; } }
 function courierCarrying(){ return (save.jobs||[]).find(j=>j.kind==="courier"&&j.picked); }
@@ -2976,7 +2977,7 @@ function bbStart(){ bbShift={served:0,earned:0,tips:0,start:Date.now()}; bbCusto
   pushPresence(true); closePanel(); toast("Shift started at Byte Bowl Noodles. Shoppers will line up at the stall.","#ff5a4a"); chatLine(null,"Stand at Byte Bowl Noodles and press E to see orders, then cook each one in ticket order.","sys"); }
 async function bbClockOut(){ if(bbSlot<0) return; clearInterval(bbBeat); const slot=bbSlot; bbSlot=-1;
   if(DB){ try{ await DB.doc("staff/bbslot"+slot).set({by:null,beat:0}); }catch(e){} } else bbSlots[0]=null;
-  const mins=Math.floor((Date.now()-bbShift.start)/60e3), wage=bbShift.served?Math.min(120,mins*2):0; save.credits+=wage; persist();
+  const mins=Math.floor((Date.now()-bbShift.start)/60e3), wage=bbShift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage); persist();
   toast(`Shift over at Byte Bowl: served ${bbShift.served}, earned ₵${bbShift.earned} + ₵${bbShift.tips} tips + ₵${wage} wages`,"#ff5a4a");
   bbCustomers.forEach(c=>c.leaving=true); bbShift=null; pushPresence(true); }
 function bbSpawn(){ const spot=BB_SPOTS.find(x=>!bbCustomers.some(c=>c.spot===x&&!c.leaving)); if(spot==null) return;
@@ -3003,7 +3004,7 @@ function bbServe(c){ const d=BY[c.want];
     if(!bbShift){ closePanel(); return; }
     if(!bbCustomers.includes(c)||c.leaving){ addItem(c.want); persist(); toast(`They left before you finished. The ${d.t==="food"?"food":"drink"} went to your stash.`); bbConsole(); return; }
     const tip=Math.round(Math.max(0,4+(c.left/c.max)*10-res.mistakes*4)*tipMult()); c.leaving=true; c.happy=T;
-    save.credits+=d.v+tip; bbShift.served++; bbShift.earned+=d.v; bbShift.tips+=tip; persist(); toast(`+₵${d.v}${tip?` and ₵${tip} tip`:""}`,"#ff5a4a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); bbConsole(); }); }
+    save.credits+=d.v+tip; earnRP(d.v+tip); bbShift.served++; bbShift.earned+=d.v; bbShift.tips+=tip; persist(); toast(`+₵${d.v}${tip?` and ₵${tip} tip`:""}`,"#ff5a4a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); bbConsole(); }); }
 setInterval(()=>{ if(currentView!=="bbconsole"||$("#overlay").hidden||!bbShift) return; const sig=JSON.stringify([bbCustomers.filter(c=>c.arrived&&!c.leaving).map(c=>c.id+":"+Math.ceil(c.left/5)),bbShift.served]); if(sig!==bbSig){ bbSig=sig; const sc=document.querySelector(".panel .body"); const top=sc?sc.scrollTop:0; bbConsole(true); const nb=document.querySelector(".panel .body"); if(nb) nb.scrollTop=top; } },1000);
 
 /* --- drawing */
@@ -3592,6 +3593,20 @@ function openUpload(){
 
 /* ============================================================ SMACKED SHOP (real-life rewards, owner-run) */
 let IS_ADMIN=false, ASSETS=null;
+/* Reward Points: a members-only balance earned from work (shifts, jobs, quests, assembly line). Mined, won, traded,
+   gifted or sold credits never become points. Smacked Shop takes points only, and each member can redeem at most
+   ECON.capc cents of real cost per calendar month (UTC). The cap is also enforced by the Firestore rules. */
+let ECON={price:50,capc:1400,rate:8000,dayMax:6000};
+function cleanEcon(d){ d=d||{}; const n=(v,a,b,def)=>{ v=+v; return isFinite(v)&&v>0?clamp(v,a,b):def; }; return {price:n(d.price,1,1000,50),capc:Math.round(n(d.capc,1,100000,1400)),rate:Math.round(n(d.rate,1,1e7,8000)),dayMax:Math.round(n(d.dayMax,1,1e7,6000))}; }
+function dayKey(){ const t=new Date(); return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate(); }
+function monthKey(){ const t=new Date(); return t.getUTCFullYear()+"-"+(t.getUTCMonth()+1); }
+function earnRP(amount){ amount=Math.floor(+amount||0); if(amount<=0||!myId||!dccActive(myId)) return 0; const k=dayKey(); if(!save.rpDay||save.rpDay.d!==k) save.rpDay={d:k,n:0};
+  const g=Math.min(amount,Math.max(0,ECON.dayMax-save.rpDay.n)); if(g<=0) return 0; save.rp=(+save.rp||0)+g; save.rpDay.n+=g; return g; }
+function monthSpentC(){ return myRedeem.month===monthKey()?(Math.floor(+myRedeem.spentc)||0):0; }
+function capLeftC(){ return Math.max(0,ECON.capc-monthSpentC()); }
+function itemRP(it){ return it.rp>0?it.rp:Math.ceil((it.cents||0)/100*ECON.rate); }
+function priceText(x){ return x.cur==="rp"?`${(+x.price||0).toLocaleString()} RP`:x.cur==="chips"?x.price+" chips":"₵"+x.price; }
+const usd=c=>"$"+((+c||0)/100).toFixed(2);
 let shopItems=[], shopInfo={text:""}, myRedeem={codes:[]}, pickupStatus={}, allRedeem={}, codeHash={};
 const shopImgs={};
 const CODE_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -3599,7 +3614,7 @@ function genCode(){ const a=new Uint32Array(8); crypto.getRandomValues(a); const
 function normCode(s){ const t=String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,""); const b=t.startsWith("SMK")?t.slice(3):t; return b.length===8?`SMK-${b.slice(0,4)}-${b.slice(4)}`:""; }
 async function hashOf(code){ if(!codeHash[code]) codeHash[code]=await sha("smacked:"+code); return codeHash[code]; }
 function cleanItem(id,d){ if(!d||typeof d!=="object") return null; return { id, title:String(d.title||"Untitled").slice(0,60), desc:String(d.desc||"").slice(0,400), price:clamp(Math.floor(+d.price)||0,0,1e7), cur:d.cur==="chips"?"chips":"credits",
-  stock:clamp(Math.floor(+d.stock)||0,0,100000), sold:clamp(Math.floor(+d.sold)||0,0,100000), active:d.active!==false, img:typeof d.img==="string"&&/^(\/|https:|blob:|data:image\/)/.test(d.img)?d.img:"", imgId:typeof d.imgId==="string"?d.imgId:"", order:+d.order||0 }; }
+  stock:clamp(Math.floor(+d.stock)||0,0,100000), sold:clamp(Math.floor(+d.sold)||0,0,100000), cents:clamp(Math.round(+d.cents)||0,0,1000000), rp:clamp(Math.floor(+d.rp)||0,0,1e9), active:d.active!==false, img:typeof d.img==="string"&&/^(\/|https:|blob:|data:image\/)/.test(d.img)?d.img:"", imgId:typeof d.imgId==="string"?d.imgId:"", order:+d.order||0 }; }
 function remaining(it){ return Math.max(0,it.stock-it.sold); }
 function statusOf(code){ const h=codeHash[code]; return (h&&pickupStatus[h])||{status:"ready"}; }
 const STATUS_N={ready:"Ready for pickup",picked:"Picked up",cancelled:"Cancelled · refunded"};
@@ -3611,7 +3626,7 @@ function itemVisual(it,px){ if(it.img){ const im=el("img",{src:it.img,alt:it.tit
 
 /* --- customer side */
 function openSmacked(tab="shop"){
-  const body=panel("SMACKED SHOP","Real-life rewards. Redeem with chips or credits, get a pickup code, and show it at the shop to collect your item."); currentView="smacked:"+tab;
+  const body=panel("SMACKED SHOP","Real-life rewards. Members redeem with Reward Points, get a pickup code, and show it at the shop to collect the item."); currentView="smacked:"+tab;
   if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Smacked Shop needs a signed-in claude.ai session so your pickup codes are saved to your account."})); return; }
   const tabs=el("div",{class:"tabs"}); const T2=[["shop","Shop"],["codes",`My pickup codes (${(myRedeem.codes||[]).length})`]]; if(IS_ADMIN) T2.push(["admin","Owner tools"]);
   T2.forEach(([k,l])=>tabs.append(el("button",{class:"btn"+(k==="admin"?" hot":""),type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>openSmacked(k)}))); body.append(tabs);
@@ -3622,34 +3637,40 @@ function openSmacked(tab="shop"){
   const live=shopItems.filter(i=>i.active).sort((a,b)=>a.order-b.order||a.title.localeCompare(b.title));
   if(!live.length){ body.append(el("div",{class:"empty",text:IS_ADMIN?"Your shop is empty. Open Owner tools to add your first item.":"The shelves are empty right now. New rewards drop here when the owner stocks them."})); return; }
   const g=el("div",{class:"grid",style:"grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"});
-  const okRedeem=canRedeem(); for(const it of live){ const left=remaining(it); const c=el("button",{class:"card",type:"button",onclick:()=>redeemConfirm(it)}); if(!okRedeem) c.append(el("div",{class:"r-epic",style:"font-size:10px",text:"🔒 Members only"})); c.append(itemVisual(it,96),el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:it.cur==="chips"?"r-rare":"r-common",style:it.cur==="credits"?"color:var(--amber)":"",text:it.cur==="chips"?`${it.price} chips`:`₵${it.price}`}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
+  const okRedeem=canRedeem(); for(const it of live){ const left=remaining(it); const c=el("button",{class:"card",type:"button",onclick:()=>redeemConfirm(it)}); if(!okRedeem) c.append(el("div",{class:"r-epic",style:"font-size:10px",text:"🔒 Members only"})); c.append(itemVisual(it,96),el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:"r-uncommon",text:it.cents>0?`${itemRP(it).toLocaleString()} RP`:"Not priced yet"}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
   body.append(g);
 }
 function canRedeem(){ return IS_ADMIN||dccActive(myId); }
 function smackedGate(){ if(IS_ADMIN) return el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:"Members-only rewards"}),el("span",{class:"sub",text:"Only Data Collectors Club members can redeem here. You can always redeem as the owner. Grant memberships from the Admin Panel."})));
-  if(dccActive(myId)){ const d=dcc[myId]; return el("div",{class:"detail"},dccCanvas(d.sym,32),el("div",{class:"info"},el("strong",{text:"Data Collectors Club member"}),el("span",{class:"r-uncommon",text:"You can redeem Smacked Shop rewards"+(d.until?` until ${new Date(d.until).toLocaleDateString()}.`:".")}))); }
+  if(dccActive(myId)){ const d=dcc[myId]; return el("div",{class:"detail"},dccCanvas(d.sym,32),el("div",{class:"info"},el("strong",{text:"Data Collectors Club member"}),el("span",{class:"r-uncommon",text:"You can redeem Smacked Shop rewards"+(d.until?` until ${new Date(d.until).toLocaleDateString()}.`:".")}),
+    el("span",{text:`Reward Points: ${Math.floor(+save.rp||0).toLocaleString()} · Monthly reward limit: ${Math.round(capLeftC()/ECON.capc*100)}% left (resets on the 1st)`}),
+    el("span",{class:"sub",text:"Earn points by working shifts, making courier deliveries, finishing quests, and building on the assembly line."}))); }
   const d=dcc[myId]; const why=d&&d.on&&d.until&&d.until<=Date.now()?`Your membership expired on ${new Date(d.until).toLocaleDateString()}.`:d&&!d.on?"Your membership is switched off right now.":"You're not a member yet.";
-  return el("div",{class:"detail",style:"border-color:var(--mag)"},el("div",{class:"info"},el("strong",{text:"🔒 Members only: Data Collectors Club"}),el("span",{text:`Smacked Shop rewards can only be redeemed by Data Collectors Club members. ${why} Membership is granted by the game's owner.`}),el("span",{class:"sub",text:"You can still browse what's in stock, and any pickup codes you already have stay valid."}))); }
+  return el("div",{class:"detail",style:"border-color:var(--mag)"},el("div",{class:"info"},el("strong",{text:"🔒 Members only: Data Collectors Club"}),el("span",{text:`Smacked Shop rewards can only be redeemed by Data Collectors Club members. ${why} Membership is $${ECON.price}/month. Ask the game's owner to join.`}),el("span",{class:"sub",text:"You can still browse what's in stock, and any pickup codes you already have stay valid."}))); }
 function redeemConfirm(it){
   const body=panel("Redeem: "+it.title,"This is a real item. After redeeming you get a pickup code to show in person."); currentView=null;
-  const bal=it.cur==="chips"?save.chips:save.credits; const left=remaining(it);
+  const bal=Math.floor(+save.rp||0), left=remaining(it), price=itemRP(it), priced=it.cents>0, fits=it.cents<=capLeftC(), ok=canRedeem();
   body.append(el("div",{class:"detail"},(()=>{ const v=itemVisual(it,120); v.style.width="140px"; v.style.flex="none"; return v; })(),el("div",{class:"info"},el("strong",{text:it.title}),it.desc?el("span",{style:"white-space:pre-wrap",text:it.desc}):null,
-    el("span",{text:`Price: ${it.cur==="chips"?it.price+" chips":"₵"+it.price}`}),el("span",{class:"sub",text:`You have ${Math.floor(bal).toLocaleString()} ${it.cur}. ${left} left in stock.`}))));
-  const go=el("button",{class:"btn hot",type:"button",text:`Redeem for ${it.cur==="chips"?it.price+" chips":"₵"+it.price}`,onclick:()=>redeemItem(it,go)});
-  if(bal<it.price||!left||!canRedeem()) go.disabled=true; if(!canRedeem()) go.textContent="🔒 Members only";
-  if(!canRedeem()) body.append(smackedGate());
+    el("span",{text:priced?`Price: ${price.toLocaleString()} Reward Points`:"This item isn't priced yet."}),el("span",{class:"sub",text:`You have ${bal.toLocaleString()} Reward Points. ${left} left in stock.`}))));
+  const go=el("button",{class:"btn hot",type:"button",text:ok?`Redeem for ${price.toLocaleString()} RP`:"🔒 Members only",onclick:()=>redeemItem(it,go)});
+  if(!ok||!priced||bal<price||!left||!fits) go.disabled=true;
+  if(!ok) body.append(smackedGate());
   body.append(el("div",{class:"row"},go,el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openSmacked("shop")})));
-  if(bal<it.price) body.append(el("div",{class:"r-epic",text:`You need ${Math.ceil(it.price-bal)} more ${it.cur}.`}));
+  if(ok&&priced&&bal<price) body.append(el("div",{class:"r-epic",text:`You need ${(price-bal).toLocaleString()} more Reward Points. Members earn them by working shifts, making courier deliveries, finishing quests, and building on the assembly line.`}));
+  if(ok&&priced&&!fits) body.append(el("div",{class:"r-epic",text:"This would go over your monthly reward limit. Your limit resets on the 1st of the month."}));
 }
 async function redeemItem(it,btn){
   if(!canRedeem()){ toast("Smacked Shop rewards are for Data Collectors Club members only."); return openSmacked("shop"); }
   const fresh=shopItems.find(x=>x.id===it.id); if(!fresh||!fresh.active||!remaining(fresh)){ toast("That reward just sold out."); return openSmacked("shop"); }
-  const bal=it.cur==="chips"?save.chips:save.credits; if(bal<it.price) return;
-  btn.disabled=true; if(it.cur==="chips") save.chips-=it.price; else save.credits-=it.price; persist();
-  const code=genCode(); const entry={code,item:it.id,title:it.title,price:it.price,cur:it.cur,at:Date.now()};
+  if(!(fresh.cents>0)){ toast("That reward isn't priced yet."); return openSmacked("shop"); }
+  const price=itemRP(fresh); if((+save.rp||0)<price) return;
+  if(fresh.cents>capLeftC()){ toast("That would go over your monthly reward limit."); return; }
+  btn.disabled=true; save.rp-=price; persist();
+  const code=genCode(), month=monthKey(), cents=fresh.cents, spentc=monthSpentC()+cents;
+  const entry={code,item:fresh.id,title:fresh.title,price,cur:"rp",cents,at:Date.now()};
   const codes=[...(myRedeem.codes||[]),entry].slice(-100);
-  try{ await DB.doc("redeem/"+myId).set({name:myName||"Runner",codes}); myRedeem={...myRedeem,codes}; await hashOf(code); }
-  catch(e){ if(it.cur==="chips") save.chips+=it.price; else save.credits+=it.price; persist(); toast(e&&/permission/i.test(String(e.code||e.message||""))?"Redemption refused: Data Collectors Club membership required. You weren't charged.":"The redemption didn't go through. You weren't charged."); btn.disabled=false; return; }
+  try{ await DB.doc("redeem/"+myId).set({name:myName||"Runner",codes,month,spentc}); myRedeem={...myRedeem,codes,month,spentc}; await hashOf(code); }
+  catch(e){ save.rp+=price; persist(); toast(e&&/permission/i.test(String(e.code||e.message||""))?"Redemption refused: it needs an active membership and room in your monthly reward limit. You weren't charged.":"The redemption didn't go through. You weren't charged."); btn.disabled=false; return; }
   beep(1200,.08); setTimeout(()=>beep(1600,.12),90); emote("cheer");
   const body=panel("Redeemed!","Show this code at Smacked Shop to pick up your item. It's also saved under My pickup codes."); currentView=null;
   const codeEl=el("div",{class:"bigcode",text:code});
@@ -3662,7 +3683,7 @@ function myCodesView(body){
   if(!codes.length){ body.append(el("div",{class:"empty",text:"You haven't redeemed anything yet."})); return; }
   const l=el("div",{class:"list"});
   for(const e of codes){ const st=statusOf(e.code).status;
-    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:e.code}),el("div",{text:e.title}),el("div",{class:"sub",text:`${e.cur==="chips"?e.price+" chips":"₵"+e.price} · ${new Date(e.at).toLocaleString()}`})),
+    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:e.code}),el("div",{text:e.title}),el("div",{class:"sub",text:`${priceText(e)} · ${new Date(e.at).toLocaleString()}`})),
       el("span",{class:"tag "+(st==="picked"?"r-uncommon":st==="cancelled"?"r-epic":""),style:st==="ready"?"color:var(--amber)":"",text:STATUS_N[st]||st}))); }
   body.append(l);
 }
@@ -3670,17 +3691,18 @@ function myCodesView(body){
 /* --- owner tools */
 let adminTab="inventory", editing=null, confirmDel=null;
 function adminTools(body){
-  const tabs=el("div",{class:"tabs"}); [["inventory","Inventory"],["redemptions","Redemptions"],["verify","Verify a code"],["info","Pickup info"]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(adminTab===k),text:l,onclick:()=>{ adminTab=k; editing=null; openSmacked("admin"); }}))); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); [["inventory","Inventory"],["profit","Profit settings"],["redemptions","Redemptions"],["verify","Verify a code"],["info","Pickup info"]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(adminTab===k),text:l,onclick:()=>{ adminTab=k; editing=null; openSmacked("admin"); }}))); body.append(tabs);
   if(adminTab==="inventory"){
     if(editing) return itemForm(body,editing);
-    body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Add an item",onclick:()=>{ editing={id:"",title:"",desc:"",price:100,cur:"credits",stock:1,sold:0,active:true,img:"",imgId:""}; openSmacked("admin"); }})));
+    body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Add an item",onclick:()=>{ editing={id:"",title:"",desc:"",price:0,cur:"rp",cents:0,rp:0,stock:1,sold:0,active:true,img:"",imgId:""}; openSmacked("admin"); }})));
     if(!shopItems.length){ body.append(el("div",{class:"empty",text:"No items yet. Add one: give it a name, a price in chips or credits, how many you have, and a photo if you like."})); return; }
     const l=el("div",{class:"list"});
     for(const it of [...shopItems].sort((a,b)=>a.order-b.order||a.title.localeCompare(b.title))){ const v=itemVisual(it,40); v.style.width="56px"; v.style.flex="none";
       const del=el("button",{class:"btn",type:"button",text:confirmDel===it.id?"Confirm delete":"Delete",onclick:async()=>{ if(confirmDel!==it.id){ confirmDel=it.id; openSmacked("admin"); return; } confirmDel=null; try{ await DB.doc("shop/"+it.id).delete(); toast("Item deleted."); }catch(e){ toast("Couldn't delete that item."); } openSmacked("admin"); }});
-      l.append(el("div",{class:"li"},v,el("div",{class:"grow"},el("div",{text:it.title+(it.active?"":" (hidden)")}),el("div",{class:"sub",text:`${it.cur==="chips"?it.price+" chips":"₵"+it.price} · ${remaining(it)} of ${it.stock} left · ${it.sold} redeemed`})),
+      l.append(el("div",{class:"li"},v,el("div",{class:"grow"},el("div",{text:it.title+(it.active?"":" (hidden)")}),el("div",{class:"sub",text:`${it.cents>0?itemRP(it).toLocaleString()+" RP · costs you "+usd(it.cents):"Not priced: set what it costs you"} · ${remaining(it)} of ${it.stock} left · ${it.sold} redeemed`})),
         el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Edit",onclick:()=>{ editing={...it}; openSmacked("admin"); }}),del))); }
     body.append(l); return; }
+  if(adminTab==="profit") return profitSettings(body);
   if(adminTab==="redemptions"){
     const rows=allRows(); const pending=rows.filter(r=>statusOf(r.code).status==="ready").length;
     body.append(el("div",{class:"row"},el("span",{class:"pill",text:`${rows.length} total`}),el("span",{class:"pill cr",text:`${pending} waiting for pickup`})));
@@ -3701,18 +3723,38 @@ function adminTools(body){
 }
 function allRows(){ const rows=[]; for(const [uid,d] of Object.entries(allRedeem)) for(const e of (d.codes||[])) if(e&&typeof e.code==="string") rows.push({...e,uid,uname:cleanName(d.name||"")||nameOf(uid)}); return rows.sort((a,b)=>(b.at||0)-(a.at||0)); }
 function redemptionRow(r){ const st=statusOf(r.code).status;
-  const row=el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:r.code}),el("div",{text:`${r.title} · ${r.cur==="chips"?r.price+" chips":"₵"+r.price}`}),el("div",{class:"sub",text:`${r.uname} · ${new Date(r.at).toLocaleString()}`})),
+  const row=el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:r.code}),el("div",{text:`${r.title} · ${priceText(r)}${r.cents?" · costs you "+usd(r.cents):""}`}),el("div",{class:"sub",text:`${r.uname} · ${new Date(r.at).toLocaleString()}`})),
     el("span",{class:"tag "+(st==="picked"?"r-uncommon":st==="cancelled"?"r-epic":""),style:st==="ready"?"color:var(--amber)":"",text:STATUS_N[st]||st}));
   if(st==="ready") row.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Mark picked up",onclick:()=>setPickup(r.code,"picked")}),el("button",{class:"btn",type:"button",text:"Cancel & refund",onclick:()=>setPickup(r.code,"cancelled")})));
   return row; }
 async function setPickup(code,status){ try{ const h=await hashOf(code); await DB.doc("pickups/"+h).set({status,at:Date.now()}); pickupStatus[h]={status}; toast(status==="picked"?`${code} marked picked up.`:`${code} cancelled. The player is refunded automatically.`); syncSold(); }
   catch(e){ toast("Couldn't update that code. Only the shop owner can do this."); } openSmacked("admin"); }
+function profitSettings(body){
+  const num=(id,v,step)=>el("input",{class:"num",id,type:"number",min:"0",step:step||"1",value:String(v)});
+  const price=num("ec_price",ECON.price,"1"), cap=num("ec_cap",(ECON.capc/100).toFixed(2),"0.5"), rate=num("ec_rate",ECON.rate,"500"), day=num("ec_day",ECON.dayMax,"500");
+  const out=el("div",{class:"list"});
+  const calc=()=>{ const P=+price.value||0, C=+cap.value||0, fee=P*0.029+0.30, keep=P-fee-C, pct=P>0?keep/P*100:0; out.innerHTML="";
+    out.append(el("div",{class:"detail",style:pct>=65?"border-color:#43f0a4":"border-color:#ff5a4a"},el("div",{class:"info"},
+      el("strong",{class:pct>=65?"r-uncommon":"r-epic",text:`Worst-case profit: ${pct.toFixed(0)}% per member`}),
+      el("span",{text:`Even if a member maxes out their limit, you keep $${keep.toFixed(2)} of $${P.toFixed(2)} after card fees (about 2.9% + $0.30). ${pct>=65?"That's at or above your 65% goal.":`To reach 65%, keep the limit at or under $${Math.max(0,P*0.35-fee).toFixed(2)}.`}`}),
+      el("span",{class:"sub",text:`A member earning their full ${(+day.value||0).toLocaleString()} points every day for 30 days could cover about $${((+day.value||0)*30/Math.max(1,+rate.value||1)).toFixed(2)} of rewards, so the monthly limit is what stops them.`})))); };
+  [price,cap,rate,day].forEach(i=>i.addEventListener("input",calc));
+  const msg=el("span",{class:"sub"});
+  body.append(el("div",{class:"row"},el("label",{class:"fld"},"Membership price ($/month)",price),el("label",{class:"fld"},"Monthly reward limit per member ($)",cap)),
+    el("div",{class:"row"},el("label",{class:"fld"},"Reward Points per $1 of real cost",rate),el("label",{class:"fld"},"Most points a member can earn per day",day)),out,
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Save profit settings",onclick:async()=>{
+      const d={price:Math.round(+price.value||0),capc:Math.round((+cap.value||0)*100),rate:Math.round(+rate.value||0),dayMax:Math.round(+day.value||0),at:Date.now()};
+      if(!(d.price>0&&d.capc>0&&d.rate>0&&d.dayMax>0)){ msg.textContent="Every field needs a number above zero."; return; }
+      try{ await DB.doc("shopinfo/econ").set(d); ECON=cleanEcon(d); msg.textContent="Saved. Members see the new limit right away."; }catch(e){ msg.textContent="Couldn't save. Only the shop owner can change this."; } }}),msg),
+    el("p",{class:"sub",text:"Membership is still turned on per player from the Admin Panel; the price here is what players are told. Cancelled redemptions still count toward that month's limit."}));
+  calc(); }
 function itemForm(body,it){
   const f=(id,label,input)=>el("label",{class:"fld"},label,input);
   const title=el("input",{class:"num",id:"it_title",maxlength:"60",value:it.title,placeholder:"e.g. Smacked hoodie (size L)"});
   const desc=el("textarea",{id:"it_desc",rows:"3",maxlength:"400",style:"width:100%;font-family:var(--f-ui);background:#0d0818;color:var(--text);border:1px solid var(--line);padding:8px"}); desc.value=it.desc;
-  const price=el("input",{class:"num",id:"it_price",type:"number",min:"0",value:String(it.price)});
-  const cur=el("select",{id:"it_cur"}); [["credits","Credits (₵)"],["chips","Chips"]].forEach(([v,t])=>cur.append(el("option",{value:v,text:t}))); cur.value=it.cur;
+  const cost=el("input",{class:"num",id:"it_cost",type:"number",min:"0",step:"0.01",value:it.cents?(it.cents/100).toFixed(2):"",placeholder:"e.g. 8.50"});
+  const price=el("input",{class:"num",id:"it_rp",type:"number",min:"0",step:"100",value:it.cents?String(itemRP(it)):""});
+  cost.addEventListener("input",()=>{ const c=Math.round((+cost.value||0)*100); price.value=c>0?String(Math.ceil(c/100*ECON.rate)):""; });
   const stock=el("input",{class:"num",id:"it_stock",type:"number",min:"0",value:String(it.stock)});
   const active=el("input",{type:"checkbox",id:"it_active"}); active.checked=it.active;
   const preview=el("div",{style:"width:120px"}); const showPrev=()=>{ preview.innerHTML=""; const v=itemVisual(it,60); preview.append(v); }; showPrev();
@@ -3720,12 +3762,15 @@ function itemForm(body,it){
   file.onchange=async()=>{ const fl=file.files&&file.files[0]; if(!fl) return; if(fl.size>8e6){ upStatus.textContent="That image is over 8 MB. Pick a smaller one."; return; } upStatus.textContent="Uploading…";
     try{ const r=await ASSETS.upload(fl); it.img=r.url; it.imgId=r.id; upStatus.textContent="Photo uploaded."; showPrev(); }catch(e){ upStatus.textContent="Upload failed. Try another image."; } };
   body.append(el("strong",{text:it.id?"Edit item":"New item"}),el("div",{class:"detail",style:"align-items:flex-start"},preview,el("div",{class:"info"},f("t","Name",title),f("d","Description (size, color, details)",desc),
-    el("div",{class:"row"},f("p","Price",price),f("c","Paid with",cur),f("s","Stock (how many you have)",stock)),
+    el("div",{class:"row"},f("c","What it costs you ($)",cost),f("p","Price in Reward Points",price),f("s","Stock (how many you have)",stock)),
+    el("span",{class:"sub",text:`Points fill in at ${ECON.rate.toLocaleString()} RP per $1 (change this in Profit settings). Items over the ${usd(ECON.capc)} monthly limit can never be redeemed.`}),
     el("label",{class:"row",style:"gap:8px"},active,el("span",{text:"Visible in the shop"})),f("i","Photo",file),upStatus)));
   const msg=el("span",{class:"r-epic"});
   body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:it.id?"Save changes":"Add to shop",onclick:async()=>{
       const t=title.value.trim(); if(t.length<2){ msg.textContent="Give the item a name."; return; }
-      const doc={title:t.slice(0,60),desc:desc.value.slice(0,400),price:clamp(Math.floor(+price.value)||0,0,1e7),cur:cur.value==="chips"?"chips":"credits",stock:clamp(Math.floor(+stock.value)||0,0,100000),sold:it.sold||0,active:active.checked,img:it.img||"",imgId:it.imgId||"",order:it.order||Date.now(),at:Date.now()};
+      const cents=clamp(Math.round((+cost.value||0)*100),0,1000000); if(cents<=0){ msg.textContent="Enter what the item costs you, so the monthly limit can protect your profit."; return; }
+      const rp=clamp(Math.floor(+price.value)||Math.ceil(cents/100*ECON.rate),1,1e9);
+      const doc={title:t.slice(0,60),desc:desc.value.slice(0,400),price:rp,cur:"rp",cents,rp,stock:clamp(Math.floor(+stock.value)||0,0,100000),sold:it.sold||0,active:active.checked,img:it.img||"",imgId:it.imgId||"",order:it.order||Date.now(),at:Date.now()};
       const id=it.id||("i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
       try{ await DB.doc("shop/"+id).set(doc); toast(it.id?"Item updated.":"Item added to Smacked Shop."); editing=null; openSmacked("admin"); }catch(e){ msg.textContent="Couldn't save. Only the shop owner can change inventory."; } }}),
     el("button",{class:"btn",type:"button",text:"Cancel",onclick:()=>{ editing=null; openSmacked("admin"); }}),msg));
@@ -3734,8 +3779,8 @@ async function syncSold(){ if(!IS_ADMIN||!DB) return; const rows=allRows(); for(
   const cnt={}; for(const r of rows) if(statusOf(r.code).status!=="cancelled") cnt[r.item]=(cnt[r.item]||0)+1;
   for(const it of shopItems){ const n=cnt[it.id]||0; if(n!==it.sold){ try{ await DB.doc("shop/"+it.id).update({sold:n}); }catch(e){} } } }
 async function checkRefunds(){ if(!DB||!myId) return; let changed=false; const codes=(myRedeem.codes||[]).map(e=>({...e}));
-  for(const e of codes){ await hashOf(e.code); if(statusOf(e.code).status==="cancelled"&&!e.refunded){ e.refunded=true; changed=true; if(e.cur==="chips") save.chips+=e.price; else save.credits+=e.price; toast(`${e.title} (${e.code}) was cancelled. Refunded ${e.cur==="chips"?e.price+" chips":"₵"+e.price}.`,"#ffb84a"); } }
-  if(changed){ persist(); try{ await DB.doc("redeem/"+myId).set({name:myName||"Runner",codes}); }catch(e){} } }
+  for(const e of codes){ await hashOf(e.code); if(statusOf(e.code).status==="cancelled"&&!e.refunded){ e.refunded=true; changed=true; if(e.cur==="rp") save.rp=(+save.rp||0)+(+e.price||0); else if(e.cur==="chips") save.chips+=e.price; else save.credits+=e.price; toast(`${e.title} (${e.code}) was cancelled. Refunded ${priceText(e)}.`,"#ffb84a"); } }
+  if(changed){ persist(); const keep=myRedeem.month?{month:myRedeem.month,spentc:Math.floor(+myRedeem.spentc)||0}:{}; try{ await DB.doc("redeem/"+myId).set({name:myName||"Runner",codes,...keep}); }catch(e){} } }
 function refreshSmacked(){ if(currentView&&currentView.startsWith("smacked:")&&!$("#overlay").hidden){ const a=document.activeElement; if(a&&["INPUT","TEXTAREA","SELECT"].includes(a.tagName)&&a.closest(".panel")) return; if(editing) return; const sc=document.querySelector(".panel .body"); const top=sc?sc.scrollTop:0; openSmacked(currentView.split(":")[1]); const nb=document.querySelector(".panel .body"); if(nb) nb.scrollTop=top; } }
 
 /* --- district drawing */
@@ -3854,7 +3899,7 @@ function storyGo(id,fx){ const st=save.story; const r=st.run||(st.run=storyFresh
   if(r.v.san<=0&&!/^end_/.test(id)) id="end_flat"; let N=STORY[id]; if(N&&N.go){ const g=N.go(r.v); if(g) { id=g; N=STORY[id]; } } if(N&&N.fx) N.fx(r.v);
   r.n=id; if(N&&N.end) storyFinish(N.end); persist(); openStory(true); }
 function storyFinish(k){ const st=save.story, E=STORY_END[k]; if(!st.endings.includes(k)) st.endings.push(k); st.runs=(st.runs||0)+1;
-  const gc=Math.max(0,Math.min(STORY_CAP.cr,E.cr)-st.paidC), gh=Math.max(0,Math.min(STORY_CAP.ch,E.ch)-st.paidCh); st.last={k,gc,gh}; st.paidC+=gc; st.paidCh+=gh; save.credits+=gc; save.chips+=gh; hud();
+  const gc=Math.max(0,Math.min(STORY_CAP.cr,E.cr)-st.paidC), gh=Math.max(0,Math.min(STORY_CAP.ch,E.ch)-st.paidCh); st.last={k,gc,gh}; st.paidC+=gc; st.paidCh+=gh; save.credits+=gc; earnRP(gc); save.chips+=gh; hud();
   try{ stTrack("act","Story ending "+E.n); }catch(e){} if(gc||gh) setTimeout(()=>{ toast(`Story Mode · ${E.n}: +₵${gc}${gh?` · +${gh} chips`:""}`,E.col); [392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.14,"triangle"),i*140)); },400); else setTimeout(()=>beep(196,.4,"sine"),200); }
 function storyCorrupt(s,san){ if(san>3) return s; const p=san<=1?.07:san===2?.035:.015, G="█▓▒░#%&@¿¤"; return s.split("").map(c=>c!=="\n"&&c!==" "&&Math.random()<p?G[(Math.random()*G.length)|0]:c).join(""); }
 function openStory(cont){ const st=save.story; if(!cont||!(st.run&&STORY[st.run.n])) return openStoryMenu();
@@ -4021,7 +4066,7 @@ function cbStart(){ cbShift={served:0,earned:0,tips:0,start:Date.now()}; cbCusto
   pushPresence(true); closePanel(); toast("Shift started at Cyber Buys & More. Customers will come to the register.","#43f0a4"); chatLine(null,"Read the customer's request, grab the item from the right aisle, then ring it up at the register.","sys"); }
 async function cbClockOut(){ if(cbSlot<0) return; clearInterval(cbBeat); const slot=cbSlot; cbSlot=-1;
   if(DB){ try{ await DB.doc("cbstaff/slot"+slot).set({by:null,beat:0}); }catch(e){} } else cbSlots[0]=null;
-  const mins=Math.floor((Date.now()-cbShift.start)/60e3), wage=cbShift.served?Math.min(120,mins*2):0; save.credits+=wage; persist();
+  const mins=Math.floor((Date.now()-cbShift.start)/60e3), wage=cbShift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage); persist();
   toast(`Shift over: ${cbShift.served} sales, ₵${cbShift.earned} commission + ₵${cbShift.tips} tips + ₵${wage} wages`,"#43f0a4");
   cbCustomers.forEach(c=>c.leaving=true); cbShift=null; cbHolding=null; pushPresence(true); }
 const CB_SPOTS=[1250,1320];
@@ -4055,7 +4100,7 @@ function ringUp(c){
   const row=el("div",{class:"row"}); for(const o of opts) row.append(el("button",{class:"btn hot",type:"button",style:"min-width:80px;font-size:16px",text:`₵${o}`,onclick:()=>{
       if(!cbCustomers.includes(c)||c.leaving){ toast("They already left."); cbHolding=null; return cbRegister(); }
       const right=o===change; const comm=Math.max(1,Math.round(price*.15)); const tip=right?Math.round((3+(c.left/c.max)*10)*tipMult()):0; const earned=right?comm:Math.ceil(comm/2);
-      save.credits+=earned+tip; cbShift.served++; cbShift.earned+=earned; cbShift.tips+=tip; c.leaving=true; c.happy=T; cbHolding=null; persist();
+      save.credits+=earned+tip; earnRP(earned+tip); cbShift.served++; cbShift.earned+=earned; cbShift.tips+=tip; c.leaving=true; c.happy=T; cbHolding=null; persist();
       if(right){ toast(`Sale! +₵${earned} commission${tip?` +₵${tip} tip`:""}`,"#43f0a4"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
       else { toast(`Wrong change (it was ₵${change}). Pix fixed it. Half commission, no tip.`,"#ff5a4a"); beep(160,.15); }
       cbRegister(); }})); body.append(row);
@@ -4685,7 +4730,7 @@ function asmStart(){ const td=asmToday(); save.asmDay={d:td,n:asmShiftsToday()+1
   asmShift={start:Date.now(),built:0,earned:0,wages:0,tips:0,wageAcc:0,lastPay:Date.now(),streak:0,best:0,lastBuild:Date.now(),fails:0}; asmOrder=null; clearInterval(asmBeat);
   let beatN=0; asmBeat=setInterval(()=>{ if(asmSlot<0||!asmShift) return; if(me.scene!=="assembly"){ asmClockOut(); return; }
     const now=Date.now(), dtm=Math.min(60e3,now-asmShift.lastPay); asmShift.lastPay=now;
-    if(now-asmShift.lastBuild<180e3){ asmShift.wageAcc+=ASM_WAGE*dtm/ASM_WAGE_MS; const pay=Math.floor(asmShift.wageAcc); if(pay>0){ asmShift.wageAcc-=pay; save.credits+=pay; asmShift.wages+=pay; asmShift.earned+=pay; persist(); hud(); if(asmUI&&asmUI.paint) asmUI.paint(); } }
+    if(now-asmShift.lastBuild<180e3){ asmShift.wageAcc+=ASM_WAGE*dtm/ASM_WAGE_MS; const pay=Math.floor(asmShift.wageAcc); if(pay>0){ asmShift.wageAcc-=pay; save.credits+=pay; earnRP(pay); asmShift.wages+=pay; asmShift.earned+=pay; persist(); hud(); if(asmUI&&asmUI.paint) asmUI.paint(); } }
     if(++beatN%4===0&&DB) DB.doc("staff/asm"+asmSlot).update({beat:Date.now()}).catch(()=>{});
     const left=asmShift.start+ASM_SHIFT_MIN*6e4-now; if(left<=0){ toast("Your 60-minute shift is over. Nice work!","#ffd36a"); asmClockOut(); } else if(left<60e3&&!asmShift.warned){ asmShift.warned=1; toast("1 minute left on your shift.","#ffd36a"); } },15e3);
   me.x=ASM_X(asmSlot); me.y=300; me.dir=1; target=null; pushPresence(true); toast(`Clocked in at Bay ${asmSlot+1} (shift ${asmShiftsToday()}/${ASM_SHIFTS_DAY} today). ₵${ASM_WAGE} every 30 min while you keep building, plus speed tips. Shifts last up to ${ASM_SHIFT_MIN} min.`,"#ffd36a"); beep(880,.08); openAsmConsole(); }
@@ -4715,7 +4760,7 @@ function asmPick(t){ if(!asmOrder||!asmUI) return; const need=asmOrder.steps[asm
   if(t!==need){ asmOrder.mist++; asmOrder.pen+=2.5; asmUI.msg.textContent=`Wrong part! That slot needs a ${ASM_PARTS.find(q=>q.t===need).n}. −2.5s`; asmUI.msg.className="r-epic"; beep(160,.12,"square"); return; }
   asmOrder.i++; beep(600+asmOrder.i*80,.04,"triangle"); me.emote={e:"use",t:T};
   if(asmOrder.i>=asmOrder.steps.length){ const left=Math.max(0,asmTimeLeft()), sp=left/asmOrder.limit, perfect=!asmOrder.mist; asmShift.streak++; asmShift.best=Math.max(asmShift.best,asmShift.streak);
-    const pay=asmTip(sp,asmShift.streak,perfect); save.credits+=pay; asmShift.earned+=pay; asmShift.tips=(asmShift.tips||0)+pay; asmShift.built++; questEvent("asm"); asmShift.lastBuild=Date.now(); persist(); hud();
+    const pay=asmTip(sp,asmShift.streak,perfect); save.credits+=pay; earnRP(pay); asmShift.earned+=pay; asmShift.tips=(asmShift.tips||0)+pay; asmShift.built++; questEvent("asm"); asmShift.lastBuild=Date.now(); persist(); hud();
     asmBelt.push({id:BY[asmOrder.icon]?asmOrder.icon:"b_pc_common",x:ASM_X(asmSlot),t0:T}); asmFlash={bay:asmSlot,until:T+1.2,txt:pay?"+₵"+pay+" tip":"✓"};
     asmUI.msg.textContent=`${perfect?"PERFECT · ":""}${asmOrder.n} shipped!${pay?` +₵${pay} speed tip`:" Build faster to earn tips."}`; asmUI.msg.className="r-uncommon"; beep(1200,.08); setTimeout(()=>beep(1500,.1),80); asmNewOrder(); }
   asmUI.paint(); }
@@ -5900,10 +5945,10 @@ function clubStart(){ clubShift={served:0,earned:0,tips:0,start:Date.now()}; pat
   me.seat=null; pushPresence(true); closePanel(); toast("Shift started at The Third Eye. Patrons will take seats and order.","#cf72ff"); chatLine(null,"Check the club bar for orders, prep each item, then carry it to the patron's seat.","sys"); }
 async function clubClockOut(){ if(clubSlot<0) return; clearInterval(clubBeat); const slot=clubSlot; clubSlot=-1;
   if(DB){ try{ await DB.doc("clubstaff/slot"+slot).set({by:null,beat:0}); }catch(e){} } else clubSlots[0]=null;
-  const mins=Math.floor((Date.now()-clubShift.start)/60e3), wage=clubShift.served?Math.min(150,mins*3):0; save.credits+=wage; persist();
+  const mins=Math.floor((Date.now()-clubShift.start)/60e3), wage=clubShift.served?Math.min(150,mins*3):0; save.credits+=wage; earnRP(wage); persist();
   toast(`Shift over: ${clubShift.served} served, ₵${clubShift.earned} + ₵${clubShift.tips} tips + ₵${wage} wages`,"#cf72ff");
   for(const c of patrons) if(!c.served){ c.leaving=true; c.sat=false; } clubShift=null; clubHolding=null; pushPresence(true); }
-function clubPay(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; if(clubShift){ clubShift.served++; clubShift.earned+=base; clubShift.tips+=tip; } persist(); toast(`+₵${base}${tip?` +₵${tip} tip`:""}`,"#cf72ff"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
+function clubPay(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; earnRP(base+tip); if(clubShift){ clubShift.served++; clubShift.earned+=base; clubShift.tips+=tip; } persist(); toast(`+₵${base}${tip?` +₵${tip} tip`:""}`,"#cf72ff"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
 function spawnPatron(){ const free=SEATS.map((_,i)=>i).filter(i=>!seatTaken(i)); if(!free.length) return; const seat=free[(Math.random()*free.length)|0];
   const PIDS=TRIP_IDS.filter(id=>id!=="trip_god"); const w=PIDS.map(id=>({common:5,uncommon:3,rare:2,epic:1})[BY[id].r]||1); let r=Math.random()*w.reduce((a,b)=>a+b,0), want=PIDS[0]; for(let i=0;i<PIDS.length;i++){ if((r-=w[i])<=0){ want=PIDS[i]; break; } }
   patrons.push({id:Math.random().toString(36).slice(2),seat,x:60,y:292,dir:1,phase:0,look:randomLook(),want,max:75,left:75,arrived:false,sat:false,leaving:false,served:false,moving:true}); }
@@ -6642,7 +6687,7 @@ async function flush(){
   if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); }catch(e){}
     const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{}]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},at:Date.now()}); }catch(e){} } }
 }
-function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0;
+function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0; o.rp=Math.max(0,+o.rp||0); if(!o.rpDay||typeof o.rpDay!=="object") o.rpDay={d:"",n:0};
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
   o.look=fullLook({...DEFAULT_LOOK,...(s.look||{})}); o.owned=Array.isArray(s.owned)?s.owned.filter(x=>typeof x==="string").slice(0,300):[]; o.name=cleanName(s.name||""); if(nameProblem(o.name)) o.name=""; o.handleKey=typeof s.handleKey==="string"?s.handleKey.slice(0,200):""; o.scrap=Object.fromEntries(Object.entries(s.scrap&&typeof s.scrap==="object"?s.scrap:{}).filter(([k])=>/^[0-4]$/.test(k)).map(([k,v])=>[k,Math.min(Date.now(),+v||0)])); o.quest=s.quest&&TYPE_N[s.quest.type]?{type:s.quest.type,qty:clamp(Math.floor(+s.quest.qty)||1,1,3),reward:clamp(Math.floor(+s.quest.reward)||50,1,500),done:false}:null; o.rack=(Array.isArray(s.rack)?s.rack:[]).filter(r=>r&&BY[r.id]).slice(0,4).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())})); o.jobs=(Array.isArray(s.jobs)?s.jobs:[]).filter(j=>j&&["courier","supply","build"].includes(j.kind)&&STALLS[j.to]&&(j.kind!=="courier"||STALLS[j.from])&&(j.kind!=="supply"||TYPE_N[j.t])&&(j.kind!=="build"||RECIPES.some(r=>r.k===j.k))).slice(0,JOB_MAX).map(j=>({...j,reward:clamp(Math.floor(+j.reward)||0,0,5000),chips:clamp(Math.floor(+j.chips)||0,0,200),qty:clamp(Math.floor(+j.qty)||1,1,5),minTier:clamp(Math.floor(+j.minTier)||0,0,3),label:String(j.label||"Job").slice(0,140)})); o.taken=Array.isArray(s.taken)?s.taken.filter(x=>typeof x==="string").slice(-30):[]; o.jobsDone=Math.max(0,Math.floor(+s.jobsDone)||0); o.duelWins=Math.max(0,Math.floor(+s.duelWins)||0); for(const k of ["voidKills","voidDeaths","botKills"]) o[k]=Math.max(0,Math.floor(+s[k])||0); o.decor=cleanDecor(s.decor); o.room=cleanRoom(s.room); o.roomOwned=Array.isArray(s.roomOwned)?s.roomOwned.filter(x=>typeof x==="string").slice(0,60):[]; for(const k of ["wall","floor","light"]) if(!roomOwnedIn(o.roomOwned,k,o.room[k])) o.room[k]=0; o.home=cleanHomeState(s.home); o.settled=Array.isArray(s.settled)?s.settled.filter(x=>typeof x==="string").slice(-80):[];
   o.botMode=["off","easy","normal","hard"].includes(s.botMode)?s.botMode:"normal";
@@ -6708,9 +6753,10 @@ setInterval(hud,1000);
     // Smacked Shop
     if(IS_ADMIN){ try{ ASSETS=await cl.use("assets"); }catch(e){} }
     db.collection("shop").onSnapshot(s=>{ shopItems=s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean); refreshSmacked(); },()=>{});
+    db.doc("shopinfo/econ").onSnapshot(s=>{ ECON=cleanEcon(s.exists?s.data():null); hud(); refreshSmacked(); },()=>{});
     db.doc("shopinfo/main").onSnapshot(s=>{ shopInfo={text:s.exists?String((s.data()||{}).text||"").slice(0,600):""}; refreshSmacked(); },()=>{});
     db.collection("pickups").onSnapshot(s=>{ pickupStatus={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["ready","picked","cancelled"].includes(v.status)) pickupStatus[d.id]={status:v.status}; }); checkRefunds(); if(IS_ADMIN) syncSold(); refreshSmacked(); },()=>{});
-    db.doc("redeem/"+myId).onSnapshot(s=>{ const d=s.exists?s.data():null; myRedeem={codes:Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string").map(e=>({...e})):[]}; Promise.all(myRedeem.codes.map(e=>hashOf(e.code))).then(()=>{ checkRefunds(); refreshSmacked(); }); },()=>{});
+    db.doc("redeem/"+myId).onSnapshot(s=>{ const d=s.exists?s.data():null; myRedeem={codes:Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string").map(e=>({...e})):[],...(d&&typeof d.month==="string"?{month:d.month,spentc:Math.floor(+d.spentc)||0}:{})}; hud(); Promise.all(myRedeem.codes.map(e=>hashOf(e.code))).then(()=>{ checkRefunds(); refreshSmacked(); }); },()=>{});
     if(IS_ADMIN) db.collection("redeem").onSnapshot(s=>{ allRedeem={}; s.docs.forEach(d=>allRedeem[d.id]=d.data()); resolveNames(Object.keys(allRedeem)); syncSold().then(refreshSmacked); },()=>{});
     for(const field of ["a","b"]) db.collection("duels").where(field,"==",myId).onSnapshot(s=>{ for(const ch of s.docChanges()){ if(ch.type==="removed") continue; const d={id:ch.doc.id,...ch.doc.data()}; if(!GAMES[d.game]||typeof d.a!=="string"||typeof d.b!=="string") continue; duels.set(d.id,d); handleDuel(d); } },()=>{});
     startInbox(db); watchLand(db);

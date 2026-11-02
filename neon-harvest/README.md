@@ -33,7 +33,27 @@ The config values are safe to publish. Access is controlled by the security rule
 | `database.rules.json` | Rules for live player positions and multiplayer events |
 | `build.py` | Rebuilds `index.html` from the claude.ai version of the game |
 
+## Smacked Shop rewards and profit
+
+- **Reward Points (RP)** are the only way to pay at Smacked Shop. Only Data Collectors Club members earn them, and only from work: bar, store, club and noodle shifts, courier deliveries, quests and the assembly line. Parts orders and credits from miners, duels, the Void, gifts, trades and selling parts never turn into points, and points can't be traded or gifted.
+- **Monthly reward limit.** When you stock an item, enter what it costs you in dollars. Each member can redeem at most $14 of real cost per calendar month (UTC) by default. This limit is checked by the Firestore rules, not just the game, so even a player who cheats their point balance can't take more than the limit.
+- **Profit settings** (Smacked Shop → Owner tools → Profit settings) let you change the membership price, the monthly limit, how many points equal $1, and the daily point limit. It shows your worst-case profit per member; at $50 with a $14 limit that's about 69%.
+- Items stocked before this update have no cost yet and show "Not priced yet" until you edit them and enter what they cost you.
+- Cancelled redemptions refund the points but still count toward that month's limit.
+
+**After updating, paste the new [`firestore.rules`](firestore.rules) into Firebase (Firestore Database → Rules → Publish).** Until you do, the monthly limit is only checked by the game.
+
 ## Notes
 
-- Each player's game runs in their own browser, so combat damage, balances and trades are checked by the players' games rather than a server. The rules stop players from editing each other's saves, but a determined cheater could still inflate their own numbers. Review Smacked Shop redemptions before handing over real items.
+- Each player's game runs in their own browser, so combat damage, balances and trades are checked by the players' games rather than a server. The rules stop players from editing each other's saves, but a determined cheater could still inflate their own numbers, including Reward Points. The monthly limit caps what that can cost you; still review Smacked Shop redemptions before handing over real items.
 - Firebase's free plan covers roughly 100 players online at once and 50,000 database reads a day, which is plenty for a community game. The console shows usage under **Usage and billing**.
+- This `index.html` is now the main version of the game. `build.py` rebuilds it from the older claude.ai copy, which doesn't have Reward Points, so don't run it unless that copy is updated first.
+
+## Next step: paid memberships (needs Firebase's pay-as-you-go plan)
+
+Memberships are still switched on by hand in the Admin Panel. To make them automatic and to move balances onto a server:
+
+1. Upgrade the Firebase project to the **Blaze** (pay-as-you-go) plan and set a budget alert.
+2. Create a **Stripe** account and a $50/month subscription product.
+3. Add a Cloud Function that receives Stripe's payment events and writes `dcc/{uid}` (on, and `until` set to the end of the paid period).
+4. Move Reward Point earning and redemption into Cloud Functions so the server, not the browser, keeps the balance.
