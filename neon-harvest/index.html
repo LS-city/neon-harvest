@@ -39,7 +39,8 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .stats{display:flex;gap:6px;flex-wrap:wrap}
 .pill{background:rgba(21,14,38,.82);border:1px solid var(--line);padding:4px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill b{font-weight:600}
-.pill.cr b{color:var(--amber)} .pill.rp b{color:var(--c-uncommon)} #game.mobile #rppill{display:none!important} .pill.ch b{color:var(--cyan)} .pill.on b{color:var(--c-uncommon)}
+.pill.cr b{color:var(--amber)} .pill.rp b{color:var(--c-uncommon)} #rppill{cursor:pointer} #rppill.rpgain{animation:rpgain 1.2s ease} @keyframes rpgain{0%{box-shadow:0 0 0 rgba(67,240,164,0)}25%{box-shadow:0 0 16px rgba(67,240,164,.9);transform:scale(1.12)}100%{box-shadow:0 0 0 rgba(67,240,164,0);transform:none}}
+.rpbig{display:flex;align-items:baseline;gap:8px}.rpbig b{font-size:34px;color:var(--c-uncommon);font-family:var(--f-display)}.rpbar{height:8px;background:#1b1530;border:1px solid var(--line)}.rpbar i{display:block;height:100%;background:var(--c-uncommon)} .pill.ch b{color:var(--cyan)} .pill.on b{color:var(--c-uncommon)}
 .btn{font-family:var(--f-ui);font-size:12px;background:var(--panel);color:var(--text);border:1px solid var(--line);padding:6px 10px;cursor:pointer}
 .btn:hover{border-color:var(--cyan);color:#fff}
 .btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
@@ -351,7 +352,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
     <div class="stats">
       <span class="pill cr">₵ <b id="credits">0</b></span>
       <span class="pill ch">CHIPS <b id="chips">0</b></span>
-      <span class="pill rp" id="rppill" hidden title="Reward Points: earned by members from work, spent at Smacked Shop">RP <b id="rp">0</b></span>
+      <button class="pill rp" id="rppill" type="button" hidden title="Reward Points: earned by members from work, spent at Smacked Shop. Tap for details.">RP <b id="rp">0</b></button>
       <span class="pill" id="hppill" hidden></span>
       <span class="pill" id="jobpill" hidden></span>
       <span class="pill" id="buffs" hidden></span>
@@ -2004,7 +2005,7 @@ function tabEdge(t){ if(!t||t._edge) { if(t) t.classList.toggle("end",t.scrollLe
 function closePanel(){ currentView=null; tryOn=null; $("#overlay").hidden=true; $("#overlay").innerHTML=""; }
 $("#overlay").addEventListener("pointerdown",e=>{ if(e.target.id==="overlay") closePanel(); });
 $("#overlay").addEventListener("click",e=>{ if(e.target.closest&&e.target.closest(".panel .tabs")) panelFresh=1; setTimeout(()=>{ panelFresh=0; },0); },true);
-$("#btnBag").onclick=()=>openStash(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
+$("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
 /* ============================================================ HOW TO PLAY */
 const GUIDE={
   start:{n:"Start here",secs:[
@@ -2683,7 +2684,7 @@ function startShift(){ shift={served:0,earned:0,tips:0,start:Date.now()}; custom
 async function clockOut(){
   if(!onShift()) return; clearInterval(beatTimer); const slot=mySlot; mySlot=-1;
   if(DB){ try{ await DB.doc("staff/slot"+slot).set({by:null,beat:0}); }catch(e){} } else staffSlots[0]=null;
-  const mins=Math.floor((Date.now()-shift.start)/60e3); const wage=shift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage); persist();
+  const mins=Math.floor((Date.now()-shift.start)/60e3); const wage=shift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage,"The Glitch shift"); persist();
   toast(`Shift over: served ${shift.served}, earned ₵${shift.earned} + ₵${shift.tips} tips + ₵${wage} wages`,"#ffb84a");
   customers.forEach(c=>c.leaving=true); shift=null; pushPresence(true);
 }
@@ -2704,7 +2705,7 @@ function tickCustomers(){
     if(c.arrived&&!c.leaving){ c.dir=-1; c.left-=dt; if(c.left<=0){ c.leaving=true; toast("A customer got tired of waiting and left."); beep(160,.12); } } }
   customers=customers.filter(c=>!(c.leaving&&c.x<=57));
 }
-function payShift(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; earnRP(base+tip); if(shift){ shift.served++; shift.earned+=base; shift.tips+=tip; } persist(); toast(`+₵${base}${tip?` and ₵${tip} tip`:""}`,"#ffb84a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
+function payShift(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; earnRP(base+tip,"The Glitch shift"); if(shift){ shift.served++; shift.earned+=base; shift.tips+=tip; } persist(); toast(`+₵${base}${tip?` and ₵${tip} tip`:""}`,"#ffb84a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
 
 /* drink mixing minigame */
 function mixDrink(drinkId,sub,done){
@@ -2892,7 +2893,7 @@ function activeJob(id){ return (save.jobs||[]).find(j=>j.id===id); }
 function acceptJob(o){ if(save.jobs.length>=JOB_MAX){ toast(`You can hold ${JOB_MAX} jobs at once. Finish or drop one first.`); return; }
   save.jobs.push({...o,picked:false,deadline:0}); save.taken=[...(save.taken||[]),o.id].slice(-30); persist(); toast("Job accepted: "+o.label,"#f5e663"); beep(900,.06); }
 function dropJob(j,msg){ save.jobs=save.jobs.filter(x=>x!==j); persist(); if(msg) toast(msg); }
-function finishJob(j){ save.credits+=j.reward; if(j.kind==="courier") earnRP(j.reward); /* only package runs pay RP: parts orders and rig commissions hand over items that can come from duels, miners or trades */ save.chips+=j.chips||0; save.jobsDone=(save.jobsDone||0)+1; dropJob(j); toast(`Job done: +₵${j.reward}${j.chips?` +${j.chips} chips`:""}`,"#f5e663"); emote("cheer"); beep(1300,.08); setTimeout(()=>beep(1700,.1),90);
+function finishJob(j){ save.credits+=j.reward; if(j.kind==="courier") earnRP(j.reward,"Courier Hub"); /* only package runs pay RP: parts orders and rig commissions hand over items that can come from duels, miners or trades */ save.chips+=j.chips||0; save.jobsDone=(save.jobsDone||0)+1; dropJob(j); toast(`Job done: +₵${j.reward}${j.chips?` +${j.chips} chips`:""}`,"#f5e663"); emote("cheer"); beep(1300,.08); setTimeout(()=>beep(1700,.1),90);
   if(save.jobsDone%5===0){ const id=rollItem(1.5); addItem(id); persist(); toast(`Dispatch bonus for ${save.jobsDone} jobs: ${BY[id].n}`,RAR[BY[id].r].c); } }
 function tickJobs(){ for(const j of save.jobs||[]) if(j.kind==="courier"&&j.picked&&Date.now()>j.deadline){ dropJob(j,"The package timed out. Courier job failed."); beep(140,.2,"sawtooth"); break; } }
 function courierCarrying(){ return (save.jobs||[]).find(j=>j.kind==="courier"&&j.picked); }
@@ -2979,7 +2980,7 @@ function bbStart(){ bbShift={served:0,earned:0,tips:0,start:Date.now()}; bbCusto
   pushPresence(true); closePanel(); toast("Shift started at Byte Bowl Noodles. Shoppers will line up at the stall.","#ff5a4a"); chatLine(null,"Stand at Byte Bowl Noodles and press E to see orders, then cook each one in ticket order.","sys"); }
 async function bbClockOut(){ if(bbSlot<0) return; clearInterval(bbBeat); const slot=bbSlot; bbSlot=-1;
   if(DB){ try{ await DB.doc("staff/bbslot"+slot).set({by:null,beat:0}); }catch(e){} } else bbSlots[0]=null;
-  const mins=Math.floor((Date.now()-bbShift.start)/60e3), wage=bbShift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage); persist();
+  const mins=Math.floor((Date.now()-bbShift.start)/60e3), wage=bbShift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage,"Byte Bowl shift"); persist();
   toast(`Shift over at Byte Bowl: served ${bbShift.served}, earned ₵${bbShift.earned} + ₵${bbShift.tips} tips + ₵${wage} wages`,"#ff5a4a");
   bbCustomers.forEach(c=>c.leaving=true); bbShift=null; pushPresence(true); }
 function bbSpawn(){ const spot=BB_SPOTS.find(x=>!bbCustomers.some(c=>c.spot===x&&!c.leaving)); if(spot==null) return;
@@ -3006,7 +3007,7 @@ function bbServe(c){ const d=BY[c.want];
     if(!bbShift){ closePanel(); return; }
     if(!bbCustomers.includes(c)||c.leaving){ addItem(c.want); persist(); toast(`They left before you finished. The ${d.t==="food"?"food":"drink"} went to your stash.`); bbConsole(); return; }
     const tip=Math.round(Math.max(0,4+(c.left/c.max)*10-res.mistakes*4)*tipMult()); c.leaving=true; c.happy=T;
-    save.credits+=d.v+tip; earnRP(d.v+tip); bbShift.served++; bbShift.earned+=d.v; bbShift.tips+=tip; persist(); toast(`+₵${d.v}${tip?` and ₵${tip} tip`:""}`,"#ff5a4a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); bbConsole(); }); }
+    save.credits+=d.v+tip; earnRP(d.v+tip,"Byte Bowl shift"); bbShift.served++; bbShift.earned+=d.v; bbShift.tips+=tip; persist(); toast(`+₵${d.v}${tip?` and ₵${tip} tip`:""}`,"#ff5a4a"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); bbConsole(); }); }
 setInterval(()=>{ if(currentView!=="bbconsole"||$("#overlay").hidden||!bbShift) return; const sig=JSON.stringify([bbCustomers.filter(c=>c.arrived&&!c.leaving).map(c=>c.id+":"+Math.ceil(c.left/5)),bbShift.served]); if(sig!==bbSig){ bbSig=sig; const sc=document.querySelector(".panel .body"); const top=sc?sc.scrollTop:0; bbConsole(true); const nb=document.querySelector(".panel .body"); if(nb) nb.scrollTop=top; } },1000);
 
 /* --- drawing */
@@ -3602,8 +3603,28 @@ let ECON={price:50,capc:1400,rate:8000,dayMax:6000};
 function cleanEcon(d){ d=d||{}; const n=(v,a,b,def)=>{ v=+v; return isFinite(v)&&v>0?clamp(v,a,b):def; }; return {price:n(d.price,1,1000,50),capc:Math.round(n(d.capc,1,100000,1400)),rate:Math.round(n(d.rate,1,1e7,8000)),dayMax:Math.round(n(d.dayMax,1,1e7,6000))}; }
 function dayKey(){ const t=new Date(); return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate(); }
 function monthKey(){ const t=new Date(); return t.getUTCFullYear()+"-"+(t.getUTCMonth()+1); }
-function earnRP(amount){ amount=Math.floor(+amount||0); if(amount<=0||!myId||!dccActive(myId)) return 0; const k=dayKey(); if(!save.rpDay||save.rpDay.d!==k) save.rpDay={d:k,n:0};
-  const g=Math.min(amount,Math.max(0,ECON.dayMax-save.rpDay.n)); if(g<=0) return 0; save.rp=(+save.rp||0)+g; save.rpDay.n+=g; return g; }
+function earnRP(amount,src){ amount=Math.floor(+amount||0); if(amount<=0||!myId||!dccActive(myId)) return 0; const k=dayKey(); if(!save.rpDay||save.rpDay.d!==k) save.rpDay={d:k,n:0};
+  const g=Math.min(amount,Math.max(0,ECON.dayMax-save.rpDay.n)); if(g<=0){ rpCapNote(); return 0; } save.rp=(+save.rp||0)+g; save.rpDay.n+=g; rpNote(g,src||"Work"); if(g<amount) rpCapNote(); return g; }
+/* show members when they earn RP: a log, a (batched) toast and a pulse on the RP pill */
+let rpPend=null, rpCapWarned="";
+function rpNote(n,src){ save.rpLog=Array.isArray(save.rpLog)?save.rpLog:[]; const now=Date.now(), last=save.rpLog[0];
+  if(last&&last.s===src&&now-last.t<5*60e3){ last.n+=n; last.t=now; } else save.rpLog.unshift({t:now,s:src,n}); save.rpLog=save.rpLog.slice(0,40);
+  if(!rpPend){ rpPend={n:0,src}; setTimeout(()=>{ const P=rpPend; rpPend=null; if(!P||!P.n) return; toast(`+${P.n.toLocaleString()} RP · ${P.src}`,"#43f0a4"); const pill=$("#rppill"); if(pill){ pill.classList.remove("rpgain"); void pill.offsetWidth; pill.classList.add("rpgain"); } hud(); if(currentView==="rp") openRP(); },1500); }
+  rpPend.n+=n; rpPend.src=src; hud(); persist(); }
+function rpCapNote(){ const k=dayKey(); if(rpCapWarned===k) return; rpCapWarned=k; toast(`Daily Reward Points limit reached (${ECON.dayMax.toLocaleString()} RP). Earn more tomorrow.`,"#ffb84a"); }
+function rpAgo(t){ const m=Math.round((Date.now()-t)/60e3); if(m<1) return "just now"; if(m<60) return m+" min ago"; const h=Math.round(m/60); if(h<24) return h+" hr ago"; return Math.round(h/24)+" d ago"; }
+function openRP(){ const member=!!(myId&&dccActive(myId)), bal=Math.floor(+save.rp||0), k=dayKey(), today=save.rpDay&&save.rpDay.d===k?save.rpDay.n:0;
+  const body=panel("Reward Points","Members-only points for real-life rewards at Smacked Shop."); currentView="rp";
+  body.append(el("div",{class:"rpbig"},el("b",{text:bal.toLocaleString()}),el("span",{text:"Reward Points"})));
+  if(!myId) body.append(el("div",{class:"r-epic",text:"Sign in to earn and keep Reward Points."}));
+  else if(member){ const d=dcc[myId]; body.append(el("div",{class:"r-uncommon",text:`✓ Data Collectors Club member${d&&d.until?` until ${new Date(d.until).toLocaleDateString()}`:""}: you're earning RP from work.`})); }
+  else body.append(el("div",{class:"r-epic",text:"You're not a Data Collectors Club member right now, so work doesn't earn RP. Points you already have stay saved."}));
+  if(member){ const pct=Math.min(100,today/ECON.dayMax*100); body.append(el("strong",{text:`Today: ${today.toLocaleString()} / ${ECON.dayMax.toLocaleString()} RP`}),el("div",{class:"rpbar"},el("i",{style:`width:${pct}%`})),el("span",{class:"sub",text:today>=ECON.dayMax?"You've hit today's limit. It resets at midnight.":`${(ECON.dayMax-today).toLocaleString()} RP left to earn today.`})); }
+  body.append(el("strong",{text:"How members earn RP"}),el("span",{class:"sub",text:"1 RP for every credit earned from work: shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More and The Third Eye bar (pay and tips), Harvest Assembly wages and tips, Courier Hub package runs, story quest chapters and Story Mode endings."}));
+  body.append(el("strong",{text:"Recent RP earnings"})); const l=el("div",{class:"list"}); const log=Array.isArray(save.rpLog)?save.rpLog:[];
+  if(!log.length) l.append(el("div",{class:"empty",text:member?"Nothing yet. Work a shift or run a courier package to start earning.":"No RP earned yet."}));
+  for(const e of log.slice(0,25)) l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:#43f0a4;border-color:#43f0a4",text:`+${e.n.toLocaleString()}`}),el("div",{class:"grow"},el("div",{text:e.s}),el("div",{class:"sub",text:rpAgo(e.t)})),el("span",{class:"sub",text:"RP"})));
+  body.append(l,el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Go to Smacked Shop",onclick:()=>fastTravel("smacked",140,"Smacked Shop")}),el("button",{class:"btn",type:"button",text:"How it works",onclick:()=>openGuide&&openGuide()}))); }
 function monthSpentC(){ return myRedeem.month===monthKey()?(Math.floor(+myRedeem.spentc)||0):0; }
 function capLeftC(){ return Math.max(0,ECON.capc-monthSpentC()); }
 function itemRP(it){ return it.rp>0?it.rp:Math.ceil((it.cents||0)/100*ECON.rate); }
@@ -3901,7 +3922,7 @@ function storyGo(id,fx){ const st=save.story; const r=st.run||(st.run=storyFresh
   if(r.v.san<=0&&!/^end_/.test(id)) id="end_flat"; let N=STORY[id]; if(N&&N.go){ const g=N.go(r.v); if(g) { id=g; N=STORY[id]; } } if(N&&N.fx) N.fx(r.v);
   r.n=id; if(N&&N.end) storyFinish(N.end); persist(); openStory(true); }
 function storyFinish(k){ const st=save.story, E=STORY_END[k]; if(!st.endings.includes(k)) st.endings.push(k); st.runs=(st.runs||0)+1;
-  const gc=Math.max(0,Math.min(STORY_CAP.cr,E.cr)-st.paidC), gh=Math.max(0,Math.min(STORY_CAP.ch,E.ch)-st.paidCh); st.last={k,gc,gh}; st.paidC+=gc; st.paidCh+=gh; save.credits+=gc; earnRP(gc); save.chips+=gh; hud();
+  const gc=Math.max(0,Math.min(STORY_CAP.cr,E.cr)-st.paidC), gh=Math.max(0,Math.min(STORY_CAP.ch,E.ch)-st.paidCh); st.last={k,gc,gh}; st.paidC+=gc; st.paidCh+=gh; save.credits+=gc; earnRP(gc,"Story Mode"); save.chips+=gh; hud();
   try{ stTrack("act","Story ending "+E.n); }catch(e){} if(gc||gh) setTimeout(()=>{ toast(`Story Mode · ${E.n}: +₵${gc}${gh?` · +${gh} chips`:""}`,E.col); [392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.14,"triangle"),i*140)); },400); else setTimeout(()=>beep(196,.4,"sine"),200); }
 function storyCorrupt(s,san){ if(san>3) return s; const p=san<=1?.07:san===2?.035:.015, G="█▓▒░#%&@¿¤"; return s.split("").map(c=>c!=="\n"&&c!==" "&&Math.random()<p?G[(Math.random()*G.length)|0]:c).join(""); }
 function openStory(cont){ const st=save.story; if(!cont||!(st.run&&STORY[st.run.n])) return openStoryMenu();
@@ -4068,7 +4089,7 @@ function cbStart(){ cbShift={served:0,earned:0,tips:0,start:Date.now()}; cbCusto
   pushPresence(true); closePanel(); toast("Shift started at Cyber Buys & More. Customers will come to the register.","#43f0a4"); chatLine(null,"Read the customer's request, grab the item from the right aisle, then ring it up at the register.","sys"); }
 async function cbClockOut(){ if(cbSlot<0) return; clearInterval(cbBeat); const slot=cbSlot; cbSlot=-1;
   if(DB){ try{ await DB.doc("cbstaff/slot"+slot).set({by:null,beat:0}); }catch(e){} } else cbSlots[0]=null;
-  const mins=Math.floor((Date.now()-cbShift.start)/60e3), wage=cbShift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage); persist();
+  const mins=Math.floor((Date.now()-cbShift.start)/60e3), wage=cbShift.served?Math.min(120,mins*2):0; save.credits+=wage; earnRP(wage,"Cyber Buys shift"); persist();
   toast(`Shift over: ${cbShift.served} sales, ₵${cbShift.earned} commission + ₵${cbShift.tips} tips + ₵${wage} wages`,"#43f0a4");
   cbCustomers.forEach(c=>c.leaving=true); cbShift=null; cbHolding=null; pushPresence(true); }
 const CB_SPOTS=[1250,1320];
@@ -4102,7 +4123,7 @@ function ringUp(c){
   const row=el("div",{class:"row"}); for(const o of opts) row.append(el("button",{class:"btn hot",type:"button",style:"min-width:80px;font-size:16px",text:`₵${o}`,onclick:()=>{
       if(!cbCustomers.includes(c)||c.leaving){ toast("They already left."); cbHolding=null; return cbRegister(); }
       const right=o===change; const comm=Math.max(1,Math.round(price*.15)); const tip=right?Math.round((3+(c.left/c.max)*10)*tipMult()):0; const earned=right?comm:Math.ceil(comm/2);
-      save.credits+=earned+tip; earnRP(earned+tip); cbShift.served++; cbShift.earned+=earned; cbShift.tips+=tip; c.leaving=true; c.happy=T; cbHolding=null; persist();
+      save.credits+=earned+tip; earnRP(earned+tip,"Cyber Buys shift"); cbShift.served++; cbShift.earned+=earned; cbShift.tips+=tip; c.leaving=true; c.happy=T; cbHolding=null; persist();
       if(right){ toast(`Sale! +₵${earned} commission${tip?` +₵${tip} tip`:""}`,"#43f0a4"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
       else { toast(`Wrong change (it was ₵${change}). Pix fixed it. Half commission, no tip.`,"#ff5a4a"); beep(160,.15); }
       cbRegister(); }})); body.append(row);
@@ -4732,7 +4753,7 @@ function asmStart(){ const td=asmToday(); save.asmDay={d:td,n:asmShiftsToday()+1
   asmShift={start:Date.now(),built:0,earned:0,wages:0,tips:0,wageAcc:0,lastPay:Date.now(),streak:0,best:0,lastBuild:Date.now(),fails:0}; asmOrder=null; clearInterval(asmBeat);
   let beatN=0; asmBeat=setInterval(()=>{ if(asmSlot<0||!asmShift) return; if(me.scene!=="assembly"){ asmClockOut(); return; }
     const now=Date.now(), dtm=Math.min(60e3,now-asmShift.lastPay); asmShift.lastPay=now;
-    if(now-asmShift.lastBuild<180e3){ asmShift.wageAcc+=ASM_WAGE*dtm/ASM_WAGE_MS; const pay=Math.floor(asmShift.wageAcc); if(pay>0){ asmShift.wageAcc-=pay; save.credits+=pay; earnRP(pay); asmShift.wages+=pay; asmShift.earned+=pay; persist(); hud(); if(asmUI&&asmUI.paint) asmUI.paint(); } }
+    if(now-asmShift.lastBuild<180e3){ asmShift.wageAcc+=ASM_WAGE*dtm/ASM_WAGE_MS; const pay=Math.floor(asmShift.wageAcc); if(pay>0){ asmShift.wageAcc-=pay; save.credits+=pay; earnRP(pay,"Harvest Assembly wages"); asmShift.wages+=pay; asmShift.earned+=pay; persist(); hud(); if(asmUI&&asmUI.paint) asmUI.paint(); } }
     if(++beatN%4===0&&DB) DB.doc("staff/asm"+asmSlot).update({beat:Date.now()}).catch(()=>{});
     const left=asmShift.start+ASM_SHIFT_MIN*6e4-now; if(left<=0){ toast("Your 60-minute shift is over. Nice work!","#ffd36a"); asmClockOut(); } else if(left<60e3&&!asmShift.warned){ asmShift.warned=1; toast("1 minute left on your shift.","#ffd36a"); } },15e3);
   me.x=ASM_X(asmSlot); me.y=300; me.dir=1; target=null; pushPresence(true); toast(`Clocked in at Bay ${asmSlot+1} (shift ${asmShiftsToday()}/${ASM_SHIFTS_DAY} today). ₵${ASM_WAGE} every 30 min while you keep building, plus speed tips. Shifts last up to ${ASM_SHIFT_MIN} min.`,"#ffd36a"); beep(880,.08); openAsmConsole(); }
@@ -4762,7 +4783,7 @@ function asmPick(t){ if(!asmOrder||!asmUI) return; const need=asmOrder.steps[asm
   if(t!==need){ asmOrder.mist++; asmOrder.pen+=2.5; asmUI.msg.textContent=`Wrong part! That slot needs a ${ASM_PARTS.find(q=>q.t===need).n}. −2.5s`; asmUI.msg.className="r-epic"; beep(160,.12,"square"); return; }
   asmOrder.i++; beep(600+asmOrder.i*80,.04,"triangle"); me.emote={e:"use",t:T};
   if(asmOrder.i>=asmOrder.steps.length){ const left=Math.max(0,asmTimeLeft()), sp=left/asmOrder.limit, perfect=!asmOrder.mist; asmShift.streak++; asmShift.best=Math.max(asmShift.best,asmShift.streak);
-    const pay=asmTip(sp,asmShift.streak,perfect); save.credits+=pay; earnRP(pay); asmShift.earned+=pay; asmShift.tips=(asmShift.tips||0)+pay; asmShift.built++; questEvent("asm"); asmShift.lastBuild=Date.now(); persist(); hud();
+    const pay=asmTip(sp,asmShift.streak,perfect); save.credits+=pay; earnRP(pay,"Harvest Assembly tips"); asmShift.earned+=pay; asmShift.tips=(asmShift.tips||0)+pay; asmShift.built++; questEvent("asm"); asmShift.lastBuild=Date.now(); persist(); hud();
     asmBelt.push({id:BY[asmOrder.icon]?asmOrder.icon:"b_pc_common",x:ASM_X(asmSlot),t0:T}); asmFlash={bay:asmSlot,until:T+1.2,txt:pay?"+₵"+pay+" tip":"✓"};
     asmUI.msg.textContent=`${perfect?"PERFECT · ":""}${asmOrder.n} shipped!${pay?` +₵${pay} speed tip`:" Build faster to earn tips."}`; asmUI.msg.className="r-uncommon"; beep(1200,.08); setTimeout(()=>beep(1500,.1),80); asmNewOrder(); }
   asmUI.paint(); }
@@ -5882,7 +5903,7 @@ function questStatus(k){ const S=qState(k); if(S.done) return "done"; if(!S.on) 
 function acceptQuest(k){ const S=qState(k), C=QUESTS[k].ch[S.ch]; S.on=true; S.base={}; for(const o of C.obj) if(o.k==="ev") S.base[o.e]=save.qstat[o.e]||0; persist(); beep(700,.08,"triangle"); setTimeout(()=>beep(1050,.1,"triangle"),90); toast(`New quest: ${C.t}`,QUESTS[k].col); }
 function turnInQuest(k){ const Q=QUESTS[k], S=qState(k), C=Q.ch[S.ch]; if(!questReady(k)) return false;
   for(const o of C.obj) if(o.k==="give"){ let need=o.n; for(const [id,q] of itemsMatching(o).sort((a,b)=>BY[a[0]].v-BY[b[0]].v)){ const use=Math.min(need,q); addItem(id,-use); need-=use; if(!need) break; } }
-  const R=C.reward||{}; const got=[]; if(R.cr){ save.credits+=R.cr; earnRP(R.cr); got.push(`₵${R.cr}`); } if(R.chips){ save.chips+=R.chips; got.push(`${R.chips} chips`); }
+  const R=C.reward||{}; const got=[]; if(R.cr){ save.credits+=R.cr; earnRP(R.cr,"Story quest"); got.push(`₵${R.cr}`); } if(R.chips){ save.chips+=R.chips; got.push(`${R.chips} chips`); }
   if(R.part){ const pool=CAT.filter(i=>TECH_T.includes(i.t)&&i.r===R.part&&i.t!=="miner"&&!String(i.id).startsWith("b_")); const it=pool[(Math.random()*pool.length)|0]; if(it){ addItem(it.id,1); got.push(it.n); } }
   S.ch++; S.on=false; S.base={}; if(S.ch>=Q.ch.length){ S.done=true; broadcastSys(`completed "${Q.title}" for ${Q.npc}`); emote("cheer"); [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>beep(f,.12,"triangle"),i*90)); } else { beep(1200,.08); setTimeout(()=>beep(1500,.1),90); }
   persist(); hud(); toast(`${C.t} complete! +${got.join(", ")}`,"#43f0a4"); return got; }
@@ -5947,10 +5968,10 @@ function clubStart(){ clubShift={served:0,earned:0,tips:0,start:Date.now()}; pat
   me.seat=null; pushPresence(true); closePanel(); toast("Shift started at The Third Eye. Patrons will take seats and order.","#cf72ff"); chatLine(null,"Check the club bar for orders, prep each item, then carry it to the patron's seat.","sys"); }
 async function clubClockOut(){ if(clubSlot<0) return; clearInterval(clubBeat); const slot=clubSlot; clubSlot=-1;
   if(DB){ try{ await DB.doc("clubstaff/slot"+slot).set({by:null,beat:0}); }catch(e){} } else clubSlots[0]=null;
-  const mins=Math.floor((Date.now()-clubShift.start)/60e3), wage=clubShift.served?Math.min(150,mins*3):0; save.credits+=wage; earnRP(wage); persist();
+  const mins=Math.floor((Date.now()-clubShift.start)/60e3), wage=clubShift.served?Math.min(150,mins*3):0; save.credits+=wage; earnRP(wage,"The Third Eye shift"); persist();
   toast(`Shift over: ${clubShift.served} served, ₵${clubShift.earned} + ₵${clubShift.tips} tips + ₵${wage} wages`,"#cf72ff");
   for(const c of patrons) if(!c.served){ c.leaving=true; c.sat=false; } clubShift=null; clubHolding=null; pushPresence(true); }
-function clubPay(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; earnRP(base+tip); if(clubShift){ clubShift.served++; clubShift.earned+=base; clubShift.tips+=tip; } persist(); toast(`+₵${base}${tip?` +₵${tip} tip`:""}`,"#cf72ff"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
+function clubPay(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+tip; earnRP(base+tip,"The Third Eye shift"); if(clubShift){ clubShift.served++; clubShift.earned+=base; clubShift.tips+=tip; } persist(); toast(`+₵${base}${tip?` +₵${tip} tip`:""}`,"#cf72ff"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); }
 function spawnPatron(){ const free=SEATS.map((_,i)=>i).filter(i=>!seatTaken(i)); if(!free.length) return; const seat=free[(Math.random()*free.length)|0];
   const PIDS=TRIP_IDS.filter(id=>id!=="trip_god"); const w=PIDS.map(id=>({common:5,uncommon:3,rare:2,epic:1})[BY[id].r]||1); let r=Math.random()*w.reduce((a,b)=>a+b,0), want=PIDS[0]; for(let i=0;i<PIDS.length;i++){ if((r-=w[i])<=0){ want=PIDS[i]; break; } }
   patrons.push({id:Math.random().toString(36).slice(2),seat,x:60,y:292,dir:1,phase:0,look:randomLook(),want,max:75,left:75,arrived:false,sat:false,leaving:false,served:false,moving:true}); }
@@ -6668,7 +6689,7 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
   const mk=(ic,t,fn,cls)=>el("button",{class:"btn"+(cls?" "+cls:""),type:"button",onclick:fn},el("span",{class:"ic",text:ic,"aria-hidden":"true"}),el("span",{text:t}));
   const un=typeof unreadTotal==="function"?unreadTotal():0;
   body.append(el("div",{class:"mmenu"},
-    mk("👤","Character",()=>{ tryOn=null; openWardrobe("name"); }), mk("🎒","Stash",()=>openStash()),
+    mk("👤","Character",()=>{ tryOn=null; openWardrobe("name"); }), mk("🎒","Stash",()=>openStash()), mk("💠","Reward Points",()=>openRP()),
     mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
     mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
     mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }),
@@ -6689,7 +6710,7 @@ async function flush(){
   if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); }catch(e){}
     const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{}]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},at:Date.now()}); }catch(e){} } }
 }
-function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0; o.rp=Math.max(0,+o.rp||0); if(!o.rpDay||typeof o.rpDay!=="object") o.rpDay={d:"",n:0};
+function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0; o.rp=Math.max(0,+o.rp||0); if(!o.rpDay||typeof o.rpDay!=="object") o.rpDay={d:"",n:0}; o.rpLog=(Array.isArray(s.rpLog)?s.rpLog:[]).filter(e=>e&&isFinite(+e.t)&&isFinite(+e.n)&&+e.n>0).slice(0,40).map(e=>({t:+e.t,n:Math.floor(+e.n),s:String(e.s||"Work").slice(0,40)}));
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
   o.look=fullLook({...DEFAULT_LOOK,...(s.look||{})}); o.owned=Array.isArray(s.owned)?s.owned.filter(x=>typeof x==="string").slice(0,300):[]; o.name=cleanName(s.name||""); if(nameProblem(o.name)) o.name=""; o.handleKey=typeof s.handleKey==="string"?s.handleKey.slice(0,200):""; o.scrap=Object.fromEntries(Object.entries(s.scrap&&typeof s.scrap==="object"?s.scrap:{}).filter(([k])=>/^[0-4]$/.test(k)).map(([k,v])=>[k,Math.min(Date.now(),+v||0)])); o.quest=s.quest&&TYPE_N[s.quest.type]?{type:s.quest.type,qty:clamp(Math.floor(+s.quest.qty)||1,1,3),reward:clamp(Math.floor(+s.quest.reward)||50,1,500),done:false}:null; o.rack=(Array.isArray(s.rack)?s.rack:[]).filter(r=>r&&BY[r.id]).slice(0,4).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())})); o.jobs=(Array.isArray(s.jobs)?s.jobs:[]).filter(j=>j&&["courier","supply","build"].includes(j.kind)&&STALLS[j.to]&&(j.kind!=="courier"||STALLS[j.from])&&(j.kind!=="supply"||TYPE_N[j.t])&&(j.kind!=="build"||RECIPES.some(r=>r.k===j.k))).slice(0,JOB_MAX).map(j=>({...j,reward:clamp(Math.floor(+j.reward)||0,0,5000),chips:clamp(Math.floor(+j.chips)||0,0,200),qty:clamp(Math.floor(+j.qty)||1,1,5),minTier:clamp(Math.floor(+j.minTier)||0,0,3),label:String(j.label||"Job").slice(0,140)})); o.taken=Array.isArray(s.taken)?s.taken.filter(x=>typeof x==="string").slice(-30):[]; o.jobsDone=Math.max(0,Math.floor(+s.jobsDone)||0); o.duelWins=Math.max(0,Math.floor(+s.duelWins)||0); for(const k of ["voidKills","voidDeaths","botKills"]) o[k]=Math.max(0,Math.floor(+s[k])||0); o.decor=cleanDecor(s.decor); o.room=cleanRoom(s.room); o.roomOwned=Array.isArray(s.roomOwned)?s.roomOwned.filter(x=>typeof x==="string").slice(0,60):[]; for(const k of ["wall","floor","light"]) if(!roomOwnedIn(o.roomOwned,k,o.room[k])) o.room[k]=0; o.home=cleanHomeState(s.home); o.settled=Array.isArray(s.settled)?s.settled.filter(x=>typeof x==="string").slice(-80):[];
   o.botMode=["off","easy","normal","hard"].includes(s.botMode)?s.botMode:"normal";
@@ -6747,7 +6768,7 @@ setInterval(hud,1000);
       resolveNames(Object.values(vipRooms).map(v=>v.by).filter(Boolean));
       for(const [id,v] of Object.entries(vipRooms)){ const was=prev[id]; if(vipSeen&&myId&&v.by!==myId&&vipActive(id)&&v.invites.includes(myId)&&!(was&&was.invites.includes(myId)&&was.by===v.by)) chatLine(null,`${nameOf(v.by)} added you to the guest list for the ${VIP_BY[id].n} backroom at ${sceneName(VIP_BY[id].venue)}.`,"sys"); }
       vipSeen=true; vipCheckAccess(); if(currentView&&currentView.startsWith("vip")&&!$("#overlay").hidden&&!(document.activeElement&&document.activeElement.tagName==="INPUT")) refreshVipPanel(); },()=>{});
-    db.collection("dcc").onSnapshot(s=>{ const was=dccActive(myId); dcc={}; s.docs.forEach(d=>{ const v=d.data()||{}; dcc[d.id]={on:v.on===true,until:+v.until||0,sym:Math.max(0,Math.min(DCC_SYMS.length-1,Math.floor(+v.sym||0))),at:+v.at||0}; }); resolveNames(Object.keys(dcc));
+    db.collection("dcc").onSnapshot(s=>{ const was=dccActive(myId); dcc={}; s.docs.forEach(d=>{ const v=d.data()||{}; dcc[d.id]={on:v.on===true,until:+v.until||0,sym:Math.max(0,Math.min(DCC_SYMS.length-1,Math.floor(+v.sym||0))),at:+v.at||0}; }); resolveNames(Object.keys(dcc)); hud();
       if(!was&&dccActive(myId)&&dccSeen){ toast(`Welcome to the Data Collectors Club! Your ${DCC_SYMS[dccSym(myId)].n} symbol now shows next to your name.`,"#43f0a4"); beep(1200,.12); } dccSeen=true; refreshSmacked();
       if(currentView&&currentView.startsWith("admin")&&!$("#overlay").hidden&&!(document.activeElement&&["INPUT","SELECT"].includes(document.activeElement.tagName))) refreshAdmin(); },()=>{});
     db.collection("homes").limit(100).onSnapshot(s=>{ homes={}; s.docs.forEach(d=>homes[d.id]=d.data()); resolveNames(Object.keys(homes)); if(viewHome&&homes[viewHome.owner]){ const h=homes[viewHome.owner]; viewHome.display=Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null); viewHome.label=nameOf(viewHome.owner); } },()=>{});
