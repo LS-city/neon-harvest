@@ -1506,7 +1506,7 @@ const SCENES={
   home:{w:2900, spawn:120},
   cyberbuys:{w:2200, spawn:120},
   byte:{w:4500, spawn:140},
-  grid:{w:3000, spawn:140},
+  grid:{w:4480, spawn:140},
   smacked:{w:1600, spawn:140},
   linx:{w:3480, spawn:140},
   ascend:{w:4800, spawn:220},
@@ -1534,6 +1534,8 @@ function hotspotsBase(sc){
     ...Object.entries(GAMES).map(([k,G])=>({x:G.x,hw:110,label:`Play ${G.n}`,act:()=>openTable(k)})),
     {x:2250,hw:100,label:"View the duelist leaderboard",act:()=>openLeaderboard()},
     {x:UPL_X,hw:110,label:"Play UPLOAD",act:()=>openUpload()},
+    ...Object.entries(ARC).map(([k,A])=>({x:A.x,hw:70,label:`Play ${A.n} (₵${ARC_COST})`,act:()=>openArc(k)})),
+    {x:ARC_BOARD_X,hw:110,label:"Arcade high scores",act:()=>openArcScores()},
   ];
   if(sc==="smacked") return [
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
@@ -1903,6 +1905,7 @@ const GUIDE={
     ["Mining Rack (your apartment)",["Install crypto miners, Mining Rigs, Phone Farms or Quantum Rigs and they mine chips while you're offline, up to 12 hours before the buffer fills.","Each Home Server in your stash boosts the rack 25% (up to 2), and your Home Vibe adds up to +40% more."]],
     ["Plants",["Water a Bio-Lum Plant or Neon Bonsai in your living room every 8 hours. At growth 5/5, harvest it for 12 chips (plant) or 25 chips (bonsai) and it grows again."]],
     ["The Void",["Delete bots: pick Easy, Normal or Hard at the Bot Control terminal in the safe zone. Harder modes pay more chips per kill, up to 40 for the SENTINEL Ω boss.","Beat other players: whoever dies loses 15% of their credits and chips, and half goes to the player who got the kill."]],
+    ["Grid Arcade (The Grid)",["Four arcade cabinets east of UPLOAD, ₵10 a play:","NEON PONG: the classic. ↑/↓ or W/S (or drag). First to 7 beats the CPU. Easy, Normal or Hard pays 3, 6 or 10 chips per win.","BYTE BREAKER: breakout. Smash 6 rows of bricks, and the top rows take two hits. Clear them all for the next level. 1 chip per 250 points.","GRID RUNNER: endless runner. Jump (double-jump in the air) over firewalls and grab gold chips. 1 chip per 300 m.","FIREWALL INVADERS: shoot the virus swarm wave after wave before it lands. 1 chip per 400 points.","Up to 15 chips per run, and a new personal best pays ₵25. The Arcade High Scores board shows the top player of each game."]],
     ["UPLOAD (The Grid)",["First clears pay 4 to 22 chips per level, gold root keys pay +1 chip each, and clearing all 10 levels wins a HALO Singularity Chip."]]]},
   items:{n:"Get every item",secs:[
     ["Parts and rigs",["48 rigs to build at your Workbench, filtered by PCs, Miners, Phones and Other: 12 new PCs (Frostbyte Tower, Inferno Rig, Aqua Loop, Neon Cube, Shadow Slim, Galaxy Station, Matrix Monolith, Holo Pyramid, Stormcaller, Sakura Bloom, Titan Workstation, Quantum Desktop), 12 new miners for your rack (Solar 35/hr up to Lattice 120/hr per Mk) and 12 buildable phones you can hold in your hand. Each one has its own animated look.","Phones use three new part types from the Parts Depot: displays, cameras and batteries.","Workbench (your apartment): pick a recipe and tap Assemble. You build it by hand: tap each part in the tray (or drag it onto the build) to install it, motherboard first, and watch it go in piece by piece with cables hooking up to the power supply. Then hit ⏻ Power it on to boot it and get your rig. Cancel anytime and you keep your parts. ⚡ Auto-assemble finishes it for you.","Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips. Byte Market stalls sell parts, prebuilt PCs and miners.","Workbench (your apartment): combine parts into 12 kinds of rigs, from Gaming PCs and Mining Rigs to Cyberdecks, Quantum Rigs and Credit Miners. Better parts make a higher Mk. The Recipe Book tab shows what every recipe needs and where to find each part.","Rigs can be displayed, gifted, traded, installed or taken apart again."]],
@@ -2972,6 +2975,7 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"Companion Customs",d:"Colors and gear for your companion",s:"clash",x:360},
   {g:"Hot spots",n:"Volt Armory",d:"Weapons for The Void",s:"byte",x:4240},
   {g:"Hot spots",n:"UPLOAD arcade",d:"Snake-style hacking levels at The Grid",s:"grid",x:()=>UPL_X},
+  {g:"Hot spots",n:"Grid Arcade",d:"Neon Pong, Byte Breaker, Grid Runner, Firewall Invaders",s:"grid",x:()=>ARC.pong.x},
   {g:"Hot spots",n:"Your Linx Land plot",d:"Collect ₵ from your Credit Miners",s:"linx",x:()=>myPlot()>=0?plotX(myPlot()):140,need:()=>myPlot()>=0},
 ];
 function ftBlocked(){ if(me.dead) return "You can't travel while you're deleted."; if(me.scene==="ascend"&&godActive()) return "You're beyond the city. The God Particle returns you to The Third Eye when it fades."; if(me.scene==="void"&&T-lastHitT<6&&!inSafe(me.x)) return "You're in combat. Step into the safe zone or wait a few seconds."; return null; }
@@ -3210,7 +3214,7 @@ function drawGrid(t){
   const lx=2250; ctx.fillStyle="#0b0716"; ctx.fillRect(lx-100,120,200,104); ctx.strokeStyle="#ffb84a"; ctx.strokeRect(lx-99.5,120.5,199,103); neonText("TOP DUELISTS",lx,112,11,"#ffb84a",1);
   ctx.font="10px 'IBM Plex Mono',monospace"; ctx.textAlign="left"; leaderboard().slice(0,6).forEach(([id,w],i)=>{ ctx.fillStyle=i===0?"#ffb84a":"#e9e2ff"; ctx.fillText(`${i+1}. ${nameOf(id).slice(0,14)}`,lx-90,140+i*14); ctx.textAlign="right"; ctx.fillText(String(w),lx+90,140+i*14); ctx.textAlign="left"; });
   if(!leaderboard().length){ ctx.fillStyle="#9a8cc0"; ctx.fillText("No duels won yet.",lx-90,150); ctx.fillText("Be the first.",lx-90,166); }
-  drawUploadCab(t);
+  drawUploadCab(t); drawArcadeRow(t);
 }
 function drawUploadCab(t){ const ux=UPL_X;
   // records board
@@ -3255,6 +3259,119 @@ function uplProg(){ if(!save.upload||typeof save.upload!=="object") save.upload=
 let uplKey=null, uplSel=null;
 addEventListener("keydown",e=>{ if(uplKey&&currentView==="upload"&&!$("#overlay").hidden) uplKey(e); },true);
 function uplBoard(){ const rows=Object.entries(homes).map(([id,h])=>[id,clamp(Math.floor(+h.up)||0,0,UPL_LEVELS.length)]).filter(r=>r[1]>0); const mine=uplProg().cleared; if(myId&&mine&&!rows.some(r=>r[0]===myId)) rows.push([myId,mine]); return rows.sort((a,b)=>b[1]-a[1]); }
+/* ============================================================ GRID ARCADE: 4 cabinets */
+const ARC={pong:{n:"NEON PONG",x:3080,col:"#38e8ff",tag:"The classic. First to 7 beats the CPU.",unit:"wins"},breaker:{n:"BYTE BREAKER",x:3380,col:"#ff3fa8",tag:"Smash the firewall brick by brick.",unit:"pts"},runner:{n:"GRID RUNNER",x:3680,col:"#43f0a4",tag:"Jump the firewalls. Run forever.",unit:"m"},invaders:{n:"FIREWALL INVADERS",x:3980,col:"#ffb84a",tag:"Blast the virus swarm before it lands.",unit:"pts"}};
+const ARC_COST=10, ARC_BOARD_X=4280; let ARCG=null;
+function arcBest(k){ return +((save.arcade||{})[k]||0); }
+function arcBoard(k){ const rows=[]; for(const [uid,h] of Object.entries(homes||{})){ if(uid===myId) continue; const v=+((h&&h.arc)||{})[k]||0; if(v>0) rows.push([nameOf(uid)||h.name||"Runner",v]); } const mine=arcBest(k); if(mine>0) rows.push([(myName||"You")+" (you)",mine]); return rows.sort((a,b)=>b[1]-a[1]).slice(0,8); }
+function arcReward(k,score,extra){ let ch=0; if(k==="pong") ch=extra.won?[3,6,10][extra.diff]:0; else if(k==="breaker") ch=Math.min(15,Math.floor(score/250)); else if(k==="runner") ch=Math.min(15,Math.floor(score/300)); else ch=Math.min(15,Math.floor(score/400)); return ch; }
+function openArc(k){ const A=ARC[k]; if(!A) return; stopArc(); const body=panel(A.n,`${A.tag} ₵${ARC_COST} per play. Chips for good runs, and your best score goes on The Grid's arcade board.`); currentView="arc_"+k;
+  const cv=document.createElement("canvas"); cv.width=960; cv.height=600; cv.tabIndex=0; cv.setAttribute("aria-label",A.n+" game screen"); cv.style.cssText="width:100%;max-width:640px;aspect-ratio:480/300;display:block;margin:0 auto;border:2px solid "+A.col+";box-shadow:0 0 18px "+A.col+"55;touch-action:none;background:#05030a";
+  const hud=el("div",{class:"row",style:"justify-content:center;gap:8px;flex-wrap:wrap"}); const pad=el("div",{class:"row",style:"justify-content:center;gap:8px;flex-wrap:wrap"}); const opts=el("div",{class:"row",style:"justify-content:center;gap:6px;flex-wrap:wrap"});
+  const ctrl={pong:"↑/↓ or W/S (or drag on the screen) to move. First to 7 wins.",breaker:"←/→ or A/D (or drag) to move the paddle. Space launches. 3 lives.",runner:"Space, ↑ or tap the screen to jump. Tap again in the air to double-jump.",invaders:"←/→ or A/D to move, Space (or the FIRE button) to shoot. 3 lives."}[k];
+  const board=el("div",{class:"list"}); const rows=arcBoard(k); if(!rows.length) board.append(el("div",{class:"empty",text:"No scores yet. Be the first!"})); rows.forEach(([n,v],i)=>board.append(el("div",{class:"li"},el("span",{class:"tag",style:i===0?`color:${A.col};border-color:${A.col}`:"",text:`#${i+1}`}),el("div",{class:"grow",text:n}),el("span",{text:`${v} ${A.unit}`}))));
+  body.append(cv,hud,pad,opts,el("p",{class:"sub",style:"text-align:center",text:ctrl}),el("strong",{text:`High scores · your best: ${arcBest(k)} ${A.unit}`}),board);
+  ARCG={k,cv,ctx:cv.getContext("2d"),keys:{},state:"title",hudEl:hud,padEl:pad,optsEl:opts,diff:1,t0:performance.now(),last:performance.now(),score:0,g:null};
+  const press=(key,on)=>{ if(ARCG) ARCG.keys[key]=on; };
+  const kd=e=>{ if(!ARCG||currentView!=="arc_"+k) return; const m={ArrowUp:"up",KeyW:"up",ArrowDown:"down",KeyS:"down",ArrowLeft:"left",KeyA:"left",ArrowRight:"right",KeyD:"right",Space:"act",Enter:"start"}[e.code]; if(!m) return; e.preventDefault(); e.stopPropagation(); if(!ARCG.keys[m]&&(m==="act"||m==="start")) arcAction(m); press(m,true); };
+  const ku=e=>{ const m={ArrowUp:"up",KeyW:"up",ArrowDown:"down",KeyS:"down",ArrowLeft:"left",KeyA:"left",ArrowRight:"right",KeyD:"right",Space:"act",Enter:"start"}[e.code]; if(m) press(m,false); };
+  addEventListener("keydown",kd,true); addEventListener("keyup",ku,true); ARCG.unbind=()=>{ removeEventListener("keydown",kd,true); removeEventListener("keyup",ku,true); };
+  const ptr=e=>{ if(!ARCG) return; const r=cv.getBoundingClientRect(); ARCG.px=(e.clientX-r.left)/r.width*480; ARCG.py=(e.clientY-r.top)/r.height*300; };
+  cv.addEventListener("pointerdown",e=>{ ptr(e); ARCG.drag=true; cv.setPointerCapture(e.pointerId); if(ARCG.state!=="play") arcAction("start"); else arcAction("act"); }); cv.addEventListener("pointermove",e=>{ if(ARCG&&ARCG.drag) ptr(e); }); cv.addEventListener("pointerup",()=>{ if(ARCG){ ARCG.drag=false; ARCG.px=null; } });
+  const tb=(lbl,key)=>{ const b=el("button",{class:"btn",type:"button",text:lbl,style:"min-width:56px;touch-action:none"}); b.addEventListener("pointerdown",e=>{ e.preventDefault(); if(key==="act") arcAction("act"); press(key,true); }); for(const ev of ["pointerup","pointerleave","pointercancel"]) b.addEventListener(ev,()=>press(key,false)); return b; };
+  if(k==="pong") pad.append(tb("▲","up"),tb("▼","down")); else if(k==="runner") pad.append(tb("JUMP","act")); else pad.append(tb("◀","left"),tb("▶","right"),tb(k==="invaders"?"FIRE":"LAUNCH","act"));
+  arcUI(); requestAnimationFrame(arcLoop); setTimeout(()=>cv.focus(),50); }
+function stopArc(){ if(ARCG&&ARCG.unbind) ARCG.unbind(); ARCG=null; }
+function arcUI(){ const G=ARCG; if(!G) return; const A=ARC[G.k]; G.hudEl.innerHTML=""; G.optsEl.innerHTML="";
+  if(G.state==="play") G.hudEl.append(el("span",{class:"pill",text:G.k==="pong"?`You ${G.g.ps} : ${G.g.cs} CPU`:`Score ${Math.floor(G.score)}`}),G.g&&G.g.lives!=null?el("span",{class:"pill",text:`Lives ${G.g.lives}`}):"",el("span",{class:"pill",text:`Best ${arcBest(G.k)}`}));
+  else { if(G.k==="pong") for(const [i,l] of [[0,"Easy"],[1,"Normal"],[2,"Hard"]]) G.optsEl.append(el("button",{class:"btn"+(G.diff===i?" hot":""),type:"button",text:`${l} (win: ${[3,6,10][i]} chips)`,onclick:()=>{ G.diff=i; arcUI(); }}));
+    const go=el("button",{class:"btn hot",type:"button",text:`▶ Insert ₵${ARC_COST} & play`,onclick:()=>arcAction("start")}); if(save.credits<ARC_COST) go.disabled=true; G.hudEl.append(go,el("span",{class:"pill",text:`Best ${arcBest(G.k)} ${A.unit}`})); } }
+function arcAction(m){ const G=ARCG; if(!G) return; if(G.state!=="play"){ if(m==="start"||m==="act"){ if(G.state==="over"&&performance.now()-G.overAt<600) return; arcStart(); } return; } const g=G.g;
+  if(G.k==="breaker"&&g.stuck){ g.stuck=false; g.vx=150*(Math.random()<.5?-1:1); g.vy=-220; beep(700,.04); }
+  if(G.k==="runner"){ if(g.onGround){ g.vy=-330; g.onGround=false; g.jumps=1; beep(520,.05,"square"); } else if(g.jumps<2){ g.vy=-300; g.jumps=2; beep(700,.05,"square"); } }
+  if(G.k==="invaders"&&performance.now()-g.lastShot>260){ g.lastShot=performance.now(); g.shots.push({x:g.x,y:262}); beep(1300,.03,"square"); } }
+function arcStart(){ const G=ARCG; if(save.credits<ARC_COST){ toast(`You need ₵${ARC_COST} to play.`); return; } save.credits-=ARC_COST; persist(); hud(); G.state="play"; G.score=0; G.t0=performance.now(); beep(523,.06); setTimeout(()=>beep(784,.08),80);
+  if(G.k==="pong") G.g={py:150,cy:150,bx:240,by:150,vx:200*(Math.random()<.5?-1:1),vy:(Math.random()-.5)*160,ps:0,cs:0,trail:[],serve:performance.now()+700};
+  else if(G.k==="breaker"){ const br=[]; for(let r=0;r<6;r++) for(let c2=0;c2<10;c2++) br.push({x:20+c2*44,y:34+r*16,w:40,h:12,hp:r<2?2:1,c:["#ff3fa8","#ff8a3a","#ffd36a","#43f0a4","#38e8ff","#7c5cff"][r]}); G.g={x:240,bx:240,by:270,vx:0,vy:0,stuck:true,lives:3,br,lvl:1,parts:[]}; }
+  else if(G.k==="runner") G.g={y:240,vy:0,onGround:true,jumps:0,obs:[],chips:[],spawn:0,speed:220,dist:0,parts:[]};
+  else { const en=[]; for(let r=0;r<4;r++) for(let c2=0;c2<9;c2++) en.push({x:60+c2*40,y:40+r*28,r,alive:true}); G.g={x:240,shots:[],bombs:[],en,dir:1,sp:30,lives:3,lastShot:0,wave:1,parts:[],inv:0}; }
+  arcUI(); }
+function arcEnd(extra){ const G=ARCG; if(!G||G.state!=="play") return; G.state="over"; G.overAt=performance.now(); const k=G.k; const score=k==="pong"?(extra.won?1:0):Math.floor(G.score);
+  save.arcade=save.arcade||{}; const prev=+save.arcade[k]||0; let msg; let best=false;
+  if(k==="pong"){ if(extra.won){ save.arcade.pong=prev+1; best=true; } msg=extra.won?`YOU WIN ${G.g.ps}-${G.g.cs}!`:`CPU WINS ${G.g.cs}-${G.g.ps}`; }
+  else { if(score>prev){ save.arcade[k]=score; best=true; } msg=`GAME OVER · ${score} ${ARC[k].unit}`; }
+  const ch=arcReward(k,score,extra||{}); if(ch) save.chips+=ch; if(best&&k!=="pong"&&score>0){ save.credits+=25; } persist(); hud();
+  G.result={msg,ch,best:best&&k!=="pong"}; toast(`${ARC[k].n}: ${msg}${ch?` · +${ch} chips`:""}${best&&k!=="pong"&&score>0?" · NEW BEST +₵25":""}`,ARC[k].col); if(ch) [523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.08,"triangle"),i*80)); else beep(200,.2,"sawtooth"); arcUI(); }
+function arcLoop(){ const G=ARCG; if(!G||!G.cv.isConnected||currentView!=="arc_"+G.k){ stopArc(); return; } const now=performance.now(), dt=Math.min(.033,(now-G.last)/1000); G.last=now; const c=G.ctx, A=ARC[G.k], t=now/1000; c.setTransform(2,0,0,2,0,0);
+  c.fillStyle="#05030a"; c.fillRect(0,0,480,300); c.fillStyle="rgba(255,255,255,.02)"; for(let y=0;y<300;y+=3) c.fillRect(0,y,480,1);
+  if(G.state==="play") ({pong:pongStep,breaker:breakerStep,runner:runnerStep,invaders:invStep})[G.k](G,c,dt,t); else arcAttract(G,c,t);
+  if(G.state!=="play"){ c.fillStyle="rgba(5,3,10,.6)"; c.fillRect(0,0,480,300); c.textAlign="center"; c.font="bold 26px Silkscreen, monospace"; c.fillStyle=A.col; c.shadowColor=A.col; c.shadowBlur=16; c.fillText(G.state==="over"&&G.result?G.result.msg:A.n,240,120); c.shadowBlur=0; c.font="11px 'IBM Plex Mono',monospace"; c.fillStyle="#e9e2ff";
+    if(G.state==="over"&&G.result){ c.fillText(`${G.result.ch?`+${G.result.ch} chips`:"No chips this time"}${G.result.best?" · NEW BEST! +₵25":""}`,240,150); }
+    c.fillStyle=Math.sin(t*4)>0?"#fff":"#8d86ab"; c.fillText(save.credits>=ARC_COST?`PRESS SPACE / TAP · INSERT ₵${ARC_COST}`:`YOU NEED ₵${ARC_COST}`,240,190); }
+  requestAnimationFrame(arcLoop); }
+function arcAttract(G,c,t){ const k=G.k; c.globalAlpha=.5; if(k==="pong"){ c.fillStyle="#38e8ff"; c.fillRect(16,120+Math.sin(t*2)*60,6,40); c.fillRect(458,120+Math.sin(t*2+1)*60,6,40); c.fillRect(240+Math.sin(t*1.3)*200,150+Math.sin(t*2.7)*110,8,8); } else if(k==="breaker"){ for(let r=0;r<5;r++) for(let i=0;i<10;i++){ c.fillStyle=["#ff3fa8","#ff8a3a","#ffd36a","#43f0a4","#38e8ff"][r]; c.fillRect(20+i*44,34+r*16,40,12); } } else if(k==="runner"){ c.fillStyle="#43f0a4"; c.fillRect(0,260,480,2); for(let i=0;i<4;i++) c.fillRect(((i*140-t*120)%560+560)%560-40,236,14,24); } else { for(let r=0;r<4;r++) for(let i=0;i<9;i++){ c.fillStyle=["#ff3f5a","#ffb84a","#cf72ff","#43f0a4"][r]; c.fillRect(60+i*40+Math.sin(t)*20,40+r*28,22,14); } } c.globalAlpha=1; }
+function glowRect(c,x,y,w,h,col){ c.fillStyle=col; c.shadowColor=col; c.shadowBlur=10; c.fillRect(x,y,w,h); c.shadowBlur=0; }
+function pongStep(G,c,dt,t){ const g=G.g, D=[{sp:150,err:30},{sp:220,err:16},{sp:310,err:6}][G.diff];
+  const sp=280; if(G.keys.up) g.py-=sp*dt; if(G.keys.down) g.py+=sp*dt; if(G.px!=null&&G.drag) g.py+=(G.py-g.py)*Math.min(1,dt*14); g.py=Math.max(24,Math.min(276,g.py));
+  const target=g.vx>0?g.by+Math.sin(t*3)*D.err:150; g.cy+=Math.max(-D.sp*dt,Math.min(D.sp*dt,target-g.cy)); g.cy=Math.max(24,Math.min(276,g.cy));
+  if(performance.now()>g.serve){ g.bx+=g.vx*dt; g.by+=g.vy*dt; } if(g.by<6||g.by>294){ g.vy*=-1; g.by=Math.max(6,Math.min(294,g.by)); beep(400,.02,"square"); }
+  const hit=(px,py)=>Math.abs(g.by-py)<26&&Math.abs(g.bx-px)<8;
+  if(g.vx<0&&hit(22,g.py)){ g.vx=Math.min(520,-g.vx*1.06); g.vy+=(g.by-g.py)*5; g.bx=30; beep(880,.03,"square"); }
+  if(g.vx>0&&hit(458,g.cy)){ g.vx=-Math.min(520,g.vx*1.06); g.vy+=(g.by-g.cy)*5; g.bx=450; beep(660,.03,"square"); }
+  if(g.bx<-10||g.bx>490){ if(g.bx<0) g.cs++; else g.ps++; beep(g.bx<0?180:1200,.12); g.bx=240; g.by=150; g.vx=200*(g.bx<0?1:-1)*(Math.random()<.5?1:-1); g.vy=(Math.random()-.5)*160; g.serve=performance.now()+800; g.trail=[]; arcUI(); if(g.ps>=7||g.cs>=7){ arcEnd({won:g.ps>=7,diff:G.diff}); return; } }
+  g.trail.push([g.bx,g.by]); if(g.trail.length>12) g.trail.shift();
+  c.setLineDash([6,8]); c.strokeStyle="rgba(56,232,255,.35)"; c.beginPath(); c.moveTo(240,0); c.lineTo(240,300); c.stroke(); c.setLineDash([]);
+  c.font="bold 40px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle="rgba(56,232,255,.35)"; c.fillText(g.ps,180,50); c.fillStyle="rgba(255,63,168,.35)"; c.fillText(g.cs,300,50);
+  g.trail.forEach(([x,y],i)=>{ c.globalAlpha=i/g.trail.length*.5; c.fillStyle="#fff"; c.fillRect(x-3,y-3,6,6); }); c.globalAlpha=1;
+  glowRect(c,16,g.py-24,6,48,"#38e8ff"); glowRect(c,458,g.cy-24,6,48,"#ff3fa8"); glowRect(c,g.bx-4,g.by-4,8,8,"#fff"); }
+function breakerStep(G,c,dt,t){ const g=G.g; const sp=340; if(G.keys.left) g.x-=sp*dt; if(G.keys.right) g.x+=sp*dt; if(G.px!=null&&G.drag) g.x+=(G.px-g.x)*Math.min(1,dt*16); g.x=Math.max(36,Math.min(444,g.x));
+  if(g.stuck){ g.bx=g.x; g.by=270; } else { g.bx+=g.vx*dt; g.by+=g.vy*dt; if(g.bx<5||g.bx>475){ g.vx*=-1; g.bx=Math.max(5,Math.min(475,g.bx)); } if(g.by<5){ g.vy=Math.abs(g.vy); }
+    if(g.vy>0&&g.by>274&&g.by<284&&Math.abs(g.bx-g.x)<38){ g.vy=-Math.abs(g.vy)*1.01; g.vx=(g.bx-g.x)*7; beep(500,.03,"square"); }
+    for(const b of g.br){ if(b.hp<=0) continue; if(g.bx>b.x-4&&g.bx<b.x+b.w+4&&g.by>b.y-4&&g.by<b.y+b.h+4){ b.hp--; const fromSide=g.bx<b.x||g.bx>b.x+b.w; if(fromSide) g.vx*=-1; else g.vy*=-1; G.score+=b.hp?5:20*g.lvl; beep(b.hp?500:900+Math.random()*300,.03,"square"); if(!b.hp) for(let i=0;i<8;i++) g.parts.push({x:b.x+b.w/2,y:b.y+6,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,c:b.c,t:0}); arcUI(); break; } }
+    if(g.by>305){ g.lives--; arcUI(); beep(160,.2,"sawtooth"); if(g.lives<=0){ arcEnd({}); return; } g.stuck=true; }
+    if(g.br.every(b=>b.hp<=0)){ g.lvl++; G.score+=200; for(const b of g.br) b.hp=b.y<66?2:1; g.stuck=true; toast(`Level ${g.lvl}!`,"#ff3fa8"); } }
+  for(const b of g.br){ if(b.hp<=0) continue; glowRect(c,b.x,b.y,b.w,b.h,b.c); if(b.hp>1){ c.fillStyle="rgba(255,255,255,.5)"; c.fillRect(b.x+2,b.y+2,b.w-4,3); } }
+  g.parts=g.parts.filter(p=>(p.t+=dt)<.6); for(const p of g.parts){ c.globalAlpha=1-p.t/.6; c.fillStyle=p.c; c.fillRect(p.x+p.vx*p.t,p.y+p.vy*p.t,3,3); } c.globalAlpha=1;
+  glowRect(c,g.x-36,278,72,8,"#e9e2ff"); glowRect(c,g.bx-4,g.by-4,8,8,"#fff"); c.fillStyle="#8d86ab"; c.font="10px monospace"; c.textAlign="left"; c.fillText(`LVL ${g.lvl}`,8,296); }
+function runnerStep(G,c,dt,t){ const g=G.g; g.speed=Math.min(520,220+g.dist*.05); g.dist+=g.speed*dt/10; G.score=g.dist; g.vy+=900*dt; g.y+=g.vy*dt; if(g.y>=240){ g.y=240; g.vy=0; g.onGround=true; g.jumps=0; }
+  g.spawn-=dt; if(g.spawn<=0){ const tall=Math.random()<.35; g.obs.push({x:500,w:tall?16:24,h:tall?42:22}); if(Math.random()<.6) g.chips.push({x:560+Math.random()*80,y:150+Math.random()*60}); g.spawn=Math.max(.55,1.4-g.dist/3000)+Math.random()*.6; }
+  for(const o of g.obs) o.x-=g.speed*dt; for(const ch of g.chips) ch.x-=g.speed*dt; g.obs=g.obs.filter(o=>o.x>-40); g.chips=g.chips.filter(ch=>ch.x>-20&&!ch.got);
+  const px=70; for(const o of g.obs){ if(px+10>o.x&&px-10<o.x+o.w&&g.y>262-o.h-2){ beep(140,.3,"sawtooth"); arcEnd({}); return; } }
+  for(const ch of g.chips){ if(Math.abs(ch.x-px)<16&&Math.abs(ch.y-(g.y-14))<20){ ch.got=true; g.dist+=25; beep(1200,.04,"triangle"); } }
+  for(let i=0;i<30;i++){ c.fillStyle=`rgba(67,240,164,${.15+(i%3)*.1})`; c.fillRect(((i*67-t*g.speed*.3)%520+520)%520-20,20+(i*37)%180,2,2); }
+  c.fillStyle="#0a2a1a"; c.fillRect(0,262,480,38); c.strokeStyle="#43f0a4"; c.shadowColor="#43f0a4"; c.shadowBlur=8; c.beginPath(); c.moveTo(0,262); c.lineTo(480,262); c.stroke(); c.shadowBlur=0; for(let x=-(g.dist*10%40);x<480;x+=40){ c.strokeStyle="rgba(67,240,164,.25)"; c.beginPath(); c.moveTo(x,262); c.lineTo(x-20,300); c.stroke(); }
+  for(const o of g.obs){ glowRect(c,o.x,262-o.h,o.w,o.h,"#ff3f5a"); c.fillStyle="#fff"; c.fillRect(o.x+2,262-o.h+3,o.w-4,2); }
+  for(const ch of g.chips){ glowRect(c,ch.x-5,ch.y-5,10,10,"#ffd36a"); }
+  const run=g.onGround?Math.sin(t*20)*4:0; c.save(); c.translate(px,g.y); c.strokeStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=8; c.lineWidth=3; c.lineCap="round"; c.beginPath(); c.arc(0,-34,6,0,7); c.moveTo(0,-28); c.lineTo(0,-12); c.moveTo(0,-12); c.lineTo(-6+run,0); c.moveTo(0,-12); c.lineTo(6-run,0); c.moveTo(0,-24); c.lineTo(-8-run,-16); c.moveTo(0,-24); c.lineTo(8+run,-18); c.stroke(); c.restore(); c.shadowBlur=0;
+  c.fillStyle="#e9e2ff"; c.font="bold 12px 'IBM Plex Mono',monospace"; c.textAlign="right"; c.fillText(`${Math.floor(g.dist)} m`,470,18); if((performance.now()|0)%30===0) arcUI(); }
+function invStep(G,c,dt,t){ const g=G.g; const sp=260; if(G.keys.left) g.x-=sp*dt; if(G.keys.right) g.x+=sp*dt; if(G.px!=null&&G.drag) g.x+=(G.px-g.x)*Math.min(1,dt*14); g.x=Math.max(16,Math.min(464,g.x)); if(G.keys.act&&performance.now()-g.lastShot>320) arcAction("act");
+  const alive=g.en.filter(e=>e.alive); let edge=false; for(const e of alive){ e.x+=g.dir*g.sp*dt; if(e.x<14||e.x>444) edge=true; } if(edge){ g.dir*=-1; for(const e of alive) e.y+=12; }
+  if(Math.random()<dt*(.8+g.wave*.3)&&alive.length){ const s=alive[(Math.random()*alive.length)|0]; g.bombs.push({x:s.x+11,y:s.y+14}); }
+  for(const s of g.shots) s.y-=420*dt; for(const b of g.bombs) b.y+=170*dt; g.shots=g.shots.filter(s=>s.y>-10&&!s.hit); g.bombs=g.bombs.filter(b=>b.y<310&&!b.hit);
+  for(const s of g.shots) for(const e of alive){ if(e.alive&&s.x>e.x-2&&s.x<e.x+24&&s.y>e.y-2&&s.y<e.y+16){ e.alive=false; s.hit=true; G.score+=(4-e.r)*10*g.wave; beep(900+e.r*120,.03,"square"); for(let i=0;i<8;i++) g.parts.push({x:e.x+11,y:e.y+7,vx:(Math.random()-.5)*140,vy:(Math.random()-.5)*140,t:0,c:["#ff3f5a","#ffb84a","#cf72ff","#43f0a4"][e.r]}); arcUI(); break; } }
+  if(g.inv<=0) for(const b of g.bombs){ if(Math.abs(b.x-g.x)<14&&b.y>262&&b.y<284){ b.hit=true; g.lives--; g.inv=1.5; beep(160,.2,"sawtooth"); arcUI(); if(g.lives<=0){ arcEnd({}); return; } } } g.inv-=dt;
+  if(alive.some(e=>e.y>250)){ arcEnd({}); return; }
+  if(!g.en.some(e=>e.alive)){ g.wave++; g.sp=30+g.wave*10; G.score+=100*g.wave; g.en.forEach(e=>{ e.alive=true; e.x=60+(g.en.indexOf(e)%9)*40; e.y=40+e.r*28; }); toast(`Wave ${g.wave}!`,"#ffb84a"); }
+  for(let i=0;i<40;i++){ c.fillStyle="rgba(255,255,255,.3)"; c.fillRect((i*97)%480,(i*53+t*20)%300,1,1); }
+  for(const e of g.en){ if(!e.alive) continue; const col=["#ff3f5a","#ffb84a","#cf72ff","#43f0a4"][e.r], f=Math.sin(t*6+e.x)>0; c.fillStyle=col; c.shadowColor=col; c.shadowBlur=8; c.fillRect(e.x+4,e.y,14,10); c.fillRect(e.x,e.y+(f?4:6),4,6); c.fillRect(e.x+18,e.y+(f?4:6),4,6); c.fillStyle="#05030a"; c.fillRect(e.x+7,e.y+3,3,3); c.fillRect(e.x+12,e.y+3,3,3); c.shadowBlur=0; }
+  for(const s of g.shots) glowRect(c,s.x-1,s.y-6,2,8,"#38e8ff"); for(const b of g.bombs) glowRect(c,b.x-2,b.y-4,4,8,"#ff3f5a");
+  g.parts=g.parts.filter(p=>(p.t+=dt)<.5); for(const p of g.parts){ c.globalAlpha=1-p.t/.5; c.fillStyle=p.c; c.fillRect(p.x+p.vx*p.t,p.y+p.vy*p.t,3,3); } c.globalAlpha=1;
+  if(g.inv<=0||Math.sin(t*30)>0){ c.fillStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=10; c.beginPath(); c.moveTo(g.x,262); c.lineTo(g.x+14,282); c.lineTo(g.x-14,282); c.fill(); c.shadowBlur=0; }
+  c.fillStyle="#8d86ab"; c.font="10px monospace"; c.textAlign="left"; c.fillText(`WAVE ${g.wave}`,8,296); }
+function openArcScores(){ const body=panel("Arcade High Scores","The Grid's four arcade cabinets. Beat a score to take the top spot."); currentView=null;
+  for(const [k,A] of Object.entries(ARC)){ body.append(el("strong",{style:`color:${A.col}`,text:A.n})); const l=el("div",{class:"list"}); const rows=arcBoard(k); if(!rows.length) l.append(el("div",{class:"empty",text:"No scores yet."})); rows.slice(0,5).forEach(([n,v],i)=>l.append(el("div",{class:"li"},el("span",{class:"tag",text:`#${i+1}`}),el("div",{class:"grow",text:n}),el("span",{text:`${v} ${A.unit}`})))); body.append(l,el("button",{class:"btn hot",type:"button",text:`Play ${A.n}`,onclick:()=>{ closePanel(); me.x=A.x; openArc(k); }})); } }
+function drawArcadeRow(t){ for(const [k,A] of Object.entries(ARC)){ const x=A.x;
+  ctx.fillStyle="#120a24"; ctx.beginPath(); ctx.moveTo(x-48,250); ctx.lineTo(x-48,96); ctx.lineTo(x-38,78); ctx.lineTo(x+38,78); ctx.lineTo(x+48,96); ctx.lineTo(x+48,250); ctx.fill();
+  ctx.strokeStyle=A.col; ctx.shadowColor=A.col; ctx.shadowBlur=12; ctx.lineWidth=2; ctx.strokeRect(x-48,96,96,154); ctx.shadowBlur=0; ctx.lineWidth=1;
+  ctx.fillStyle="#05030a"; ctx.fillRect(x-38,108,76,62); ctx.save(); ctx.beginPath(); ctx.rect(x-38,108,76,62); ctx.clip(); ctx.translate(x-38,108); ctx.scale(76/480,62/300); arcAttract({k},ctx,t); ctx.restore();
+  ctx.fillStyle="rgba(255,255,255,.04)"; for(let y=108;y<170;y+=2) ctx.fillRect(x-38,y,76,1);
+  ctx.fillStyle="#1b1530"; ctx.fillRect(x-42,176,84,22); ctx.fillStyle="#e9e2ff"; ctx.beginPath(); ctx.arc(x-18,187,5,0,7); ctx.fill(); for(let i=0;i<3;i++){ ctx.fillStyle=[A.col,"#ffd36a","#43f0a4"][i]; ctx.beginPath(); ctx.arc(x+4+i*12,187,4,0,7); ctx.fill(); }
+  ctx.fillStyle="#2a1f44"; ctx.fillRect(x-14,214,28,8); ctx.fillStyle=Math.sin(t*3+x)>0?"#ffd36a":"#5a4a2a"; ctx.fillRect(x-4,216,8,4);
+  neonText(A.n.split(" ")[0],x,72,9,A.col,flick(60+x%7,t)); if(A.n.split(" ")[1]) neonText(A.n.split(" ").slice(1).join(" "),x,88,7,A.col,1); }
+  const bx=ARC_BOARD_X; ctx.fillStyle="#0b0716"; ctx.fillRect(bx-110,96,220,140); ctx.strokeStyle="#ffd36a"; ctx.strokeRect(bx-109.5,96.5,219,139); neonText("ARCADE HIGH SCORES",bx,88,9,"#ffd36a",1);
+  ctx.font="7px 'IBM Plex Mono',monospace"; let row=0; for(const [k,A] of Object.entries(ARC)){ const top=arcBoard(k)[0]; ctx.textAlign="left"; ctx.fillStyle=A.col; ctx.fillText(A.n,bx-100,116+row*30); ctx.fillStyle="#e9e2ff"; ctx.fillText(top?`${String(top[0]).slice(0,16)}`:"— no score yet —",bx-100,128+row*30); ctx.textAlign="right"; ctx.fillText(top?`${top[1]} ${A.unit}`:"",bx+100,128+row*30); row++; } ctx.textAlign="left";
+}
+
 function openUpload(){
   const prog=uplProg(); if(uplSel==null) uplSel=Math.min(prog.cleared,UPL_LEVELS.length-1);
   const body=panel("UPLOAD","Hack the Grid. Steer your upload through the firewall, grab every data packet, then dive into the uplink port to clear the level."); currentView="upload";
@@ -5942,7 +6059,7 @@ async function flush(){
   const data=JSON.parse(JSON.stringify(save));
   try{ localStorage.setItem("nh_save",JSON.stringify(data)); localStorage.setItem("nh_save_uid",myId||""); }catch(e){}
   if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); }catch(e){}
-    const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard()]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),at:Date.now()}); }catch(e){} } }
+    const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{}]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},at:Date.now()}); }catch(e){} } }
 }
 function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0;
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
@@ -5950,6 +6067,7 @@ function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") ret
   o.botMode=["off","easy","normal","hard"].includes(s.botMode)?s.botMode:"normal";
   o.land=s.land&&Number.isInteger(s.land.plot)&&s.land.plot>=0&&s.land.plot<1000?{plot:s.land.plot,at:+s.land.at||0}:null;
   o.landRigs=(Array.isArray(s.landRigs)?s.landRigs:[]).filter(r=>r&&BY[r.id]&&BY[r.id].k==="cminer").slice(0,6).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())}));
+  o.arcade=Object.fromEntries(Object.entries((s.arcade&&typeof s.arcade==="object")?s.arcade:{}).filter(([k,v])=>ARC[k]&&+v>0).map(([k,v])=>[k,Math.min(1e7,Math.floor(+v))]));
   o.fusions=Array.isArray(s.fusions)?s.fusions.filter(x=>typeof x==="string"&&FUSE_BY[x]).slice(0,20):[];
   o.blocked=Array.isArray(s.blocked)?s.blocked.filter(x=>typeof x==="string").slice(0,200):[];
   o.upload={cleared:Math.max(0,Math.min(10,Math.floor(+(s.upload&&s.upload.cleared))||0)),best:Math.max(0,Math.floor(+(s.upload&&s.upload.best))||0)};
