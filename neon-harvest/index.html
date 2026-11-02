@@ -238,7 +238,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ===================== MOBILE (touch) LAYOUT: only applies when #game has .mobile ===================== */
 #btnMenu{display:none}
-#game.mobile{--top:calc(54px + env(safe-area-inset-top,0px));--cvh:min(86vw,54vh);background:#07040f}
+#game.mobile{--top:calc(54px + env(safe-area-inset-top,0px));--cvh:max(min(86vw,54vh),min(110vw,calc(100vh - var(--top) - 350px)));background:#07040f}
 #game.mobile #overlay{z-index:15}
 #game.mobile button,#game.mobile .btn,#game.mobile .k{touch-action:manipulation}
 #game.mobile input,#game.mobile select,#game.mobile textarea{font-size:16px!important}
@@ -246,7 +246,24 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile .brand{display:none}
 #game.mobile .stats{flex-wrap:nowrap;width:100%;align-items:center;gap:5px;min-width:0}
 #game.mobile .stats .pill{font-size:12px;padding:0 8px;height:40px;display:inline-flex;align-items:center;gap:4px;flex:none}
-#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #buffs,#game.mobile #trippill,#game.mobile #jobpill{display:none!important}
+#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd{display:none!important}
+#mstatus,#mquick{display:none}
+#game.mobile #mstatus{display:flex;position:absolute;top:calc(var(--top) + 6px);left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));flex-wrap:wrap;gap:4px;z-index:5;pointer-events:none}
+#game.mobile #mstatus .pill{font-size:11px;height:auto;min-height:24px;padding:3px 8px;background:rgba(11,7,22,.86);display:inline-flex;align-items:center;max-width:100%;white-space:normal;line-height:1.25}
+#game.mobile #mstatus .pill[hidden]{display:none}
+#game.mobile:not(.portrait) #mstatus{left:auto;right:max(10px,env(safe-area-inset-right,0px));max-width:46vw;justify-content:flex-end}
+#game.mobile.portrait.mq #mquick{display:flex;position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(var(--top) + var(--cvh) + 8px);gap:6px;z-index:5}
+#mquick .btn{flex:1 1 0;min-width:0;height:48px;padding:2px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1}
+#mquick .btn span{font-size:18px}#mquick .btn small{font-size:9px;color:var(--dim);letter-spacing:.04em}
+#game.mobile.portrait.mq #prompt{top:calc(var(--top) + var(--cvh) + 64px)}
+#game.mobile.portrait.mq #chatlog{top:calc(var(--top) + var(--cvh) + 118px)}
+#game.mobile.portrait.mq #chatlog.open,#game.mobile.portrait.mq #invites{top:calc(var(--top) + var(--cvh) + 64px)}
+.tabx{position:relative;min-width:0}
+.tabx .tarr{position:absolute;top:0;bottom:2px;width:34px;border:0;z-index:2;color:var(--cyan);font-size:18px;cursor:pointer;padding:0}
+.tabx .tarr.l{left:0;background:linear-gradient(90deg,var(--panel) 55%,rgba(21,14,38,0))}
+.tabx .tarr.r{right:0;background:linear-gradient(270deg,var(--panel) 55%,rgba(21,14,38,0))}
+.tabx .tarr[hidden]{display:none}
+#game.mobile:not(.portrait) .wtop .tabx{flex:1 1 0;min-width:0}
 #game.mobile #hppill{max-width:34vw;overflow:hidden;text-overflow:ellipsis}
 #game.mobile .mbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;font-size:20px;flex:none}
 #game.mobile #btnBag{margin-left:auto}
@@ -368,6 +385,15 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn hot" id="btnAdmin" type="button" hidden>Admin</button>
       <button class="btn mbtn" id="btnMenu" type="button" aria-label="Menu">☰</button>
     </div>
+  </div>
+  <div id="mstatus" aria-live="polite"></div>
+  <div id="mquick" role="toolbar" aria-label="Quick actions">
+    <button class="btn" type="button" data-q="char" aria-label="Character"><span>👤</span><small>Look</small></button>
+    <button class="btn" type="button" data-q="travel" aria-label="Fast travel"><span>🚇</span><small>Travel</small></button>
+    <button class="btn" type="button" data-q="quests" aria-label="Quests"><span>📜</span><small>Quests</small></button>
+    <button class="btn" type="button" data-q="pet" aria-label="Companion"><span>🐾</span><small>Pet</small></button>
+    <button class="btn" type="button" data-q="online" aria-label="Who's online"><span>🟢</span><small>Online</small></button>
+    <button class="btn" type="button" data-q="help" aria-label="How to Play"><span>❓</span><small>Help</small></button>
   </div>
   <div id="toast" aria-live="polite"></div>
   <div id="invites" aria-live="polite"></div>
@@ -961,7 +987,7 @@ function renderChatLog(force){ const log=$("#chatlog"); if(!log) return; const n
   for(const d of log.children){ const h=d._h; if(!h) continue; const life=h.sys?SYS_LIFE:CHAT_LIFE, left=life-(now-h.at); d.style.opacity=chatTyping||(deck&&!h.sys)?"1":deck?".7":String(Math.max(0,Math.min(1,left/1500))); } }
 function COARSE_UI(){ return matchMedia("(max-width:520px)").matches; }
 setInterval(()=>renderChatLog(false),500);
-function hud(){ jobHud(); if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); const rpp=$("#rppill"); if(rpp){ rpp.hidden=!(myId&&(dccActive(myId)||(+save.rp||0)>0)); $("#rp").textContent=Math.floor(+save.rp||0).toLocaleString(); } }
+function hud(){ jobHud(); if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=MOBILE&&bf.length>1?`⚡ ${bf.length} boosts · ${Math.max(...bf.map(k=>Math.ceil((save.buffs[k]-Date.now())/60e3)))}m (☰ for details)`:bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); const rpp=$("#rppill"); if(rpp){ rpp.hidden=!(myId&&(dccActive(myId)||(+save.rp||0)>0)); $("#rp").textContent=Math.floor(+save.rp||0).toLocaleString(); } }
 
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
@@ -2075,6 +2101,19 @@ function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_g
   else nav.append(el("button",{class:"btn hot",type:"button",text:"Start playing",onclick:closePanel}));
   body.append(nav); }
 $("#btnHelp").onclick=()=>openGuide();
+/* ---- mobile: quick-action row, status strip, and scrollable tab rows with arrows */
+document.querySelectorAll("#mquick .btn").forEach(b=>b.addEventListener("click",()=>{ const q=b.dataset.q; beep(880,.04);
+  if(q==="char"){ tryOn=null; openWardrobe("name"); } else if(q==="travel") openFastTravel(); else if(q==="quests") openQuestLog(); else if(q==="pet") openCompanion(); else if(q==="online") openOnline(); else openGuide(); }));
+function mobileDeck(){ const g=$("#game"); if(!g||!MOBILE) return; const ms=$("#mstatus"); for(const id of ["#jobpill","#trippill","#buffs"]){ const e=$(id); if(e&&e.parentElement!==ms) ms.appendChild(e); }
+  let room=false; if(g.classList.contains("portrait")){ const cr=cv.getBoundingClientRect(), pad=$("#pad").getBoundingClientRect(); room=pad.top-cr.bottom>=64; } g.classList.toggle("mq",room); }
+function enhanceTabs(root){ if(!MOBILE) return; for(const t of root.querySelectorAll(".panel .tabs")){ if(t.parentElement&&t.parentElement.classList.contains("tabx")) continue; const w=document.createElement("div"); w.className="tabx"; t.parentElement.insertBefore(w,t); w.appendChild(t);
+    const L=el("button",{class:"tarr l",type:"button","aria-label":"Scroll tabs left",text:"‹"}), R=el("button",{class:"tarr r",type:"button","aria-label":"More tabs",text:"›"}); w.append(L,R);
+    const upd=()=>{ const max=t.scrollWidth-t.clientWidth; L.hidden=t.scrollLeft<4; R.hidden=max<=4||t.scrollLeft>=max-4; };
+    L.onclick=()=>{ t.scrollBy({left:-t.clientWidth*.7,behavior:"smooth"}); }; R.onclick=()=>{ t.scrollBy({left:t.clientWidth*.7,behavior:"smooth"}); };
+    t.addEventListener("scroll",upd,{passive:true}); const center=()=>{ const sel=t.querySelector('[aria-pressed="true"],.btn.hot'); if(sel){ const a=t.getBoundingClientRect(), b=sel.getBoundingClientRect(); t.scrollLeft=Math.max(0,t.scrollLeft+(b.left-a.left)-t.clientWidth/2+b.width/2); } upd(); };
+    requestAnimationFrame(center); setTimeout(center,120); setTimeout(upd,400); } }
+if(window.MutationObserver){ let qd=0; new MutationObserver(()=>{ if(qd) return; qd=requestAnimationFrame(()=>{ qd=0; enhanceTabs($("#overlay")); }); }).observe($("#overlay"),{childList:true,subtree:true}); }
+setInterval(mobileDeck,1000); addEventListener("resize",()=>setTimeout(mobileDeck,100)); setTimeout(mobileDeck,300);
 let guideAuto=(()=>{ try{ return !localStorage.getItem("nh_guide_seen"); }catch(e){ return false; } })();
 setInterval(()=>{ if(!guideAuto) return; if(!$("#title").hidden||!$("#overlay").hidden||!save||!save.name) return; guideAuto=false; openGuide("start"); },1200);
 function el(tag,props={},...kids){ const e=document.createElement(tag); for(const [k,v] of Object.entries(props)){ if(k==="class") e.className=v; else if(k==="text") e.textContent=v; else if(k.startsWith("on")) e[k]=v; else e.setAttribute(k,v); } for(const k of kids) if(k!=null) e.append(k); return e; }
