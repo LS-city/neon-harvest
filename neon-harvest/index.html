@@ -1654,7 +1654,41 @@ const SCENES={
   clash:{w:2500, spawn:140},
 };
 // hotspots: x center, half-width, label, act
-function hotspots(sc){ const base=hotspotsBase(sc)||[]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
+function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
+/* ============================================================ RP EXCHANGE MACHINES: trade credits for Reward Points */
+const RPM_COST=4000, RPM_GET=50, RPM_MAX=10;
+const RPM_SPOTS={street:{x:2150,n:"Sector 9"},byte:{x:2170,n:"Byte Market"},grid:{x:2000,n:"The Grid"},smacked:{x:1185,n:"Smacked Shop"}};
+function rpmHot(sc){ const m=RPM_SPOTS[sc]; return m?[{x:m.x,hw:42,label:`RP Exchange: ₵${RPM_COST.toLocaleString()} → ${RPM_GET} RP`,act:()=>openRPM()}]:[]; }
+let rpmQty=1;
+function openRPM(){ const member=!!(myId&&dccActive(myId)), bal=Math.floor(+save.rp||0), cr=Math.floor(save.credits), maxQ=Math.max(1,Math.min(RPM_MAX,Math.floor(cr/RPM_COST)));
+  rpmQty=clamp(rpmQty,1,maxQ); const body=panel("RP Exchange Machine",`Trade credits for Reward Points. ₵${RPM_COST.toLocaleString()} buys ${RPM_GET} RP.`); currentView="rpm";
+  body.append(el("div",{class:"detail"},rpmIcon(),el("div",{class:"info"},el("strong",{text:`₵${RPM_COST.toLocaleString()} → ${RPM_GET} RP`}),el("span",{text:`You have ₵${cr.toLocaleString()} and ${bal.toLocaleString()} RP.`}),
+    el("span",{class:"sub",text:`Machines stand in ${Object.values(RPM_SPOTS).map(s=>s.n).join(", ")}. Exchanged points don't count toward your daily work limit.`}))));
+  if(!myId){ body.append(el("div",{class:"r-epic",text:"Sign in to use the RP Exchange."})); return; }
+  if(!member){ body.append(el("div",{class:"r-epic",text:"🔒 Members only. Reward Points are for Data Collectors Club members, so the machine stays locked until you're a member. Your credits are safe."})); return; }
+  if(cr<RPM_COST){ body.append(el("div",{class:"r-epic",text:`You need ₵${(RPM_COST-cr).toLocaleString()} more for one exchange.`})); return; }
+  const q=el("strong",{text:""}), tot=el("span",{class:"r-uncommon",text:""});
+  const draw=()=>{ q.textContent=`× ${rpmQty}`; tot.textContent=`Pay ₵${(RPM_COST*rpmQty).toLocaleString()} · get ${(RPM_GET*rpmQty).toLocaleString()} RP · ₵${(cr-RPM_COST*rpmQty).toLocaleString()} left`; go.textContent=`Exchange ₵${(RPM_COST*rpmQty).toLocaleString()} for ${(RPM_GET*rpmQty).toLocaleString()} RP`; minus.disabled=rpmQty<=1; plus.disabled=rpmQty>=maxQ; };
+  const minus=el("button",{class:"btn",type:"button","aria-label":"Fewer",text:"−",onclick:()=>{ rpmQty=Math.max(1,rpmQty-1); draw(); }}), plus=el("button",{class:"btn",type:"button","aria-label":"More",text:"+",onclick:()=>{ rpmQty=Math.min(maxQ,rpmQty+1); draw(); }});
+  const go=el("button",{class:"btn hot",type:"button",onclick:()=>rpmExchange(rpmQty)});
+  body.append(el("div",{class:"row",style:"align-items:center;gap:8px;flex-wrap:wrap"},el("span",{text:"Exchanges:"}),minus,q,plus),tot,el("div",{class:"row"},go),el("p",{class:"sub",text:"Exchanges are final: points can't be turned back into credits."})); draw(); }
+function rpmExchange(n){ n=Math.floor(n); if(!(n>=1)||!myId||!dccActive(myId)) return; const cost=RPM_COST*n; if(save.credits<cost){ toast(`You need ₵${cost.toLocaleString()}.`); beep(150,.15); return; }
+  save.credits-=cost; save.rp=(+save.rp||0)+RPM_GET*n; rpNote(RPM_GET*n,"RP Exchange machine"); persist(); hud();
+  [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.07,"square",.04),i*70)); me.emote={e:"cheer",t:T}; rpmFlash=T; rpmQty=1; openRPM(); }
+let rpmFlash=-9;
+function rpmIcon(){ const cv=document.createElement("canvas"); cv.width=120; cv.height=150; cv.style.cssText="width:60px;height:75px;flex:none"; const c=cv.getContext("2d"); c.scale(1,1); c.translate(60,145); drawRPMachine(c,0,0,1.15,1.2); return cv; }
+function drawRPMachine(c,x,y,s,t){ c.save(); c.translate(x,y); c.scale(s,s);
+  c.fillStyle="rgba(0,0,0,.45)"; c.beginPath(); c.ellipse(0,0,30,6,0,0,7); c.fill();
+  c.fillStyle="#120c22"; c.fillRect(-24,-112,48,112); c.strokeStyle="#43f0a4"; c.shadowColor="#43f0a4"; c.shadowBlur=10; c.lineWidth=2; c.strokeRect(-23,-111,46,110); c.shadowBlur=0;
+  c.fillStyle="#43f0a4"; c.fillRect(-24,-122,48,12); c.fillStyle="#0b0716"; c.font="bold 6px Silkscreen, monospace"; c.textAlign="center"; c.fillText("RP EXCHANGE",0,-114);
+  c.fillStyle="#05030a"; c.fillRect(-17,-100,34,30); const fl=(T-rpmFlash)<1.2; c.fillStyle=fl?"#43f0a4":"#38e8ff"; c.font="7px 'IBM Plex Mono',monospace"; c.fillText(fl?"+RP!":"₵4,000",0,-88); c.fillStyle="#43f0a4"; c.fillText(fl?"THANKS":"→ 50 RP",0,-77);
+  c.fillStyle="rgba(255,255,255,.05)"; for(let k=-100;k<-70;k+=2) c.fillRect(-17,k,34,1);
+  c.fillStyle="#2a1f44"; c.fillRect(-12,-62,24,5); c.fillStyle=Math.sin(t*4)>0?"#ffd36a":"#5a4a2a"; c.fillRect(-6,-61,12,3);
+  for(let k=0;k<3;k++){ c.fillStyle=["#43f0a4","#ffd36a","#ff3fa8"][k]; c.beginPath(); c.arc(-10+k*10,-46,3.2,0,7); c.fill(); }
+  c.fillStyle="#0b0716"; c.fillRect(-14,-28,28,12); c.strokeStyle="#43f0a4"; c.lineWidth=1; c.strokeRect(-14,-28,28,12); c.fillStyle="#43f0a4"; c.globalAlpha=.4+.3*Math.sin(t*3); c.fillRect(-12,-26,24,8); c.globalAlpha=1;
+  c.restore(); }
+function drawRPMachines(t){ const m=RPM_SPOTS[me.scene]; if(!m) return; drawRPMachine(ctx,m.x,262,1,t); }
+
 function hotspotsBase(sc){
   if(sc==="street") return [
     {x:300,hw:60,label:"Enter Apt 7C (home)",act:()=>openHomeDoor()},
@@ -1986,6 +2020,7 @@ function stepInner(now){
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
   if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else drawHome(T); if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  drawRPMachines(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
@@ -2085,7 +2120,7 @@ const GUIDE={
     ["Trade and compete",["Gift parts by tapping a player, sell on the Trade Board, challenge players in The Grid, and climb the Top Duelists and Top Fraggers boards."]]]},
   rewards:{n:"Rewards",secs:[
     ["Data Collectors Club",[()=>`A members-only club for $${ECON.price} a month. The game's owner turns your membership on for a set time.`,"Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members earn Reward Points and redeem Smacked Shop rewards. Anyone can browse the shop."]],
-    ["Earn Reward Points (RP)",["Members earn 1 RP for every credit they earn from work:","Shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar and the Harvest Assembly line (pay, tips and wages).","Courier Hub package deliveries, story quest chapters (Q) and Story Mode endings.","These don't earn RP: parts orders (Vex's jobs, parts deliveries and rig commissions), Credit Miners and other miners, Grid duels and arcades, The Void, gifts, the Trade Board, selling parts, home bonuses and anything else.",()=>`Daily limit: up to ${ECON.dayMax.toLocaleString()} RP a day. Your RP balance shows at the top of the screen (on phones, inside Smacked Shop).`]],
+    ["Earn Reward Points (RP)",["Members earn 1 RP for every credit they earn from work:","Shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar and the Harvest Assembly line (pay, tips and wages).","Courier Hub package deliveries, story quest chapters (Q) and Story Mode endings.","RP Exchange machines (Sector 9, Byte Market, The Grid and Smacked Shop): members can trade ₵4,000 for 50 RP, up to 10 exchanges at a time. These points don't count toward the daily limit.","These don't earn RP: parts orders (Vex's jobs, parts deliveries and rig commissions), Credit Miners and other miners, Grid duels and arcades, The Void, gifts, the Trade Board, selling parts, home bonuses and anything else.",()=>`Daily limit: up to ${ECON.dayMax.toLocaleString()} RP a day. Your RP balance shows at the top of the screen on PC and phones. Tap it for your earnings history.`]],
     ["Redeem at Smacked Shop (Metro)",["Each reward has a price in RP. Pick one and tap Redeem to get a pickup code like SMK-AB12-CD34.","Show the code at the shop in person to collect your item. The owner checks every code before handing anything over. All your codes are under My pickup codes.","Monthly reward limit: there's a cap on how much you can redeem each month. Smacked Shop shows how much of it you have left, and it resets on the 1st.","Cancelled codes refund your RP automatically, but still count toward that month's limit. Codes you already have stay valid even if your membership ends."]]]}
 };
 let guideTab="start";
@@ -3143,6 +3178,7 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"Volt Armory",d:"Weapons for The Void",s:"byte",x:4240},
   {g:"Hot spots",n:"UPLOAD arcade",d:"Snake-style hacking levels at The Grid",s:"grid",x:()=>UPL_X},
   {g:"Hot spots",n:"Story Mode · Lethe Clinic",d:"A dark psychological text story with choices and 9 endings",s:"story",x:()=>STORY_X.door},
+  {g:"Hot spots",n:"RP Exchange machine",d:"Members: trade ₵4,000 for 50 RP (Sector 9)",s:"street",x:2150},
   {g:"Hot spots",n:"Grid Arcade",d:"Neon Pong, Byte Breaker, Grid Runner, Firewall Invaders",s:"grid",x:()=>ARC.pong.x},
   {g:"Hot spots",n:"Your Linx Land plot",d:"Collect ₵ from your Credit Miners",s:"linx",x:()=>myPlot()>=0?plotX(myPlot()):140,need:()=>myPlot()>=0},
 ];
@@ -3659,7 +3695,7 @@ function openRP(){ const member=!!(myId&&dccActive(myId)), bal=Math.floor(+save.
   else if(member){ const d=dcc[myId]; body.append(el("div",{class:"r-uncommon",text:`✓ Data Collectors Club member${d&&d.until?` until ${new Date(d.until).toLocaleDateString()}`:""}: you're earning RP from work.`})); }
   else body.append(el("div",{class:"r-epic",text:"You're not a Data Collectors Club member right now, so work doesn't earn RP. Points you already have stay saved."}));
   if(member){ const pct=Math.min(100,today/ECON.dayMax*100); body.append(el("strong",{text:`Today: ${today.toLocaleString()} / ${ECON.dayMax.toLocaleString()} RP`}),el("div",{class:"rpbar"},el("i",{style:`width:${pct}%`})),el("span",{class:"sub",text:today>=ECON.dayMax?"You've hit today's limit. It resets at midnight.":`${(ECON.dayMax-today).toLocaleString()} RP left to earn today.`})); }
-  body.append(el("strong",{text:"How members earn RP"}),el("span",{class:"sub",text:"1 RP for every credit earned from work: shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More and The Third Eye bar (pay and tips), Harvest Assembly wages and tips, Courier Hub package runs, story quest chapters and Story Mode endings."}));
+  body.append(el("strong",{text:"How members earn RP"}),el("span",{class:"sub",text:"1 RP for every credit earned from work: shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More and The Third Eye bar (pay and tips), Harvest Assembly wages and tips, Courier Hub package runs, story quest chapters and Story Mode endings. You can also trade ₵4,000 for 50 RP at an RP Exchange machine (Sector 9, Byte Market, The Grid, Smacked Shop)."}));
   body.append(el("strong",{text:"Recent RP earnings"})); const l=el("div",{class:"list"}); const log=Array.isArray(save.rpLog)?save.rpLog:[];
   if(!log.length) l.append(el("div",{class:"empty",text:member?"Nothing yet. Work a shift or run a courier package to start earning.":"No RP earned yet."}));
   for(const e of log.slice(0,25)) l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:#43f0a4;border-color:#43f0a4",text:`+${e.n.toLocaleString()}`}),el("div",{class:"grow"},el("div",{text:e.s}),el("div",{class:"sub",text:rpAgo(e.t)})),el("span",{class:"sub",text:"RP"})));
