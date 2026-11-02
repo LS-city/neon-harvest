@@ -76,16 +76,40 @@
     form.onsubmit=async e=>{ e.preventDefault(); say(""); go.disabled=true; try{ if(mode==="signup") await auth.createUserWithEmailAndPassword(email.value.trim(),pass.value); else await auth.signInWithEmailAndPassword(email.value.trim(),pass.value); }catch(err){ say(errText(err)); go.disabled=false; } };
     const forgot=h("button",{class:"link",type:"button",text:"Forgot your password?",onclick:async()=>{ if(!email.value.trim()){ say("Type your email above first."); return; } try{ await auth.sendPasswordResetEmail(email.value.trim()); say("Password reset email sent. Check your inbox.",true); }catch(e){ say(errText(e)); } }});
     card.append(h("div",{class:"logo",text:"NEON HARVEST"}),h("div",{class:"sub",text:"SECTOR 9 · CHIPS · PARTS · RIGS"}),tabs,g,h("div",{class:"or",text:"or use email"}),form);
-    if(mode==="signin") card.append(forgot); card.append(msg,h("p",{class:"note",text:"Your account keeps your stash, apartment, pickup codes and winnings on every device."}));
+    if(mode==="signin") card.append(forgot); card.append(msg,h("p",{class:"note",text:"NEON HARVEST is for players 21 and older. Your account keeps your stash, apartment, pickup codes and winnings on every device."}));
     ov.append(card); document.body.appendChild(ov); setTimeout(()=>email.focus(),30); }
   function hideAuth(){ if(ov){ ov.remove(); ov=null; } }
+
+  /* ---------- 21+ age check: asked once per account, before the game loads ---------- */
+  // Only "confirmed 21+" and the time are stored, in the player's private save area. The birth date itself is never saved.
+  function ageGate(u){ return new Promise(async resolve=>{
+    const ref=fs.doc("data/users/"+u.uid+"/age/check");
+    try{ const s=await ref.get(); if(s.exists&&s.data().ok===true) return resolve(true); }catch(e){}
+    ensureStyle(); if(ov) ov.remove();
+    ov=h("div",{id:"nh-auth",role:"dialog","aria-label":"Confirm your age"}); const card=h("div",{class:"card"});
+    const msg=h("div",{class:"msg",role:"status"});
+    const dob=h("input",{id:"nh-dob",type:"date",autocomplete:"bday",max:new Date().toISOString().slice(0,10)});
+    const go=h("button",{class:"hot",type:"submit",text:"Continue"});
+    const form=h("form",{style:"display:flex;flex-direction:column;gap:10px"},h("label",{},"Date of birth",dob),go);
+    form.onsubmit=async e=>{ e.preventDefault(); msg.textContent="";
+      const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(dob.value); if(!m){ msg.textContent="Enter your date of birth."; return; }
+      const y=+m[1], mo=+m[2], d=+m[3], now=new Date(); let age=now.getFullYear()-y; if(now.getMonth()+1<mo||(now.getMonth()+1===mo&&now.getDate()<d)) age--;
+      if(age<21){ card.innerHTML=""; card.append(h("div",{class:"logo",text:"NEON HARVEST"}),h("div",{class:"sub",text:"21+ ONLY"}),
+          h("p",{text:"Sorry, NEON HARVEST is only for players 21 and older."}),h("button",{type:"button",text:"Sign out",onclick:()=>auth.signOut()})); return; }
+      go.disabled=true; try{ await ref.set({ok:true,at:Date.now()}); }catch(err){ msg.textContent="Couldn't save that. Check your connection and try again."; go.disabled=false; return; }
+      hideAuth(); resolve(true); };
+    card.append(h("div",{class:"logo",text:"NEON HARVEST"}),h("div",{class:"sub",text:"21+ ONLY"}),
+      h("p",{text:"NEON HARVEST is for adults 21 and older. Confirm your date of birth to continue. You'll only be asked once."}),form,msg,
+      h("p",{class:"note",text:"Your birth date isn't saved, only that you're 21 or older. Smacked Shop pickups also require a photo ID."}),
+      h("button",{class:"link",type:"button",text:"Sign out",onclick:()=>auth.signOut()}));
+    ov.append(card); document.body.appendChild(ov); setTimeout(()=>dob.focus(),30); }); }
 
   auth.getRedirectResult().catch(()=>{});
   let signedInOnce=false;
   auth.onAuthStateChanged(async u=>{
     if(u){ current=u; hideAuth(); window.NH_ACCOUNT_LABEL="Signed in as "+(u.email||displayName(u));
       try{ await fs.doc("profiles/"+u.uid).set({name:displayName(u),at:Date.now()},{merge:true}); }catch(e){}
-      if(!signedInOnce){ signedInOnce=true; startPresence(); readyResolve(u); } }
+      if(!signedInOnce){ signedInOnce=true; if(!document.body) await new Promise(r=>window.addEventListener("DOMContentLoaded",r,{once:true})); await ageGate(u); startPresence(); readyResolve(u); } }
     else { if(signedInOnce){ location.reload(); return; } current=null; if(document.body) showAuth(); else window.addEventListener("DOMContentLoaded",()=>showAuth()); } });
 
   /* ---------- Firestore <-> game data (nested arrays are encoded, Firestore can't store them) ---------- */

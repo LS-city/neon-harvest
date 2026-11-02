@@ -18,6 +18,10 @@ Multiplayer, accounts and saving run on [Firebase](https://firebase.google.com) 
 
 The config values are safe to publish. Access is controlled by the security rules.
 
+## Adults only (21+)
+
+After signing in, each new account confirms its date of birth once. Only "confirmed 21+" and the time are saved (in `data/users/{uid}/age/check`, private to that player), never the birth date. Anyone under 21 is shown a message and can only sign out. This is a self-confirmation, so also check a photo ID at every Smacked Shop pickup.
+
 ## Owner powers
 
 `NH_OWNER_EMAIL` in `firebase-config.js` is the only account that can stock Smacked Shop, verify pickup codes, and claim the name **Rassir**. Sign in with **Continue with Google** using that address. Email/password accounts don't count until their email is verified, so nobody can register your address and take over the shop.
