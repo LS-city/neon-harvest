@@ -114,6 +114,16 @@ canvas.dccsym{vertical-align:-3px;margin-right:4px;display:inline-block}
 .panel header{flex:none}
 .panel .body > *{flex-shrink:0}
 .tabs{display:flex;gap:4px;flex-wrap:wrap}
+.stcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+.stcard{border:1px solid #2a2140;background:#0d0919;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stcard b{font-size:22px;color:var(--cyan);font-family:Silkscreen,monospace}.stcard span{font-size:12px}.stcard small{color:var(--dim);font-size:11px}
+.sth{margin:16px 0 4px;font-size:13px;color:var(--pink);letter-spacing:.08em;text-transform:uppercase}
+.stbars{display:flex;flex-direction:column;gap:4px}.stbar{display:grid;grid-template-columns:minmax(90px,34%) 1fr auto;gap:8px;align-items:center;font-size:12px}
+.stbar .stl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stbar .stt{height:10px;background:#160f28}.stbar .stt i{display:block;height:100%}.stbar .stv{color:var(--dim);font-size:11px;white-space:nowrap}
+.stcols{display:flex;align-items:flex-end;gap:2px;height:120px;padding-top:14px;border-bottom:1px solid #2a2140}
+.stcol{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative;min-width:0}
+.stcol i{width:100%;display:block}.stcol .stn{font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;max-width:100%}.stcol .stx{position:absolute;bottom:-14px;font-size:9px;color:var(--dim);white-space:nowrap}
+.stcols{margin-bottom:16px}
 .tabs .btn[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
 .guide h3{margin:14px 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}.guide ul{margin:0;padding-left:18px}.guide li{margin:4px 0;line-height:1.5;font-size:13px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
@@ -1794,7 +1804,7 @@ cv.addEventListener("pointerdown",e=>{ const r=cv.getBoundingClientRect(); const
   const sw=SCENES[me.scene].w; target={x:clamp(wx,30,sw-30),y:clamp(wy,LANE.top,LANE.bot)}; });
 
 function useHot(){ if(!$("#overlay").hidden) return; if(nearHot){ beep(880,.05); safeAct(nearHot); } }
-function safeAct(h){ try{ h.act(); }catch(e){ console.error(e); toast("That didn't work. Try again."); } }
+function safeAct(h){ try{ stTrack("act",h.label); }catch(e){} try{ h.act(); }catch(e){ console.error(e); toast("That didn't work. Try again."); } }
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
   setTimeout(()=>{ go(scene,x); if(scene==="assembly") chatLine(null,"Harvest Assembly: clock in at the shift board or walk into any open bay. ₵400/hr while you keep building, plus speed tips. Up to 60 min per shift, 2 shifts a day. Leaving clocks you out.","sys"); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards. Redeem with chips or credits and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
@@ -1870,7 +1880,7 @@ function emote(e){ me.emote={e,t:T}; pushPresence(true,{emote:{e,at:Date.now()}}
 
 /* ============================================================ PANELS */
 let panelFresh=0; const freshTab=f=>()=>{ panelFresh=1; f(); };
-function panel(title,sub,refresh){ currentView=null; const ov=$("#overlay");
+function panel(title,sub,refresh){ currentView=null; if(!refresh&&($("#overlay").hidden||stLastPanel!==title)){ stLastPanel=title; try{ stTrack("panel",String(title).split("·")[0]); }catch(e){} } const ov=$("#overlay");
   { const ob=ov.hidden?null:ov.querySelector(".panel .body"), ot=ov.hidden?null:ov.querySelector(".panel .tabs"); const same=ob&&ov.querySelector(".panel")?.getAttribute("aria-label")===title;
     const fresh=panelFresh; panelFresh=0;
     if(same){ const top=ob.scrollTop, tl=ot?ot.scrollLeft:0; setTimeout(()=>{ const nb=ov.querySelector(".panel .body"), nt=ov.querySelector(".panel .tabs"); if(nb&&!refresh&&!fresh) nb.scrollTop=top; if(nt){ nt.scrollLeft=tl; tabEdge(nt); } },0); }
@@ -4588,12 +4598,13 @@ function paintDcc(cv){ const c=cv.getContext("2d"), w=cv.width; c.clearRect(0,0,
 setInterval(()=>{ for(const cv of document.querySelectorAll("canvas.dccsym")) if(cv.isConnected) paintDcc(cv); },90);
 function updAdminBtn(){ const b=$("#btnAdmin"); if(b) b.hidden=!IS_ADMIN; }
 $("#btnAdmin").onclick=()=>openAdmin();
-let dccTab="dcc", dccQ="";
+let dccTab="dcc", dccQ="", stLastPanel="";
 function refreshAdmin(){ if(currentView==="admin") openAdmin(dccTab); }
 function adminPlayers(){ const ids=new Set([...Object.keys(homes||{}),...Object.keys(dcc)]); for(const p of peers.values()) if(p.by) ids.add(p.by); if(myId) ids.add(myId); return [...ids].filter(Boolean); }
 function openAdmin(tab){ if(!IS_ADMIN){ toast("Admins only."); return; } dccTab=tab||dccTab; const body=panel("Admin Panel","Owner-only tools. Only your account can see or use these."); currentView="admin";
-  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["symbols","Symbols"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["stats","Player stats"],["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["symbols","Symbols"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
   if(!DB){ body.append(el("div",{class:"empty",text:"Sign in with the owner account to manage memberships."})); return; }
+  if(dccTab==="stats") return adminStats(body);
   if(dccTab==="symbols"){ body.append(el("p",{class:"sub",text:`The ${DCC_SYMS.length} Data Collectors Club symbols. Pick one per member when you grant or edit a membership.`})); const g=el("div",{class:"dccgrid"}); DCC_SYMS.forEach((S,i)=>g.append(el("div",{class:"card"},dccCanvas(i,46),el("div",{class:"nm",text:S.n})))); body.append(g); return; }
   if(dccTab==="members"){ const ids=Object.keys(dcc).sort((a,b)=>(dccActive(b)-dccActive(a))||((dcc[a].until||9e15)-(dcc[b].until||9e15)));
     if(!ids.length){ body.append(el("div",{class:"empty",text:"No members yet. Grant one from the Data Collectors Club tab."})); return; }
@@ -4611,6 +4622,76 @@ function openAdmin(tab){ if(!IS_ADMIN){ toast("Admins only."); return; } dccTab=
       l.append(el("div",{class:"li"},lk?lookCanvas(validLook?validLook(lk):lk,26):el("span",{class:"tag",text:"?"}),el("div",{class:"grow"},el("div",{},...(dccSym(id)>=0?[dccCanvas(dccSym(id),14)]:[]),nameOf(id)+(id===myId?" (you)":"")),el("div",{class:st.cls,text:st.txt+(on?" · online":"")})),
         el("button",{class:"btn"+(dcc[id]?"":" hot"),type:"button",text:dcc[id]?"Manage":"Grant",onclick:()=>openDccEdit(id)}))); } }
   draw(); setTimeout(()=>{ if(dccQ) q.focus(); },0); }
+/* ============================================================ PLAYER STATS (owner analytics) */
+const ST_IDLE=180e3, ST_SESS_GAP=30*60e3; let ST=null, stDirty=false, stLastInput=Date.now(), stLoaded=false, stDocs=null, stUnsub=null, stRange=7;
+function stKey(s){ return String(s||"").replace(/\(.*?\)/g,"").replace(/₵\s*[\d,]+|[\d,]+\s*(chips?|credits?)/gi,"").replace(/[^A-Za-z&' -]+/g," ").replace(/\s+/g," ").trim().slice(0,40); }
+function stHour(ms){ const d=new Date(ms); return `${ymd(ms)}T${String(d.getHours()).padStart(2,"0")}`; }
+function stBlank(){ const n=Date.now(); return {kind:"stats",v:1,first:n,last:n,total:0,afk:0,sessions:0,scene:{},act:{},panel:{},hours:{},days:{},conc:{},sess:[]}; }
+function stCap(m,n){ const e=Object.entries(m||{}); if(e.length<=n) return m||{}; return Object.fromEntries(e.sort((a,b)=>b[1]-a[1]).slice(0,n)); }
+function stPrune(){ const d=ymd(Date.now()-30*864e5), h=stHour(Date.now()-14*864e5); for(const k in ST.days) if(k<d) delete ST.days[k]; for(const k in ST.conc) if(k<h) delete ST.conc[k]; ST.act=stCap(ST.act,80); ST.panel=stCap(ST.panel,80); ST.sess=ST.sess.slice(-40); }
+function stValid(d){ const o=stBlank(); if(!d||typeof d!=="object") return o; const num=m=>Object.fromEntries(Object.entries(m&&typeof m==="object"?m:{}).filter(([k,v])=>typeof k==="string"&&k.length<=48&&isFinite(+v)&&+v>0).map(([k,v])=>[k,+v]));
+  for(const k of ["first","last","total","afk","sessions"]) if(isFinite(+d[k])) o[k]=+d[k]; for(const k of ["scene","act","panel","hours","days","conc"]) o[k]=num(d[k]); o.sess=(Array.isArray(d.sess)?d.sess:[]).filter(s=>s&&isFinite(+s.at)&&isFinite(+s.sec)).slice(-40).map(s=>({at:+s.at,sec:+s.sec})); o.name=typeof d.name==="string"?d.name.slice(0,24):""; return o; }
+function stTouch(){ if(!ST) return; const n=Date.now(), s=ST.sess[ST.sess.length-1]; if(!s||n-(s.at+s.sec*1000)>ST_SESS_GAP){ ST.sess.push({at:n,sec:0}); ST.sessions++; } }
+function stCount(map,key){ if(!ST) return; key=stKey(key); if(!key) return; ST[map][key]=(ST[map][key]||0)+1; stDirty=true; }
+function stTrack(kind,key){ stCount(kind==="panel"?"panel":"act",key); }
+for(const ev of ["keydown","pointerdown","wheel"]) addEventListener(ev,()=>{ const was=Date.now()-stLastInput>ST_IDLE; stLastInput=Date.now(); if(was) stTouch(); },{passive:true,capture:true});
+function stTick(){ if(!ST||!myId) return; const n=Date.now(); if(document.visibilityState!=="visible") return; if(n-stLastInput>ST_IDLE){ ST.afk++; return; }
+  stTouch(); const s=ST.sess[ST.sess.length-1]; s.sec++; ST.total++; ST.last=n; const sc=me.scene||"street"; ST.scene[sc]=(ST.scene[sc]||0)+1; const hr=new Date(n).getHours(); ST.hours[hr]=(ST.hours[hr]||0)+1; const dk=ymd(n); ST.days[dk]=(ST.days[dk]||0)+1; stDirty=true; }
+function stOnline(){ const ids=new Set([myId]); for(const p of peers.values()) if(p.by) ids.add(p.by); return ids.size; }
+function stConc(){ if(!ST||!myId||document.visibilityState!=="visible") return; const h=stHour(Date.now()), n=stOnline(); if((ST.conc[h]||0)<n){ ST.conc[h]=n; stDirty=true; } }
+async function stLoad(){ if(stLoaded||!DB||!myId) return; stLoaded=true; let prev=null; try{ const s=await DB.doc(`club/st_${myId}`).get(); if(s.exists) prev=stValid(s.data()); }catch(e){}
+  const cur=ST; ST=prev||stBlank(); if(cur){ ST.total+=cur.total; ST.afk+=cur.afk; for(const m of ["scene","act","panel","hours","days"]) for(const [k,v] of Object.entries(cur[m])) ST[m][k]=(ST[m][k]||0)+v; for(const [k,v] of Object.entries(cur.conc)) ST.conc[k]=Math.max(ST.conc[k]||0,v); const cs=cur.sess[cur.sess.length-1]; if(cs){ ST.sess.push(cs); ST.sessions++; } } stDirty=true; stFlush(); }
+async function stFlush(){ if(!ST||!stDirty||!DB||!myId||!stLoaded) return; stDirty=false; stPrune(); try{ await DB.doc(`club/st_${myId}`).set({...ST,name:(myName||"").slice(0,24),uid:myId,at:Date.now()}); }catch(e){ stDirty=true; } }
+ST=stBlank(); stTouch(); setInterval(stTick,1000); setInterval(stConc,60e3); setInterval(()=>{ if(!stLoaded) stLoad(); stFlush(); },60e3); setTimeout(stConc,8000);
+addEventListener("pagehide",()=>{ stDirty=true; stFlush(); }); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden"){ stDirty=true; stFlush(); } });
+
+/* ---- owner view ---- */
+function stFmt(sec){ sec=Math.round(sec||0); if(sec<60) return sec+"s"; const m=Math.round(sec/60); if(m<60) return m+"m"; const h=Math.floor(m/60); return h<48?`${h}h ${m%60}m`:`${Math.round(h/24)}d ${h%24}h`; }
+function stWatch(){ if(stUnsub||!DB) return; try{ stUnsub=DB.collection("club").onSnapshot(s=>{ const first=!stDocs; stDocs={}; s.docs.forEach(d=>{ if(d.id.startsWith("st_")) stDocs[d.id.slice(3)]=stValid(d.data()); }); if(first&&currentView==="admin"&&dccTab==="stats") openAdmin("stats"); },()=>{}); }catch(e){} }
+function stAgg(docs,days){ const now=Date.now(), from=ymd(now-(days-1)*864e5), ids=Object.keys(docs); const A={players:ids.length,active:0,today:0,returning:0,total:0,scene:{},act:{},actP:{},panel:{},panelP:{},hours:Array(24).fill(0),daysPlay:{},daysTime:{},conc:{},sess:[],newP:{},top:[]};
+  for(const id of ids){ const d=docs[id]; let inRange=0; for(const [k,v] of Object.entries(d.days)) if(k>=from){ inRange+=v; A.daysPlay[k]=(A.daysPlay[k]||0)+1; A.daysTime[k]=(A.daysTime[k]||0)+v; }
+    if(d.days[ymd(now)]) A.today++; if(Object.keys(d.days).length>=2) A.returning++; const nd=ymd(d.first); if(nd>=from) A.newP[nd]=(A.newP[nd]||0)+1;
+    for(const [k,v] of Object.entries(d.conc)) A.conc[k]=Math.max(A.conc[k]||0,v); A.total+=d.total; A.top.push([id,d.total,d.last,d.name]);
+    if(!inRange) continue; A.active++;
+    for(const [k,v] of Object.entries(d.scene)) A.scene[k]=(A.scene[k]||0)+v; for(const [k,v] of Object.entries(d.hours)) A.hours[+k]+=v;
+    for(const [k,v] of Object.entries(d.act)){ A.act[k]=(A.act[k]||0)+v; A.actP[k]=(A.actP[k]||0)+1; } for(const [k,v] of Object.entries(d.panel)){ A.panel[k]=(A.panel[k]||0)+v; A.panelP[k]=(A.panelP[k]||0)+1; }
+    for(const s of d.sess) if(s.at>=now-days*864e5&&s.sec>=10) A.sess.push(s.sec); }
+  A.sess.sort((a,b)=>a-b); A.avgSess=A.sess.length?A.sess.reduce((a,b)=>a+b,0)/A.sess.length:0; A.medSess=A.sess.length?A.sess[A.sess.length>>1]:0;
+  A.peak=0; A.peakAt=""; for(const [k,v] of Object.entries(A.conc)) if(v>A.peak||(v===A.peak&&k>A.peakAt)){ A.peak=v; A.peakAt=k; } A.top.sort((a,b)=>b[1]-a[1]); return A; }
+function stTips(A){ const T=[], sceneTot=Object.values(A.scene).reduce((a,b)=>a+b,0)||1; const share=k=>(A.scene[k]||0)/sceneTot;
+  if(!A.active){ T.push(["info","No play data in this range yet. Stats start collecting as soon as players are in the game."]); return T; }
+  if(sceneTot<3600) T.push(["info",`Only ${stFmt(sceneTot)} of play is recorded in this range so far. These tips get more reliable as more play time comes in.`]);
+  const quiet=Object.keys(SCENES).filter(k=>!["vip","home","ascend"].includes(k)).map(k=>[k,share(k)]).sort((a,b)=>a[1]-b[1]);
+  for(const [k,s] of quiet.slice(0,3)) if(s<.03) T.push(["warn",`${sceneName(k)} gets ${(s*100).toFixed(1)}% of play time. Consider a quest, an event, a Fast Travel callout or a better reward there to give it a stronger presence.`]);
+  const busy=Object.entries(A.scene).sort((a,b)=>b[1]-a[1])[0]; if(busy&&busy[1]/sceneTot>.4) T.push(["good",`${sceneName(busy[0])} holds ${(busy[1]/sceneTot*100).toFixed(0)}% of all play time. It's your strongest area, so new content there will reach the most players.`]);
+  const short=A.sess.filter(s=>s<120).length/(A.sess.length||1); if(A.sess.length>=5&&short>.35) T.push(["warn",`${(short*100).toFixed(0)}% of sessions last under 2 minutes. The first moments may be confusing: check the title screen, sign-in and the starting street.`]);
+  if(A.players>=3&&A.returning/A.players<.3) T.push(["warn",`Only ${A.returning} of ${A.players} players have come back on a second day. Daily rewards, quests and limited-time items help bring people back.`]); else if(A.players>=3) T.push(["good",`${A.returning} of ${A.players} players (${Math.round(A.returning/A.players*100)}%) came back on more than one day.`]);
+  if(A.medSess>=1200) T.push(["good",`The median session is ${stFmt(A.medSess)}. Players stick around once they're in.`]);
+  if(A.peak<=1&&A.players>=3) T.push(["warn","Players rarely overlap online. Scheduled events (DJ nights, tournaments, double-chip hours) at your busiest hour would get more people in the game together."]);
+  const bestHr=A.hours.indexOf(Math.max(...A.hours)); if(Math.max(...A.hours)>0) T.push(["info",`Your busiest hour is ${bestHr%12||12}${bestHr<12?"am":"pm"} (players' local time). That's the best time for live events.`]);
+  return T; }
+function stBars(rows,fmt,col){ const max=Math.max(1,...rows.map(r=>r[1])); const w=el("div",{class:"stbars"}); for(const [lbl,v,sub] of rows) w.append(el("div",{class:"stbar"},el("span",{class:"stl",text:lbl}),el("span",{class:"stt"},el("i",{style:`width:${v?Math.max(1.5,v/max*100):0}%;background:${col||"var(--cyan)"}`})),el("span",{class:"stv",text:fmt(v)+(sub?` · ${sub}`:"")}))); return w; }
+function stCols(rows,fmt,col){ const max=Math.max(1,...rows.map(r=>r[1])); const w=el("div",{class:"stcols"}), few=rows.length<=14; for(const [lbl,v] of rows) w.append(el("div",{class:"stcol",title:`${lbl}: ${fmt(v)}`},el("span",{class:"stn",text:v&&few?fmt(v):""}),el("i",{style:`height:${v?Math.max(3,v/max*100):0}%;background:${col||"var(--cyan)"}`}),el("span",{class:"stx",text:lbl}))); return w; }
+function adminStats(body){ stWatch(); stDirty=true; stFlush(); const docs=stDocs; const rng=el("div",{class:"row",style:"gap:6px;flex-wrap:wrap;align-items:center"},el("span",{class:"sub",text:"Range:"})); for(const [d,l] of [[1,"Today"],[7,"7 days"],[14,"14 days"],[30,"30 days"]]) rng.append(el("button",{class:"btn"+(stRange===d?" hot":""),type:"button",text:l,onclick:()=>{ stRange=d; openAdmin("stats"); }})); rng.append(el("button",{class:"btn",type:"button",text:"↻ Refresh",onclick:()=>openAdmin("stats")}));
+  body.append(el("p",{class:"sub",text:"How people play NEON HARVEST. Every signed-in player's game reports play time per area, what they use, and how many players are online together. Only active time counts: idle over 3 minutes or a hidden tab is left out."}),rng);
+  if(!docs){ body.append(el("div",{class:"empty",text:"Loading stats…"})); return; } const A=stAgg(docs,stRange), sceneTot=Object.values(A.scene).reduce((a,b)=>a+b,0)||1;
+  const card=(n,l,s)=>el("div",{class:"stcard"},el("b",{text:n}),el("span",{text:l}),s?el("small",{text:s}):"");
+  body.append(el("div",{class:"stcards"},card(String(stOnline()),"online now"),card(String(A.peak),"peak online together",A.peakAt?A.peakAt.replace("T"," ")+":00":"last 14 days"),card(String(A.active),`active players (${stRange===1?"today":stRange+"d"})`,`${A.players} all-time · ${A.today} today`),card(stFmt(A.avgSess),"average session",`median ${stFmt(A.medSess)} · ${A.sess.length} session${A.sess.length===1?"":"s"}`),card(stFmt(A.players?A.total/A.players:0),"play time per player",`${stFmt(A.total)} total`),card(A.players?Math.round(A.returning/A.players*100)+"%":"–","came back another day",`${A.returning} of ${A.players}`)));
+  const sec=(t,s)=>{ body.append(el("h3",{class:"sth",text:t})); if(s) body.append(el("p",{class:"sub",text:s})); };
+  sec("What to improve","Generated from the numbers below."); const tl=el("div",{class:"list"}); for(const [k,t] of stTips(A)) tl.append(el("div",{class:"li"},el("span",{class:"tag",style:`color:${{warn:"#ffb84a",good:"#43f0a4",info:"#38e8ff"}[k]};border-color:currentColor`,text:{warn:"Improve",good:"Working",info:"Note"}[k]}),el("div",{class:"grow",text:t}))); body.append(tl);
+  const dl=[]; for(let i=Math.min(stRange,30)-1;i>=0;i--){ const k=ymd(Date.now()-i*864e5); dl.push([k.slice(5),k]); }
+  if(stRange>1){ sec("Players per day"); body.append(stCols(dl.map(([l,k])=>[l,A.daysPlay[k]||0]),v=>String(v),"#43f0a4")); sec("Play time per day"); body.append(stCols(dl.map(([l,k])=>[l,A.daysTime[k]||0]),stFmt,"#7c5cff")); }
+  sec("Players online at the same time","Most players online together in each hour (last 48 hours)."); const hl=[]; for(let i=47;i>=0;i--){ const ms=Date.now()-i*36e5, k=stHour(ms), h=new Date(ms).getHours(); hl.push([h%6===0?`${h%12||12}${h<12?"a":"p"}`:"",A.conc[k]||0]); } body.append(stCols(hl,v=>String(v),"#38e8ff"));
+  sec("When people play","Play time by hour of day (players' local time). Hover or long-press a bar for the exact number."); body.append(stCols(A.hours.map((v,h)=>[h%3===0?`${h%12||12}${h<12?"a":"p"}`:"",v]),stFmt,"#ff3fa8"));
+  sec("Where players spend their time","Share of active play time in each area. Short bars are the areas that need a stronger presence.");
+  body.append(stBars(Object.keys(SCENES).map(k=>[sceneName(k).replace(/^an? /,"").replace(/^./,c=>c.toUpperCase()),A.scene[k]||0,`${((A.scene[k]||0)/sceneTot*100).toFixed(1)}%`]).sort((a,b)=>b[1]-a[1]),stFmt,"#7c5cff"));
+  const top=(m,p,n)=>Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,v])=>[k,v,`${p[k]} player${p[k]===1?"":"s"}`]);
+  sec("What players do the most","Things players walk up to and use in the world (doors, shops, games, NPCs)."); const ta=top(A.act,A.actP,15); body.append(ta.length?stBars(ta,v=>`${v}×`,"#43f0a4"):el("div",{class:"empty",text:"No activity yet."}));
+  sec("Most opened menus","Panels and menus players open (stash, shops, games, quests…)."); const tp=top(A.panel,A.panelP,15); body.append(tp.length?stBars(tp,v=>`${v}×`,"#ffb84a"):el("div",{class:"empty",text:"No activity yet."}));
+  const least=Object.entries(A.act).sort((a,b)=>a[1]-b[1]).slice(0,8); if(least.length>=8){ sec("Least used","Features players touch the least in this range. Worth a look: hard to find, unclear, or not rewarding enough?"); body.append(stBars(least.map(([k,v])=>[k,v,`${A.actP[k]} player${A.actP[k]===1?"":"s"}`]),v=>`${v}×`,"#ff3f5a")); }
+  sec("Session length"); const B=[["< 2 min",0,120],["2–10 min",120,600],["10–30 min",600,1800],["30–60 min",1800,3600],["1–2 hr",3600,7200],["2 hr +",7200,1e9]]; body.append(stBars(B.map(([l,a,b])=>[l,A.sess.filter(s=>s>=a&&s<b).length]),v=>`${v} session${v===1?"":"s"}`,"#38e8ff"));
+  sec("Top players by play time","All-time active play time."); const pl=el("div",{class:"list"}); A.top.slice(0,15).forEach(([id,t,last,nm],i)=>pl.append(el("div",{class:"li"},el("span",{class:"tag",text:`#${i+1}`}),el("div",{class:"grow"},el("div",{text:(nm&&(!nameOf(id)||nameOf(id)==="Runner")?nm:nameOf(id))||"Runner"}),el("div",{class:"sub",text:`last seen ${Date.now()-last<5*60e3?"just now":stFmt((Date.now()-last)/1000)+" ago"} · ${(docs[id].sessions||0)} session${docs[id].sessions===1?"":"s"}`})),el("span",{text:stFmt(t)})))); body.append(A.top.length?pl:el("div",{class:"empty",text:"No players yet."})); resolveNames(A.top.slice(0,15).map(r=>r[0])); }
+
 function ymd(ms){ const d=new Date(ms); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function openDccEdit(id){ if(!IS_ADMIN) return; const cur=dcc[id]; const dr={on:cur?cur.on:true,sym:cur?cur.sym:0,until:cur?cur.until:Date.now()+30*864e5};
   const body=panel(`Data Collectors Club · ${nameOf(id)}`,cur?"Edit this membership.":"Grant a new membership."); currentView="admin-edit";
@@ -6106,7 +6187,7 @@ setInterval(hud,1000);
   const cl=window.claude; if(!cl||!cl.use){ ACCESS.mode="solo"; updOnline(); chatLine(null,accessNote(),"sys"); renderTitle(save.name?"limited":"signedout"); return; }
   const [u,db,room]=await Promise.all([cl.use("user"),cl.use("db"),cl.use("room")].map(p=>p.catch(()=>null)));
   USER=u;
-  if(u){ try{ IS_ADMIN=!!(await u.isOwner()); }catch(e){} updAdminBtn(); try{ myId=await u.id(); if(!save.name) myName=(await u.name())||"Runner"; if(myId) names[myId]=myName; }catch(e){} }
+  if(u){ try{ IS_ADMIN=!!(await u.isOwner()); }catch(e){} updAdminBtn(); try{ myId=await u.id(); setTimeout(()=>stLoad(),3000); if(!save.name) myName=(await u.name())||"Runner"; if(myId) names[myId]=myName; }catch(e){} }
   let canWrite=true; if(u&&myId){ try{ const c=await u.can("data.write"); canWrite=c!==false; }catch(e){} }
   ACCESS.mode=!db?"signedout":!myId?"limited":!canWrite?"readonly":room?"full":"full";
   if(db&&myId&&canWrite){ DB=db;
