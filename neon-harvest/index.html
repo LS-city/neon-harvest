@@ -386,6 +386,36 @@ const CAT = [
   {id:"cpu_r4",    n:"Rook-4 Processor",    t:"cpu",  r:"uncommon", v:88},
   {id:"cpu_x",     n:"Xenon-X Processor",   t:"cpu",  r:"rare",     v:240},
   {id:"core_q",    n:"Quantum Lattice Core",t:"core", r:"epic",     v:900},
+  {id:"chip_bio",  n:"Bio-Neural Chip",     t:"chip", r:"uncommon", v:60},
+  {id:"chip_flux", n:"Flux Capacitor Chip", t:"chip", r:"rare",     v:140},
+  {id:"fan_ion",   n:"Ion Wind Fan",        t:"fan",  r:"uncommon", v:40},
+  {id:"fan_cryo",  n:"Cryo Vortex Fan",     t:"fan",  r:"epic",     v:260},
+  {id:"mb_atx",    n:"ATX Prime Board",     t:"mobo", r:"uncommon", v:90},
+  {id:"mb_omega",  n:"Omega Titan Board",   t:"mobo", r:"epic",     v:520},
+  {id:"gpu_lite",  n:"Lite 1050 GPU",       t:"gpu",  r:"common",   v:70},
+  {id:"gpu_aurora",n:"Aurora RX GPU",       t:"gpu",  r:"rare",     v:320},
+  {id:"ram_16",    n:"16GB Neon RAM",       t:"ram",  r:"uncommon", v:40},
+  {id:"ram_hyper", n:"HyperDIMM 64GB",      t:"ram",  r:"epic",     v:300},
+  {id:"ssd_nvme",  n:"NVMe Bolt Drive",     t:"ssd",  r:"rare",     v:150},
+  {id:"ssd_quant", n:"Quantum Storage Cube",t:"ssd",  r:"epic",     v:340},
+  {id:"psu_850",   n:"850W Gold PSU",       t:"psu",  r:"uncommon", v:70},
+  {id:"psu_fusion",n:"Fusion Cell PSU",     t:"psu",  r:"epic",     v:380},
+  {id:"cpu_pico",  n:"Pico-3 Processor",    t:"cpu",  r:"common",   v:45},
+  {id:"cpu_omni",  n:"Omni-128 Processor",  t:"cpu",  r:"epic",     v:560},
+  {id:"hdd_6tb",   n:"Silent 6TB HDD",      t:"hdd",  r:"uncommon", v:48},
+  {id:"hdd_holo",  n:"Holo-Platter 40TB",   t:"hdd",  r:"epic",     v:300},
+  {id:"scr_lcd",   n:"LCD Panel",           t:"screen",r:"common",  v:25},
+  {id:"scr_oled",  n:"OLED Flex Panel",     t:"screen",r:"uncommon",v:60},
+  {id:"scr_amoled",n:"AMOLED Infinity",     t:"screen",r:"rare",    v:140},
+  {id:"scr_holo",  n:"Holo-Glass Display",  t:"screen",r:"epic",    v:380},
+  {id:"cam_8",     n:"8MP Camera",          t:"cam",  r:"common",   v:18},
+  {id:"cam_48",    n:"48MP Sensor",         t:"cam",  r:"uncommon", v:50},
+  {id:"cam_pro",   n:"Prism Pro Lens",      t:"cam",  r:"rare",     v:130},
+  {id:"cam_omni",  n:"OmniEye Array",       t:"cam",  r:"epic",     v:340},
+  {id:"bat_li",    n:"Li-Ion Cell",         t:"batt", r:"common",   v:20},
+  {id:"bat_gra",   n:"Graphene Cell",       t:"batt", r:"uncommon", v:55},
+  {id:"bat_solid", n:"Solid-State Cell",    t:"batt", r:"rare",     v:135},
+  {id:"bat_fusion",n:"Micro-Fusion Cell",   t:"batt", r:"epic",     v:360},
 ];
 const PARTS=[...CAT];
 const TIER={common:0,uncommon:1,rare:2,epic:3}, BY_R=["common","uncommon","rare","epic"], MK=["Mk.I","Mk.II","Mk.III","Mk.IV"];
@@ -427,6 +457,49 @@ const RECIPES=[
   {k:"pfarm", n:"Phone Farm",       base:150,need:{phone:3,cable:2,psu:1},desc:"Install on your home mining rack. Mines 20 chips/hr per Mk level."},
   {k:"cminer",n:"Credit Miner",     base:170,need:{mobo:1,psu:1,cpu:1,hdd:2,fan:1},desc:"Install on your Linx Land plot to mine credits (₵) while you're away: 50/90/150/250 per hour by Mk. Separate from chip miners."},
 ];
+// ---- 36 new buildable PCs, miners and phones
+const NEW_BUILDS=[
+  {k:"pc_frost",cat:"pc",n:"Frostbyte Tower",base:190,need:{mobo:1,cpu:1,gpu:1,ram:1,ssd:1,psu:1,fan:2},look:{shape:"tower",body:"#dff4ff",trim:"#8fd8ff",fx:"frost"},desc:"Ice-white tower with snow drifting behind the glass."},
+  {k:"pc_inferno",cat:"pc",n:"Inferno Rig",base:240,need:{mobo:1,cpu:1,gpu:2,ram:2,psu:1,fan:2},look:{shape:"tower",body:"#1a0806",trim:"#ff5a2a",fx:"flame"},desc:"Twin GPUs running so hot the window is full of fire."},
+  {k:"pc_aqua",cat:"pc",n:"Aqua Loop",base:220,need:{mobo:1,cpu:1,gpu:1,ram:2,ssd:1,psu:1,fan:1},look:{shape:"tower",body:"#0a1a2a",trim:"#38e8ff",fx:"bubbles"},desc:"Custom liquid cooling. Bubbles race through glowing tubes."},
+  {k:"pc_cube",cat:"pc",n:"Neon Cube",base:150,need:{mobo:1,cpu:1,gpu:1,ram:1,ssd:1,psu:1},look:{shape:"cube",body:"#141022",trim:"#ff3fa8",fx:"wave"},desc:"A compact cube wrapped in rainbow light waves."},
+  {k:"pc_slim",cat:"pc",n:"Shadow Slim",base:120,need:{mobo:1,cpu:1,ram:1,ssd:1,psu:1},look:{shape:"slim",body:"#08060e",trim:"#7c5cff",fx:"pulse"},desc:"Whisper-thin and matte black. One violet pulse line."},
+  {k:"pc_galaxy",cat:"pc",n:"Galaxy Station",base:280,need:{mobo:1,cpu:1,gpu:1,ram:2,ssd:2,psu:1,fan:3},look:{shape:"wide",body:"#0b0620",trim:"#cf72ff",fx:"galaxy"},desc:"A full spiral galaxy turns inside the side panel."},
+  {k:"pc_matrix",cat:"pc",n:"Matrix Monolith",base:200,need:{mobo:1,cpu:1,ram:2,ssd:1,hdd:1,psu:1},look:{shape:"mono",body:"#020a04",trim:"#43f0a4",fx:"matrix"},desc:"A black monolith with green code raining down its face."},
+  {k:"pc_holo",cat:"pc",n:"Holo Pyramid",base:210,need:{mobo:1,cpu:1,gpu:1,chip:1,psu:1,fan:1},look:{shape:"pyramid",body:"#101828",trim:"#38e8ff",fx:"holo"},desc:"A glass pyramid that projects a hologram above its tip."},
+  {k:"pc_storm",cat:"pc",n:"Stormcaller",base:250,need:{mobo:1,cpu:1,gpu:2,ram:1,psu:1,fan:2},look:{shape:"tower",body:"#0e1024",trim:"#f5e663",fx:"storm"},desc:"Lightning arcs between the GPUs when it's under load."},
+  {k:"pc_sakura",cat:"pc",n:"Sakura Bloom",base:180,need:{mobo:1,cpu:1,gpu:1,ram:1,ssd:1,psu:1,fan:1},look:{shape:"cube",body:"#fff0f6",trim:"#ff8ad8",fx:"petals"},desc:"Soft pink case. Cherry petals drift past the glass."},
+  {k:"pc_titan",cat:"pc",n:"Titan Workstation",base:380,need:{mobo:1,cpu:1,gpu:2,ram:4,ssd:2,psu:1,fan:3},look:{shape:"wide",body:"#1a1408",trim:"#ffd36a",fx:"gold"},desc:"A massive gold-trimmed workstation. Sells for a fortune."},
+  {k:"pc_quantum",cat:"pc",n:"Quantum Desktop",base:640,need:{mobo:1,core:1,ram:2,ssd:1,psu:1,fan:2},look:{shape:"tower",body:"#0c0618",trim:"#cf72ff",fx:"core"},desc:"A quantum core floats in the window, pulsing with light."},
+  {k:"mn_solar",cat:"miner",n:"Solar Miner",base:110,rate:35,need:{mobo:1,psu:1,gpu:1,fan:1},look:{shape:"frame",trim:"#ffb84a",fx:"sun"},desc:"Mines 35 chips/hr per Mk level on your rack. Powered by a tiny sun."},
+  {k:"mn_hydro",cat:"miner",n:"Hydro Miner",base:150,rate:45,need:{mobo:1,psu:1,gpu:2,fan:2},look:{shape:"tank",trim:"#38e8ff",fx:"bubbles"},desc:"Submerged in coolant. Mines 45 chips/hr per Mk."},
+  {k:"mn_ice",cat:"miner",n:"Glacier Rig",base:210,rate:70,need:{mobo:1,psu:1,gpu:3,fan:3},look:{shape:"frame",trim:"#a8e8ff",fx:"ice"},desc:"Frost-coated triple GPU rig. Mines 70 chips/hr per Mk."},
+  {k:"mn_magma",cat:"miner",n:"Magma Rig",base:230,rate:75,need:{mobo:1,psu:2,gpu:3,fan:2},look:{shape:"crate",trim:"#ff5a2a",fx:"lava"},desc:"Runs molten hot. Mines 75 chips/hr per Mk."},
+  {k:"mn_swarm",cat:"miner",n:"Swarm Node",base:90,rate:30,need:{chip:2,psu:1,fan:1},look:{shape:"crate",trim:"#43f0a4",fx:"swarm"},desc:"A buzzing cloud of nano-miners. Mines 30 chips/hr per Mk."},
+  {k:"mn_tower",cat:"miner",n:"Data Tower",base:160,rate:50,need:{mobo:1,cpu:1,ram:1,hdd:2,psu:1},look:{shape:"stack",trim:"#4aa8ff",fx:"stack"},desc:"Stacked drives blinking all night. Mines 50 chips/hr per Mk."},
+  {k:"mn_beast",cat:"miner",n:"Beast Rig",base:340,rate:110,need:{mobo:1,psu:2,gpu:4,fan:3},look:{shape:"frame",trim:"#ff3f5a",fx:"beast"},desc:"Four GPUs, three fans, zero chill. Mines 110 chips/hr per Mk."},
+  {k:"mn_crystal",cat:"miner",n:"Crystal Miner",base:190,rate:60,need:{mobo:1,psu:1,gpu:2,chip:2},look:{shape:"crystal",trim:"#ff8ad8",fx:"crystal"},desc:"Grows data crystals as it mines. 60 chips/hr per Mk."},
+  {k:"mn_ghost",cat:"miner",n:"Ghost Miner",base:170,rate:55,need:{mobo:1,psu:1,gpu:2,fan:1},look:{shape:"frame",trim:"#e9e2ff",fx:"ghost"},desc:"Flickers in and out of existence. 55 chips/hr per Mk."},
+  {k:"mn_turbo",cat:"miner",n:"Turbo Miner",base:200,rate:65,need:{mobo:1,psu:1,gpu:2,fan:3},look:{shape:"frame",trim:"#f5e663",fx:"turbo"},desc:"Overclocked fans scream at full speed. 65 chips/hr per Mk."},
+  {k:"mn_lattice",cat:"miner",n:"Lattice Miner",base:560,rate:120,need:{core:1,mobo:1,psu:1,fan:2},look:{shape:"tank",trim:"#cf72ff",fx:"lattice"},desc:"Mines with a quantum core. 120 chips/hr per Mk."},
+  {k:"mn_neural",cat:"miner",n:"Neural Miner",base:180,rate:58,need:{mobo:1,cpu:1,ram:1,chip:2,psu:1},look:{shape:"stack",trim:"#ff3fa8",fx:"neural"},desc:"A thinking machine that dreams in hashes. 58 chips/hr per Mk."},
+  {k:"ph_nova",cat:"phone",n:"Nova Bar",base:80,need:{chip:1,screen:1,batt:1,cam:1},look:{shape:"bar",trim:"#38e8ff",fx:"stars"},desc:"A classic slab phone with a starfield screen. Hold it in your hand."},
+  {k:"ph_fold",cat:"phone",n:"Origami Fold",base:190,need:{chip:1,cpu:1,screen:2,batt:1,cam:1},look:{shape:"fold",trim:"#cf72ff",fx:"wave"},desc:"Unfolds into a mini tablet. Hold it in your hand."},
+  {k:"ph_flip",cat:"phone",n:"Retro Flip",base:70,need:{chip:1,screen:1,batt:1},look:{shape:"flip",trim:"#ff8ad8",fx:"pixel"},desc:"Snaps open with pixel art on the screen. Hold it in your hand."},
+  {k:"ph_glass",cat:"phone",n:"Glass Slate",base:170,need:{chip:1,cpu:1,ram:1,screen:1,batt:1,cam:2},look:{shape:"bar",trim:"#a8e8ff",fx:"glass"},desc:"Fully transparent body. Hold it in your hand."},
+  {k:"ph_rugged",cat:"phone",n:"Bunker Brick",base:150,need:{chip:1,cpu:1,batt:2,screen:1,cam:1},look:{shape:"brick",trim:"#ffb84a",fx:"radar"},desc:"Indestructible, with a radar screen. Hold it in your hand."},
+  {k:"ph_gamer",cat:"phone",n:"Gamer Edge",base:200,need:{chip:1,cpu:1,ram:1,screen:1,batt:1,fan:1},look:{shape:"edge",trim:"#ff3f5a",fx:"game"},desc:"Built-in fan and RGB edges. Plays a game on its own. Hold it in your hand."},
+  {k:"ph_holo",cat:"phone",n:"Holo Phone",base:230,need:{chip:1,cpu:1,screen:1,batt:1,cam:1},look:{shape:"bar",trim:"#43f0a4",fx:"holo"},desc:"Projects a hologram above the screen. Hold it in your hand."},
+  {k:"ph_mini",cat:"phone",n:"Pocket Mini",base:60,need:{chip:1,screen:1,batt:1},look:{shape:"mini",trim:"#8fffd0",fx:"clock"},desc:"Tiny and cute, with a big clock. Hold it in your hand."},
+  {k:"ph_lens",cat:"phone",n:"Lens Pro",base:240,need:{chip:1,cpu:1,ram:1,screen:1,batt:1,cam:3},look:{shape:"lens",trim:"#ffd36a",fx:"camera"},desc:"A triple-camera flagship with a viewfinder screen. Hold it in your hand."},
+  {k:"ph_neon",cat:"phone",n:"Neon Pulse",base:120,need:{chip:1,ram:1,screen:1,batt:1,cam:1},look:{shape:"bar",trim:"#ff3fa8",fx:"neon"},desc:"Its back panel pulses with neon. Hold it in your hand."},
+  {k:"ph_aurora",cat:"phone",n:"Aurora Curve",base:210,need:{chip:1,cpu:1,ram:1,ssd:1,screen:1,batt:1,cam:2},look:{shape:"curve",trim:"#43f0a4",fx:"aurora"},desc:"Curved glass with a living aurora wallpaper. Hold it in your hand."},
+  {k:"ph_omega",cat:"phone",n:"Omega X",base:420,need:{chip:1,cpu:1,ram:1,ssd:1,screen:1,batt:1,cam:3,cable:1},look:{shape:"edge",trim:"#ffd36a",fx:"omega"},desc:"The ultimate flagship. Gold edges and the Omega boot screen. Hold it in your hand."},
+];
+for(const b of NEW_BUILDS) RECIPES.push(b);
+const BUILD_RATE=Object.fromEntries(NEW_BUILDS.filter(b=>b.rate).map(b=>[b.k,b.rate]));
+const BUILD_LOOK=Object.fromEntries(NEW_BUILDS.map(b=>[b.k,{...b.look,cat:b.cat,need:b.need}]));
+
 for(const d of DRINKS) CAT.push(d);
 const BOWL_ING={broth:{n:"Bone Broth",c:"#ffb84a"},noodle:{n:"Hand-Pulled Noodles",c:"#f5e663"},tofu:{n:"Glow Tofu",c:"#43f0a4"},chili:{n:"Chili Oil",c:"#ff5a4a"},egg:{n:"Synth Egg",c:"#e9e2ff"}};
 const BB_FOODS=[
@@ -511,7 +584,8 @@ const ITEMS3=[
 ];
 for(const it of ITEMS3){ if(!it.desc) it.desc=it.t==="weapon"?HOLD_DESC+" Deals damage in The Void.":it.t==="phone"?HOLD_DESC:it.t==="hack"?"Decrypts Encrypted Floppies. "+HOLD_DESC:it.t==="miner"?`Install on your home mining rack: ${it.rate} chips/hr.`:""; CAT.push(it); }
 const HOLD_T=["weapon","phone","hack","gadget"];
-function validHand(id){ return typeof id==="string"&&BY[id]&&HOLD_T.includes(BY[id].t)?id:""; }
+function canHold(it){ return !!it&&(HOLD_T.includes(it.t)||(it.t==="build"&&String(it.k||"").startsWith("ph_"))); }
+function validHand(id){ return typeof id==="string"&&BY[id]&&canHold(BY[id])?id:""; }
 const TRIPS={
   trip_joint:{fx:"joint", dur:120,buffs:["luck"], steps:["Grind","Pack","Roll"],         desc:"Mellow green haze. Smoke rings drift off your head. Lucky salvage while it lasts."},
   trip_vape: {fx:"vape",  dur:90, buffs:["tips"], steps:["Fill pod","Set wattage","Prime coil"],desc:"Exhale glowing neon vapor clouds. Smooth talker: +25% shift tips."},
@@ -701,7 +775,7 @@ for(const it of [
 const COMP=CAT.filter(i=>!["drink","food","build","decor","trip"].includes(i.t));
 
 const BY = Object.fromEntries(CAT.map(i=>[i.id,i]));
-const TYPE_N = {chip:"chip",fan:"fan",mobo:"motherboard",gpu:"GPU",ram:"RAM stick",ssd:"drive",psu:"power supply",cpu:"processor",core:"core",drink:"drink",food:"food",build:"rig",hdd:"hard drive",weapon:"weapon",phone:"phone",hack:"hacker tool",floppy:"floppy disk",enc:"encrypted floppy",trip:"club item",miner:"crypto miner",kbd:"keyboard",mouse:"mouse",cable:"cable",acc:"accessory",gadget:"gadget",decor:"home item"};
+const TYPE_N = {screen:"display",cam:"camera",batt:"battery",chip:"chip",fan:"fan",mobo:"motherboard",gpu:"GPU",ram:"RAM stick",ssd:"drive",psu:"power supply",cpu:"processor",core:"core",drink:"drink",food:"food",build:"rig",hdd:"hard drive",weapon:"weapon",phone:"phone",hack:"hacker tool",floppy:"floppy disk",enc:"encrypted floppy",trip:"club item",miner:"crypto miner",kbd:"keyboard",mouse:"mouse",cable:"cable",acc:"accessory",gadget:"gadget",decor:"home item"};
 const COLORS=["#ff3fa8","#38e8ff","#ffb84a","#7c5cff","#43f0a4","#e9e2ff","#ff5a4a","#2a2440","#f5e663","#00b3a4","#ff8ad8","#8fa3ff","#c9d3e0","#ff8a3a","#8fffd0","#5a2a9a","#ffd36a","#a8e8ff","#b8142a","#7a4a2a","#ffc6e0","#2f8f62"];
 const COLOR_N=["Hot pink","Cyan","Amber","Violet","Toxic green","Ghost white","Signal red","Blackout","Laser yellow","Teal","Bubblegum","Periwinkle","Chrome","Sunset orange","Mint","Royal purple","Gold","Ice blue","Blood red","Chocolate","Cotton candy","Forest"];
 const COLOR_COST=i=>i<6?0:30;
@@ -788,6 +862,83 @@ function startMusic(){ if(musicTimer||!AC) return; const notes=[220,262,330,392,
 $("#btnSnd").onclick=()=>{ soundOn=!soundOn; try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); AC.resume(); startMusic(); }catch(e){} $("#btnSnd").textContent=soundOn?"Sound on":"Sound off"; $("#btnSnd").setAttribute("aria-pressed",String(soundOn)); };
 
 /* ============================================================ ITEM ART */
+// ---- art for new part types and the 36 new builds
+function partArtNew(c,it,S,t,col,glow){
+  if(it.t==="screen"){ const w=S*.56,h=S*.76; c.fillStyle="#141022"; c.fillRect(-w/2,-h/2,w,h); c.strokeStyle="#3d3456"; c.strokeRect(-w/2,-h/2,w,h); glow(.8); const g=c.createLinearGradient(0,-h/2,0,h/2); g.addColorStop(0,col); g.addColorStop(1,"#0b0716"); c.fillStyle=g; c.globalAlpha=.55+.25*Math.sin(t*2); c.fillRect(-w/2+S*.04,-h/2+S*.04,w-S*.08,h-S*.08); c.globalAlpha=1; c.shadowBlur=0; c.strokeStyle="rgba(255,255,255,.35)"; c.beginPath(); c.moveTo(-w/2+S*.08,-h/2+S*.1); c.lineTo(-w/2+S*.2,-h/2+S*.06); c.stroke(); if(it.r==="epic"){ c.fillStyle="#fff"; c.globalAlpha=.5+.5*Math.sin(t*3); c.fillRect(-S*.04,-S*.04,S*.08,S*.08); c.globalAlpha=1; } return true; }
+  if(it.t==="cam"){ c.fillStyle="#1b1530"; c.fillRect(-S*.3,-S*.3,S*.6,S*.6); c.strokeStyle="#3d3456"; c.strokeRect(-S*.3,-S*.3,S*.6,S*.6); const n=it.r==="epic"?4:it.r==="rare"?3:1; for(let i=0;i<n;i++){ const a=i/n*Math.PI*2+.6, r=n>1?S*.13:0, x=Math.cos(a)*r, y=Math.sin(a)*r; c.fillStyle="#0b0716"; c.beginPath(); c.arc(x,y,S*(n>1?.09:.17),0,7); c.fill(); glow(.8); c.strokeStyle=col; c.lineWidth=Math.max(1,S*.025); c.stroke(); c.shadowBlur=0; c.fillStyle="rgba(120,180,255,.5)"; c.beginPath(); c.arc(x-S*.03,y-S*.03,S*(n>1?.025:.05),0,7); c.fill(); } c.fillStyle=Math.sin(t*4)>0?"#ff3f5a":"#3a1a20"; c.fillRect(S*.18,-S*.25,S*.05,S*.05); return true; }
+  if(it.t==="batt"){ const w=S*.36,h=S*.66; c.fillStyle="#24203a"; c.fillRect(-w/2,-h/2,w,h); c.fillStyle="#8d86ab"; c.fillRect(-w*.25,-h/2-S*.05,w*.5,S*.05); const lv=.35+.65*((Math.sin(t*.8)+1)/2); glow(1); c.fillStyle=col; c.fillRect(-w/2+S*.04,h/2-S*.04-(h-S*.08)*lv,w-S*.08,(h-S*.08)*lv); c.shadowBlur=0; c.fillStyle="#fff"; c.globalAlpha=.85; c.beginPath(); c.moveTo(S*.03,-S*.14); c.lineTo(-S*.06,S*.02); c.lineTo(0,S*.02); c.lineTo(-S*.03,S*.14); c.lineTo(S*.06,-S*.02); c.lineTo(0,-S*.02); c.fill(); c.globalAlpha=1; return true; }
+  return false; }
+function fanSpin(c,x,y,r,t,col,sp){ c.save(); c.translate(x,y); c.fillStyle="#0b0716"; c.beginPath(); c.arc(0,0,r,0,7); c.fill(); c.strokeStyle=col; c.lineWidth=Math.max(1,r*.15); c.beginPath(); c.arc(0,0,r,0,7); c.stroke(); c.rotate(t*(sp||12)); c.fillStyle="#8d86ab"; for(let b=0;b<5;b++){ c.rotate(Math.PI*2/5); c.fillRect(0,-r*.12,r*.85,r*.24); } c.restore(); }
+function buildArtNew(c,it,S,t,col,glow){ const L=BUILD_LOOK[it.k]; if(!L) return false; const tier=TIER[it.r]||0, tr=L.trim;
+  if(tier>=3){ c.save(); c.globalAlpha=.25+.15*Math.sin(t*3); const g=c.createRadialGradient(0,0,S*.1,0,0,S*.6); g.addColorStop(0,col); g.addColorStop(1,"rgba(0,0,0,0)"); c.fillStyle=g; c.fillRect(-S*.6,-S*.6,S*1.2,S*1.2); c.restore(); }
+  if(L.cat==="pc") pcArt(c,S,t,L,tr,glow); else if(L.cat==="miner") minerArt(c,S,t,L,tr,glow,it); else phoneArt(c,S,t,L,tr,glow);
+  return true; }
+function windowFx(c,fx,x,y,w,h,t,tr){ c.save(); c.beginPath(); c.rect(x,y,w,h); c.clip(); const S=Math.max(w,h);
+  if(fx==="frost"){ c.fillStyle="rgba(200,240,255,.18)"; c.fillRect(x,y,w,h); c.strokeStyle="#e9f6ff"; c.lineWidth=Math.max(.6,S*.012); for(let i=0;i<8;i++){ const u=(t*.2+i/8)%1, px=x+((i*37)%100)/100*w, py=y+u*h; for(let k=0;k<3;k++){ const a=k*1.05+t; c.beginPath(); c.moveTo(px-Math.cos(a)*S*.03,py-Math.sin(a)*S*.03); c.lineTo(px+Math.cos(a)*S*.03,py+Math.sin(a)*S*.03); c.stroke(); } } }
+  else if(fx==="flame"){ for(let i=0;i<7;i++){ const fx2=x+w*(i+.5)/7, fh=h*(.4+.4*Math.abs(Math.sin(t*6+i*1.7))); c.fillStyle=i%2?"#ffb84a":"#ff3a1a"; c.globalAlpha=.8; c.beginPath(); c.moveTo(fx2-w*.08,y+h); c.quadraticCurveTo(fx2+Math.sin(t*9+i)*w*.05,y+h-fh,fx2+w*.08,y+h); c.fill(); } }
+  else if(fx==="bubbles"){ c.fillStyle="rgba(56,232,255,.18)"; c.fillRect(x,y,w,h); c.strokeStyle="#38e8ff"; c.lineWidth=Math.max(1,S*.025); c.beginPath(); c.moveTo(x+w*.2,y+h); c.lineTo(x+w*.2,y+h*.2); c.lineTo(x+w*.8,y+h*.2); c.lineTo(x+w*.8,y+h); c.stroke(); c.fillStyle="#e9f6ff"; for(let i=0;i<8;i++){ const u=(t*.6+i/8)%1; c.beginPath(); c.arc(x+w*(i%2?.2:.8),y+h-(u*h*.8),S*.018,0,7); c.fill(); } }
+  else if(fx==="wave"){ for(let k=0;k<5;k++){ c.strokeStyle=`hsl(${(t*80+k*60)%360},100%,60%)`; c.lineWidth=Math.max(1,S*.03); c.beginPath(); for(let i=0;i<=12;i++){ const px=x+w*i/12; c.lineTo(px,y+h*(k+.5)/5+Math.sin(i*.8+t*4+k)*h*.05); } c.stroke(); } }
+  else if(fx==="pulse"){ for(let k=0;k<3;k++){ const u=(t*.6+k/3)%1; c.strokeStyle=tr; c.globalAlpha=1-u; c.lineWidth=Math.max(1,S*.02); c.beginPath(); c.arc(x+w/2,y+h/2,u*S*.6,0,7); c.stroke(); } c.globalAlpha=1; c.fillStyle=tr; c.fillRect(x+w*.45,y,w*.1,h); }
+  else if(fx==="galaxy"){ c.fillStyle="#05020f"; c.fillRect(x,y,w,h); c.translate(x+w/2,y+h/2); c.rotate(t*.4); for(let arm=0;arm<3;arm++) for(let j=0;j<22;j++){ const a=arm*2.09+j*.22, r=j*S*.012; c.fillStyle=`hsla(${(260+j*5+arm*40)%360},100%,${70+j}%,.8)`; c.fillRect(Math.cos(a)*r,Math.sin(a)*r*.7,S*.014,S*.014); } }
+  else if(fx==="matrix"){ c.fillStyle="#010802"; c.fillRect(x,y,w,h); c.fillStyle="#43f0a4"; c.font=`${Math.max(5,S*.07)}px monospace`; c.textAlign="center"; for(let i=0;i<6;i++){ const col0=x+w*(i+.5)/6; for(let k=0;k<6;k++){ const yy=y+((t*h*.6+i*37+k*S*.1)%(h+S*.1)); c.globalAlpha=1-k/6; c.fillText(String.fromCharCode(0x30A0+((i*7+k+(t*8|0))%60)),col0,yy-k*S*.08); } } }
+  else if(fx==="storm"){ c.fillStyle="#0a0c20"; c.fillRect(x,y,w,h); if(Math.sin(t*7)>.3){ c.strokeStyle="#f5e663"; c.shadowColor="#f5e663"; c.shadowBlur=10; c.lineWidth=Math.max(1,S*.02); c.beginPath(); let px=x+w*(.3+.4*((t*3|0)%3)/3), py=y; c.moveTo(px,py); for(let k=0;k<5;k++){ px+=(Math.random()-.5)*w*.4; py+=h/5; c.lineTo(px,py); } c.stroke(); c.shadowBlur=0; } }
+  else if(fx==="petals"){ c.fillStyle="rgba(255,138,216,.12)"; c.fillRect(x,y,w,h); for(let i=0;i<7;i++){ const u=(t*.25+i/7)%1; c.save(); c.translate(x+((i*41)%100)/100*w+Math.sin(t+i)*w*.1,y+u*h); c.rotate(t*2+i); c.fillStyle="#ff8ad8"; c.beginPath(); c.ellipse(0,0,S*.03,S*.015,0,0,7); c.fill(); c.restore(); } }
+  else if(fx==="gold"){ c.fillStyle="rgba(255,211,106,.12)"; c.fillRect(x,y,w,h); const sx=x+((t*.5)%1.4-.2)*w; const g=c.createLinearGradient(sx-w*.2,0,sx+w*.2,0); g.addColorStop(0,"rgba(255,211,106,0)"); g.addColorStop(.5,"rgba(255,240,200,.6)"); g.addColorStop(1,"rgba(255,211,106,0)"); c.fillStyle=g; c.fillRect(x,y,w,h); }
+  else if(fx==="core"){ c.fillStyle="#0a0418"; c.fillRect(x,y,w,h); const r=S*.12+Math.sin(t*4)*S*.015; const g=c.createRadialGradient(x+w/2,y+h/2,1,x+w/2,y+h/2,r*2.4); g.addColorStop(0,"#fff"); g.addColorStop(.3,"#cf72ff"); g.addColorStop(1,"rgba(207,114,255,0)"); c.fillStyle=g; c.fillRect(x,y,w,h); c.strokeStyle="#cf72ff"; c.lineWidth=Math.max(1,S*.015); for(let k=0;k<2;k++){ c.save(); c.translate(x+w/2,y+h/2); c.rotate(t*(1.5+k)); c.scale(1,.35); c.beginPath(); c.arc(0,0,r*1.6,0,7); c.stroke(); c.restore(); } }
+  c.restore(); }
+function pcArt(c,S,t,L,tr,glow){ const shp=L.shape;
+  if(shp==="pyramid"){ c.fillStyle=L.body; c.beginPath(); c.moveTo(0,-S*.3); c.lineTo(S*.38,S*.36); c.lineTo(-S*.38,S*.36); c.closePath(); c.fill(); glow(1); c.strokeStyle=tr; c.lineWidth=Math.max(1,S*.025); c.stroke(); c.shadowBlur=0; c.save(); c.globalAlpha=.35+.2*Math.sin(t*3); c.fillStyle=tr; c.beginPath(); c.moveTo(0,-S*.3); c.lineTo(S*.16,-S*.48); c.lineTo(-S*.16,-S*.48); c.fill(); c.restore(); c.save(); c.translate(0,-S*.44); c.rotate(t); c.strokeStyle="#fff"; c.globalAlpha=.8; c.strokeRect(-S*.05,-S*.05,S*.1,S*.1); c.restore(); c.fillStyle=tr; for(let i=0;i<3;i++){ c.globalAlpha=Math.sin(t*4+i)>0?1:.3; c.fillRect(-S*.12+i*S*.1,S*.26,S*.05,S*.04); } c.globalAlpha=1; return; }
+  const dims={tower:[.5,.8],cube:[.62,.62],slim:[.3,.84],mono:[.4,.9],wide:[.82,.62]}[shp]||[.5,.8]; const w=S*dims[0], h=S*dims[1];
+  c.fillStyle=L.body; c.fillRect(-w/2,-h/2,w,h); glow(.8); c.strokeStyle=tr; c.lineWidth=Math.max(1,S*.025); c.strokeRect(-w/2,-h/2,w,h); c.shadowBlur=0;
+  const wx=shp==="slim"?-w*.3:shp==="mono"?-w*.38:-w*.05, ww=shp==="slim"?w*.6:shp==="mono"?w*.76:w*.5;
+  windowFx(c,L.fx,wx,-h*.42,ww,h*.84,t,tr);
+  const fans=shp==="slim"||shp==="mono"?0:shp==="wide"?3:2; for(let i=0;i<fans;i++){ const fy=-h*.3+i*(h*.6/Math.max(1,fans-1)); fanSpin(c,-w*.3,fans===1?0:fy,Math.min(w*.14,h*.13),t+i,tr,12); }
+  c.fillStyle=tr; c.globalAlpha=.5+.5*Math.sin(t*3); c.fillRect(-w/2,h/2-S*.03,w,S*.03); c.globalAlpha=1; }
+function minerArt(c,S,t,L,tr,glow,it){ const shp=L.shape, ng=Math.max(1,(L.need.gpu||0)), w=S*.9, h=S*.62;
+  if(shp==="tank"){ c.fillStyle="rgba(56,232,255,.12)"; c.fillRect(-w*.45,-h*.55,w*.9,h*1.05); c.strokeStyle=tr; c.lineWidth=Math.max(1,S*.025); c.strokeRect(-w*.45,-h*.55,w*.9,h*1.05); c.fillStyle="rgba(56,232,255,.25)"; c.fillRect(-w*.45,-h*.35,w*.9,h*.85); }
+  else if(shp==="crate"){ c.fillStyle="#2a1a10"; c.fillRect(-w/2,-h/2,w,h); c.strokeStyle=tr; c.lineWidth=Math.max(1,S*.025); c.strokeRect(-w/2,-h/2,w,h); for(let i=1;i<4;i++){ c.beginPath(); c.moveTo(-w/2+w*i/4,-h/2); c.lineTo(-w/2+w*i/4,h/2); c.stroke(); } }
+  else if(shp==="stack"){ for(let i=0;i<5;i++){ c.fillStyle="#1b1530"; c.fillRect(-w*.3,-h*.6+i*h*.25,w*.6,h*.22); c.strokeStyle=tr; c.lineWidth=Math.max(1,S*.015); c.strokeRect(-w*.3,-h*.6+i*h*.25,w*.6,h*.22); c.fillStyle=Math.sin(t*6+i*1.7)>0?tr:"#1a1428"; c.fillRect(w*.18,-h*.53+i*h*.25,w*.05,h*.06); c.fillStyle="#3d3456"; c.fillRect(-w*.25,-h*.52+i*h*.25,w*.3,h*.04); } }
+  else if(shp==="crystal"){ c.fillStyle="#1b1530"; c.fillRect(-w*.45,h*.1,w*.9,h*.35); for(let i=0;i<4;i++){ const cx=-w*.3+i*w*.2, ch=h*(.5+.25*Math.sin(t+i)); glow(1); c.fillStyle=i%2?tr:"#e9e2ff"; c.globalAlpha=.8; c.beginPath(); c.moveTo(cx-w*.06,h*.1); c.lineTo(cx,h*.1-ch); c.lineTo(cx+w*.06,h*.1); c.fill(); c.globalAlpha=1; c.shadowBlur=0; } }
+  else { c.strokeStyle="#6b6585"; c.lineWidth=Math.max(1,S*.025); c.strokeRect(-w/2,-h/2,w,h); c.beginPath(); c.moveTo(-w/2,0); c.lineTo(w/2,0); c.stroke(); }
+  if(shp!=="stack"&&shp!=="crystal"){ const n=Math.min(4,ng); for(let i=0;i<n;i++){ const gx=-w*.42+i*(w*.84/n), gw=w*.84/n-w*.03; c.fillStyle="#1b1530"; c.fillRect(gx,-h*.44,gw,h*.38); c.fillStyle=tr; c.fillRect(gx,-h*.44,gw,S*.02); fanSpin(c,gx+gw/2,-h*.25,Math.min(gw*.3,h*.14),t+i,tr,L.fx==="turbo"?40:L.fx==="beast"?24:14); } }
+  // effects
+  const fx=L.fx; c.save();
+  if(fx==="sun"){ c.translate(w*.32,-h*.62); glow(1); c.fillStyle="#ffd36a"; c.beginPath(); c.arc(0,0,S*.08,0,7); c.fill(); c.shadowBlur=0; c.rotate(t); c.strokeStyle="#ffb84a"; for(let i=0;i<8;i++){ c.rotate(Math.PI/4); c.beginPath(); c.moveTo(S*.1,0); c.lineTo(S*.15,0); c.stroke(); } }
+  else if(fx==="bubbles"||fx==="lattice"){ c.fillStyle="#e9f6ff"; for(let i=0;i<8;i++){ const u=(t*.5+i/8)%1; c.globalAlpha=1-u; c.beginPath(); c.arc(-w*.4+((i*29)%80)/80*w*.8,h*.45-u*h,S*.015+(i%3)*S*.005,0,7); c.fill(); } c.globalAlpha=1; if(fx==="lattice"){ glow(1); c.fillStyle="#cf72ff"; c.beginPath(); c.arc(0,h*.1,S*.08+Math.sin(t*5)*S*.01,0,7); c.fill(); c.shadowBlur=0; c.strokeStyle="#cf72ff"; for(let i=0;i<2;i++){ c.save(); c.translate(0,h*.1); c.rotate(t*(1.5+i)); c.scale(1,.3); c.beginPath(); c.arc(0,0,S*.15,0,7); c.stroke(); c.restore(); } } }
+  else if(fx==="ice"){ c.strokeStyle="#e9f6ff"; c.lineWidth=Math.max(.6,S*.012); for(let i=0;i<6;i++){ const px=-w/2+((i*41)%100)/100*w, py=-h/2+((i*23)%100)/100*h; for(let k=0;k<3;k++){ const a=k*1.05; c.beginPath(); c.moveTo(px-Math.cos(a)*S*.03,py-Math.sin(a)*S*.03); c.lineTo(px+Math.cos(a)*S*.03,py+Math.sin(a)*S*.03); c.stroke(); } } c.fillStyle="rgba(200,240,255,.2)"; c.fillRect(-w/2,h*.38,w,h*.12); }
+  else if(fx==="lava"){ const g=c.createLinearGradient(0,h*.1,0,h*.5); g.addColorStop(0,"rgba(255,90,42,0)"); g.addColorStop(1,"rgba(255,90,42,.7)"); c.fillStyle=g; c.fillRect(-w/2,h*.1,w,h*.4); for(let i=0;i<5;i++){ const u=(t*.8+i/5)%1; c.fillStyle="#ffb84a"; c.globalAlpha=1-u; c.beginPath(); c.arc(-w*.4+i*w*.2,h*.45-u*h*.6,S*.02,0,7); c.fill(); } c.globalAlpha=1; }
+  else if(fx==="swarm"){ glow(.6); c.fillStyle=tr; for(let i=0;i<18;i++){ const a=t*2+i*.9, r=S*(.15+.12*Math.sin(t+i)); c.fillRect(Math.cos(a)*r*1.6,Math.sin(a*1.3)*r,S*.02,S*.02); } c.shadowBlur=0; }
+  else if(fx==="beast"){ c.strokeStyle="#ff3f5a"; c.globalAlpha=.5+.5*Math.sin(t*8); c.lineWidth=Math.max(1,S*.02); c.strokeRect(-w/2-S*.02,-h/2-S*.02,w+S*.04,h+S*.04); c.globalAlpha=1; }
+  else if(fx==="crystal"){ for(let i=0;i<5;i++){ const tw=Math.max(0,Math.sin(t*3+i*1.7)); c.fillStyle="#fff"; c.globalAlpha=tw; c.fillRect(-w*.35+i*w*.17,-h*.2+((i*13)%10)/10*h*.3,S*.02,S*.02); } c.globalAlpha=1; }
+  else if(fx==="ghost"){ c.globalAlpha=.3+.3*Math.sin(t*2); c.fillStyle="#e9e2ff"; c.fillRect(-w/2,-h/2,w,h); c.globalAlpha=1; }
+  else if(fx==="turbo"){ c.strokeStyle="rgba(245,230,99,.5)"; c.lineWidth=Math.max(1,S*.015); for(let i=0;i<5;i++){ const u=(t*3+i/5)%1; c.beginPath(); c.moveTo(w/2+u*S*.1,-h*.3+i*h*.15); c.lineTo(w/2+u*S*.1+S*.12,-h*.3+i*h*.15); c.stroke(); } }
+  else if(fx==="neural"){ c.strokeStyle="#ff3fa8"; c.lineWidth=Math.max(.6,S*.012); for(let i=0;i<7;i++){ c.globalAlpha=.4+.4*Math.sin(t*3+i); c.beginPath(); c.moveTo(-w*.35+((i*37)%70)/100*w,-h*.5); c.quadraticCurveTo(0,-h*.7+Math.sin(t+i)*h*.1,w*.35-((i*23)%70)/100*w,-h*.5); c.stroke(); } c.globalAlpha=1; }
+  else if(fx==="stack"){ c.fillStyle="#4aa8ff"; c.font=`bold ${S*.07}px monospace`; c.textAlign="center"; c.fillText(((t*7)|0)%2?"101":"010",0,h*.75); }
+  c.restore();
+  if(shp!=="stack"){ for(let i=0;i<3;i++){ c.fillStyle=Math.sin(t*8+i*2)>0?"#43f0a4":"#1a1428"; c.fillRect(-w*.36+i*S*.06,h*.38,S*.035,S*.035); } c.fillStyle=tr; c.font=`bold ${S*.07}px monospace`; c.textAlign="center"; c.fillText("+"+Math.floor((t*3)%10),w*.32,h*.42); } }
+function phoneArt(c,S,t,L,tr,glow){ const shp=L.shape; let w=S*.42,h=S*.8; if(shp==="mini"){ w=S*.3; h=S*.5; } if(shp==="brick"){ w=S*.5; h=S*.82; } if(shp==="fold"){ w=S*.76; h=S*.66; }
+  const body=(x,y,ww,hh)=>{ c.fillStyle=shp==="glass"||L.fx==="glass"?"rgba(168,232,255,.18)":"#141022"; const r=Math.min(ww,hh)*.14; c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+ww,y,x+ww,y+hh,r); c.arcTo(x+ww,y+hh,x,y+hh,r); c.arcTo(x,y+hh,x,y,r); c.arcTo(x,y,x+ww,y,r); c.closePath(); c.fill(); glow(shp==="edge"||L.fx==="neon"?1:.5); c.strokeStyle=tr; c.lineWidth=Math.max(1,S*(shp==="brick"?.05:.025)); c.stroke(); c.shadowBlur=0; };
+  if(shp==="flip"){ c.save(); c.translate(0,-S*.1); c.rotate(-.15); body(-w/2,-h*.42,w,h*.44); phoneScreen(c,L.fx,-w/2+S*.04,-h*.38,w-S*.08,h*.36,t,tr); c.restore(); body(-w/2,S*.02,w,h*.42); c.fillStyle="#3d3456"; for(let r=0;r<3;r++) for(let k=0;k<3;k++) c.fillRect(-w*.3+k*w*.22,S*.08+r*h*.09,w*.16,h*.06); return; }
+  if(shp==="fold"){ body(-w/2,-h/2,w,h); phoneScreen(c,L.fx,-w/2+S*.03,-h/2+S*.03,w/2-S*.04,h-S*.06,t,tr); phoneScreen(c,L.fx,S*.01,-h/2+S*.03,w/2-S*.04,h-S*.06,t+1.3,tr); c.strokeStyle="rgba(255,255,255,.3)"; c.beginPath(); c.moveTo(0,-h/2); c.lineTo(0,h/2); c.stroke(); return; }
+  body(-w/2,-h/2,w,h); const sx=-w/2+S*(shp==="brick"?.07:.03), sy=-h/2+S*(shp==="brick"?.08:.05), sw=w-S*(shp==="brick"?.14:.06), sh=h-S*(shp==="brick"?.2:.12); phoneScreen(c,L.fx,sx,sy,sw,sh,t,tr);
+  c.fillStyle="#0b0716"; c.fillRect(-S*.04,-h/2+S*.015,S*.08,S*.02);
+  const nc=L.need.cam||0; if(shp==="lens"||nc>=3){ c.fillStyle="#1b1530"; c.beginPath(); c.arc(w*.18,-h*.38,S*.08,0,7); c.fill(); c.strokeStyle=tr; c.stroke(); }
+  if(shp==="edge"){ for(const sd of [-1,1]){ c.fillStyle=`hsl(${(t*120+(sd>0?180:0))%360},100%,60%)`; c.fillRect(sd*w/2-(sd>0?S*.02:0),-h*.3,S*.02,h*.6); } }
+  if(L.fx==="holo"){ c.save(); c.globalAlpha=.35+.2*Math.sin(t*3); c.fillStyle=tr; c.beginPath(); c.moveTo(-w*.3,-h/2); c.lineTo(w*.3,-h/2); c.lineTo(w*.5,-h/2-S*.3); c.lineTo(-w*.5,-h/2-S*.3); c.fill(); c.globalAlpha=1; c.translate(0,-h/2-S*.2); c.rotate(t*1.5); c.strokeStyle="#fff"; c.strokeRect(-S*.06,-S*.06,S*.12,S*.12); c.restore(); } }
+function phoneScreen(c,fx,x,y,w,h,t,tr){ c.save(); c.beginPath(); c.rect(x,y,w,h); c.clip(); const S=Math.max(w,h); c.fillStyle="#05030a"; c.fillRect(x,y,w,h);
+  if(fx==="stars"){ for(let i=0;i<16;i++){ const u=(t*.3+i/16)%1; c.fillStyle="#fff"; c.globalAlpha=u; const a=i*2.4; c.fillRect(x+w/2+Math.cos(a)*u*w*.6,y+h/2+Math.sin(a)*u*h*.6,S*.015,S*.015); } }
+  else if(fx==="wave"||fx==="aurora"){ for(let k=0;k<4;k++){ c.strokeStyle=fx==="aurora"?["#43f0a4","#38e8ff","#cf72ff","#8fffd0"][k]:`hsl(${(t*60+k*70)%360},100%,60%)`; c.globalAlpha=.7; c.lineWidth=Math.max(1,S*.04); c.beginPath(); for(let i=0;i<=10;i++) c.lineTo(x+w*i/10,y+h*(.25+k*.15)+Math.sin(i*.9+t*2+k)*h*.05); c.stroke(); } }
+  else if(fx==="pixel"){ const n=6; for(let i=0;i<n;i++) for(let k=0;k<n;k++){ c.fillStyle=((i+k+(t*3|0))%3)===0?tr:"#1a1428"; c.fillRect(x+w*i/n+1,y+h*k/n+1,w/n-2,h/n-2); } }
+  else if(fx==="glass"){ c.fillStyle="rgba(168,232,255,.25)"; c.fillRect(x,y,w,h); c.fillStyle="#fff"; c.font=`${Math.max(5,S*.12)}px monospace`; c.textAlign="center"; c.fillText(new Date(Date.now()).toTimeString().slice(0,5),x+w/2,y+h*.4); }
+  else if(fx==="radar"){ c.strokeStyle="#43f0a4"; c.lineWidth=1; for(let r=1;r<=3;r++){ c.beginPath(); c.arc(x+w/2,y+h/2,r*Math.min(w,h)*.15,0,7); c.stroke(); } c.save(); c.translate(x+w/2,y+h/2); c.rotate(t*2); c.fillStyle="rgba(67,240,164,.4)"; c.beginPath(); c.moveTo(0,0); c.arc(0,0,Math.min(w,h)*.45,0,.6); c.fill(); c.restore(); }
+  else if(fx==="game"){ c.fillStyle="#43f0a4"; const seg=6; for(let i=0;i<seg;i++){ const u=((t*.5)-i*.04)%1; const px=x+w*(.1+.8*Math.abs(Math.sin(u*Math.PI*2))), py=y+h*(.1+.8*u); c.fillRect(px,py,S*.03,S*.03); } c.fillStyle="#ff3f5a"; c.fillRect(x+w*.7,y+h*.3,S*.03,S*.03); }
+  else if(fx==="holo"){ c.fillStyle=tr; c.globalAlpha=.4; for(let i=0;i<6;i++) c.fillRect(x,y+((t*h*.4+i*h/6)%h),w,1); }
+  else if(fx==="clock"){ c.fillStyle=tr; c.font=`bold ${Math.max(5,S*.18)}px monospace`; c.textAlign="center"; c.fillText(new Date().toTimeString().slice(0,5),x+w/2,y+h*.55); }
+  else if(fx==="camera"){ c.fillStyle="#1a2a3a"; c.fillRect(x,y,w,h); c.strokeStyle="#fff"; c.lineWidth=1; const f=.5+.1*Math.sin(t*2); c.strokeRect(x+w*(.5-f/2),y+h*(.5-f/2),w*f,h*f); c.fillStyle=Math.sin(t*3)>0?"#ff3f5a":"#3a1a20"; c.beginPath(); c.arc(x+w*.85,y+h*.1,S*.02,0,7); c.fill(); }
+  else if(fx==="neon"){ const p=.5+.5*Math.sin(t*4); c.fillStyle=tr; c.globalAlpha=.3+.4*p; c.fillRect(x,y,w,h); c.globalAlpha=1; c.strokeStyle="#fff"; c.lineWidth=1; c.beginPath(); c.arc(x+w/2,y+h/2,Math.min(w,h)*.25*(.8+.2*p),0,7); c.stroke(); }
+  else if(fx==="omega"){ const g=c.createLinearGradient(x,y,x,y+h); g.addColorStop(0,"#2a1a08"); g.addColorStop(1,"#0b0716"); c.fillStyle=g; c.fillRect(x,y,w,h); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=10; c.font=`bold ${Math.max(6,S*.3)}px serif`; c.textAlign="center"; c.textBaseline="middle"; c.globalAlpha=.6+.4*Math.sin(t*2); c.fillText("Ω",x+w/2,y+h/2); }
+  c.restore(); }
+
 function drawItem(c,id,cx,cy,S,t){
   const it=BY[id]; if(!it) return; const col=RAR[it.r].c; c.save(); c.translate(cx,cy); c.lineWidth=Math.max(1,S*.03);
   const glow=(a)=>{c.shadowColor=col;c.shadowBlur=S*.25*a;};
@@ -1048,8 +1199,9 @@ function drawItem(c,id,cx,cy,S,t){
         for(const [ox,rot] of [[-S*.1,-.1],[S*.12,.15]]){ c.save(); c.translate(ox,0); c.rotate(rot); c.fillStyle="#c98a3a"; c.beginPath(); c.moveTo(-S*.2,S*.2); c.lineTo(S*.2,S*.2); c.lineTo(0,-S*.24); c.closePath(); c.fill(); c.fillStyle="#f0c46a"; c.beginPath(); c.moveTo(-S*.16,S*.17); c.lineTo(S*.16,S*.17); c.lineTo(0,-S*.18); c.closePath(); c.fill(); c.restore(); }
         glow(.6+.4*Math.sin(t*3)); c.fillStyle=fc; c.fillRect(-S*.26,S*.14,S*.5,S*.04); for(let i=0;i<3;i++){ const h=S*(.05+.04*Math.abs(Math.sin(t*1.5+i))); c.fillRect(-S*.18+i*S*.16,S*.16,S*.03,h); } c.shadowBlur=0; }
       break; }
+    case "screen": case "cam": case "batt": { partArtNew(c,it,S,t,col,glow); break; }
     case "build": {
-      const tier=TIER[it.r];
+      const tier=TIER[it.r]; if(buildArtNew(c,it,S,t,col,glow)) break;
       if(it.k==="stream"){ c.fillStyle="#141022"; c.fillRect(-S*.38,-S*.3,S*.46,S*.34); c.fillStyle="#2a0f3d"; c.fillRect(-S*.35,-S*.27,S*.4,S*.28); c.fillStyle="#ff3fa8"; for(let i=0;i<4;i++) c.fillRect(-S*.32,-S*.22+i*S*.06,S*.1+((i*31+Math.floor(t*4))%5)*S*.04,S*.03);
         c.fillStyle="#3d3160"; c.fillRect(-S*.18,S*.04,S*.06,S*.12); c.fillRect(-S*.3,S*.16,S*.3,S*.03); c.fillStyle="#141022"; c.fillRect(S*.16,-S*.2,S*.2,S*.42); glow(1); c.strokeStyle=col; c.lineWidth=S*.02; c.beginPath(); c.arc(S*.26,-S*.1,S*.06,0,7); c.stroke(); c.shadowBlur=0;
         c.strokeStyle="#e9e2ff"; c.lineWidth=S*.025; c.beginPath(); c.arc(-S*.1,-S*.4,S*.08,0,7); c.stroke(); const on=Math.sin(t*4)>0; c.fillStyle=on?"#ff5a4a":"#3a1a20"; c.font=`bold ${S*.07}px monospace`; c.textAlign="left"; c.textBaseline="middle"; c.fillText("● LIVE",-S*.44,S*.34); }
@@ -1752,7 +1904,7 @@ const GUIDE={
     ["The Void",["Delete bots: pick Easy, Normal or Hard at the Bot Control terminal in the safe zone. Harder modes pay more chips per kill, up to 40 for the SENTINEL Ω boss.","Beat other players: whoever dies loses 15% of their credits and chips, and half goes to the player who got the kill."]],
     ["UPLOAD (The Grid)",["First clears pay 4 to 22 chips per level, gold root keys pay +1 chip each, and clearing all 10 levels wins a HALO Singularity Chip."]]]},
   items:{n:"Get every item",secs:[
-    ["Parts and rigs",["Workbench (your apartment): pick a recipe and tap Assemble. You build it by hand: tap each part in the tray (or drag it onto the build) to install it, motherboard first, and watch it go in piece by piece with cables hooking up to the power supply. Then hit ⏻ Power it on to boot it and get your rig. Cancel anytime and you keep your parts. ⚡ Auto-assemble finishes it for you.","Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips. Byte Market stalls sell parts, prebuilt PCs and miners.","Workbench (your apartment): combine parts into 12 kinds of rigs, from Gaming PCs and Mining Rigs to Cyberdecks, Quantum Rigs and Credit Miners. Better parts make a higher Mk. The Recipe Book tab shows what every recipe needs and where to find each part.","Rigs can be displayed, gifted, traded, installed or taken apart again."]],
+    ["Parts and rigs",["48 rigs to build at your Workbench, filtered by PCs, Miners, Phones and Other: 12 new PCs (Frostbyte Tower, Inferno Rig, Aqua Loop, Neon Cube, Shadow Slim, Galaxy Station, Matrix Monolith, Holo Pyramid, Stormcaller, Sakura Bloom, Titan Workstation, Quantum Desktop), 12 new miners for your rack (Solar 35/hr up to Lattice 120/hr per Mk) and 12 buildable phones you can hold in your hand. Each one has its own animated look.","Phones use three new part types from the Parts Depot: displays, cameras and batteries.","Workbench (your apartment): pick a recipe and tap Assemble. You build it by hand: tap each part in the tray (or drag it onto the build) to install it, motherboard first, and watch it go in piece by piece with cables hooking up to the power supply. Then hit ⏻ Power it on to boot it and get your rig. Cancel anytime and you keep your parts. ⚡ Auto-assemble finishes it for you.","Parts Depot: stock rotates every hour. Common parts cost credits, epic parts cost chips. Byte Market stalls sell parts, prebuilt PCs and miners.","Workbench (your apartment): combine parts into 12 kinds of rigs, from Gaming PCs and Mining Rigs to Cyberdecks, Quantum Rigs and Credit Miners. Better parts make a higher Mk. The Recipe Book tab shows what every recipe needs and where to find each part.","Rigs can be displayed, gifted, traded, installed or taken apart again."]],
     ["Cyber Buys & More (Sector 9)",["Six aisles: Drives & Cables, Peripherals, Wall Art & Signs, Furniture & Lighting, then past the register, the new wing: Gadgets & Gaming (12 holdable gadgets like a Pocket Drone, VR Visor Rig and Hover Skateboard) and Smart Home (Holo-TV, Jukebox, Robo Butler and more).","Epic items cost chips, everything else credits."]],
     ["Weapons (Volt Armory, Byte Market)",["40 weapons from the Laser Knife to the Void Reaver, each with its own damage, reach, speed and animated attack effect. Some hit everyone in range, pierce, or slow targets. Burn weapons (Plasma Axe, Hex Staff, Nano Swarm) keep damaging for a few seconds; lifesteal weapons (Vampire Fang, Overdrive Saber, Void Reaver) heal you on every hit. The Armory shelf shows 14 of them and changes every hour. The Armory shows 10 each hour; bots can drop them too.","Equip one in your hand from Character → Hand. Use Pose to show it off."]],
     ["Companion Clash (Metro)",["A neon arena for companions. Ride the Metro (T) to Companion Clash.","Clash Arena: turn-based battles. Each round pick ⚔ Strike, ✦ Special (based on your companion's trait: Barrier, Mend, Fury, Blitz, Lucky Strike or Overload) or 🛡 Guard. Fight wild companions (Easy, Even, Hard) or other players' companions, who fight back on autopilot. Wins pay credits and chips and raise your rating; beating players pays more. Your companion rests 20 seconds between battles.","Expedition Gate: send your companion to Scrap Dunes (2 min), Neon Ruins (6 min) or the Data Abyss (15 min) to find 2–7 parts plus chips. Longer trips find rarer parts (the Abyss can even find epics). Luck and dig companions and tall hybrids find an extra part. While it's away it can't fetch, use its ability or battle.","Tamer Rankings: the top companion tamers by rating."]],["Companion Customs",["Open it from the Companion Clash shop or P → 🎨 Customize.","Colors (free): 16 body colors and 16 glow colors for eyes, lights and neon parts.","Gear (bought once with ₵, works on every companion): 11 hats, 7 neckwear pieces and 6 back pieces, from a Party Cone (₵40) to Data Wings (₵300). Each piece adds HP, ATK, DEF or SPD in Companion Clash.","Everyone sees your companion's colors and gear."]],["God Particle (The Third Eye)",["The rarest club item: ₵500 at the club bar (or have your companion fetch it). Use it inside The Third Eye.","A third eye tears open on your forehead and a giant eye opens above you, and everyone in the club sees it. A few seconds later a pillar of light pulls you out of the club.","You land in Elysium, a hidden world only God Particle users can enter. Other ascended players are there too. Touch the Origin Spire once per trip for ₵150–300 and 20–40 chips, ask the Oracle for a prophecy, and bathe in the Light Fountain for 20 min of lucky salvage.","More in Elysium: play the Harp of Light, toss ₵10 into the Wishing Well of Stars (chips, credits or even a rare part), sit on the Throne of Light, and check your soul in the Mirror of Souls.","The Celestial Bar: Seraphine pours 6 godly drinks and Malakai pours 6 devilish ones (₵50–80). Each has its own animated effect (halo, light wings, orbiting stars, a nimbus cloud, hellfire, horns and tail, bat wings and more) plus boosts. Sit in the Seraph, Ember or Nebula booths with friends.","Orb Court: step to the free-throw line, press E (or USE) to start the meter and again to shoot the glowing orb. Land it in the gold zone. Each make pays a chip and every 5-in-a-row pays 10 more. The zone shrinks as your streak grows.","It lasts 15 minutes and gives every boost. You can't fast travel out of Elysium, but T (☰ → Fast Travel on phones) opens the Elysium Map to glide between its spots. When it fades you're sent back to The Third Eye."]],["Food and drinks",["Every drink now has an animated effect that everyone can see for 2 minutes, like bubbles, sparks, steam, frost, music notes, falling coins or glitches.","11 drinks from Vex and 7 dishes from Kai at The Glitch (1.5× price; menu price from a runner on shift). Byte Bowl Noodles sells the full menu for less plus 8 specials of its own.","Eat or drink from your Stash for boosts: walk speed, lucky salvage, double CHIP PRINT chips, +25% shift tips or Void armor (25% less damage). Food heals in The Void when you're clear of a fight."]],
@@ -1799,7 +1951,7 @@ function itemCard(id,count,meta,onclick){ const it=BY[id]; const b=el("button",{
 function invList(){ return Object.entries(save.inv).filter(([id,n])=>n>0&&BY[id]).sort((a,b)=>BY[b[0]].v-BY[a[0]].v); }
 
 /* --- stash */
-const STASH_CATS=[["all","All"],["parts","PC parts",["chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hdd"]],["rigs","Rigs",["build","miner"]],["weapons","Weapons",["weapon"]],["tech","Tech & gadgets",["phone","hack","floppy","enc","kbd","mouse","cable","acc","gadget"]],["food","Food & drinks",["food","drink"]],["club","Club items",["trip"]],["decor","Decor",["decor"]],["other","Other",null]];
+const STASH_CATS=[["all","All"],["parts","Parts",["chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hdd","screen","cam","batt"]],["rigs","Rigs",["build","miner"]],["weapons","Weapons",["weapon"]],["tech","Tech & gadgets",["phone","hack","floppy","enc","kbd","mouse","cable","acc","gadget"]],["food","Food & drinks",["food","drink"]],["club","Club items",["trip"]],["decor","Decor",["decor"]],["other","Other",null]];
 const STASH_SORTS=[["rarity","Rarity (best first)"],["value","Value (high → low)"],["valueAsc","Value (low → high)"],["name","Name (A → Z)"],["qty","Quantity (most first)"],["type","Type"]];
 let stashUI=(()=>{ try{ return {q:"",cat:"all",sort:"rarity",rar:"all",sel:null,...JSON.parse(localStorage.getItem("nh_stash_ui")||"{}"),q:"",sel:null,shown:60}; }catch(e){ return {q:"",cat:"all",sort:"rarity",rar:"all",sel:null,shown:60}; } })();
 function stashSaveUI(){ try{ localStorage.setItem("nh_stash_ui",JSON.stringify({cat:stashUI.cat,sort:stashUI.sort,rar:stashUI.rar})); }catch(e){} }
@@ -1813,7 +1965,7 @@ function stashActions(id,refresh){ const it=BY[id], acts=el("div",{class:"row",s
   if(it.t==="drink"||it.t==="food") acts.append(el("button",{class:"btn hot",type:"button",text:it.t==="food"?"Eat it":"Drink it",onclick:()=>{ consumeItem(id); refresh(); }}));
   if(it.t==="enc") acts.append(el("button",{class:"btn hot",type:"button",text:"Decrypt",onclick:()=>openDecrypt()}));
   if(it.t==="trip"){ const ub=el("button",{class:"btn hot",type:"button",text:me.scene==="club"?"Use it":"Use (inside The Third Eye only)",onclick:()=>useTrip(id)}); if(me.scene!=="club") ub.disabled=true; acts.append(ub); const mx=typeof knownMixesFor==="function"?knownMixesFor(id):[]; for(const F of mx){ const other=F.a===id?F.b:F.a; const b=el("button",{class:"btn",type:"button",style:"border-color:#ffd36a;color:#ffd36a",text:`⚗ Mix + ${BY[other].n}`,onclick:()=>mixFusion(F)}); if(me.scene!=="club") b.disabled=true; acts.append(b); } }
-  if(HOLD_T.includes(it.t)) acts.append(el("button",{class:"btn hot",type:"button",text:save.look.hand===id?"Unequip from hand":"Equip in hand",onclick:()=>{ const on=save.look.hand!==id; save.look={...save.look,hand:on?id:""}; persist(); pushPresence(true); toast(on?`${it.n} equipped. Try the Pose emote.`:`${it.n} unequipped.`); refresh(); }}));
+  if(canHold(it)) acts.append(el("button",{class:"btn hot",type:"button",text:save.look.hand===id?"Unequip from hand":"Equip in hand",onclick:()=>{ const on=save.look.hand!==id; save.look={...save.look,hand:on?id:""}; persist(); pushPresence(true); toast(on?`${it.n} equipped. Try the Pose emote.`:`${it.n} unequipped.`); refresh(); }}));
   acts.append(el("button",{class:"btn",type:"button",text:"Put on a shelf",onclick:()=>{ const slot=save.display.indexOf(null); if(slot<0){ toast("All 6 shelves are full. Take something down first."); return; } save.display[slot]=id; addItem(id,-1); persist(); toast(`${it.n} placed on shelf ${slot+1}`); refresh(); }}));
   acts.append(el("button",{class:"btn",type:"button",text:"Post on Trade Board",onclick:()=>openListForm(id)}));
   return acts; }
@@ -1925,7 +2077,7 @@ async function claimName(n){
 }
 /* --- shop */
 let shopStock=null, shopDay=-1;
-function getStock(){ const d=Math.floor(Date.now()/36e5); if(d!==shopDay){ shopDay=d; const r=seeded(d*31+7); const pool=[...PARTS].sort(()=>r()-.5); shopStock=pool.slice(0,8).map(i=>({id:i.id,price:Math.round(i.v*1.35),cur:i.r==="epic"?"chips":"credits"})).map(s=>s.cur==="chips"?{...s,price:Math.round(BY[s.id].v/2)}:s); } return shopStock; }
+function getStock(){ const d=Math.floor(Date.now()/36e5); if(d!==shopDay){ shopDay=d; const r=seeded(d*31+7); const pool=[...PARTS].sort(()=>r()-.5); shopStock=pool.slice(0,12).map(i=>({id:i.id,price:Math.round(i.v*1.35),cur:i.r==="epic"?"chips":"credits"})).map(s=>s.cur==="chips"?{...s,price:Math.round(BY[s.id].v/2)}:s); } return shopStock; }
 function openShop(tab="buy"){
   const body=panel("PARTS DEPOT","Stock rotates every hour. Epic parts are priced in chips. Sell-back pays full worth in credits.");
   const tabs=el("div",{class:"tabs"}); ["buy","sell"].forEach(k=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:k==="buy"?"Buy parts":"Sell parts",onclick:()=>openShop(k)}))); body.append(tabs);
@@ -2110,8 +2262,12 @@ function openWorkbench(tab="build"){
           persist(); toast(`Dismantled ${it.n} into ${got.length} parts`); beep(300,.1,"sawtooth"); openWorkbench("dismantle"); }}))); }
     body.append(list); return;
   }
-  const list=el("div",{class:"list"});
-  for(const rec of RECIPES){
+  const catOf=r=>r.cat||(["miner","qrig","pfarm","cminer"].includes(r.k)?"miner":["pc","mpc","stream","server"].includes(r.k)?"pc":"other");
+  const wbcat=window._wbCat||"all", wbready=!!window._wbReady; const ft=el("div",{class:"row",style:"flex-wrap:wrap;gap:4px"});
+  for(const [k,l] of [["all","All"],["pc","PCs"],["miner","Miners"],["phone","Phones"],["other","Other"]]){ const n=RECIPES.filter(r=>k==="all"||catOf(r)===k).length; ft.append(el("button",{class:"btn"+(wbcat===k?" hot":""),type:"button",style:"padding:4px 8px",text:`${l} ${n}`,onclick:()=>{ window._wbCat=k; openWorkbench("build"); }})); }
+  const rdy=el("label",{style:"display:flex;gap:6px;align-items:center;margin-left:auto"},el("input",{type:"checkbox"}),"Ready to build"); rdy.querySelector("input").checked=wbready; rdy.querySelector("input").onchange=e=>{ window._wbReady=e.target.checked; openWorkbench("build"); }; ft.append(rdy); body.append(ft);
+  const list=el("div",{class:"list"}); let shownRec=0;
+  for(const rec of RECIPES){ if(wbcat!=="all"&&catOf(rec)!==wbcat) continue; if(wbready&&Object.entries(rec.need).some(([t,q])=>countType(t)<q)) continue; shownRec++;
     const reqs=el("div",{class:"row"}); let ok=true;
     for(const [t,q] of Object.entries(rec.need)){ const have=countType(t); if(have<q) ok=false; reqs.append(el("span",{class:"tag "+(have>=q?"r-uncommon":"r-epic"),text:`${TYPE_N[t]} ${Math.min(have,q)}/${q}`})); }
     const cheap=pickParts(rec,"cheap"), best=pickParts(rec,"best");
@@ -2121,7 +2277,7 @@ function openWorkbench(tab="build"){
     if(!ok){ b1.disabled=true; b2.disabled=true; }
     list.append(el("div",{class:"li"},itemCanvas(`b_${rec.k}_${best?BY_R[buildTier(best)]:"common"}`,56),el("div",{class:"grow"},el("div",{text:rec.n}),el("div",{class:"sub",text:rec.desc}),reqs,el("div",{class:"row"},b1,b2))));
   }
-  body.append(list);
+  if(!shownRec) list.append(el("div",{class:"empty",text:"Nothing to show. Untick Ready to build or pick another category."})); body.append(list);
 }
 /* --- recipe book: what every recipe needs, which items count, and where to get them */
 let rbQuery="", rbReady=false;
@@ -2166,6 +2322,11 @@ const BENCH={
   pfarm:{kind:"dock",s:[["phone",108,46,62,104],["phone",198,46,62,104],["phone",288,46,62,104],["cable",112,176,128,20],["cable",252,176,128,20],["psu",404,160,100,60]]},
   cminer:{kind:"rack",s:[["mobo",150,80,180,140],["cpu",196,104,46,46],["hdd",76,92,58,26],["hdd",76,126,58,26],["psu",362,90,110,60],["fan",372,168,60,60]]},
 };
+const BENCH_TPL={
+  tower:{mobo:[[210,40,170,160]],cpu:[[262,62,46,46]],core:[[258,58,54,54]],ram:[[318,52,14,74],[336,52,14,74],[354,52,14,74],[372,52,14,74]],ssd:[[218,110,48,16],[218,130,48,16]],chip:[[300,110,30,30]],gpu:[[214,150,156,22],[214,176,156,22]],psu:[[164,224,112,48]],fan:[[158,40,44,44],[158,90,44,44],[158,140,44,44]],hdd:[[290,228,56,22],[290,254,56,22]]},
+  frame:{mobo:[[140,184,176,76]],cpu:[[196,196,44,44]],ram:[[262,190,14,62]],gpu:[[140,26,176,34],[140,66,176,34],[140,106,176,34],[140,146,176,32]],psu:[[340,200,110,54],[340,140,110,54]],fan:[[470,40,60,60],[470,110,60,60],[470,180,60,60]],chip:[[346,40,40,36],[396,40,40,36]],core:[[340,36,92,92]],hdd:[[340,96,60,22],[408,96,60,22]]},
+  phone:{chip:[[222,34,44,44]],cpu:[[276,34,44,44]],ram:[[328,34,14,44]],cam:[[222,88,34,34],[262,88,34,34],[302,88,34,34]],fan:[[262,86,40,40]],batt:[[220,132,120,58],[220,196,120,40]],ssd:[[222,244,54,16]],cable:[[284,244,54,16]],screen:[[376,30,76,240],[462,30,76,240]]}};
+for(const b of NEW_BUILDS){ const kind=b.cat==="pc"?"tower":b.cat==="miner"?"frame":"phone", T0=BENCH_TPL[kind], s=[]; for(const [t2,q] of Object.entries(b.need)){ const rects=T0[t2]||[]; for(let i=0;i<q;i++){ const r=rects[i]||rects[rects.length-1]||[60+s.length*40,250,36,30]; s.push([t2,...r]); } } BENCH[b.k]={kind,s}; }
 const ONBOARD=["cpu","ram","gpu","ssd"];
 let BA=null;
 function openAssembly(rec,mode){ const parts=pickParts(rec,mode); if(!parts){ toast("You're missing parts for that."); return; } const L=BENCH[rec.k]; if(!L){ return; }
@@ -2212,6 +2373,7 @@ function benchChassis(c,kind,t,on,glow){ const R=(x,y,w,h,f,s)=>{ c.fillStyle=f;
   else if(kind==="terminal"){ R(90,28,210,116,"#c8bfa8","#8a7a5a"); c.fillStyle=on?"#062a10":"#101810"; c.fillRect(108,40,150,92); R(90,142,210,62,"#b8ae98","#8a7a5a"); R(320,30,180,140,"#141024","#4a4466"); }
   else if(kind==="station"){ R(120,60,330,180,"#141024","#4a4466"); c.strokeStyle=on?glow:"#2a2440"; c.lineWidth=1; for(let i=0;i<6;i++){ c.beginPath(); c.moveTo(130,80+i*26); c.lineTo(440,80+i*26); c.stroke(); } }
   else if(kind==="dock"){ R(96,36,270,130,"#141024","#4a4466"); R(96,166,300,40,"#1b1530"); }
+  else if(kind==="phone"){ c.fillStyle="#141024"; c.strokeStyle="#4a4466"; c.lineWidth=2; c.beginPath(); c.roundRect?c.roundRect(206,18,148,272,18):c.rect(206,18,148,272); c.fill(); c.stroke(); c.fillStyle="#8d86ab"; c.font="8px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText("BACK",280,286); c.strokeStyle=on?glow:"#2a2440"; c.strokeRect(368,22,178,256); c.fillText("FRONT GLASS",457,286); }
 }
 function benchLoop(){ const B=BA; if(!B||!B.cv||!B.cv.isConnected||currentView!=="assemble") return; const c=B.cv.getContext("2d"), now=performance.now(), t=now/1000; c.setTransform(2,0,0,2,0,0);
   const g=c.createLinearGradient(0,0,0,300); g.addColorStop(0,"#120c22"); g.addColorStop(1,"#0a0614"); c.fillStyle=g; c.fillRect(0,0,560,300); c.strokeStyle="rgba(67,240,164,.08)"; c.lineWidth=1; for(let x=0;x<560;x+=20){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,300); c.stroke(); } for(let y=0;y<300;y+=20){ c.beginPath(); c.moveTo(0,y); c.lineTo(560,y); c.stroke(); }
@@ -2228,7 +2390,7 @@ function benchLoop(){ const B=BA; if(!B||!B.cv||!B.cv.isConnected||currentView!=
     if(on&&s.t==="fan"){ c.save(); c.translate(cx,cy); c.rotate(t*25); c.strokeStyle=glow; c.globalAlpha=.7; c.lineWidth=2; for(let k=0;k<4;k++){ c.rotate(Math.PI/2); c.beginPath(); c.moveTo(0,0); c.lineTo(s.w*.42,s.h*.1); c.stroke(); } c.restore(); } }
   // power on glow + screens
   if(B.boot){ const u=Math.min(1,(now-B.boot)/2200); c.save(); c.globalCompositeOperation="lighter"; c.fillStyle=glow; c.globalAlpha=.08+.06*Math.sin(t*8); c.fillRect(0,0,560,300); c.restore();
-    const scr={tower:[160,30],slab:[160,62],desk:[256,62],terminal:[116,58],station:[130,74]}[B.kind]; if(scr){ c.fillStyle=B.kind==="terminal"?"#43f0a4":"#38e8ff"; c.font="bold 9px 'IBM Plex Mono',monospace"; c.textAlign="left"; const lines=["BIOS OK",`${B.parts.length} PARTS DETECTED`,`${MK[B.tier]} ${B.rec.n.toUpperCase()}`,"BOOT COMPLETE ✓"]; lines.slice(0,Math.ceil(u*4)).forEach((l,i)=>c.fillText(l,scr[0],scr[1]+i*12)); }
+    const scr={tower:[160,30],slab:[160,62],desk:[256,62],terminal:[116,58],station:[130,74],phone:[384,60]}[B.kind]; if(scr){ c.fillStyle=B.kind==="terminal"?"#43f0a4":"#38e8ff"; c.font="bold 9px 'IBM Plex Mono',monospace"; c.textAlign="left"; const lines=["BIOS OK",`${B.parts.length} PARTS DETECTED`,`${MK[B.tier]} ${B.rec.n.toUpperCase()}`,"BOOT COMPLETE ✓"]; lines.slice(0,Math.ceil(u*4)).forEach((l,i)=>c.fillText(l,scr[0],scr[1]+i*12)); }
     c.fillStyle="#1a1230"; c.fillRect(180,284,200,8); c.fillStyle=glow; c.fillRect(180,284,200*u,8); }
   if(B.done){ c.fillStyle="rgba(11,7,22,.55)"; c.fillRect(0,110,560,70); c.font="bold 20px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle=glow; c.shadowColor=glow; c.shadowBlur=14; c.fillText(`${MK[B.tier]} ${B.rec.n.toUpperCase()}`,280,145); c.shadowBlur=0; c.font="10px 'IBM Plex Mono',monospace"; c.fillStyle="#fff"; c.fillText(`${BY[B.outId].r.toUpperCase()} · WORTH ₵${BY[B.outId].v}`,280,166); }
   B.sparks=B.sparks.filter(p=>now-p.t0<500); for(const p of B.sparks){ const u=(now-p.t0)/1000; if(u<0) continue; c.fillStyle=p.c; c.globalAlpha=1-u*2; c.fillRect(p.x+p.vx*u,p.y+p.vy*u,2.5,2.5); } c.globalAlpha=1;
@@ -2253,7 +2415,7 @@ function doBuild(rec,mode,stage){
 }
 
 /* ============================================================ MINING RACK */
-function rigRate(id){ const it=BY[id]; if(!it) return 0; if(it.t==="miner") return it.rate||0; if(it.t!=="build") return 0; const base=it.k==="miner"?30:it.k==="qrig"?150:it.k==="pfarm"?20:0; return base*(1+TIER[it.r]); }
+function rigRate(id){ const it=BY[id]; if(!it) return 0; if(it.t==="miner") return it.rate||0; if(it.t!=="build") return 0; const base=it.k==="miner"?30:it.k==="qrig"?150:it.k==="pfarm"?20:(BUILD_RATE[it.k]||0); return base*(1+TIER[it.r]); }
 function serverBoost(){ return 1+.25*Math.min(2,countBuild("server")); }
 function rigPending(s){ return Math.min(12,Math.max(0,(Date.now()-s.since)/36e5))*rigRate(s.id)*serverBoost()*vibeBoost()*(1+petTrait("mine")/100); }
 function rackPending(){ return (save.rack||[]).reduce((a,s)=>a+rigPending(s),0); }
@@ -2548,7 +2710,7 @@ const hourSeed=()=>Math.floor(Date.now()/36e5);
 function stallStock(i){
   const st=STALLS[i]; const r=seeded(hourSeed()*97+i*13+1);
   if(st.drinks) return [...BB_FOODS,...FOODS,...DRINKS].map(d=>({id:d.id,price:d.v,cur:"credits"}));
-  if(st.builds){ const out=[]; for(const rc of RECIPES){ if(rc.k==="qrig"&&r()<.6) continue; const tier=r()<.06?3:r()<.25?2:r()<.55?1:0; const id=`b_${rc.k}_${BY_R[tier]}`; out.push(tier===3?{id,price:Math.round(BY[id].v*.6),cur:"chips"}:{id,price:Math.round(BY[id].v*1.45),cur:"credits"}); } return out; }
+  if(st.builds){ const out=[]; for(const rc of [...RECIPES].sort(()=>r()-.5).slice(0,14)){ if(rc.k==="qrig"&&r()<.6) continue; const tier=r()<.06?3:r()<.25?2:r()<.55?1:0; const id=`b_${rc.k}_${BY_R[tier]}`; out.push(tier===3?{id,price:Math.round(BY[id].v*.6),cur:"chips"}:{id,price:Math.round(BY[id].v*1.45),cur:"credits"}); } return out; }
   if(st.types){ const pool=COMP.filter(p=>st.types.includes(p.t)&&p.id!=="flop_blank").sort(()=>r()-.5).slice(0,st.types.includes("weapon")?14:6); for(const a of st.always||[]) if(!pool.some(p=>p.id===a)) pool.unshift(BY[a]); return pool.map(p=>p.r==="epic"?{id:p.id,price:Math.round(p.v/2*st.disc),cur:"chips"}:{id:p.id,price:Math.round(p.v*1.3*st.disc),cur:"credits"}); }
   return [];
 }
@@ -4609,7 +4771,7 @@ function openDecrypt(){
 }
 /* --- hand tab in Character */
 function handTab(body,firstRun){
-  const own=invList().filter(([id])=>HOLD_T.includes(BY[id].t)); const g=el("div",{class:"grid wgrid"});
+  const own=invList().filter(([id])=>canHold(BY[id])); const g=el("div",{class:"grid wgrid"});
   const mk=(id,label,meta,metaClass)=>{ const l={...tryOn,hand:id}; const sel=(tryOn.hand||"")===id, cur=(fullLook(save.look).hand||"")===id;
     const card=el("button",{class:"card"+(sel?" sel":""),type:"button","aria-pressed":String(sel),onclick:()=>{ tryOn.hand=id; openWardrobe("hand",firstRun); }});
     card.append(lookCanvas(l,64),el("div",{class:"nm",text:label}),el("div",{class:"meta"},el("span",{class:cur?"r-uncommon":metaClass||"",text:cur?"Equipped":meta}),el("span",{text:sel&&!cur?"Trying":""}))); return card; };
@@ -5455,7 +5617,7 @@ const BOT_MODES={
   hard:  {n:"Hard",  count:7, pool:{slasher:3,gunner:3,phantom:2,brute:2,grunt:1},boss:"sentinel",hp:1.4,dmg:1.35,resp:6,aggro:420,chip:1.4,rar:{common:28,uncommon:38,rare:25,epic:9},d:"7 bots: Phantoms that blink behind you, Firewall Brutes with ground slams, and the SENTINEL Ω boss. Best loot, epic drops included."},
 };
 const R_ORDER=["common","uncommon","rare","epic"];
-const TECH_T=["chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hack","phone","floppy","miner","hdd","kbd","mouse","cable","acc","gadget"];
+const TECH_T=["screen","cam","batt","chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hack","phone","floppy","miner","hdd","kbd","mouse","cable","acc","gadget"];
 let loot=[], botsFor=null;
 function botMode(){ return BOT_MODES[save.botMode]||BOT_MODES.normal; }
 function wpick(w){ const e=Object.entries(w).filter(([,v])=>v>0); let t=e.reduce((a,[,v])=>a+v,0)*Math.random(); for(const [k,v] of e){ if((t-=v)<0) return k; } return e[0][0]; }
