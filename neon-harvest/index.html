@@ -832,7 +832,8 @@ function rollRarity(boost=0){ let tot=0; const ws=Object.entries(RAR).map(([k,o]
 function rollItem(boost=0,type){ const r=rollRarity(boost); let pool=PARTS.filter(i=>i.r===r&&(!type||i.t===type)); if(!pool.length) pool=PARTS.filter(i=>i.r===r); if(!pool.length) pool=PARTS; return pool[(Math.random()*pool.length)|0].id; }
 function addItem(id,n=1){ save.inv[id]=(save.inv[id]||0)+n; if(save.inv[id]<=0) delete save.inv[id]; }
 function hasItem(id){ return (save.inv[id]||0)>0 }
-function toast(msg,color){ const d=document.createElement("div"); d.textContent=msg; if(color) d.style.borderColor=color; const tb=$("#toast"); tb.appendChild(d); while(tb.children.length>4) tb.firstChild.remove(); setTimeout(()=>d.remove(),3200); }
+let toastMute=0;
+function toast(msg,color){ if(toastMute) return; const d=document.createElement("div"); d.textContent=msg; if(color) d.style.borderColor=color; const tb=$("#toast"); tb.appendChild(d); while(tb.children.length>4) tb.firstChild.remove(); setTimeout(()=>d.remove(),3200); }
 const chatHist=[]; let chatOpen=false, chatFilter="all", chatTyping=false;
 const CHAT_LIFE=14000, SYS_LIFE=7000;
 function chatLine(who,text,cls,by){ const now=Date.now(), last=chatHist[chatHist.length-1]; text=String(text);
@@ -1771,7 +1772,7 @@ function drawHome(t){
 
 /* ============================================================ LOOP */
 const keys={}; let dt=0, last=performance.now(), T=0, target=null, nearHot=null;
-addEventListener("keydown",e=>{ if(!$("#title").hidden){ if(e.key==="Enter"&&e.target.tagName!=="BUTTON"){ const b=$("#title .btn.hot"); if(b){ e.preventDefault(); b.click(); } } return; } if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"){ if(e.key==="Escape"&&!$("#overlay").hidden&&e.target.closest&&e.target.closest("#overlay")) closePanel(); return; } if(!$("#overlay").hidden){ if(e.key==="Escape") closePanel(); return; }
+addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySelector(".txc")){ document.querySelector(".txc").remove(); e.preventDefault(); e.stopImmediatePropagation(); return; } if(!$("#title").hidden){ if(e.key==="Enter"&&e.target.tagName!=="BUTTON"){ const b=$("#title .btn.hot"); if(b){ e.preventDefault(); b.click(); } } return; } if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"){ if(e.key==="Escape"&&!$("#overlay").hidden&&e.target.closest&&e.target.closest("#overlay")) closePanel(); return; } if(!$("#overlay").hidden){ if(e.key==="Escape") closePanel(); return; }
   keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();
   if(me.scene==="void"){ const kk=e.key.toLowerCase(); if(kk==="f"){ voidAttack(); e.preventDefault(); } if(kk==="g") setBlock(true); }
   if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="t"||e.key==="T") openFastTravel(); if(e.key==="p"||e.key==="P") openCompanion(); if(e.key==="q"||e.key==="Q") openQuestLog(); if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
@@ -1947,6 +1948,27 @@ $("#btnHelp").onclick=()=>openGuide();
 let guideAuto=(()=>{ try{ return !localStorage.getItem("nh_guide_seen"); }catch(e){ return false; } })();
 setInterval(()=>{ if(!guideAuto) return; if(!$("#title").hidden||!$("#overlay").hidden||!save||!save.name) return; guideAuto=false; openGuide("start"); },1200);
 function el(tag,props={},...kids){ const e=document.createElement(tag); for(const [k,v] of Object.entries(props)){ if(k==="class") e.className=v; else if(k==="text") e.textContent=v; else if(k.startsWith("on")) e[k]=v; else e.setAttribute(k,v); } for(const k of kids) if(k!=null) e.append(k); return e; }
+
+// ---- confirm before buying, selling or gifting from item grids
+function askTx(o,fn){ const P=document.querySelector("#overlay .panel"); if(!P||window.__autoConfirm){ fn(); return; } const old=P.querySelector(".txc"); if(old) old.remove(); const it=BY[o.id]; if(!it) return;
+  const mode=o.mode||"buy", cur=o.cur||"credits", price=Math.max(0,Math.round(o.price||0)), max=Math.max(1,Math.min(o.max||1,99)); let qty=1;
+  const bal=()=>cur==="chips"?save.chips:save.credits, unit=cur==="chips"?" chips":"", fmt=v=>cur==="chips"?`${v} chips`:`₵${v}`;
+  const wrap=el("div",{class:"txc",role:"dialog","aria-modal":"true","aria-label":`${mode==="buy"?"Buy":mode==="sell"?"Sell":"Give"} ${it.n}`,style:"position:absolute;inset:0;z-index:30;background:rgba(5,3,12,.78);display:grid;place-items:center;padding:12px"});
+  const box=el("div",{style:"background:var(--panel,#150e26);border:1px solid var(--line);box-shadow:0 0 30px rgba(56,232,255,.18);width:min(380px,100%);max-height:100%;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px"});
+  const extra=[]; if(it.desc) extra.push(it.desc); if(it.t==="weapon"&&typeof WSTATS!=="undefined"&&WSTATS[o.id]) extra.push(weaponStatText(o.id)); if(typeof rigRate==="function"&&rigRate(o.id)>0) extra.push(`Mines ${rigRate(o.id)} chips/hr on your rack.`); const own=save.inv[o.id]||0;
+  const qtyEl=el("span",{style:"min-width:28px;text-align:center;font-weight:bold"}), total=el("div",{style:"font-size:15px"}), after=el("div",{class:"sub"});
+  const go=el("button",{class:"btn hot",type:"button"}), minus=el("button",{class:"btn",type:"button",text:"−","aria-label":"One fewer",onclick:()=>{ qty=Math.max(1,qty-1); upd(); }}), plus=el("button",{class:"btn",type:"button",text:"+","aria-label":"One more",onclick:()=>{ qty=Math.min(max,qty+1); upd(); }});
+  const upd=()=>{ qtyEl.textContent=String(qty); const t=price*qty; minus.disabled=qty<=1; plus.disabled=qty>=max;
+    if(mode==="buy"){ total.innerHTML=""; total.append(`Total: `,el("b",{text:fmt(t)})); const left=bal()-t; after.textContent=left>=0?`You have ${fmt(Math.floor(bal()))}. After: ${fmt(Math.floor(left))}.`:`You have ${fmt(Math.floor(bal()))}. You need ${fmt(Math.ceil(-left))} more.`; after.style.color=left>=0?"":"#ff5a4a"; go.textContent=`Buy${qty>1?" ×"+qty:""} for ${fmt(t)}`; go.disabled=left<0; }
+    else if(mode==="sell"){ total.innerHTML=""; total.append(`You get: `,el("b",{text:fmt(t)})); after.textContent=`You own ${own}. After: ${own-qty}.`; go.textContent=`Sell${qty>1?" ×"+qty:""} for ${fmt(t)}`; go.disabled=false; }
+    else { total.textContent=o.to?`Send to ${o.to}`:""; after.textContent=`You own ${own}. It leaves your stash.`; go.textContent=`Give ${it.n}`; } };
+  go.onclick=()=>{ if(o.async){ wrap.remove(); fn(); return; } const before=save.inv[o.id]||0; let done=0; toastMute=1; try{ for(let i=0;i<qty;i++){ const b0=save.inv[o.id]||0; fn(); const b1=save.inv[o.id]||0; if(mode==="buy"?b1<=b0:b1>=b0) break; done++; } }finally{ toastMute=0; }
+    wrap.remove(); if(mode==="gift") return; if(done) toast(`${mode==="buy"?"Bought":"Sold"} ${done>1?done+"× ":""}${it.n} ${mode==="buy"?"for":"for"} ${fmt(price*done)}`,RAR[it.r].c); else if(mode==="buy") toast(`Not enough ${cur}.`); };
+  box.append(el("div",{class:"detail",style:"margin:0"},itemCanvas(o.id,80),el("div",{class:"info"},el("strong",{text:it.n}),el("span",{class:"r-"+it.r,text:`${it.r.toUpperCase()} ${TYPE_N[it.t]||it.t}`}),el("span",{class:"sub",text:`${mode==="buy"?"Price":mode==="sell"?"Pays":"Worth"} ${mode==="gift"?"₵"+it.v:fmt(price)}${mode==="buy"&&own?` · you own ${own}`:""}`}))));
+  for(const x of extra) box.append(el("div",{class:"sub",text:x}));
+  if(max>1&&mode!=="gift") box.append(el("div",{class:"row",style:"align-items:center;gap:6px"},el("span",{class:"sub",text:"Quantity"}),minus,qtyEl,plus,mode==="sell"?el("button",{class:"btn",type:"button",text:`All (${max})`,onclick:()=>{ qty=max; upd(); }}):""));
+  box.append(total,after,el("div",{class:"row",style:"flex-wrap:wrap"},go,el("button",{class:"btn",type:"button",text:"Cancel",onclick:()=>wrap.remove()})));
+  wrap.append(box); wrap.addEventListener("pointerdown",e=>{ if(e.target===wrap) wrap.remove(); }); P.style.position=P.style.position||"relative"; P.append(wrap); upd(); setTimeout(()=>go.focus(),0); }
 function itemCard(id,count,meta,onclick){ const it=BY[id]; const b=el("button",{class:"card r-"+it.r,type:"button",onclick}); b.append(itemCanvas(id,64), el("div",{class:"nm",text:it.n}), el("div",{class:"meta"},el("span",{class:"r-"+it.r,text:it.r}),el("span",{text:meta!=null?meta:("×"+count)}))); return b; }
 function invList(){ return Object.entries(save.inv).filter(([id,n])=>n>0&&BY[id]).sort((a,b)=>BY[b[0]].v-BY[a[0]].v); }
 
@@ -2082,8 +2104,8 @@ function openShop(tab="buy"){
   const body=panel("PARTS DEPOT","Stock rotates every hour. Epic parts are priced in chips. Sell-back pays full worth in credits.");
   const tabs=el("div",{class:"tabs"}); ["buy","sell"].forEach(k=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:k==="buy"?"Buy parts":"Sell parts",onclick:()=>openShop(k)}))); body.append(tabs);
   const g=el("div",{class:"grid"});
-  if(tab==="buy"){ for(const s of getStock()) g.append(itemCard(s.id,1,s.cur==="chips"?`${s.price} chips`:`₵${s.price}`,()=>{ const bal=s.cur==="chips"?save.chips:save.credits; if(bal<s.price){ toast(`Not enough ${s.cur}. You need ${s.price-Math.floor(bal)} more.`); beep(150,.15); return;} if(s.cur==="chips") save.chips-=s.price; else save.credits-=s.price; addItem(s.id); persist(); toast(`Bought ${BY[s.id].n}`,RAR[BY[s.id].r].c); beep(1200,.08); openShop("buy"); })); }
-  else { const inv=invList(); if(!inv.length) g.append(el("div",{class:"empty",text:"Nothing to sell yet."})); for(const [id,n] of inv) g.append(itemCard(id,n,`₵${BY[id].v} ×${n}`,()=>{ addItem(id,-1); save.credits+=BY[id].v; persist(); toast(`Sold ${BY[id].n} for ₵${BY[id].v}`); beep(700,.06); openShop("sell"); })); }
+  if(tab==="buy"){ for(const s of getStock()) g.append(itemCard(s.id,1,s.cur==="chips"?`${s.price} chips`:`₵${s.price}`,()=>askTx({id:s.id,mode:"buy",price:s.price,cur:s.cur,max:10},()=>{ const bal=s.cur==="chips"?save.chips:save.credits; if(bal<s.price){ toast(`Not enough ${s.cur}. You need ${s.price-Math.floor(bal)} more.`); beep(150,.15); return;} if(s.cur==="chips") save.chips-=s.price; else save.credits-=s.price; addItem(s.id); persist(); toast(`Bought ${BY[s.id].n}`,RAR[BY[s.id].r].c); beep(1200,.08); openShop("buy"); }))); }
+  else { const inv=invList(); if(!inv.length) g.append(el("div",{class:"empty",text:"Nothing to sell yet."})); for(const [id,n] of inv) g.append(itemCard(id,n,`₵${BY[id].v} ×${n}`,()=>askTx({id,mode:"sell",price:BY[id].v,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=BY[id].v; persist(); toast(`Sold ${BY[id].n} for ₵${BY[id].v}`); beep(700,.06); openShop("sell"); }))); }
   body.append(g);
 }
 /* --- scrap */
@@ -2173,7 +2195,7 @@ function openTrade(tab="board",refresh){ tradeTab=tab;
   if(!rows.length){ body.append(el("div",{class:"empty",text:tab==="mine"?"You have no active listings.":"No listings yet. Post a part and set your price."})); return; }
   const list=el("div",{class:"list"});
   for(const m of rows){ const it=BY[m.item]; if(!it) continue; const mine=m.seller===myId;
-    const b=el("button",{class:"btn"+(mine?"":" hot"),type:"button",text:mine?"Take down":`Buy ₵${m.price}`,onclick:()=>mine?cancelListing(m):buyListing(m)});
+    const b=el("button",{class:"btn"+(mine?"":" hot"),type:"button",text:mine?"Take down":`Buy ₵${m.price}`,onclick:()=>mine?cancelListing(m):askTx({id:m.item,mode:"buy",price:m.price,max:1,async:true},()=>buyListing(m))});
     list.append(el("div",{class:"li"},itemCanvas(m.item,48),el("div",{class:"grow"},el("div",{text:it.n}),el("div",{class:"r-"+it.r,text:`${it.r} · seller ${mine?"you":nameOf(m.seller)} · depot worth ₵${it.v}`})),b)); }
   body.append(list);
 }
@@ -2211,7 +2233,7 @@ function openPlayer(pid){
   body.append(el("div",{class:"row"},el("label",{class:"fld"},"Credits",cr),el("button",{class:"btn",type:"button",text:"Send credits",onclick:async e=>{ const a=clamp(Math.round(+cr.value||0),1,99999); if(save.credits<a){toast("Not enough credits.");return;} e.target.disabled=true;
     try{ save.credits-=a; await DB.collection("gifts").add({to:p.by,from:myId,kind:"credits",amount:a,note:"",at:Date.now()}); persist(); toast(`Sent ₵${a} to ${nm}`); closePanel(); }catch(err){ save.credits+=a; toast("Gift failed to send."); e.target.disabled=false; } }})));
   const g=el("div",{class:"grid"}); const inv=invList(); if(!inv.length) g.append(el("div",{class:"empty",text:"No parts to gift."}));
-  for(const [id,n] of inv) g.append(itemCard(id,n,"gift",async()=>{ if(!hasItem(id)) return; try{ addItem(id,-1); await DB.collection("gifts").add({to:p.by,from:myId,kind:"item",item:id,amount:1,note:"",at:Date.now()}); persist(); toast(`Gave ${BY[id].n} to ${nm}`,RAR[BY[id].r].c); emote("wave"); closePanel(); }catch(e){ addItem(id,1); toast("Gift failed to send."); } }));
+  for(const [id,n] of inv) g.append(itemCard(id,n,"gift",()=>askTx({id,mode:"gift",to:nm},async()=>{ if(!hasItem(id)) return; try{ addItem(id,-1); await DB.collection("gifts").add({to:p.by,from:myId,kind:"item",item:id,amount:1,note:"",at:Date.now()}); persist(); toast(`Gave ${BY[id].n} to ${nm}`,RAR[BY[id].r].c); emote("wave"); closePanel(); }catch(e){ addItem(id,1); toast("Gift failed to send."); } })));
   body.append(g);
 }
 async function claimGift(doc){
@@ -2790,7 +2812,7 @@ function openStall(i,tab){
   if(tab==="sell"){ const inv=invList().filter(([id])=>sellPrice(i,id)>0);
     body.append(el("p",{class:"sub",text:st.wanted?"Wanted types pay 1.6×.":`${st.vendor} pays ${Math.round((st.buyMult-1)*100)}% over Parts Depot for these.`}));
     if(!inv.length){ body.append(el("div",{class:"empty",text:"Nothing in your stash this stall will buy."})); return; }
-    const g=el("div",{class:"grid"}); for(const [id,n] of inv){ const pr=sellPrice(i,id); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); toast(`Sold ${BY[id].n} for ₵${pr}`); beep(700,.06); openStall(i,"sell"); })); }
+    const g=el("div",{class:"grid"}); for(const [id,n] of inv){ const pr=sellPrice(i,id); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>askTx({id,mode:"sell",price:pr,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); toast(`Sold ${BY[id].n} for ₵${pr}`); beep(700,.06); openStall(i,"sell"); }))); }
     body.append(g); return; }
   if(st.drinks&&tab==="shift") return bbShiftTab(i);
   if(st.drinks&&tab==="buy"){ const buy=d=>{ if(save.credits<d.v){ toast(`Not enough credits. You need ${d.v-Math.floor(save.credits)} more.`); beep(150,.15); return; } save.credits-=d.v; addItem(d.id); persist(); toast(`${st.vendor} hands you ${d.n}. It's in your stash.`,d.col); beep(1200,.08); openStall(i,"buy"); };
@@ -2799,8 +2821,8 @@ function openStall(i,tab){
       body.append(l); }
     body.append(el("p",{class:"sub",text:"Food and drinks here cost less than at The Glitch. Eat or drink from your stash for boosts; food heals in The Void."})); return; }
   const g=el("div",{class:"grid"});
-  for(const s of stallStock(i)) g.append(itemCard(s.id,1,s.cur==="chips"?`${s.price} chips`:`₵${s.price}`,()=>{ const bal=s.cur==="chips"?save.chips:save.credits; if(bal<s.price){ toast(`Not enough ${s.cur}. You need ${s.price-Math.floor(bal)} more.`); beep(150,.15); return; }
-    if(s.cur==="chips") save.chips-=s.price; else save.credits-=s.price; addItem(s.id); persist(); toast(`Bought ${BY[s.id].n}`,RAR[BY[s.id].r].c); beep(1200,.08); openStall(i,"buy"); }));
+  for(const s of stallStock(i)) g.append(itemCard(s.id,1,s.cur==="chips"?`${s.price} chips`:`₵${s.price}`,()=>askTx({id:s.id,mode:"buy",price:s.price,cur:s.cur,max:10},()=>{ const bal=s.cur==="chips"?save.chips:save.credits; if(bal<s.price){ toast(`Not enough ${s.cur}. You need ${s.price-Math.floor(bal)} more.`); beep(150,.15); return; }
+    if(s.cur==="chips") save.chips-=s.price; else save.credits-=s.price; addItem(s.id); persist(); toast(`Bought ${BY[s.id].n}`,RAR[BY[s.id].r].c); beep(1200,.08); openStall(i,"buy"); })));
   body.append(g, el("p",{class:"sub",text:`Stock changes every hour.${st.drinks?" Drinks here cost less than at The Glitch.":""}`}));
 }
 
@@ -3559,9 +3581,9 @@ function openCbSection(si){
   if(want.length){ body.append(el("div",{class:"row"},el("span",{class:"pill cr",text:`Customer wants: ${want.map(c=>BY[c.want].n).join(", ")}`})));
     const g=el("div",{class:"grid"}); for(const it of sectionItems(sec)) g.append(itemCard(it.id,1,"grab",()=>{ const c=want.find(c=>c.want===it.id); if(!c){ toast(`Nobody asked for ${it.n}. Check the request.`); beep(160,.12); return; } cbHolding={cid:c.id,id:it.id}; beep(900,.05); toast(`Got the ${it.n}. Take it to the register.`,"#43f0a4"); closePanel(); }));
     body.append(g); return; }
-  const g=el("div",{class:"grid"}); for(const it of sectionItems(sec)){ const p=cbPrice(it.id); g.append(itemCard(it.id,1,p.cur==="chips"?`${p.price} chips`:`₵${p.price}`,()=>{
+  const g=el("div",{class:"grid"}); for(const it of sectionItems(sec)){ const p=cbPrice(it.id); g.append(itemCard(it.id,1,p.cur==="chips"?`${p.price} chips`:`₵${p.price}`,()=>askTx({id:it.id,mode:"buy",price:p.price,cur:p.cur,max:10},()=>{
       const bal=p.cur==="chips"?save.chips:save.credits; if(bal<p.price){ toast(`Not enough ${p.cur}. You need ${Math.ceil(p.price-bal)} more.`); beep(150,.15); return; }
-      if(p.cur==="chips") save.chips-=p.price; else save.credits-=p.price; addItem(it.id); persist(); toast(`Bought ${it.n}${it.t==="decor"?". Place it in your living room.":""}`,RAR[it.r].c); beep(1200,.08); openCbSection(si); })); }
+      if(p.cur==="chips") save.chips-=p.price; else save.credits-=p.price; addItem(it.id); persist(); toast(`Bought ${it.n}${it.t==="decor"?". Place it in your living room.":""}`,RAR[it.r].c); beep(1200,.08); openCbSection(si); }))); }
   body.append(g); if(sec.decor) body.append(el("p",{class:"sub",text:`${sec.decor==="wall"?"Wall":"Floor"} items go in your apartment's living room. Open your stash or the living room to place them.`}));
 }
 function openCbCounter(){
@@ -3574,7 +3596,7 @@ function openCbCounter(){
   const sell=invList().filter(([id])=>CB_ITEMS.some(i=>i.id===id));
   body.append(el("strong",{text:"Sell back used gear (70% of worth)"}));
   if(!sell.length) body.append(el("div",{class:"empty",text:"Nothing from this store in your stash."}));
-  else { const g=el("div",{class:"grid"}); for(const [id,n] of sell){ const pr=Math.round(BY[id].v*.7); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); toast(`Sold ${BY[id].n} for ₵${pr}`); openCbCounter(); })); } body.append(g); }
+  else { const g=el("div",{class:"grid"}); for(const [id,n] of sell){ const pr=Math.round(BY[id].v*.7); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>askTx({id,mode:"sell",price:pr,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); toast(`Sold ${BY[id].n} for ₵${pr}`); openCbCounter(); }))); } body.append(g); }
 }
 
 /* --- shifts */
