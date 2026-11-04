@@ -139,6 +139,9 @@
   const userNS=Object.freeze({
     id:async()=>current?current.uid:null, name:async()=>current?displayName(current):"", email:async()=>current?(current.email||null):null, avatarUrl:async()=>current?(current.photoURL||null):null,
     me:async()=>current?{id:current.uid,name:displayName(current),avatarUrl:current.photoURL||null,email:current.email||null}:{id:null,name:"",avatarUrl:null,email:null},
+    emailVerified:async()=>!!(current&&current.emailVerified),
+    sendVerification:async()=>{ if(current&&!current.emailVerified) await current.sendEmailVerification(); },
+    refresh:async()=>{ if(!current) return false; await current.reload(); current=auth.currentUser||current; await current.getIdToken(true); return !!current.emailVerified; },
     isOwner:async()=>isOwner(), canEdit:async()=>isOwner(), can:async()=>true, search:async()=>[],
     profiles:async ids=>{ ids=[].concat(ids||[]).filter(x=>typeof x==="string"&&x); const out={};
       await Promise.all(ids.map(async id=>{ if(!profCache[id]){ try{ const s=await fs.doc("profiles/"+id).get(); profCache[id]={id,name:s.exists?String(s.data().name||""):"",guest:false}; }catch(e){ return; } } out[id]=profCache[id]; }));

@@ -133,6 +133,45 @@ service cloud.firestore {
       return request.resource.data.get('month', '') == (resource == null ? '' : resource.data.get('month', ''))
         && request.resource.data.get('spentc', 0) == (resource == null ? 0 : resource.data.get('spentc', 0));
     }
+    // Neon Row: storefronts the owner rents to local businesses.
+    // The owner sets each store (look, info, the partner's email, rent paid until). While the rent is paid,
+    // the partner, signed in with that verified email, manages their own rewards and pickup codes.
+    function rowDoc(slot) { return get(/databases/$(database)/documents/row/$(slot)).data; }
+    function isPartner(slot) {
+      return signedIn() && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/row/$(slot))
+        && rowDoc(slot).get('email', '') == request.auth.token.email.lower()
+        && rowDoc(slot).get('active', false) == true
+        && rowDoc(slot).get('until', 0) > request.time.toMillis();
+    }
+    match /row/{slot} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /rowitems/{slot}/items/{id} {
+      allow read: if signedIn();
+      allow create, delete: if isOwner() || isPartner(slot);
+      // Partners edit their rewards; a member redeeming can only add 1 to "sold", up to the stock.
+      allow update: if isOwner() || isPartner(slot)
+        || (isMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sold'])
+            && request.resource.data.sold == resource.data.sold + 1 && request.resource.data.sold <= resource.data.stock);
+    }
+    match /rowcodes/{slot}/codes/{code} {
+      allow read: if isOwner() || isPartner(slot) || (signedIn() && resource.data.by == me());
+      // Members redeem as themselves, at the reward's real RP price.
+      allow create: if signedIn() && isMember() && request.resource.data.by == me()
+        && request.resource.data.status == 'ready' && request.resource.data.slot == slot && request.resource.data.code == code
+        && request.resource.data.item is string
+        && exists(/databases/$(database)/documents/rowitems/$(slot)/items/$(request.resource.data.item))
+        && get(/databases/$(database)/documents/rowitems/$(slot)/items/$(request.resource.data.item)).data.rp == request.resource.data.rp;
+      // The store (or the owner) marks a ready code picked up or cancelled, once.
+      // The player can only flag their own cancelled code as refunded, once.
+      allow update: if ((isOwner() || isPartner(slot)) && resource.data.status == 'ready'
+            && request.resource.data.status in ['picked', 'cancelled']
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'done']))
+        || (signedIn() && resource.data.by == me() && resource.data.status == 'cancelled'
+            && resource.data.get('refunded', false) == false && request.resource.data.refunded == true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['refunded']));
+      allow delete: if false;
+    }
+
     match /redeem/{uid} {
       allow read: if signedIn() && (me() == uid || isOwner());
       allow write: if signedIn() && me() == uid

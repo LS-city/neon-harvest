@@ -1648,6 +1648,7 @@ const SCENES={
   byte:{w:4500, spawn:140},
   grid:{w:4480, spawn:140},
   smacked:{w:1600, spawn:140},
+  neonrow:{w:2400, spawn:140},
   story:{w:1600, spawn:180},
   linx:{w:3480, spawn:140},
   ascend:{w:640, spawn:320},
@@ -1718,6 +1719,7 @@ function hotspotsBase(sc){
     {x:STORY_X.door,hw:90,label:"Enter the Lethe Clinic (Story Mode)",act:()=>openStory()},
     {x:STORY_X.wall,hw:120,label:"Read the patient files (endings)",act:()=>openStoryArchive()},
   ];
+  if(sc==="neonrow") return rowHot();
   if(sc==="smacked") return [
     {x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
     {x:800,hw:150,label:IS_ADMIN?"Enter Smacked Shop (owner)":dccActive(myId)?"Enter Smacked Shop (members redeem)":"Enter Smacked Shop (members only)",act:()=>openSmacked("shop")},
@@ -1792,6 +1794,7 @@ const npcs={
         {x:1885,y:296,look:{skin:0,style:2,jacket:1,pants:7,visor:6,hat:9,back:5},dir:-1,vx:0,dance:true,fx:"vape",name:""},{x:1990,y:322,look:{skin:3,style:4,jacket:8,pants:7,visor:5,hat:3},dir:-1,vx:0,dance:true,fx:"eye",name:""},
         {x:540,y:300,look:{skin:1,style:3,jacket:4,pants:7,visor:1,hat:4},dir:-1,vx:0,fx:"joint",name:""}],
   cyberbuys:[{x:600,y:300,look:{skin:5,style:1,jacket:4,pants:7,visor:1,hat:5},dir:1,vx:14,min:250,max:1150,name:""},{x:900,y:318,look:{skin:0,style:2,jacket:8,pants:3,visor:4,hat:0,pet:2},dir:-1,vx:-10,min:300,max:1150,name:""}],
+  neonrow:[{x:900,y:300,look:{skin:3,style:1,jacket:6,pants:7,visor:2,hat:1},dir:1,vx:18,min:300,max:2200,name:""},{x:1700,y:322,look:{skin:1,style:4,jacket:9,pants:3,visor:5,hat:0,pet:1},dir:-1,vx:-12,min:600,max:2300,name:""}],
   smacked:[{x:1050,y:290,look:{skin:2,style:2,jacket:10,pants:7,visor:1,hat:4},dir:-1,vx:12,min:500,max:1400,name:""}],
   grid:[{x:900,y:300,look:{skin:4,style:4,jacket:1,pants:7,visor:7,hat:0,aura:4},dir:1,vx:16,min:400,max:2000,name:""},{x:1500,y:328,look:{skin:3,style:2,jacket:6,pants:7,visor:5,hat:8},dir:-1,vx:0,dance:true,name:""}],
   byte:[{x:700,y:300,look:{skin:1,style:3,jacket:8,pants:7,visor:4,hat:4},dir:1,vx:26,min:300,max:1500,name:""},{x:1500,y:322,look:{skin:5,style:5,jacket:10,pants:3,visor:6,hat:1,pet:2},dir:-1,vx:-20,min:1100,max:2500,name:""},
@@ -1979,7 +1982,7 @@ function useHot(){ if(!$("#overlay").hidden) return; if(nearHot){ beep(880,.05);
 function safeAct(h){ try{ stTrack("act",h.label); }catch(e){} try{ h.act(); }catch(e){ console.error(e); toast("That didn't work. Try again."); } }
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
-  setTimeout(()=>{ go(scene,x); if(scene==="assembly") chatLine(null,"Harvest Assembly: clock in at the shift board or walk into any open bay. ₵400 every 30 min while you keep building, plus speed tips. Up to 60 min per shift, 2 shifts a day. Leaving clocks you out.","sys"); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards for Data Collectors Club members. Redeem with Reward Points (RP) and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
+  setTimeout(()=>{ go(scene,x); if(scene==="assembly") chatLine(null,"Harvest Assembly: clock in at the shift board or walk into any open bay. ₵400 every 30 min while you keep building, plus speed tips. Up to 60 min per shift, 2 shifts a day. Leaving clocks you out.","sys"); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="neonrow") chatLine(null,"Neon Row: real local businesses rent these storefronts. Walk up to a store, see its rewards, and redeem with RP. Show your NR- code at the store in person.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards for Data Collectors Club members. Redeem with Reward Points (RP) and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
 function go(scene,x){ if(scene==="ascend"&&!godActive()){ toast("Elysium can only be reached with the God Particle."); return; } if(me.scene==="ascend"&&scene!=="ascend"&&godActive()&&!(godState&&godState.leaving)){ toast("The God Particle holds you in Elysium until it fades."); return; } if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } questEvent("visit:"+scene); me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
@@ -2019,7 +2022,7 @@ function stepInner(now){
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else drawHome(T); if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else drawHome(T); if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
@@ -2113,7 +2116,7 @@ const GUIDE={
     ["Sector 9",["The Glitch: Vex's bar (11 drinks), Kai's Kitchen (7 dishes), the Job Board, a jukebox with 13 tracks (₵5 a play, everyone in the bar hears it), CHIP PRINT arcade and two backrooms.","Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley, and The Third Eye club with its stage, a DJ booth with 13 tracks (synthwave, house, deep house, techno, acid, tech house, minimal and more; ₵10 a request), seats, club bar and two backrooms."]],
     ["Backrooms (The Glitch and The Third Eye)",["Four rentable high-tech rooms behind each venue's back wall: Neon Lounge (40 chips/day) and Server Den (60) at The Glitch, Void Suite (60) and Prism Room (80) at The Third Eye. A week costs 5 days' price. One room per player at a time.","Keep it public, or make it private and invite players to your guest list; uninvited people are moved out. Inside: seating, free drinks from the bar, music and party lights, an arcade, an overclock server, a decrypt terminal, a laser dance floor and more, with boosts that last longer than home ones."]],
     ["The Third Eye menu",["34 club items, each with its own screen effect, body animation and boost. They only work inside the club.","Take the same item again for ×2 and then PEAK ×3. Take the right different item while one is active to fuse them into one of 22 fusions with bigger effects and more boosts. Every recipe is listed under My club items at the club bar (with a one-tap Mix it when you own both), and the Fusion Lab tracks your discoveries."]],
-    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, Byte Bowl Noodles, Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons).","The Grid: wager duels, the Top Duelists board and the UPLOAD arcade.","Harvest Assembly: the 10-bay assembly line (see Earn ₵ credits).","Linx Land: plots and Credit Miners (see Earn ₵ credits).","Smacked Shop: real-life rewards for Data Collectors Club members (see the Rewards tab).","The Void: PvP arena with health bars. The safe zone by the Metro heals you and has Bot Control (Off, Easy, Normal, Hard). Watch for red warning rings and aim lines and step away to dodge. Getting deleted costs 15% and sends you home."]]]},
+    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, Byte Bowl Noodles, Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons).","The Grid: wager duels, the Top Duelists board and the UPLOAD arcade.","Harvest Assembly: the 10-bay assembly line (see Earn ₵ credits).","Linx Land: plots and Credit Miners (see Earn ₵ credits).","Smacked Shop: real-life rewards for Data Collectors Club members (see the Rewards tab).","Neon Row: storefronts rented by real local businesses. Each store sets its own rewards (see the Rewards tab).","The Void: PvP arena with health bars. The safe zone by the Metro heals you and has Bot Control (Off, Easy, Normal, Hard). Watch for red warning rings and aim lines and step away to dodge. Getting deleted costs 15% and sends you home."]]]},
   social:{n:"Play with others",secs:[
     ["Story quests",["People around the city have stories that need you. Look for markers over their heads: gold ! = a new chapter, … = in progress, green ? = ready to turn in.","Walk up and press E (or tap them) to talk. Quest givers stop to chat. Seven storylines with 3–4 chapters each: Vex (The Glitch) “Ghost in the Taps”, Kai (The Glitch) “Recipe from the Old Net”, Juno and Rook (Sector 9 street) “The Lost Signal” and “The Void Hunter”, Mira (Byte Market) “Club Secrets”, Pixel (Cyber Buys) “Smart Home Dream” and Agent Linx (Linx Land) “Land Baron”.","Objectives use everything in the game: digging scrap, deleting Void bots, assembling rigs, Assembly shifts, companion fetches, battles and expeditions, club items and fusions, drinks, decor and deliveries. Delivery items are handed over when you turn in.","Every chapter pays credits and chips, and finishing a story pays a rare or epic part. Progress is saved, so come back anytime. Press Q (☰ → Quests on phones) for the Quest Log, which shows where each person is and lets you travel there.","Everyone else you meet has something to say too: tap them to chat."]],
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes. Chat lines fade after a few seconds; tap Log for the full history, filtered by chat or events.","Invite players to your apartment from the intercom or to your backroom from its room controls; they get a card that brings them straight to you."]],
@@ -2122,7 +2125,8 @@ const GUIDE={
   rewards:{n:"Rewards",secs:[
     ["Data Collectors Club",[()=>`A members-only club for $${ECON.price} a month. The game's owner turns your membership on for a set time.`,"Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members earn Reward Points and redeem Smacked Shop rewards. Anyone can browse the shop."]],
     ["Earn Reward Points (RP)",["Members earn 1 RP for every credit they earn from work:","Shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar and the Harvest Assembly line (pay, tips and wages).","Courier Hub package deliveries, story quest chapters (Q) and Story Mode endings.","RP Exchange machines (Sector 9, Byte Market, The Grid and Smacked Shop): members can trade ₵4,000 for 50 RP, up to 10 exchanges at a time. These points don't count toward the daily limit.","These don't earn RP: parts orders (Vex's jobs, parts deliveries and rig commissions), Credit Miners and other miners, Grid duels and arcades, The Void, gifts, the Trade Board, selling parts, home bonuses and anything else.",()=>`Daily limit: up to ${ECON.dayMax.toLocaleString()} RP a day. Your RP balance shows at the top of the screen on PC and phones. Tap it for your earnings history.`]],
-    ["Redeem at Smacked Shop (Metro)",["Each reward has a price in RP. Pick one and tap Redeem to get a pickup code like SMK-AB12-CD34.","Show the code and a photo ID (21+) at the shop in person to collect your item. The owner checks every code before handing anything over. All your codes are under My pickup codes.","Monthly reward limit: there's a cap on how much you can redeem each month. Smacked Shop shows how much of it you have left, and it resets on the 1st.","Cancelled codes refund your RP automatically, but still count toward that month's limit. Codes you already have stay valid even if your membership ends."]]]}
+    ["Redeem at Smacked Shop (Metro)",["Each reward has a price in RP. Pick one and tap Redeem to get a pickup code like SMK-AB12-CD34.","Show the code and a photo ID (21+) at the shop in person to collect your item. The owner checks every code before handing anything over. All your codes are under My pickup codes.","Monthly reward limit: there's a cap on how much you can redeem each month. Smacked Shop shows how much of it you have left, and it resets on the 1st.","Cancelled codes refund your RP automatically, but still count toward that month's limit. Codes you already have stay valid even if your membership ends."]],
+    ["Neon Row (Metro)",["Six storefronts rented by real local businesses. Each partner store stocks its own rewards and prices them in RP.","Redeem to get a code like NR-AB12-CD34, then show it and a photo ID (21+) at that business. The store checks the code and hands over the item. Your codes are under My codes in each store.","Neon Row rewards are given by the store, so they don't count toward your Smacked Shop monthly limit. If a store cancels a code, your RP comes back automatically.","Run a business? Ask the game's owner about renting a storefront."]]]}
 };
 let guideTab="start";
 function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_guide_seen","1"); }catch(e){}
@@ -3150,7 +3154,7 @@ function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):me.s
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)"}[s]||"somewhere"; }
+function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -3162,7 +3166,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -4073,6 +4077,203 @@ function drawSmacked(t){
   // sidewalk
   ctx.fillStyle="#1a0f20"; ctx.fillRect(camX,262,VW,80); ctx.fillStyle="rgba(255,63,168,.08)"; ctx.fillRect(700,266,200,60); ctx.fillStyle="#0e0a18"; ctx.fillRect(camX,342,VW,18);
 }
+
+/* ============================================================ NEON ROW (partner storefronts) */
+// Six storefronts that real businesses rent. The owner sets up each store's look, contact info, the
+// partner's sign-in email and the date the rent is paid until (Admin Panel → Neon Row).
+// While the rent is paid, the partner (signed in with that verified email) adds and manages their own
+// rewards, checks pickup codes and marks them picked up. Members redeem with Reward Points.
+const ROW_SLOTS=["s1","s2","s3","s4","s5","s6"], ROW_X=[420,750,1080,1410,1740,2070];
+const ROW_COLS=[["Pink","#ff3fa8"],["Cyan","#38e8ff"],["Amber","#ffb84a"],["Green","#43f0a4"],["Violet","#b06bff"],["Red","#ff5a4a"],["Lemon","#f5f06a"],["White","#f4f0ff"]];
+const ROW_STYLES=["Brick","Chrome","Arcade lights","Wood & plants"];
+let rowStores={}, rowItems={}, rowMine=[], rowCodeSt={}, rowStaff={}, rowSubs={}, rowStaffSubs={}, myEmail="", myVerified=false, rowEdit=null, rowTab="items", rowDel=null;
+function cleanRow(d){ if(!d||typeof d!=="object") return null; const web=String(d.web||"").trim();
+  return { name:String(d.name||"").slice(0,40), tagline:String(d.tagline||"").slice(0,70), color:clamp(Math.floor(+d.color)||0,0,ROW_COLS.length-1), style:clamp(Math.floor(+d.style)||0,0,ROW_STYLES.length-1),
+    email:String(d.email||"").trim().toLowerCase().slice(0,120), until:+d.until||0, addr:String(d.addr||"").slice(0,120), hours:String(d.hours||"").slice(0,120),
+    web:/^https:\/\/[^\s"'<>]+$/i.test(web)?web.slice(0,200):"", active:d.active===true }; }
+function cleanRowItem(id,d){ if(!d||typeof d!=="object") return null; return { id, title:String(d.title||"Untitled").slice(0,60), desc:String(d.desc||"").slice(0,300),
+  rp:clamp(Math.floor(+d.rp)||0,0,1e9), stock:clamp(Math.floor(+d.stock)||0,0,100000), sold:clamp(Math.floor(+d.sold)||0,0,100000), active:d.active!==false, at:+d.at||0 }; }
+function rowOpen(r){ return !!(r&&r.active&&r.name&&r.until>Date.now()); }
+function rowIsPartner(s){ const r=rowStores[s]; return !!(r&&myEmail&&r.email&&r.email===myEmail&&rowOpen(r)); }
+function rowCanManage(s){ return IS_ADMIN||(rowIsPartner(s)&&myVerified); }
+function rowLive(s){ return (rowItems[s]||[]).filter(i=>i.active).sort((a,b)=>a.rp-b.rp||a.title.localeCompare(b.title)); }
+function rowCol(r){ return ROW_COLS[(r&&r.color)||0][1]; }
+function genRowCode(){ const a=new Uint32Array(8); crypto.getRandomValues(a); const ch=[...a].map(x=>CODE_ABC[x%CODE_ABC.length]); return `NR-${ch.slice(0,4).join("")}-${ch.slice(4).join("")}`; }
+function normRowCode(s){ const t=String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,""); const b=t.startsWith("NR")?t.slice(2):t; return b.length===8?`NR-${b.slice(0,4)}-${b.slice(4)}`:""; }
+const rowDay=ms=>new Date(ms).toLocaleDateString();
+
+/* --- drawing: one storefront, centered at cx, on any canvas context (the street and the admin preview share it) */
+function rowNeon(c,txt,x,y,size,col,f=1){ c.save(); c.font=`700 ${size}px Silkscreen, monospace`; c.textAlign="center"; c.fillStyle=col; c.shadowColor=col; c.shadowBlur=14*f; c.globalAlpha=.5+.5*f; c.fillText(txt,x,y); c.restore(); }
+function drawFront(c,cx,r,t,k,items){ const open=rowOpen(r), L=cx-140, col=open?rowCol(r):"#6b5a8a", st=open?r.style:0;
+  c.fillStyle="#120a1e"; c.fillRect(L-6,52,292,210);
+  if(st===0){ c.fillStyle="#2a1426"; c.fillRect(L,60,280,202); for(let y=64;y<262;y+=12) for(let x=L+((y/12)%2)*12;x<L+280;x+=24){ c.fillStyle=((x+y)%5)?"#33182c":"#3b1d33"; c.fillRect(x,y,22,10); } }
+  else if(st===1){ const g=c.createLinearGradient(L,0,L+280,0); g.addColorStop(0,"#1c2433"); g.addColorStop(.5,"#3a4a62"); g.addColorStop(1,"#1c2433"); c.fillStyle=g; c.fillRect(L,60,280,202); c.fillStyle="rgba(255,255,255,.07)"; for(let x=L+20;x<L+280;x+=40) c.fillRect(x,60,2,202); }
+  else if(st===2){ c.fillStyle="#140c26"; c.fillRect(L,60,280,202); for(let y=60;y<262;y+=20) for(let x=L;x<L+280;x+=20) if(((x-L)/20+(y-60)/20)%2<1){ c.fillStyle="rgba(176,107,255,.12)"; c.fillRect(x,y,20,20); }
+    for(let i=0;i<14;i++){ const on=Math.floor(t*6+i)%3===0; c.fillStyle=on?col:"#3a2a50"; c.beginPath(); c.arc(L+12+i*19.5,66,3,0,7); c.fill(); } }
+  else { c.fillStyle="#2b1d14"; c.fillRect(L,60,280,202); for(let x=L;x<L+280;x+=18){ c.fillStyle=(x/18)%2?"#33231a":"#3a281d"; c.fillRect(x,60,16,202); }
+    for(const px of [L+14,L+266]){ c.fillStyle="#1d3a24"; c.fillRect(px-10,236,20,26); c.fillStyle="#43f0a4"; for(let i=0;i<5;i++){ c.beginPath(); c.ellipse(px-8+i*4,230-(i%2)*6,5,9,(i-2)*.4,0,7); c.fill(); } } }
+  // awning
+  c.fillStyle=open?col:"#3a2c4e"; c.globalAlpha=open?.85:.6; for(let i=0;i<10;i++){ c.fillRect(L+i*28,118,14,16); } c.globalAlpha=1; c.fillStyle="#0b0716"; c.fillRect(L,132,280,3);
+  if(open){ const nm=r.name.toUpperCase(); const sz=nm.length>14?11:nm.length>10?14:18; c.fillStyle="#0b0716"; c.fillRect(L+14,74,252,38); c.strokeStyle=col; c.lineWidth=2; c.strokeRect(L+15,75,250,36); c.lineWidth=1;
+    rowNeon(c,nm,cx,93+sz/3,sz,col,t?flick(31+k,t):1); if(r.tagline){ c.fillStyle="#e9e2ff"; c.font="8px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(r.tagline.slice(0,44),cx,108); }
+    // windows show the first rewards
+    const live=items||[]; [[L+16],[L+188]].forEach(([wx],w)=>{ c.fillStyle="#0d0818"; c.fillRect(wx,150,76,62); c.strokeStyle=col; c.strokeRect(wx+.5,150.5,75,61); const it=live[w];
+      if(it){ c.fillStyle=col; c.fillRect(wx+26,166,24,18); c.fillStyle="#0b0716"; c.fillRect(wx+36,166,4,18); c.fillStyle="#e9e2ff"; c.font="7px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(it.title.slice(0,14),wx+38,198); c.fillStyle=col; c.fillText(it.rp.toLocaleString()+" RP",wx+38,207); }
+      else { c.fillStyle="rgba(255,255,255,.08)"; c.fillRect(wx+20,176,36,2); }
+      c.fillStyle="rgba(255,255,255,.06)"; c.beginPath(); c.moveTo(wx,150); c.lineTo(wx+28,150); c.lineTo(wx,186); c.fill(); });
+    c.fillStyle="#0a0510"; c.fillRect(cx-40,160,80,102); c.strokeStyle=col; c.lineWidth=2; c.strokeRect(cx-39,161,78,100); c.lineWidth=1;
+    c.fillStyle="rgba(255,255,255,.05)"; c.fillRect(cx-32,168,64,86); c.fillStyle=col; c.font="9px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText("OPEN",cx,190); c.fillStyle="#e9e2ff"; c.fillText(`${live.length} REWARD${live.length===1?"":"S"}`,cx,204); }
+  else { c.fillStyle="#1a1426"; c.fillRect(L+14,140,252,122); c.fillStyle="#241c34"; for(let y=144;y<262;y+=8) c.fillRect(L+14,y,252,4);
+    c.fillStyle="#0b0716"; c.fillRect(L+30,78,220,34); c.strokeStyle="#ffb84a"; c.strokeRect(L+30.5,78.5,219,33); rowNeon(c,"FOR LEASE",cx,101,16,"#ffb84a",t?flick(41+k,t):1);
+    c.fillStyle="#e9e2ff"; c.font="9px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(`SPOT ${k+1} · YOUR BUSINESS HERE`,cx,196); }
+  c.fillStyle="#9a8cc0"; c.font="8px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(`NO. ${k+1}`,L+250,256);
+}
+function drawRow(t){
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#080616"); g.addColorStop(.6,"#1a0a2c"); g.addColorStop(1,"#0b0716"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
+  const px=camX*.3; for(let x=-200;x<3000;x+=70){ const h=110+((x*37)%120); ctx.fillStyle="#140a24"; ctx.fillRect(px+x,250-h,62,h); if((x/70)%3===0){ ctx.fillStyle="rgba(56,232,255,.25)"; for(let y=250-h+10;y<240;y+=16) ctx.fillRect(px+x+10,y,6,6); } }
+  // street arch
+  ctx.fillStyle="#0b0716"; ctx.fillRect(228,30,8,232); ctx.fillRect(108,30,8,232); ctx.fillRect(100,24,144,26); ctx.strokeStyle="#ff3fa8"; ctx.strokeRect(100.5,24.5,143,25); neonText("NEON ROW",172,43,14,"#ff3fa8",flick(51,t));
+  ctx.fillStyle="#0a0712"; ctx.fillRect(60,190,120,72); ctx.fillStyle="#ffb84a"; ctx.fillRect(56,180,128,8); neonText("◉ METRO",120,172,12,"#ffb84a",1);
+  ROW_SLOTS.forEach((s,k)=>{ const cx=ROW_X[k]; if(cx+150<camX||cx-150>camX+VW) return; drawFront(ctx,cx,rowStores[s],t,k,rowLive(s)); });
+  for(const lx of [260,585,915,1245,1575,1905,2235]){ ctx.fillStyle="#1d1530"; ctx.fillRect(lx-2,120,4,142); ctx.fillStyle=`rgba(255,184,74,${.5+.2*Math.sin(t*2+lx)})`; ctx.beginPath(); ctx.arc(lx,118,7,0,7); ctx.fill(); }
+  if(IS_ADMIN) neonText("OWNER ACCESS · SET UP SPOTS IN THE ADMIN PANEL",1240,18,9,"#43f0a4",1);
+  ctx.fillStyle="#17112a"; ctx.fillRect(camX,262,VW,80); ctx.fillStyle="rgba(255,63,168,.06)"; for(let i=Math.floor(camX/48)*48;i<camX+VW;i+=48) ctx.fillRect(i,262,1,80); ctx.fillStyle="#0e0a18"; ctx.fillRect(camX,342,VW,18);
+}
+function rowHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
+  ...ROW_SLOTS.map((s,k)=>{ const r=rowStores[s], open=rowOpen(r);
+    return {x:ROW_X[k],hw:120,label:open?`Enter ${r.name}`:IS_ADMIN?`Set up spot ${k+1} (owner)`:`Spot ${k+1}: for lease`,act:()=>open?openStore(s):IS_ADMIN?(rowEdit={slot:s,...(r||cleanRow({}))},openAdmin("row")):toast("This storefront is for lease. Businesses can rent it from the game's owner.")}; })]; }
+
+/* --- live data */
+function rowWatch(db){
+  db.collection("row").onSnapshot(s=>{ rowStores={}; s.docs.forEach(d=>{ if(ROW_SLOTS.includes(d.id)){ const r=cleanRow(d.data()); if(r) rowStores[d.id]=r; } });
+    for(const sl of ROW_SLOTS){ if(!rowSubs[sl]){ rowSubs[sl]=1; db.collection(`rowitems/${sl}/items`).onSnapshot(q=>{ rowItems[sl]=q.docs.map(d=>cleanRowItem(d.id,d.data())).filter(Boolean); refreshRow(); },()=>{}); }
+      if(rowCanManage(sl)&&!rowStaffSubs[sl]){ rowStaffSubs[sl]=1; db.collection(`rowcodes/${sl}/codes`).onSnapshot(q=>{ rowStaff[sl]=q.docs.map(d=>({id:d.id,...d.data()})).filter(x=>typeof x.code==="string"); refreshRow(); },()=>{ rowStaffSubs[sl]=0; }); } }
+    refreshRow(); },()=>{});
+  db.doc(`data/users/${myId}/rowcodes`).onSnapshot(s=>{ const d=s.exists?s.data():null; rowMine=Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string"&&ROW_SLOTS.includes(e.slot)):[]; rowCheck(); },()=>{});
+}
+async function rowCheck(){ if(!DB) return; for(const e of rowMine){ if(["picked","refunded"].includes(rowCodeSt[e.code])) continue;
+  try{ const ref=DB.doc(`rowcodes/${e.slot}/codes/${e.code}`); const s=await ref.get(); if(!s.exists) continue; const d=s.data()||{};
+    if(d.status==="cancelled"&&!d.refunded){ await ref.update({refunded:true}); save.rp=(+save.rp||0)+(Math.floor(+e.rp)||0); persist(); hud(); rowCodeSt[e.code]="refunded"; toast(`${e.title} was cancelled by the store. ${(+e.rp||0).toLocaleString()} RP refunded.`,"#43f0a4"); }
+    else rowCodeSt[e.code]=d.status==="cancelled"?"refunded":d.status; }catch(err){} } refreshRow(); }
+function refreshRow(){ if(!currentView||!currentView.startsWith("row:")||$("#overlay").hidden) return; const a=document.activeElement; if(a&&["INPUT","TEXTAREA","SELECT"].includes(a.tagName)&&a.closest(".panel")) return; const [,s,t]=currentView.split(":"); openStore(s,t,true); }
+
+/* --- the store, as players see it */
+function openStore(s,tab="rewards",refresh){ const r=rowStores[s]; if(!r){ toast("This storefront is for lease."); return; }
+  const body=panel(r.name||"Neon Row",r.tagline||"A Neon Row partner store.",refresh); currentView=`row:${s}:${tab}`;
+  if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Neon Row stores need you to be signed in so your pickup codes are saved to your account."})); return; }
+  const info=[r.addr&&`📍 ${r.addr}`,r.hours&&`🕒 ${r.hours}`].filter(Boolean);
+  const card=el("div",{class:"info"},el("strong",{text:"Visit in person"}),...info.map(x=>el("span",{text:x})),el("span",{class:"sub",text:"Redeem a reward here, then show your NR- code and a photo ID (21+) at the counter. The store hands over the item."}));
+  if(r.web) card.append(el("a",{href:r.web,target:"_blank",rel:"noopener noreferrer",style:`color:${rowCol(r)}`,text:"Visit their website ↗"}));
+  body.append(el("div",{class:"detail",style:`border-color:${rowCol(r)}`},card));
+  const mine=rowMine.filter(e=>e.slot===s); const T=[["rewards","Rewards"],["codes",`My codes (${mine.length})`]];
+  const partnerish=r.email&&myEmail&&r.email===myEmail&&rowOpen(r); if(IS_ADMIN||partnerish) T.push(["manage",IS_ADMIN&&!partnerish?"Manage (owner)":"Manage my store"]);
+  const tabs=el("div",{class:"tabs"}); T.forEach(([k,l])=>tabs.append(el("button",{class:"btn"+(k==="manage"?" hot":""),type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>{ rowEdit=null; openStore(s,k); }}))); body.append(tabs);
+  if(tab==="manage") return rowManage(body,s);
+  if(tab==="codes"){ if(!mine.length){ body.append(el("div",{class:"empty",text:"You haven't redeemed anything here yet."})); return; }
+    const l=el("div",{class:"list"}); for(const e of [...mine].reverse()){ const st=rowCodeSt[e.code]||"ready";
+      l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:e.code}),el("div",{text:e.title}),el("div",{class:"sub",text:`${(+e.rp||0).toLocaleString()} RP · ${new Date(e.at).toLocaleString()}`})),
+        el("span",{class:"tag "+(st==="picked"?"r-uncommon":st==="refunded"?"r-epic":""),style:st==="ready"?"color:var(--amber)":"",text:st==="picked"?"Picked up":st==="refunded"?"Cancelled · refunded":"Ready for pickup"}))); }
+    body.append(l); return; }
+  if(!canRedeem()) body.append(el("div",{class:"detail",style:"border-color:var(--mag)"},el("div",{class:"info"},el("strong",{text:"🔒 Members redeem with Reward Points"}),el("span",{text:`Neon Row rewards are redeemed with Reward Points, which Data Collectors Club members earn ($${ECON.price}/month). You can still look around, and visit the store in person anytime.`}))));
+  else body.append(el("div",{class:"sub",text:`You have ${Math.floor(+save.rp||0).toLocaleString()} RP. Neon Row rewards are given by the store and don't count toward your Smacked Shop monthly limit.`}));
+  const live=rowLive(s); if(!live.length){ body.append(el("div",{class:"empty",text:"No rewards on the shelves yet. Check back soon."})); return; }
+  const g=el("div",{class:"grid",style:"grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"});
+  for(const it of live){ const left=Math.max(0,it.stock-it.sold); const c=el("button",{class:"card",type:"button",onclick:()=>rowConfirm(s,it)}); const v=giftCanvas(96); v.style.cssText="width:100%;aspect-ratio:1;max-width:100%;background:radial-gradient(circle at 50% 45%,#2a1640,#0d0818 70%)";
+    c.append(v,el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:"r-uncommon",text:`${it.rp.toLocaleString()} RP`}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
+  body.append(g); }
+function rowConfirm(s,it){ const r=rowStores[s]; const body=panel("Redeem: "+it.title,`A real item from ${r.name}. You get a pickup code to show at the store.`); currentView=null;
+  const bal=Math.floor(+save.rp||0), left=Math.max(0,it.stock-it.sold), ok=canRedeem();
+  body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:it.title}),it.desc?el("span",{style:"white-space:pre-wrap",text:it.desc}):null,el("span",{text:`Price: ${it.rp.toLocaleString()} Reward Points`}),el("span",{class:"sub",text:`You have ${bal.toLocaleString()} RP. ${left} left.`}))));
+  const go=el("button",{class:"btn hot",type:"button",text:ok?`Redeem for ${it.rp.toLocaleString()} RP`:"🔒 Members only",onclick:()=>rowRedeem(s,it,go)}); if(!ok||!(it.rp>0)||bal<it.rp||!left) go.disabled=true;
+  body.append(el("div",{class:"row"},go,el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openStore(s)})));
+  if(ok&&bal<it.rp) body.append(el("div",{class:"r-epic",text:`You need ${(it.rp-bal).toLocaleString()} more Reward Points.`})); }
+async function rowRedeem(s,it,btn){ const r=rowStores[s]; const fresh=(rowItems[s]||[]).find(x=>x.id===it.id);
+  if(!canRedeem()||!rowOpen(r)) return openStore(s); if(!fresh||!fresh.active||fresh.sold>=fresh.stock){ toast("That reward just sold out."); return openStore(s); }
+  const price=fresh.rp; if(!(price>0)||(+save.rp||0)<price) return; btn.disabled=true; save.rp-=price; persist(); hud();
+  const code=genRowCode(), at=Date.now();
+  try{ await DB.doc(`rowcodes/${s}/codes/${code}`).set({code,slot:s,item:fresh.id,title:fresh.title,rp:price,by:myId,name:myName||"Runner",at,status:"ready"}); }
+  catch(e){ save.rp+=price; persist(); hud(); toast("The redemption didn't go through. You weren't charged."); btn.disabled=false; return; }
+  try{ await DB.doc(`rowitems/${s}/items/${fresh.id}`).update({sold:fresh.sold+1}); }catch(e){}
+  rowMine=[...rowMine,{code,slot:s,item:fresh.id,title:fresh.title,store:r.name,rp:price,at}].slice(-100); rowCodeSt[code]="ready";
+  try{ await DB.doc(`data/users/${myId}/rowcodes`).set({codes:rowMine}); }catch(e){}
+  beep(1200,.08); setTimeout(()=>beep(1600,.12),90); emote("cheer");
+  const body=panel("Redeemed!",`Show this code and a photo ID at ${r.name} to pick up your item. It's also saved under My codes.`); currentView=null; const codeEl=el("div",{class:"bigcode",text:code});
+  const copy=el("button",{class:"btn",type:"button",text:"Copy code",onclick:()=>{ navigator.clipboard.writeText(code).then(()=>copy.textContent="Copied").catch(()=>{ const rg=document.createRange(); rg.selectNodeContents(codeEl); const se=getSelection(); se.removeAllRanges(); se.addRange(rg); copy.textContent="Selected, press copy"; }); }});
+  body.append(el("div",{class:"detail",style:"flex-direction:column;align-items:stretch"},el("strong",{text:fresh.title}),codeEl,el("div",{class:"row"},copy,el("button",{class:"btn hot",type:"button",text:"My codes",onclick:()=>openStore(s,"codes")})))); }
+
+/* --- the partner's side: their own rewards, code check and pickups */
+function rowManage(body,s){ const r=rowStores[s];
+  if(!IS_ADMIN&&!myVerified){ const msg=el("div",{class:"sub",role:"status"});
+    body.append(el("div",{class:"detail",style:"border-color:var(--amber)"},el("div",{class:"info"},el("strong",{text:"Verify your email to manage this store"}),el("span",{text:`You're signed in as ${myEmail}, the email the owner set for ${r.name}. Verify it once so only you can change this store's rewards.`}),
+      el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Send verification email",onclick:async()=>{ try{ const u=await window.claude.use("user"); await u.sendVerification(); msg.textContent="Sent. Open the link in that email, then tap I've verified."; }catch(e){ msg.textContent="Couldn't send it. Try again in a minute."; } }}),
+        el("button",{class:"btn",type:"button",text:"I've verified",onclick:async()=>{ try{ const u=await window.claude.use("user"); myVerified=!!(await u.refresh()); }catch(e){} if(myVerified){ toast("Email verified. Welcome to Neon Row!","#43f0a4"); rowWatch(DB); openStore(s,"manage"); } else msg.textContent="Not verified yet. Open the link in the email first."; }})),msg))); return; }
+  body.append(el("div",{class:"sub",text:`Rent paid until ${rowDay(r.until)}. ${IS_ADMIN?"You're managing this store as the owner.":"Store look and info are set by the game's owner; ask them for changes."}`}));
+  const tabs=el("div",{class:"tabs"}); [["items","My rewards"],["verify","Check a code"],["codes",`Redemptions (${(rowStaff[s]||[]).filter(c=>c.status==="ready").length} waiting)`]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(rowTab===k),text:l,onclick:()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }}))); body.append(tabs);
+  if(rowTab==="verify"){ const inp=el("input",{class:"num",id:"rowcode",placeholder:"NR-XXXX-XXXX",autocomplete:"off",style:"flex:1;min-width:0;text-transform:uppercase;font-size:16px;letter-spacing:.08em"}); const res=el("div",{class:"list"});
+    const check=async()=>{ res.innerHTML=""; const code=normRowCode(inp.value); if(!code){ res.append(el("div",{class:"r-epic",text:"Enter the full code, like NR-AB12-CD34."})); return; }
+      let d=null; try{ const sn=await DB.doc(`rowcodes/${s}/codes/${code}`).get(); d=sn.exists?{id:sn.id,...sn.data()}:null; }catch(e){}
+      if(!d){ res.append(el("div",{class:"r-epic",text:"No reward from this store has that code. Check it with the customer."})); beep(150,.15); return; } res.append(rowCodeRow(s,d)); beep(1000,.06); };
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); check(); } });
+    body.append(el("label",{class:"fld"},"Customer's code",el("div",{class:"row"},inp,el("button",{class:"btn hot",type:"button",text:"Look up",onclick:check}))),res); setTimeout(()=>inp.focus(),30); return; }
+  if(rowTab==="codes"){ const rows=[...(rowStaff[s]||[])].sort((a,b)=>(b.at||0)-(a.at||0)); if(!rows.length){ body.append(el("div",{class:"empty",text:"No redemptions yet."})); return; }
+    const l=el("div",{class:"list"}); rows.forEach(d=>l.append(rowCodeRow(s,d))); body.append(l); return; }
+  if(rowEdit&&rowEdit.item) return rowItemForm(body,s,rowEdit.item);
+  body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Add a reward",onclick:()=>{ rowEdit={item:{id:"",title:"",desc:"",rp:0,stock:1,sold:0,active:true}}; openStore(s,"manage"); }})));
+  const items=[...(rowItems[s]||[])].sort((a,b)=>a.rp-b.rp); if(!items.length){ body.append(el("div",{class:"empty",text:"No rewards yet. Add one: a name, how many Reward Points it costs, and how many you're giving away."})); return; }
+  const l=el("div",{class:"list"}); for(const it of items){ const del=el("button",{class:"btn",type:"button",text:rowDel===it.id?"Confirm delete":"Delete",onclick:async()=>{ if(rowDel!==it.id){ rowDel=it.id; openStore(s,"manage"); return; } rowDel=null; try{ await DB.doc(`rowitems/${s}/items/${it.id}`).delete(); toast("Reward deleted."); }catch(e){ toast("Couldn't delete that reward."); } openStore(s,"manage"); }});
+    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:it.title+(it.active?"":" (hidden)")}),el("div",{class:"sub",text:`${it.rp.toLocaleString()} RP · ${Math.max(0,it.stock-it.sold)} of ${it.stock} left · ${it.sold} redeemed`})),
+      el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Edit",onclick:()=>{ rowEdit={item:{...it}}; openStore(s,"manage"); }}),del))); }
+  body.append(l); }
+function rowItemForm(body,s,it){ const f=(label,input)=>el("label",{class:"fld"},label,input);
+  const title=el("input",{class:"num",id:"ri_title",maxlength:"60",value:it.title,placeholder:"e.g. Free hour of games"});
+  const desc=el("textarea",{id:"ri_desc",rows:"3",maxlength:"300",style:"width:100%;font-family:var(--f-ui);background:#0d0818;color:var(--text);border:1px solid var(--line);padding:8px",placeholder:"What they get, and any fine print"}); desc.value=it.desc;
+  const rp=el("input",{class:"num",id:"ri_rp",type:"number",min:"1",step:"100",value:it.rp?String(it.rp):""}); const hint=el("span",{class:"sub"});
+  const showHint=()=>{ const v=Math.floor(+rp.value)||0; hint.textContent=v>0?`For comparison, Smacked Shop prices ${v.toLocaleString()} RP like a ${usd(v/ECON.rate*100)} item. A busy member earns a few thousand RP a day.`:"How many Reward Points it costs."; }; rp.addEventListener("input",showHint); showHint();
+  const stock=el("input",{class:"num",id:"ri_stock",type:"number",min:"0",value:String(it.stock)}); const active=el("input",{type:"checkbox",id:"ri_active"}); active.checked=it.active; const msg=el("div",{class:"sub",role:"status"});
+  body.append(f("Reward name",title),f("Description",desc),el("label",{class:"fld"},"Price in Reward Points",rp,hint),f(`How many you're giving away (${it.sold} already redeemed)`,stock),el("label",{class:"row",style:"gap:8px;align-items:center"},active,"Show it in the store"),
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:it.id?"Save changes":"Add reward",onclick:async()=>{ const d={title:title.value.trim().slice(0,60),desc:desc.value.slice(0,300),rp:Math.floor(+rp.value)||0,stock:Math.max(0,Math.floor(+stock.value)||0),sold:it.sold||0,active:active.checked,at:Date.now()};
+      if(!d.title){ msg.textContent="Give the reward a name."; return; } if(d.rp<1){ msg.textContent="Set a price in Reward Points."; return; }
+      try{ const ref=it.id?DB.doc(`rowitems/${s}/items/${it.id}`):DB.collection(`rowitems/${s}/items`).doc(); await ref.set(d); rowEdit=null; toast(it.id?"Reward saved.":"Reward added. Players can redeem it now.","#43f0a4"); openStore(s,"manage"); }
+      catch(e){ msg.textContent="Couldn't save. Your rent may have run out; ask the game's owner."; } }}),el("button",{class:"btn",type:"button",text:"Cancel",onclick:()=>{ rowEdit=null; openStore(s,"manage"); }})),msg); }
+function rowCodeRow(s,d){ const st=d.status; const row=el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:d.code}),el("div",{text:`${d.title} · ${(+d.rp||0).toLocaleString()} RP`}),el("div",{class:"sub",text:`${cleanName(d.name||"")||"Runner"} · ${new Date(d.at).toLocaleString()}`})),
+    el("span",{class:"tag "+(st==="picked"?"r-uncommon":st==="cancelled"?"r-epic":""),style:st==="ready"?"color:var(--amber)":"",text:st==="picked"?"Picked up":st==="cancelled"?"Cancelled · refunded":"Ready for pickup"}));
+  if(st==="ready") row.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Mark picked up",onclick:()=>rowSetCode(s,d,"picked")}),el("button",{class:"btn",type:"button",text:"Cancel & refund",onclick:()=>rowSetCode(s,d,"cancelled")})));
+  return row; }
+async function rowSetCode(s,d,status){ try{ await DB.doc(`rowcodes/${s}/codes/${d.code}`).update({status,done:Date.now()}); d.status=status;
+    if(status==="cancelled"){ const it=(rowItems[s]||[]).find(x=>x.id===d.item); if(it&&it.sold>0) try{ await DB.doc(`rowitems/${s}/items/${it.id}`).update({sold:it.sold-1}); }catch(e){} }
+    toast(status==="picked"?`${d.code} marked picked up.`:`${d.code} cancelled. The player gets their RP back automatically.`); }
+  catch(e){ toast("Couldn't update that code."); } openStore(s,"manage"); }
+
+/* --- the owner's side: Admin Panel → Neon Row */
+function adminRow(body){
+  body.append(el("p",{class:"sub",text:"Rent storefronts to local businesses. You set how each store looks, its info, the partner's sign-in email and the date their rent is paid until. While it's paid, the partner signs in with that email and adds their own rewards. Collect rent outside the game (cash, Cash App, an invoice)."}));
+  if(rowEdit&&rowEdit.slot) return rowSpotForm(body,rowEdit);
+  const l=el("div",{class:"list"}); ROW_SLOTS.forEach((s,k)=>{ const r=rowStores[s]; const open=rowOpen(r); const st=!r||!r.name?"Empty":open?`Open · rent paid until ${rowDay(r.until)}`:r.until&&r.until<=Date.now()?`Rent ran out ${rowDay(r.until)}`:"Closed";
+    const cv=el("canvas",{width:"300",height:"216",style:"width:100px;height:72px;flex:none;background:#0b0716"}); const c=cv.getContext("2d"); c.scale(1,1); c.translate(150-ROW_X[0],-48); drawFront(c,ROW_X[0],r,0,k,rowLive(s));
+    l.append(el("div",{class:"li"},cv,el("div",{class:"grow"},el("div",{text:`Spot ${k+1}${r&&r.name?": "+r.name:""}`}),el("div",{class:open?"r-uncommon":"sub",text:st}),r&&r.email?el("div",{class:"sub",text:`Partner: ${r.email} · ${(rowItems[s]||[]).length} rewards`}):null),
+      el("button",{class:"btn hot",type:"button",text:r&&r.name?"Edit":"Set up",onclick:()=>{ rowEdit={slot:s,...(r||cleanRow({}))}; openAdmin("row"); }}))); });
+  body.append(l); }
+function rowSpotForm(body,e){ const k=ROW_SLOTS.indexOf(e.slot); const f=(label,input,extra)=>el("label",{class:"fld"},label,input,extra||null); const inp=(id,v,ph,ml="70")=>el("input",{class:"num",id,maxlength:ml,value:v||"",placeholder:ph});
+  const name=inp("rw_name",e.name,"e.g. Arcade Time","40"), tag=inp("rw_tag",e.tagline,"e.g. Bar · games · open till 3am"), email=inp("rw_email",e.email,"partner@business.com","120"); email.type="email";
+  const addr=inp("rw_addr",e.addr,"Street address","120"), hours=inp("rw_hours",e.hours,"e.g. Daily 4pm–3am","120"), web=inp("rw_web",e.web,"https://…","200");
+  const color=el("select",{id:"rw_color",class:"num"}); ROW_COLS.forEach(([n],i)=>color.append(el("option",{value:String(i),text:n}))); color.value=String(e.color||0);
+  const style=el("select",{id:"rw_style",class:"num"}); ROW_STYLES.forEach((n,i)=>style.append(el("option",{value:String(i),text:n}))); style.value=String(e.style||0);
+  const ymd=ms=>{ const d=new Date(ms); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+  const until=el("input",{class:"num",id:"rw_until",type:"date",value:e.until?ymd(e.until):""});
+  const plus=(days)=>el("button",{class:"btn",type:"button",text:`+${days} days`,onclick:()=>{ const base=until.value?Math.max(Date.now(),new Date(until.value+"T12:00:00").getTime()):Date.now(); until.value=ymd(base+days*864e5); upd(); }});
+  const active=el("input",{type:"checkbox",id:"rw_active"}); active.checked=e.active||!e.name; const msg=el("div",{class:"sub",role:"status"});
+  const cv=el("canvas",{width:"600",height:"432",style:"width:100%;max-width:300px;aspect-ratio:300/216;background:#0b0716"});
+  const read=()=>cleanRow({name:name.value.trim(),tagline:tag.value.trim(),color:+color.value,style:+style.value,email:email.value,until:until.value?new Date(until.value+"T23:59:59").getTime():0,addr:addr.value.trim(),hours:hours.value.trim(),web:web.value.trim(),active:active.checked});
+  const upd=()=>{ const c=cv.getContext("2d"); c.setTransform(2,0,0,2,0,0); c.clearRect(0,0,300,216); c.translate(150-ROW_X[0],-48); const r=read(); if(r.until<=Date.now()) r.until=Date.now()+864e5; drawFront(c,ROW_X[0],r,0,k,rowLive(e.slot)); };
+  for(const x of [name,tag,color,style,until,active]) x.addEventListener("input",upd);
+  body.append(el("h3",{text:`Spot ${k+1}`}),cv,f("Store name",name),f("Tagline on the sign",tag),el("div",{class:"row"},f("Neon color",color),f("Storefront style",style)),
+    f("Partner's sign-in email",email,el("span",{class:"sub",text:"They sign in to the game with this email (Google, or email and password plus a one-time verification) to add their own rewards."})),
+    f("Rent paid until",until,el("div",{class:"row"},plus(7),plus(30))),f("Address",addr),f("Hours",hours),f("Website (optional, https only)",web),el("label",{class:"row",style:"gap:8px;align-items:center"},active,"Store is open"),
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Save store",onclick:async()=>{ const r=read(); if(!r.name){ msg.textContent="Give the store a name."; return; } if(r.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email)){ msg.textContent="That email doesn't look right."; return; } if(web.value.trim()&&!r.web){ msg.textContent="The website has to start with https://"; return; }
+        try{ await DB.doc("row/"+e.slot).set({...r,at:Date.now()}); rowEdit=null; toast(`${r.name} saved on Neon Row.`,"#43f0a4"); openAdmin("row"); }catch(err){ msg.textContent="Couldn't save. Only the owner can set up stores."; } }}),
+      el("button",{class:"btn",type:"button",text:"Back",onclick:()=>{ rowEdit=null; openAdmin("row"); }}),
+      e.name?el("button",{class:"btn",type:"button",text:rowDel===e.slot?"Confirm: empty this spot":"Empty this spot",onclick:async()=>{ if(rowDel!==e.slot){ rowDel=e.slot; openAdmin("row"); return; } rowDel=null; try{ await DB.doc("row/"+e.slot).delete(); rowEdit=null; toast("Spot emptied. The partner's rewards stay saved in case they come back."); }catch(err){} openAdmin("row"); }}):null),msg);
+  setTimeout(upd,40); }
 
 /* ============================================================ TITLE / SIGN-IN SCREEN */
 let titleState="loading";
@@ -5064,8 +5265,9 @@ let dccTab="dcc", dccQ="", stLastPanel="";
 function refreshAdmin(){ if(currentView==="admin") openAdmin(dccTab); }
 function adminPlayers(){ const ids=new Set([...Object.keys(homes||{}),...Object.keys(dcc)]); for(const p of peers.values()) if(p.by) ids.add(p.by); if(myId) ids.add(myId); return [...ids].filter(Boolean); }
 function openAdmin(tab){ if(!IS_ADMIN){ toast("Admins only."); return; } dccTab=tab||dccTab; const body=panel("Admin Panel","Owner-only tools. Only your account can see or use these."); currentView="admin";
-  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["stats","Player stats"],["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["symbols","Symbols"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["stats","Player stats"],["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["symbols","Symbols"],["row","Neon Row"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
   if(!DB){ body.append(el("div",{class:"empty",text:"Sign in with the owner account to manage memberships."})); return; }
+  if(dccTab==="row") return adminRow(body);
   if(dccTab==="stats") return adminStats(body);
   if(dccTab==="symbols"){ body.append(el("p",{class:"sub",text:`The ${DCC_SYMS.length} Data Collectors Club symbols. Pick one per member when you grant or edit a membership.`})); const g=el("div",{class:"dccgrid"}); DCC_SYMS.forEach((S,i)=>g.append(el("div",{class:"card"},dccCanvas(i,46),el("div",{class:"nm",text:S.n})))); body.append(g); return; }
   if(dccTab==="members"){ const ids=Object.keys(dcc).sort((a,b)=>(dccActive(b)-dccActive(a))||((dcc[a].until||9e15)-(dcc[b].until||9e15)));
@@ -6853,6 +7055,7 @@ setInterval(hud,1000);
     if(IS_ADMIN){ try{ ASSETS=await cl.use("assets"); }catch(e){} }
     db.collection("shop").onSnapshot(s=>{ shopItems=s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean); refreshSmacked(); },()=>{});
     db.doc("shopinfo/econ").onSnapshot(s=>{ ECON=cleanEcon(s.exists?s.data():null); hud(); refreshSmacked(); },()=>{});
+    try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db);
     db.doc("shopinfo/main").onSnapshot(s=>{ shopInfo={text:s.exists?String((s.data()||{}).text||"").slice(0,600):""}; refreshSmacked(); },()=>{});
     db.collection("pickups").onSnapshot(s=>{ pickupStatus={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["ready","picked","cancelled"].includes(v.status)) pickupStatus[d.id]={status:v.status}; }); checkRefunds(); if(IS_ADMIN) syncSold(); refreshSmacked(); },()=>{});
     db.doc("redeem/"+myId).onSnapshot(s=>{ const d=s.exists?s.data():null; myRedeem={codes:Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string").map(e=>({...e})):[],...(d&&typeof d.month==="string"?{month:d.month,spentc:Math.floor(+d.spentc)||0}:{})}; hud(); Promise.all(myRedeem.codes.map(e=>hashOf(e.code))).then(()=>{ checkRefunds(); refreshSmacked(); }); },()=>{});
