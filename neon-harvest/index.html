@@ -4956,6 +4956,14 @@ function drawPetAt(c,x,y,sc,pet,PS,dir,t,moving,JC){ if(!pet||pet==="None"||!PET
   if(tall){ drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>drawTallPet(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   else { if(!PET_GROUND.includes(pet)) c.translate(0,-12+Math.sin(t*2.5)*2); c.scale(PET_SCALE,PET_SCALE); drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   c.restore(); }
+/* ============================================================ UPDATE CHECK */
+// Browsers can keep an old copy of the game for a while. Check now and then for a newer version and offer a reload.
+(function(){ let shown=false; const mine=Date.parse(document.lastModified)||0;
+  async function check(){ if(shown||!mine||location.protocol!=="https:") return; try{ const r=await fetch(location.pathname+"?u="+Date.now(),{method:"HEAD",cache:"no-store"}); const lm=Date.parse(r.headers.get("last-modified")||"")||0;
+    if(lm>mine+60000){ shown=true; const b=document.createElement("button"); b.type="button"; b.textContent="✨ A new version of NEON HARVEST is out. Tap to update.";
+      b.style.cssText="position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:99;max-width:calc(100% - 32px);padding:10px 16px;background:#0b0716;color:#43f0a4;border:2px solid #43f0a4;font:600 14px 'IBM Plex Mono',monospace;cursor:pointer;box-shadow:0 0 18px rgba(67,240,164,.5)";
+      b.onclick=()=>{ try{ persist(); }catch(e){} setTimeout(()=>location.replace(location.pathname+"?v="+lm+location.hash),300); }; document.body.appendChild(b); } }catch(e){} }
+  setTimeout(check,8000); setInterval(check,5*60e3); })();
 /* ============================================================ SMACKED DIGITAL: Neo Anime Drop */
 // 30 original anime-style cosmetics that members redeem with RP at Smacked Shop (no pickup, no real-life cost).
 // They live in the normal wardrobe slots, can't be bought with credits, and never drop as loot.
