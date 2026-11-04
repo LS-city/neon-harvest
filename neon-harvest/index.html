@@ -877,6 +877,7 @@ function wardIsNew(k,i){ return WARD_BASE_LEN[k]!=null&&i>=WARD_BASE_LEN[k]; }
 function glowOn(c,col,b){ c.shadowColor=col; c.shadowBlur=b||8; }
 function wx2(layer,c,X){ const {L,dir,t,head,sh,hip,AC,JC}=X; const W2=k=>WARD[k].opts[L[k]][0]; c.save();
  try{
+  wxAnime(layer,c,X);
   if(layer==="aura"){ const a=W2("aura");
     if(a==="Hex grid"){ c.strokeStyle=AC; c.globalAlpha=.45+.2*Math.sin(t*3); c.lineWidth=.8; for(let r=0;r<3;r++) for(let q=-2;q<=2;q++){ const hx=q*9+(r%2)*4.5, hy=-14-r*14; c.beginPath(); for(let k=0;k<6;k++){ const an=k*1.047; c.lineTo(hx+Math.cos(an)*5,hy+Math.sin(an)*5); } c.closePath(); c.stroke(); } }
     if(a==="Code orbit"){ c.fillStyle=AC; c.font="5px monospace"; c.textAlign="center"; glowOn(c,AC,6); for(let k=0;k<10;k++){ const an=t*1.6+k*.628; c.globalAlpha=.4+.6*((Math.sin(an)+1)/2); c.fillText((k*7+Math.floor(t*4))%2?"1":"0",Math.cos(an)*20,-30+Math.sin(an)*6); } }
@@ -2127,6 +2128,7 @@ const GUIDE={
     ["Data Collectors Club",[()=>`A members-only club for $${ECON.price} a month. The game's owner turns your membership on for a set time.`,"Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members earn Reward Points and redeem Smacked Shop rewards. Anyone can browse the shop."]],
     ["Earn Reward Points (RP)",["Members earn 1 RP for every credit they earn from work:","Shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar and the Harvest Assembly line (pay, tips and wages).","Courier Hub package deliveries, story quest chapters (Q) and Story Mode endings.","RP Exchange machines (Sector 9, Byte Market, The Grid and Smacked Shop): members can trade ₵4,000 for 50 RP, up to 10 exchanges at a time. These points don't count toward the daily limit.","These don't earn RP: parts orders (Vex's jobs, parts deliveries and rig commissions), Credit Miners and other miners, Grid duels and arcades, The Void, gifts, the Trade Board, selling parts, home bonuses and anything else.",()=>`Daily limit: up to ${ECON.dayMax.toLocaleString()} RP a day. Your RP balance shows at the top of the screen on PC and phones. Tap it for your earnings history.`]],
     ["Redeem at Smacked Shop (Metro)",["Each reward has a price in RP. Pick one and tap Redeem to get a pickup code like SMK-AB12-CD34.","Show the code and a photo ID (21+) at the shop in person to collect your item. The owner checks every code before handing anything over. All your codes are under My pickup codes.","Monthly reward limit: there's a cap on how much you can redeem each month. Smacked Shop shows how much of it you have left, and it resets on the 1st.","Cancelled codes refund your RP automatically, but still count toward that month's limit. Codes you already have stay valid even if your membership ends."]],
+    ["Digital rewards: Neo Anime Drop",["Smacked Shop's Digital tab has 30 original anime-style items: 10 clothes, 10 companions and 10 effects, all animated.","Members redeem them with RP and get them instantly. No pickup code, and they don't count toward the monthly reward limit.","You can try any of them on in Character first. They can't be bought with credits and never drop as loot."]],
     ["Neon Row Coins (NRC)",[()=>`Everyone earns NRC, free players included: 1 NRC for every ₵10 earned from work (shifts, Harvest Assembly, courier runs, story quests) and a daily check-in at the NRC kiosk on Neon Row (+${NRC_CHECKIN}).`,()=>`Up to ${NRC_CAP} NRC a day. Data Collectors Club members earn double, up to ${NRC_CAP*2}.`,"NRC only works at Neon Row. It can't be bought, traded or gifted. Tap the NRC counter at the top to see your balance."]],
     ["Neon Row (Metro)",["Six storefronts rented by real local businesses. Each partner store stocks its own rewards: NRC rewards are open to everyone, RP rewards are for members.","Redeem to get a code like NR-AB12-CD34, then show it and a photo ID (21+) at that business. The store checks the code and hands over the item. Your codes are under My codes in each store.","Neon Row rewards are given by the store, so they don't count toward your Smacked Shop monthly limit. If a store cancels a code, your NRC or RP comes back automatically.","Run a business? Ask the game's owner about renting a storefront."]]]}
 };
@@ -2254,8 +2256,10 @@ function openWardrobe(tab="name",firstRun=false){
   const info=el("div",{class:"info"});
   const nm=el("strong",{text:myName}); nm.style.color=COLORS[tryOn.nameCol]; info.append(nm,el("span",{class:"sub",text:"Tap the preview to turn around."}));
   const changed=[...SLOTS,"hand"].filter(k=>tryOn[k]!==fullLook(save.look)[k]);
-  const cost=changed.reduce((a,k)=>a+(isOwned(k,tryOn[k])?0:optCost(k,tryOn[k])),0);
-  const wear=el("button",{class:"btn hot",type:"button",text:!changed.length?(MOBILE?"Wearing":"Wearing this look"):cost?(MOBILE?`Buy & wear ₵${cost}`:`Buy new items & wear (₵${cost})`):(MOBILE?"Wear look":"Wear this look"),onclick:()=>{
+  const exclNeed=changed.filter(k=>k!=="hand"&&isExcl(k,tryOn[k])&&!isOwned(k,tryOn[k]));
+  const cost=changed.reduce((a,k)=>a+(isOwned(k,tryOn[k])||isExcl(k,tryOn[k])?0:optCost(k,tryOn[k])),0);
+  const wear=el("button",{class:"btn hot",type:"button",text:exclNeed.length?(MOBILE?"Get at Smacked Shop":`Get ${optName(exclNeed[0],tryOn[exclNeed[0]])} at Smacked Shop (RP)`):!changed.length?(MOBILE?"Wearing":"Wearing this look"):cost?(MOBILE?`Buy & wear ₵${cost}`:`Buy new items & wear (₵${cost})`):(MOBILE?"Wear look":"Wear this look"),onclick:()=>{
+    if(exclNeed.length){ tryOn=null; openSmacked("digital"); return; }
     if(cost>save.credits){ toast(`You need ₵${cost-Math.floor(save.credits)} more.`); beep(150,.15); return; }
     save.credits-=cost; save.owned=save.owned||[]; for(const k of changed) if(!isOwned(k,tryOn[k])) save.owned.push(k+":"+tryOn[k]);
     save.look={...tryOn}; persist(); pushPresence(true); emote("cheer"); toast(cost?`New gear bought for ₵${cost}`:"Look updated"); beep(1100,.08); openWardrobe(tab,firstRun); }});
@@ -2291,8 +2295,9 @@ function openWardrobe(tab="name",firstRun=false){
     const l={...tryOn,[tab]:i}; const cvs=lookCanvas(l,64); const own=isOwned(tab,i), cur=fullLook(save.look)[tab]===i, sel=tryOn[tab]===i;
     const card=el("button",{class:"card"+(sel?" sel":""),type:"button","aria-pressed":String(sel),onclick:()=>{ tryOn[tab]=i; openWardrobe(tab,firstRun); }});
     if(WARD[tab].color){ const sw=el("div",{style:`height:6px;background:${COLORS[i]}`}); card.append(cvs,sw); } else card.append(cvs);
-    if(wardIsNew(tab,i)) card.append(el("span",{class:"tag",style:"position:absolute;top:4px;left:4px;font-size:9px;color:#43f0a4;border-color:#43f0a4",text:"NEW"}));
-    card.append(el("div",{class:"nm",text:optName(tab,i)}),...(tab==="pet"&&PETS[optName(tab,i)]?[el("div",{class:"r-uncommon",style:"font-size:10px;line-height:1.2",text:PETS[optName(tab,i)].trait.short})]:[]),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",text:cur?"Wearing":own?"Owned":`₵${optCost(tab,i)}`}),el("span",{text:sel&&!cur?"Trying":""})));
+    if(isExcl(tab,i)) card.append(el("span",{class:"tag",style:"position:absolute;top:4px;left:4px;font-size:9px;color:#cf72ff;border-color:#cf72ff",text:"SMACKED"}));
+    else if(wardIsNew(tab,i)) card.append(el("span",{class:"tag",style:"position:absolute;top:4px;left:4px;font-size:9px;color:#43f0a4;border-color:#43f0a4",text:"NEW"}));
+    card.append(el("div",{class:"nm",text:optName(tab,i)}),...(tab==="pet"&&PETS[optName(tab,i)]?[el("div",{class:"r-uncommon",style:"font-size:10px;line-height:1.2",text:PETS[optName(tab,i)].trait.short})]:[]),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:!own&&isExcl(tab,i)?"color:#cf72ff":"",text:cur?"Wearing":own?"Owned":isExcl(tab,i)?`${(digiOf(tab,i)||{rp:0}).rp.toLocaleString()} RP`:`₵${optCost(tab,i)}`}),el("span",{text:sel&&!cur?"Trying":""})));
     g.append(card);
   }
   body.append(g);
@@ -3733,11 +3738,12 @@ function itemVisual(it,px){ if(it.img){ const im=el("img",{src:it.img,alt:it.tit
 function openSmacked(tab="shop"){
   const body=panel("SMACKED SHOP","Real-life rewards. Members redeem with Reward Points, get a pickup code, and show it at the shop to collect the item."); currentView="smacked:"+tab;
   if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Smacked Shop needs a signed-in claude.ai session so your pickup codes are saved to your account."})); return; }
-  const tabs=el("div",{class:"tabs"}); const T2=[["shop","Shop"],["codes",`My pickup codes (${(myRedeem.codes||[]).length})`]]; if(IS_ADMIN) T2.push(["admin","Owner tools"]);
+  const tabs=el("div",{class:"tabs"}); const T2=[["shop","Shop"],["digital","Digital ✦"],["codes",`My pickup codes (${(myRedeem.codes||[]).length})`]]; if(IS_ADMIN) T2.push(["admin","Owner tools"]);
   T2.forEach(([k,l])=>tabs.append(el("button",{class:"btn"+(k==="admin"?" hot":""),type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>openSmacked(k)}))); body.append(tabs);
   if(shopInfo.text) body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:"Pickup info"}),el("span",{style:"white-space:pre-wrap",text:shopInfo.text}))));
   if(tab==="admin"&&IS_ADMIN) return adminTools(body);
   if(tab==="codes") return myCodesView(body);
+  if(tab==="digital") return digitalView(body);
   body.append(smackedGate());
   const live=shopItems.filter(i=>i.active).sort((a,b)=>a.order-b.order||a.title.localeCompare(b.title));
   if(!live.length){ body.append(el("div",{class:"empty",text:IS_ADMIN?"Your shop is empty. Open Owner tools to add your first item.":"The shelves are empty right now. New rewards drop here when the owner stocks them."})); return; }
@@ -4949,6 +4955,177 @@ function drawPetAt(c,x,y,sc,pet,PS,dir,t,moving,JC){ if(!pet||pet==="None"||!PET
   if(tall){ drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>drawTallPet(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   else { if(!PET_GROUND.includes(pet)) c.translate(0,-12+Math.sin(t*2.5)*2); c.scale(PET_SCALE,PET_SCALE); drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   c.restore(); }
+/* ============================================================ SMACKED DIGITAL: Neo Anime Drop */
+// 30 original anime-style cosmetics that members redeem with RP at Smacked Shop (no pickup, no real-life cost).
+// They live in the normal wardrobe slots, can't be bought with credits, and never drop as loot.
+const DIGI=[
+  // clothes
+  {k:"style",n:"Flame-trim longcoat",rp:3500,g:"Clothes",d:"A long battle coat whose hem burns with living flame. Tints with your Accent color."},
+  {k:"style",n:"Academy high-collar",rp:2500,g:"Clothes",d:"A sharp high-collar school jacket. The gold buttons catch the light one by one."},
+  {k:"style",n:"Ronin wrap",rp:3000,g:"Clothes",d:"A crossed wrap with a long sash that sways behind you."},
+  {k:"style",n:"Mecha pilot suit",rp:4000,g:"Clothes",d:"A sleek pilot suit with a power core that pulses in your chest."},
+  {k:"neck",n:"Storm scarf",rp:2000,g:"Clothes",d:"An extra-long scarf that always blows in a dramatic wind, even indoors."},
+  {k:"hat",n:"Rebel headband",rp:1500,g:"Clothes",d:"A cloth headband stitched with a NEON HARVEST chip, tails streaming behind."},
+  {k:"hair",n:"Sky spikes",rp:3000,g:"Clothes",d:"Gravity-defying spikes with an energy shimmer that pulses up through them."},
+  {k:"hair",n:"Twin-tail ribbons",rp:2500,g:"Clothes",d:"Long twin tails tied with glowing ribbons that swing as you move."},
+  {k:"back",n:"Hero cape",rp:3500,g:"Clothes",d:"A long cape that billows behind you, with a star emblem that twinkles."},
+  {k:"back",n:"Shoulder half-cape",rp:3000,g:"Clothes",d:"A one-shoulder cape over an armored pauldron. Snaps in the wind."},
+  // companions
+  {k:"pet",n:"Wisp guardian",rp:4000,g:"Companions",d:"A tiny guardian spirit circled by sparkles."},
+  {k:"pet",n:"Ember kit",rp:4500,g:"Companions",d:"A fox kit with three flickering flame tails."},
+  {k:"pet",n:"Thunder pup",rp:4500,g:"Companions",d:"A loyal pup that crackles with little sparks."},
+  {k:"pet",n:"Moon rabbit",rp:5000,g:"Companions",d:"A rabbit that rides its own glowing crescent moon."},
+  {k:"pet",n:"Paper crane",rp:3500,g:"Companions",d:"A folded paper crane that flaps after you."},
+  {k:"pet",n:"Pocket titan",rp:5500,g:"Companions",d:"A tiny battle robot that stomps along with a scanning visor."},
+  {k:"pet",n:"Ink sprite",rp:4000,g:"Companions",d:"A living brushstroke that drips ink as it floats."},
+  {k:"pet",n:"Cloud dragon",rp:6000,g:"Companions",d:"A long noodle dragon that swims through the air on little clouds."},
+  {k:"pet",n:"Lantern spirit",rp:4500,g:"Companions",d:"A paper lantern with a face and a flickering heart flame."},
+  {k:"pet",n:"Chibi oni",rp:5000,g:"Companions",d:"A pint-sized horned imp that bounces along with its club."},
+  // effects
+  {k:"aura",n:"Power surge",rp:4000,g:"Effects",d:"A flame-shaped energy aura that flares up around your whole body."},
+  {k:"aura",n:"Speed lines",rp:2500,g:"Effects",d:"Anime speed lines stream behind you, stronger when you run."},
+  {k:"aura",n:"Petal vortex",rp:3000,g:"Effects",d:"Petals spiral up around you in a slow tornado."},
+  {k:"aura",n:"Charge sparks",rp:3000,g:"Effects",d:"Sparks crackle and jump across your body while you power up."},
+  {k:"aura",n:"Spirit flames",rp:3500,g:"Effects",d:"Three spirit flames circle you."},
+  {k:"aura",n:"Shockwave stomp",rp:3500,g:"Effects",d:"Every few seconds the ground ripples out from your feet in a shockwave."},
+  {k:"aura",n:"Impact stars",rp:2000,g:"Effects",d:"Comic-style impact bursts pop around you."},
+  {k:"aura",n:"Dramatic wind",rp:2500,g:"Effects",d:"Leaves and wind streaks blow past you like a big moment just happened."},
+  {k:"aura",n:"Ascension beam",rp:5000,g:"Effects",d:"A column of light falls on you, with motes rising into it."},
+  {k:"aura",n:"Battle spikes",rp:4000,g:"Effects",d:"A jagged battle aura of spikes that pulses around you."},
+];
+const DIGI_PETS={
+  "Wisp guardian":{p:"Small, brave and always watching your back.",trait:{k:"guard",v:10,short:"10% less Void damage"},ab:{k:"buff",b:"guard",n:"Guardian Ward",cd:45,d:"Void armor for 10 min"},say:["I've got you!","*sparkle*","Stay close."]},
+  "Ember kit":{p:"Mischievous and warm. Loves shiny scrap.",trait:{k:"luck",v:10,short:"Luckier Scrap finds"},ab:{k:"fetch",n:"Ember Dig",cd:120,d:"Finds a random part"},say:["kyu!","*tails flare*","Fetch, fetch!"]},
+  "Thunder pup":{p:"Fast, loud and always charged up.",trait:{k:"tips",v:12,short:"+12% shift tips"},ab:{k:"credits",lo:30,hi:70,n:"Static Fetch",cd:60,d:"Brings ₵30–70"},say:["Arf! *zap*","Bzzt-woof!","Let's go!"]},
+  "Moon rabbit":{p:"Dreamy and lucky. Hums lullabies.",trait:{k:"print",v:3,short:"+3 chips per CHIP PRINT"},ab:{k:"buff",b:"print",n:"Moonlight Print",cd:60,d:"2× print chips for 10 min"},say:["*thump thump*","The moon is full.","Sweet dreams."]},
+  "Paper crane":{p:"Light as a wish. Folds itself when it's nervous.",trait:{k:"dig",v:1,short:"+1 chip per Scrap dig"},ab:{k:"fetch",n:"Wish Fold",cd:150,d:"Finds a random part"},say:["*flap flap*","A thousand wishes…","rustle."]},
+  "Pocket titan":{p:"Tiny body, giant heart. Takes every fight seriously.",trait:{k:"bot",v:4,short:"+4 chips per bot deleted"},ab:{k:"heal",v:40,n:"Repair Pulse",cd:5,d:"Heals 40 HP in The Void"},say:["TARGET LOCKED.","*stomp stomp*","Protect the pilot!"]},
+  "Ink sprite":{p:"A doodle that came to life. Leaves art everywhere.",trait:{k:"luck",v:8,short:"Luckier Scrap finds"},ab:{k:"credits",lo:25,hi:60,n:"Sketch Coin",cd:60,d:"Brings ₵25–60"},say:["*splat*","Draw with me!","drip… drip…"]},
+  "Cloud dragon":{p:"Ancient, playful and very long.",trait:{k:"regen",v:3,short:"+3 HP/s regen in The Void"},ab:{k:"heal",v:60,n:"Rain Blessing",cd:6,d:"Heals 60 HP in The Void"},say:["*rumble*","The sky is ours.","Hrrrm."]},
+  "Lantern spirit":{p:"Lights the way home. A little shy.",trait:{k:"tips",v:10,short:"+10% shift tips"},ab:{k:"buff",b:"print",n:"Festival Glow",cd:60,d:"2× print chips for 10 min"},say:["*flicker*","This way!","Don't be afraid of the dark."]},
+  "Chibi oni":{p:"Small, horned and full of attitude.",trait:{k:"bot",v:3,short:"+3 chips per bot deleted"},ab:{k:"buff",b:"guard",n:"Oni Roar",cd:45,d:"Void armor for 10 min"},say:["RAAH!","Fight me!","*bonk*"]},
+};
+const DIGI_GROUND=["Ember kit","Thunder pup","Pocket titan","Chibi oni"];
+const DIGI_BASE_LEN={};
+for(const it of DIGI){ if(DIGI_BASE_LEN[it.k]==null) DIGI_BASE_LEN[it.k]=WARD[it.k].opts.length; WARD[it.k].opts.push([it.n,it.k==="pet"?500:Math.round(it.rp/10),"smk"]); }
+function isExcl(k,i){ return !!(WARD[k]&&!WARD[k].color&&WARD[k].opts[i]&&WARD[k].opts[i][2]==="smk"); }
+function digiOf(k,i){ return isExcl(k,i)?DIGI.find(d=>d.k===k&&d.n===WARD[k].opts[i][0]):null; }
+function digiIndex(d){ return WARD[d.k].opts.findIndex(o=>o[0]===d.n&&o[2]==="smk"); }
+function digiOwned(d){ return (save.owned||[]).includes(d.k+":"+digiIndex(d)); }
+
+// --- art for the clothes and effects (called from wx2 for every layer)
+function wxAnime(layer,c,X){ const {L,dir,t,head,sh,hip,AC,JC,HC}=X; const W=k=>WARD[k].opts[L[k]]&&WARD[k].opts[L[k]][0]; const mv=X.moving; c.save();
+ try{
+  if(layer==="aura"){ const a=W("aura");
+    if(a==="Power surge"){ const g=c.createLinearGradient(0,0,0,-80); g.addColorStop(0,AC); g.addColorStop(1,"rgba(255,255,255,0)"); for(let k=0;k<2;k++){ c.globalAlpha=k?.35:.5; c.fillStyle=k?"#ffffff":AC; glowOn(c,AC,16); c.beginPath(); c.moveTo(-15+k*4,0);
+        for(let i=0;i<=8;i++){ const x=-15+k*4+i*(30-k*8)/8, h=(i%2?52:72)-k*10+Math.sin(t*9+i*1.9)*7; c.lineTo(x,-h); } c.lineTo(15-k*4,0); c.closePath(); c.fill(); }
+      c.globalAlpha=1; c.fillStyle="#fff"; for(let i=0;i<7;i++){ const u=(t*1.4+i/7)%1; c.globalAlpha=1-u; c.fillRect(Math.sin(i*2.7)*12,-u*80,1.6,4); } }
+    if(a==="Speed lines"){ const n=mv?14:7; c.strokeStyle="#ffffff"; c.lineCap="round"; for(let i=0;i<n;i++){ const y=-6-((i*37)%64), u=((t*(mv?3.5:1.6))+i*.37)%1, len=14+((i*13)%18); c.globalAlpha=(1-u)*(mv?.85:.45); c.lineWidth=i%3?1:1.8;
+        c.beginPath(); c.moveTo(-dir*(10+u*40),y); c.lineTo(-dir*(10+u*40+len),y); c.stroke(); } c.globalAlpha=.5; c.strokeStyle=AC; c.lineWidth=1; for(let i=0;i<3;i++){ const u=(t*2+i*.33)%1; c.beginPath(); c.moveTo(-dir*(12+u*30),-20-i*14); c.lineTo(-dir*(30+u*30),-20-i*14); c.stroke(); } }
+    if(a==="Petal vortex"){ for(let i=0;i<14;i++){ const u=(t*.35+i/14)%1, an=u*Math.PI*6+i, r=10+u*14, x=Math.cos(an)*r, y=-u*78, front=Math.sin(an)>0; if(front) continue;
+        c.save(); c.translate(x,y); c.rotate(t*3+i); c.globalAlpha=.85*(1-u*.6); c.fillStyle=i%3?"#ffb3dc":AC; glowOn(c,"#ffb3dc",4); c.beginPath(); c.ellipse(0,0,3,1.6,0,0,7); c.fill(); c.restore(); } }
+    if(a==="Charge sparks"){ c.strokeStyle=AC; glowOn(c,AC,10); c.lineWidth=1.2; const seed=Math.floor(t*12); for(let i=0;i<4;i++){ const r=(n=>{ const v=Math.sin(n*91.7+seed*13.1)*4375.5; return v-Math.floor(v); }); if(r(i)>.7) continue;
+        const x0=(r(i+1)-.5)*30, y0=-4-r(i+2)*70; c.globalAlpha=.9; c.beginPath(); c.moveTo(x0,y0); let x=x0,y=y0; for(let k=0;k<4;k++){ x+=(r(i*9+k)-.5)*12; y+=4+r(i*7+k)*5; c.lineTo(x,y); } c.stroke(); }
+      c.globalAlpha=.3+.2*Math.sin(t*20); c.fillStyle=AC; c.beginPath(); c.ellipse(0,0,14,4,0,0,7); c.fill(); }
+    if(a==="Spirit flames"){ for(let i=0;i<3;i++){ const an=t*1.3+i*2.094, x=Math.cos(an)*22, y=-36+Math.sin(an*2)*8, back=Math.sin(an)<0; c.save(); c.translate(x,y); c.globalAlpha=back?.55:.9; c.fillStyle="#9fd8ff"; glowOn(c,"#38e8ff",14);
+        const fl=Math.sin(t*12+i)*1.5; c.beginPath(); c.moveTo(0,-9-fl); c.quadraticCurveTo(5,-2,3.5,2); c.arc(0,2,3.6,0,Math.PI); c.quadraticCurveTo(-5,-2,0,-9-fl); c.fill(); c.fillStyle="#ffffff"; c.beginPath(); c.arc(0,2,1.6,0,7); c.fill(); c.restore(); } }
+    if(a==="Shockwave stomp"){ const u=(t%2.4)/2.4; c.strokeStyle=AC; glowOn(c,AC,10); for(let k=0;k<2;k++){ const v=u-k*.12; if(v<0) continue; c.globalAlpha=(1-v)*.9; c.lineWidth=2.5-k; c.beginPath(); c.ellipse(0,0,8+v*46,2+v*10,0,0,7); c.stroke(); }
+      if(u<.35){ c.fillStyle="rgba(233,226,255,.5)"; for(const sd of [-1,1]) for(let k=0;k<3;k++){ c.globalAlpha=(1-u/.35)*.7; c.beginPath(); c.arc(sd*(10+u*40+k*5),-2-k*3-u*8,3+k,0,7); c.fill(); } } }
+    if(a==="Impact stars"){ for(let i=0;i<3;i++){ const per=1.1+i*.37, u=((t+i*.5)%per)/per, sd=Math.floor((t+i*.5)/per)+i*7; const x=Math.sin(sd*3.3)*26, y=-40+Math.cos(sd*2.1)*22; if(u>.6) continue; const s=4+u*14;
+        c.save(); c.translate(x,y); c.rotate(sd); c.globalAlpha=1-u/.6; c.fillStyle=i%2?"#f5e663":AC; c.strokeStyle="#0b0716"; c.lineWidth=1; c.beginPath(); for(let k=0;k<16;k++){ const r=k%2?s*.45:s, an=k*Math.PI/8; c.lineTo(Math.cos(an)*r,Math.sin(an)*r); } c.closePath(); c.fill(); c.stroke(); c.restore(); } }
+    if(a==="Dramatic wind"){ for(let i=0;i<8;i++){ const u=(t*.9+i/8)%1, y=-8-((i*23)%66)+Math.sin(t*3+i)*3, x=dir*(40-u*90); c.globalAlpha=Math.sin(u*Math.PI)*.8;
+        if(i%2){ c.strokeStyle="#e9e2ff"; c.lineWidth=.8; c.beginPath(); c.moveTo(x,y); c.quadraticCurveTo(x-dir*10,y-3,x-dir*20,y); c.stroke(); } else { c.save(); c.translate(x,y); c.rotate(t*5+i); c.fillStyle=i%4?"#43f0a4":"#ffb84a"; c.beginPath(); c.ellipse(0,0,3,1.4,0,0,7); c.fill(); c.restore(); } } }
+    if(a==="Ascension beam"){ const w=20+Math.sin(t*2)*3, g=c.createLinearGradient(-w,0,w,0); g.addColorStop(0,"rgba(255,255,255,0)"); g.addColorStop(.5,`rgba(255,246,214,${.35+.1*Math.sin(t*3)})`); g.addColorStop(1,"rgba(255,255,255,0)"); c.fillStyle=g; c.fillRect(-w,-130,w*2,130);
+      c.fillStyle="#fff6d6"; glowOn(c,"#ffd36a",8); for(let i=0;i<9;i++){ const u=(t*.5+i/9)%1; c.globalAlpha=Math.sin(u*Math.PI); c.beginPath(); c.arc(Math.sin(i*2.1+t)*12,-u*110,1.3,0,7); c.fill(); } c.globalAlpha=.5; c.strokeStyle="#ffd36a"; c.beginPath(); c.ellipse(0,0,18,4,0,0,7); c.stroke(); }
+    if(a==="Battle spikes"){ const p=.85+.15*Math.sin(t*6); c.save(); c.translate(0,-34); c.scale(p,p); c.fillStyle=AC; glowOn(c,AC,14); c.globalAlpha=.45; c.beginPath(); for(let k=0;k<22;k++){ const an=k/22*Math.PI*2, r=k%2?20:32+Math.sin(t*8+k)*4; c.lineTo(Math.cos(an)*r*.8,Math.sin(an)*r*1.15); } c.closePath(); c.fill();
+      c.globalAlpha=.8; c.strokeStyle="#fff"; c.lineWidth=.8; c.stroke(); c.restore(); } }
+  if(layer==="back"){ const b=W("back"), wv=Math.sin(t*3), run=mv?1:0;
+    if(b==="Hero cape"){ c.fillStyle=AC; c.globalAlpha=.95; const tip=-dir*(8+run*20); c.beginPath(); c.moveTo(-7,sh-2); c.lineTo(7,sh-2); c.quadraticCurveTo(-dir*2+wv*2,hip,tip+dir*6+wv*4,-1-run*8); for(let k=0;k<4;k++) c.lineTo(tip+dir*(6-k*5)+wv*(4-k),(k%2?-4:-1)-run*(8+k*1.5)); c.quadraticCurveTo(-dir*(14+run*6),hip,-7,sh-2); c.fill();
+      c.globalAlpha=.25; c.fillStyle="#000"; c.beginPath(); c.moveTo(-dir*2,sh); c.quadraticCurveTo(-dir*(6+run*6),hip+6,tip-dir*2+wv*3,-2-run*9); c.lineTo(tip+dir*1+wv*3,-2-run*9); c.quadraticCurveTo(-dir*(3+run*4),hip+6,dir*1,sh); c.fill();
+      c.globalAlpha=1; c.fillStyle="#ffd36a"; glowOn(c,"#ffd36a",6+4*Math.sin(t*4)); c.save(); c.translate(-dir*6,hip-6); c.rotate(t); c.beginPath(); for(let k=0;k<10;k++){ const r=k%2?1.4:3.4, an=-Math.PI/2+k*Math.PI/5; c.lineTo(Math.cos(an)*r,Math.sin(an)*r); } c.fill(); c.restore(); }
+    if(b==="Shoulder half-cape"){ c.fillStyle=AC; c.globalAlpha=.95; c.beginPath(); c.moveTo(dir*6,sh-3); c.lineTo(-dir*6,sh-1); c.quadraticCurveTo(-dir*(12+run*10)+wv*2,hip,-dir*(14+run*18)+wv*5,-4-run*8); c.lineTo(-dir*(4+run*10)+wv*3,-2-run*8); c.quadraticCurveTo(-dir*2,hip,dir*6,sh+4); c.closePath(); c.fill();
+      c.globalAlpha=.35; c.fillStyle="#000"; c.beginPath(); c.moveTo(-dir*6,sh); c.quadraticCurveTo(-dir*(10+run*8),hip,-dir*(10+run*14)+wv*4,-3-run*8); c.lineTo(-dir*(8+run*12)+wv*4,-3-run*8); c.quadraticCurveTo(-dir*6,hip,-dir*4,sh); c.fill();
+      c.globalAlpha=1; c.fillStyle="#9aa2b8"; c.beginPath(); c.ellipse(dir*5,sh,7,4.4,dir*.35,0,7); c.fill(); c.fillStyle="#c9d3e0"; c.beginPath(); c.ellipse(dir*5,sh-1.2,5,2.4,dir*.35,0,7); c.fill(); c.fillStyle=AC; glowOn(c,AC,8); c.beginPath(); c.arc(dir*5,sh,1.4,0,7); c.fill(); } }
+  if(layer==="torso"){ const s=W("style");
+    if(s==="Flame-trim longcoat"){ const fl=Math.sin(t*4)*2+(mv?-dir*4:0); c.fillStyle=JC; c.beginPath(); c.moveTo(-6,sh); c.lineTo(6,sh); c.lineTo(8+fl,hip+16); c.lineTo(-8+fl,hip+16); c.closePath(); c.fill(); c.fillStyle="rgba(0,0,0,.25)"; c.fillRect(-1,sh+2,2,hip-sh+12);
+      for(let i=0;i<7;i++){ const x=-8+fl+i*2.7, h=3+Math.abs(Math.sin(t*11+i*1.3))*5; c.fillStyle=i%2?"#ffb84a":AC; glowOn(c,AC,6); c.beginPath(); c.moveTo(x-1.4,hip+16); c.quadraticCurveTo(x+Math.sin(t*8+i),hip+16-h,x+1.4,hip+16); c.fill(); } }
+    if(s==="Academy high-collar"){ c.fillStyle="#241c3c"; c.fillRect(-6,sh,12,hip-sh+3); c.strokeStyle="#ffd36a"; c.lineWidth=.8; c.strokeRect(-6,sh,12,hip-sh+3); c.fillStyle="#241c3c"; c.fillRect(-4.5,sh-5,9,6); c.strokeRect(-4.5,sh-5,9,6); c.fillStyle=AC; c.fillRect(-6,hip,12,1.4);
+      for(let i=0;i<5;i++){ const on=Math.floor(t*3)%5===i; c.fillStyle=on?"#fff6d6":"#ffd36a"; if(on) glowOn(c,"#ffd36a",8); c.beginPath(); c.arc(0,sh+2+i*4,.95,0,7); c.fill(); c.shadowBlur=0; } }
+    if(s==="Ronin wrap"){ c.fillStyle=JC; c.fillRect(-6,sh,12,hip-sh+2); c.strokeStyle="#ece6ff"; c.lineWidth=1.4; c.beginPath(); c.moveTo(-5,sh); c.lineTo(3,hip-6); c.moveTo(5,sh); c.lineTo(-1,hip-8); c.stroke();
+      c.fillStyle=AC; c.fillRect(-6.5,hip-3,13,3.4); const sw=Math.sin(t*3)*3+(mv?-dir*4:0); for(const off of [0,2.5]){ c.beginPath(); c.moveTo(-dir*5,hip-2); c.quadraticCurveTo(-dir*(10+off)+sw*.5,hip+5,-dir*(9+off)+sw,hip+13+off); c.lineTo(-dir*(7+off)+sw,hip+12+off); c.quadraticCurveTo(-dir*(7+off),hip+4,-dir*4,hip); c.fill(); } }
+    if(s==="Mecha pilot suit"){ c.fillStyle="#ece6ff"; c.fillRect(-6,sh,12,hip-sh+2); c.fillStyle=JC; c.fillRect(-6,sh+5,12,3); c.fillRect(-1.2,sh+8,2.4,hip-sh-6); c.fillStyle="#3d3456"; c.fillRect(-9,sh-1,4,5); c.fillRect(5,sh-1,4,5);
+      const p=.5+.5*Math.sin(t*4); c.fillStyle=AC; glowOn(c,AC,6+p*10); c.beginPath(); c.arc(0,sh+5,2.2+p*.6,0,7); c.fill(); c.strokeStyle=AC; c.globalAlpha=1-p; c.beginPath(); c.arc(0,sh+5,3+p*5,0,7); c.stroke(); } }
+  if(layer==="neck"){ const n=W("neck");
+    if(n==="Storm scarf"){ c.fillStyle=AC; c.fillRect(-5.5,sh-2.5,11,3.5); const base=-dir*3; c.beginPath(); c.moveTo(base,sh-2); for(let k=0;k<=10;k++){ const x=base-dir*k*3.4, y=sh-3+k*.4+Math.sin(t*7-k*.8)*(1+k*.35); c.lineTo(x,y); } for(let k=10;k>=0;k--){ const x=base-dir*k*3.4, y=sh+1+k*.5+Math.sin(t*7-k*.8+.3)*(1+k*.35); c.lineTo(x,y); } c.closePath(); c.fill();
+      c.globalAlpha=.5; c.fillStyle="#fff"; c.fillRect(-5.5,sh-2.5,11,1); } }
+  if(layer==="hat"){ const h=W("hat");
+    if(h==="Rebel headband"){ c.fillStyle=AC; c.fillRect(-9,head-6,18,3.4); c.fillStyle="#0b0716"; c.fillRect(dir*3-2,head-5.6,4,2.6); c.fillStyle=AC; c.fillRect(dir*3-1,head-4.8,2,1.2); c.fillStyle="#0b0716"; for(let k=0;k<3;k++){ c.fillRect(dir*3-2.6,head-5.4+k*.9,.6,.5); c.fillRect(dir*3+2,head-5.4+k*.9,.6,.5); }
+      c.fillStyle=AC; for(const [off,ph] of [[0,0],[2.2,1.4]]){ c.beginPath(); c.moveTo(-dir*8,head-5); for(let k=1;k<=6;k++) c.lineTo(-dir*(8+k*3),head-5+off+k*1.1+Math.sin(t*8-k*.9+ph)*(.5+k*.4)); for(let k=6;k>=1;k--) c.lineTo(-dir*(8+k*3),head-3.6+off+k*1.1+Math.sin(t*8-k*.9+ph)*(.5+k*.4)); c.closePath(); c.fill(); } } }
+  if(layer==="hair"){ const h=W("hair");
+    if(h==="Sky spikes"){ c.fillStyle=HC; c.beginPath(); c.arc(0,head-1,9,Math.PI,0); c.fill(); const spikes=[[-10,-6,-17],[-7,-13,-22],[-3,-17,-28],[1,-18,-30],[5,-15,-26],[8,-10,-20],[10,-5,-14]];
+      for(const [x,y,ty] of spikes){ c.beginPath(); c.moveTo(x-3,head+y+6); c.lineTo(x*1.4-dir*2,head+ty); c.lineTo(x+3,head+y+6); c.fill(); }
+      const u=(t*1.2)%1; c.save(); c.globalAlpha=.55*(1-u); c.strokeStyle=X.AC; glowOn(c,X.AC,10); c.lineWidth=1.2; c.beginPath(); for(const [x,y,ty] of spikes){ c.moveTo(x-1,head+y+6-u*10); c.lineTo(x*1.4-dir*2,head+ty); } c.stroke(); c.restore(); }
+    if(h==="Twin-tail ribbons"){ c.fillStyle=HC; c.beginPath(); c.arc(0,head-1,9,Math.PI,0); c.fill(); for(const sd of [-1,1]){ const sw=Math.sin(t*3+sd)*3+(mv?-dir*5:0); c.beginPath(); c.moveTo(sd*7,head-7); c.quadraticCurveTo(sd*16+sw*.5,head+2,sd*12+sw,head+24); c.lineTo(sd*8+sw,head+22); c.quadraticCurveTo(sd*11,head+2,sd*5,head-6); c.fill();
+        c.fillStyle=X.AC; glowOn(c,X.AC,8); c.beginPath(); c.moveTo(sd*7,head-8); c.lineTo(sd*12,head-12+Math.sin(t*5)*1); c.lineTo(sd*12,head-5); c.closePath(); c.moveTo(sd*7,head-8); c.lineTo(sd*2,head-12-Math.sin(t*5)); c.lineTo(sd*3,head-5); c.fill(); c.shadowBlur=0; c.fillStyle=HC; } } }
+ }catch(e){}
+ c.restore(); }
+
+// --- companion art
+function digiPetArt(){
+  return {
+  "Wisp guardian":(c,dir,t,o,JC)=>{ c.fillStyle="#e9f7ff"; c.shadowColor="#9fd8ff"; c.shadowBlur=12; c.beginPath(); c.arc(0,0,4.6,0,7); c.fill(); c.beginPath(); c.moveTo(-3.5,1); c.quadraticCurveTo(-dir*6,7,-dir*9,6+Math.sin(t*6)*2); c.quadraticCurveTo(-dir*4,3,3.5,1); c.fill(); c.shadowBlur=0;
+    c.fillStyle="#1b1530"; c.fillRect(dir*1.5-.7,-1.5,1.4,2); c.fillRect(dir*-1.2-.7,-1.5,1.4,2); for(let k=0;k<4;k++){ const an=t*2.4+k*1.57; c.fillStyle=k%2?"#fff":JC; c.globalAlpha=.6+.4*Math.sin(an*2); c.fillRect(Math.cos(an)*9-.8,Math.sin(an)*4-.8,1.6,1.6); } c.globalAlpha=1; },
+  "Ember kit":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0; for(let k=0;k<3;k++){ const a=(k-1)*.45, fl=Math.sin(t*10+k*2)*1.5; c.save(); c.translate(-dir*5,-7); c.rotate(-dir*(.9+a)); c.fillStyle=k===1?"#ffb84a":"#ff5a4a"; c.shadowColor="#ffb84a"; c.shadowBlur=8; c.beginPath(); c.moveTo(-1.8,0); c.quadraticCurveTo(0,-9-fl,1.8,0); c.fill(); c.restore(); } c.shadowBlur=0;
+    c.fillStyle="#ff8a3a"; c.fillRect(-5,-9,9,5); c.fillRect(dir>0?2:-8,-13,6,5); c.beginPath(); c.moveTo(dir>0?3:-7,-13); c.lineTo(dir>0?4:-6,-16); c.lineTo(dir>0?5.5:-4.5,-13); c.moveTo(dir>0?6:-4,-13); c.lineTo(dir>0?7:-3,-16); c.lineTo(dir>0?8:-2,-13); c.fill(); c.fillStyle="#fff"; c.fillRect(dir>0?6:-8,-10,2,2);
+    c.fillStyle="#ff8a3a"; c.fillRect(-4,-4,1.6,4+st); c.fillRect(1,-4,1.6,4-st); c.fillStyle="#0b0716"; c.fillRect(dir>0?5.5:-6.5,-12,1.1,1.1); },
+  "Thunder pup":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0, wag=Math.sin(t*14)*2; c.fillStyle="#f5e663"; c.fillRect(-6,-10,11,6); c.fillRect(dir>0?3:-9,-14,6,6); c.fillStyle="#d8b830"; c.fillRect(dir>0?3:-4,-16,2,3); c.fillRect(dir>0?7:-8,-16,2,3);
+    c.fillStyle="#f5e663"; c.fillRect(-5,-4,1.8,4+st); c.fillRect(2,-4,1.8,4-st); c.strokeStyle="#f5e663"; c.lineWidth=1.6; c.beginPath(); c.moveTo(-dir*6,-9); c.lineTo(-dir*10,-12+wag); c.stroke(); c.fillStyle="#0b0716"; c.fillRect(dir>0?7:-8,-12,1.2,1.2);
+    if(Math.sin(t*7)>.2){ c.strokeStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=8; c.lineWidth=1; for(const sd of [-1,1]){ c.beginPath(); const x=sd*8, y=-12+Math.sin(t*9)*2; c.moveTo(x,y); c.lineTo(x+sd*2,y+2); c.lineTo(x,y+3); c.lineTo(x+sd*2.5,y+5); c.stroke(); } c.shadowBlur=0; } },
+  "Moon rabbit":(c,dir,t,o,JC)=>{ c.fillStyle="#ffe9a8"; c.shadowColor="#ffd36a"; c.shadowBlur=10; c.beginPath(); c.arc(0,4,8,0,Math.PI); c.arc(0,1.5,6.8,Math.PI,0,true); c.fill(); c.shadowBlur=0;
+    c.fillStyle="#f4f0ff"; c.beginPath(); c.ellipse(0,-1,3.6,3,0,0,7); c.fill(); c.beginPath(); c.arc(dir*2,-4.5,2.6,0,7); c.fill(); const ear=Math.sin(t*2)*.2; for(const e of [0,1.6]){ c.save(); c.translate(dir*(1.2+e),-6.5); c.rotate(-dir*(.15+ear+e*.1)); c.beginPath(); c.ellipse(0,-3,1,3.2,0,0,7); c.fill(); c.restore(); }
+    c.fillStyle="#ff9ad5"; c.fillRect(dir*3.2-.5,-4.8,1,1); },
+  "Paper crane":(c,dir,t,o,JC)=>{ const f=Math.sin(t*8)*4; c.fillStyle="#f4f0ff"; c.strokeStyle="#c9c4dc"; c.lineWidth=.4; c.beginPath(); c.moveTo(-dir*7,1); c.lineTo(dir*7,0); c.lineTo(0,3); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle="#e2dcf5"; c.beginPath(); c.moveTo(-2,0); c.lineTo(dir*1,-7-f); c.lineTo(3,0); c.fill(); c.stroke(); c.fillStyle=JC; c.beginPath(); c.moveTo(-1,1); c.lineTo(-dir*2,5+f*.4); c.lineTo(2,1); c.fill();
+    c.fillStyle="#f4f0ff"; c.beginPath(); c.moveTo(dir*6,0); c.lineTo(dir*9,-4); c.lineTo(dir*9.6,-3.4); c.lineTo(dir*7,.8); c.fill(); c.beginPath(); c.moveTo(-dir*6,1); c.lineTo(-dir*9,-3); c.lineTo(-dir*8,1.5); c.fill(); },
+  "Pocket titan":(c,dir,t,o,JC)=>{ const st=o.moving?Math.abs(Math.sin(t*7))*1.6:0; c.fillStyle="#3d3456"; c.fillRect(-4.5,-6,3,6); c.fillRect(1.5,-6,3,6); c.fillStyle="#ece6ff"; c.fillRect(-5.5,-15+st*.3,11,9); c.fillRect(-7.5,-14,2,6); c.fillRect(5.5,-14,2,6);
+    c.fillStyle="#ff3fa8"; c.fillRect(-5.5,-10,11,1.6); c.fillStyle="#ece6ff"; c.fillRect(-3.5,-21+st*.3,7,6); c.fillStyle="#0b0716"; c.fillRect(-3,-19.5+st*.3,6,2.4); const sx=Math.sin(t*3)*2.2; c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=8; c.fillRect(sx-1,-19.2+st*.3,2,1.8); c.shadowBlur=0;
+    c.fillStyle="#ffb84a"; c.fillRect(-.6,-24+st*.3,1.2,3); },
+  "Ink sprite":(c,dir,t,o,JC)=>{ c.fillStyle="#140e22"; c.beginPath(); for(let k=0;k<12;k++){ const an=k/12*Math.PI*2, r=5+Math.sin(t*5+k*1.7)*1.2; c.lineTo(Math.cos(an)*r,Math.sin(an)*r); } c.closePath(); c.fill(); c.strokeStyle=JC; c.lineWidth=.8; c.stroke();
+    for(let k=0;k<3;k++){ const u=(t*.8+k/3)%1; c.fillStyle="#140e22"; c.globalAlpha=1-u; c.beginPath(); c.arc(-2+k*2,5+u*9,1.2-u*.6,0,7); c.fill(); } c.globalAlpha=1;
+    c.strokeStyle="#140e22"; c.lineWidth=2.4; c.beginPath(); c.moveTo(-dir*4,-2); c.quadraticCurveTo(-dir*9,-6+Math.sin(t*4)*2,-dir*13,-3); c.stroke(); c.fillStyle="#fff"; c.fillRect(dir*1.5-.7,-2,1.4,1.6); c.fillRect(dir*-1.2-.7,-2,1.4,1.6); },
+  "Cloud dragon":(c,dir,t,o,JC)=>{ for(let k=9;k>=0;k--){ const x=dir*6-dir*k*2.4, y=Math.sin(t*4-k*.7)*3; c.fillStyle=k%2?"#43f0a4":"#2fbf80"; c.beginPath(); c.arc(x,y,2.6-k*.12,0,7); c.fill(); if(k%3===1){ c.fillStyle="#ffd36a"; c.beginPath(); c.moveTo(x,y-2.4); c.lineTo(x-dir*1.2,y-4.5); c.lineTo(x-dir*1.8,y-2); c.fill(); } }
+    const hy=Math.sin(t*4)*3; c.fillStyle="#43f0a4"; c.beginPath(); c.ellipse(dir*8,hy-.5,3.6,2.8,0,0,7); c.fill(); c.strokeStyle="#ffd36a"; c.lineWidth=.8; c.beginPath(); c.moveTo(dir*7,hy-3); c.lineTo(dir*5,hy-6); c.moveTo(dir*9,hy-3); c.lineTo(dir*8,hy-6.5); c.moveTo(dir*11,hy); c.quadraticCurveTo(dir*14,hy+1,dir*15,hy-2+Math.sin(t*6)); c.stroke();
+    c.fillStyle="#0b0716"; c.fillRect(dir*9-.6,hy-1.6,1.2,1.2); c.fillStyle="rgba(244,240,255,.8)"; for(let k=0;k<3;k++){ const u=(t*.6+k/3)%1; c.globalAlpha=.7*(1-u); c.beginPath(); c.arc(-dir*(16+u*8)+k*2,5+k,2.6+u*1.5,0,7); c.arc(-dir*(13+u*8)+k*2,6+k,2+u,0,7); c.fill(); } c.globalAlpha=1; },
+  "Lantern spirit":(c,dir,t,o,JC)=>{ const fl=.7+.3*Math.sin(t*13)*Math.sin(t*7); c.fillStyle="#2a1426"; c.fillRect(-3.5,-9,7,1.6); c.fillRect(-3.5,6,7,1.6); c.fillStyle=`rgba(255,90,74,${.85})`; c.shadowColor="#ffb84a"; c.shadowBlur=10+fl*8; c.beginPath(); c.ellipse(0,-1,6,7.4,0,0,7); c.fill(); c.shadowBlur=0;
+    c.strokeStyle="rgba(11,7,22,.35)"; c.lineWidth=.6; for(const x of [-3,0,3]){ c.beginPath(); c.ellipse(0,-1,Math.abs(x)+.01,7.2,0,0,7); c.stroke(); } c.fillStyle=`rgba(255,233,168,${.5*fl})`; c.beginPath(); c.arc(0,0,3,0,7); c.fill();
+    c.fillStyle="#0b0716"; c.fillRect(dir*1.6-.7,-3,1.4,1.6); c.fillRect(dir*-1.4-.7,-3,1.4,1.6); c.fillRect(-1,0,2,.8); c.strokeStyle="#ffb84a"; c.lineWidth=1; c.beginPath(); c.moveTo(0,7.6); c.lineTo(Math.sin(t*3)*1.5,12); c.stroke(); },
+  "Chibi oni":(c,dir,t,o,JC)=>{ const hop=Math.abs(Math.sin(t*(o.moving?7:3)))*(o.moving?3:1.5); c.translate(0,-hop); c.fillStyle="#ff6a7a"; c.beginPath(); c.ellipse(0,-6,5,5.5,0,0,7); c.fill(); c.fillRect(-4,-2,2,2.4); c.fillRect(2,-2,2,2.4);
+    c.fillStyle="#f4f0ff"; c.beginPath(); c.moveTo(-3,-10); c.lineTo(-4.2,-14.5); c.lineTo(-1.6,-10.5); c.moveTo(3,-10); c.lineTo(4.2,-14.5); c.lineTo(1.6,-10.5); c.fill(); c.fillStyle="#ffd36a"; c.fillRect(-4.5,-4,9,2);
+    c.fillStyle="#0b0716"; c.fillRect(dir*2-.7,-8,1.4,1.4); c.fillRect(dir*-.6-.7,-8,1.4,1.4); c.fillStyle="#fff"; c.fillRect(-1.4+dir,-5.4,.8,1); c.fillRect(.6+dir,-5.4,.8,1);
+    c.save(); c.translate(dir*6,-6); c.rotate(dir*(.4+Math.sin(t*4)*.3)); c.fillStyle="#7a4a2a"; c.fillRect(-1,-8,2.4,9); c.fillStyle="#c9d3e0"; for(let k=0;k<3;k++) c.fillRect(-1.8,-7+k*2.6,.8,.8); c.restore(); },
+  }; }
+
+// --- Smacked Shop: the Digital tab
+function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
+    el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.`:"Members redeem digital rewards with RP. You can try anything on in Character first."}))));
+  for(const grp of ["Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
+    const g=el("div",{class:"grid wgrid"}); for(const d of DIGI.filter(x=>x.g===grp)){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
+      const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${d.rp.toLocaleString()} RP`})));
+      g.append(c); } body.append(g); } }
+function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(+save.rp||0), ok=canRedeem(); const body=panel(d.n,"Neo Anime Drop · digital reward"); currentView=null;
+  const pv=lookCanvas({...fullLook(save.look),[d.k]:i},110); pv.style.cssText="width:150px;height:150px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
+  const extra=d.k==="pet"&&PETS[d.n]?el("span",{class:"r-uncommon",text:`${PETS[d.n].trait.short} · ${PETS[d.n].ab.n}: ${PETS[d.n].ab.d}`}):null;
+  body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:d.n}),el("span",{text:d.d}),extra,el("span",{class:"sub",text:`${({style:"Top",neck:"Neck",hat:"Head",hair:"Hairstyle",back:"Back",pet:"Companion",aura:"Aura"})[d.k]} slot · ${own?"You own this.":`${d.rp.toLocaleString()} RP · you have ${bal.toLocaleString()} RP`}`}))));
+  const wear=()=>{ save.look={...fullLook(save.look),[d.k]:i}; persist(); pushPresence(true); emote("cheer"); toast(`Now wearing ${d.n}.`,"#cf72ff"); closePanel(); };
+  const row=el("div",{class:"row"});
+  if(own) row.append(el("button",{class:"btn hot",type:"button",text:"Wear it now",onclick:wear}));
+  else { const go=el("button",{class:"btn hot",type:"button",text:ok?`Redeem for ${d.rp.toLocaleString()} RP`:"🔒 Members only",onclick:()=>{ if(!canRedeem()||digiOwned(d)) return; if((+save.rp||0)<d.rp) return; save.rp-=d.rp; save.owned=save.owned||[]; save.owned.push(d.k+":"+i);
+        save.rpLog=Array.isArray(save.rpLog)?save.rpLog:[]; persist(); hud(); beep(1200,.08); setTimeout(()=>beep(1600,.12),90); toast(`${d.n} unlocked!`,"#cf72ff"); digiConfirm(d); }});
+    if(!ok||bal<d.rp) go.disabled=true; row.append(go); }
+  row.append(el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openSmacked("digital")})); body.append(row);
+  if(!own&&ok&&bal<d.rp) body.append(el("div",{class:"r-epic",text:`You need ${(d.rp-bal).toLocaleString()} more RP.`})); }
+
+Object.assign(PETS,DIGI_PETS); Object.assign(PET_ART,digiPetArt()); PET_GROUND.push(...DIGI_GROUND);
 function petStyleOf(n){ save.petStyle=save.petStyle||{}; return save.petStyle[n]||{}; }
 function setPetStyle(n,patch){ save.petStyle=save.petStyle||{}; save.petStyle[n]={...(save.petStyle[n]||{}),...patch}; syncPetLook(); persist(); pushPresence(true); }
 function ownGear(k){ return GEAR_BY[k]&&(GEAR_BY[k].v===0||(save.petGear||[]).includes(k)); }
@@ -6805,7 +6982,7 @@ function lookRarity(cost){ return cost<100?"common":cost<250?"uncommon":cost<450
 function lootPool(cat,r){ if(cat==="tech") return CAT.filter(i=>(TECH_T.includes(i.t)||i.t==="weapon")&&i.r===r).map(i=>({kind:"item",id:i.id,r}));
   if(cat==="decor") return DECOR_ITEMS.filter(i=>i.r===r).map(i=>({kind:"item",id:i.id,r}));
   if(cat==="food") return [...FOODS,...BB_FOODS,...DRINKS].filter(i=>i.r===r).map(i=>({kind:"item",id:i.id,r}));
-  if(cat==="look"){ const out=[]; for(const k of SLOTS){ if(WARD[k].color) continue; WARD[k].opts.forEach((o,i)=>{ if(o[1]>0&&lookRarity(o[1])===r&&!isOwned(k,i)) out.push({kind:"look",k,i,r}); }); } return out; }
+  if(cat==="look"){ const out=[]; for(const k of SLOTS){ if(WARD[k].color) continue; WARD[k].opts.forEach((o,i)=>{ if(o[1]>0&&o[2]!=="smk"&&lookRarity(o[1])===r&&!isOwned(k,i)) out.push({kind:"look",k,i,r}); }); } return out; }
   return []; }
 function rollLoot(B,M){ let r=wpick(M.rar); if(B.minR&&R_ORDER.indexOf(r)<R_ORDER.indexOf(B.minR)) r=Math.random()<.7?B.minR:"epic"; const cat=wpick(B.cats);
   for(let k=R_ORDER.indexOf(r);k>=0;k--){ const pool=lootPool(cat,R_ORDER[k]); if(pool.length) return pool[(Math.random()*pool.length)|0]; }
