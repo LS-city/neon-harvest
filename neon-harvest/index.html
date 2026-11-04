@@ -2297,7 +2297,7 @@ function openWardrobe(tab="name",firstRun=false){
     if(WARD[tab].color){ const sw=el("div",{style:`height:6px;background:${COLORS[i]}`}); card.append(cvs,sw); } else card.append(cvs);
     if(isExcl(tab,i)) card.append(el("span",{class:"tag",style:"position:absolute;top:4px;left:4px;font-size:9px;color:#cf72ff;border-color:#cf72ff",text:"SMACKED"}));
     else if(wardIsNew(tab,i)) card.append(el("span",{class:"tag",style:"position:absolute;top:4px;left:4px;font-size:9px;color:#43f0a4;border-color:#43f0a4",text:"NEW"}));
-    card.append(el("div",{class:"nm",text:optName(tab,i)}),...(tab==="pet"&&PETS[optName(tab,i)]?[el("div",{class:"r-uncommon",style:"font-size:10px;line-height:1.2",text:PETS[optName(tab,i)].trait.short})]:[]),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:!own&&isExcl(tab,i)?"color:#cf72ff":"",text:cur?"Wearing":own?"Owned":isExcl(tab,i)?`${(digiOf(tab,i)||{rp:0}).rp.toLocaleString()} RP`:`₵${optCost(tab,i)}`}),el("span",{text:sel&&!cur?"Trying":""})));
+    card.append(el("div",{class:"nm",text:optName(tab,i)}),...(tab==="pet"&&PETS[optName(tab,i)]?[el("div",{class:"r-uncommon",style:"font-size:10px;line-height:1.2",text:PETS[optName(tab,i)].trait.short})]:[]),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:!own&&isExcl(tab,i)?"color:#cf72ff":"",text:cur?"Wearing":own?"Owned":isExcl(tab,i)?`${digiOf(tab,i)?digiPrice(digiOf(tab,i)).toLocaleString():0} RP`:`₵${optCost(tab,i)}`}),el("span",{text:sel&&!cur?"Trying":""})));
     g.append(card);
   }
   body.append(g);
@@ -3802,7 +3802,7 @@ function myCodesView(body){
 /* --- owner tools */
 let adminTab="inventory", editing=null, confirmDel=null;
 function adminTools(body){
-  const tabs=el("div",{class:"tabs"}); [["inventory","Inventory"],["profit","Profit settings"],["redemptions","Redemptions"],["verify","Verify a code"],["info","Pickup info"]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(adminTab===k),text:l,onclick:()=>{ adminTab=k; editing=null; openSmacked("admin"); }}))); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); [["inventory","Inventory"],["digital","Digital items"],["profit","Profit settings"],["redemptions","Redemptions"],["verify","Verify a code"],["info","Pickup info"]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(adminTab===k),text:l,onclick:()=>{ adminTab=k; editing=null; openSmacked("admin"); }}))); body.append(tabs);
   if(adminTab==="inventory"){
     if(editing) return itemForm(body,editing);
     body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Add an item",onclick:()=>{ editing={id:"",title:"",desc:"",price:0,cur:"rp",cents:0,rp:0,stock:1,sold:0,active:true,img:"",imgId:""}; openSmacked("admin"); }})));
@@ -3814,6 +3814,7 @@ function adminTools(body){
         el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Edit",onclick:()=>{ editing={...it}; openSmacked("admin"); }}),del))); }
     body.append(l); return; }
   if(adminTab==="profit") return profitSettings(body);
+  if(adminTab==="digital") return digiAdmin(body);
   if(adminTab==="redemptions"){
     const rows=allRows(); const pending=rows.filter(r=>statusOf(r.code).status==="ready").length;
     body.append(el("div",{class:"row"},el("span",{class:"pill",text:`${rows.length} total`}),el("span",{class:"pill cr",text:`${pending} waiting for pickup`})));
@@ -5011,6 +5012,10 @@ for(const it of DIGI){ if(DIGI_BASE_LEN[it.k]==null) DIGI_BASE_LEN[it.k]=WARD[it
 function isExcl(k,i){ return !!(WARD[k]&&!WARD[k].color&&WARD[k].opts[i]&&WARD[k].opts[i][2]==="smk"); }
 function digiOf(k,i){ return isExcl(k,i)?DIGI.find(d=>d.k===k&&d.n===WARD[k].opts[i][0]):null; }
 function digiIndex(d){ return WARD[d.k].opts.findIndex(o=>o[0]===d.n&&o[2]==="smk"); }
+// The owner sets each item's RP price and whether it's in the shop (shopinfo/digital); unset items use the suggested price.
+var digiCfg={};
+function digiPrice(d){ const c=digiCfg[d.n]; return c&&Math.floor(+c.rp)>0?Math.floor(+c.rp):d.rp; }
+function digiOn(d){ const c=digiCfg[d.n]; return !(c&&c.on===false); }
 function digiOwned(d){ return (save.owned||[]).includes(d.k+":"+digiIndex(d)); }
 
 // --- art for the clothes and effects (called from wx2 for every layer)
@@ -5109,21 +5114,36 @@ function digiPetArt(){
 function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
     el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.`:"Members redeem digital rewards with RP. You can try anything on in Character first."}))));
   for(const grp of ["Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
-    const g=el("div",{class:"grid wgrid"}); for(const d of DIGI.filter(x=>x.g===grp)){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
-      const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${d.rp.toLocaleString()} RP`})));
+    const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
+      const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${digiPrice(d).toLocaleString()} RP`}),!digiOn(d)?el("span",{class:"r-epic",text:"Hidden"}):null));
       g.append(c); } body.append(g); } }
-function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(+save.rp||0), ok=canRedeem(); const body=panel(d.n,"Neo Anime Drop · digital reward"); currentView=null;
+function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(+save.rp||0), ok=canRedeem(), price=digiPrice(d), live=digiOn(d)||IS_ADMIN; const body=panel(d.n,"Neo Anime Drop · digital reward"); currentView=null;
   const pv=lookCanvas({...fullLook(save.look),[d.k]:i},110); pv.style.cssText="width:150px;height:150px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
   const extra=d.k==="pet"&&PETS[d.n]?el("span",{class:"r-uncommon",text:`${PETS[d.n].trait.short} · ${PETS[d.n].ab.n}: ${PETS[d.n].ab.d}`}):null;
-  body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:d.n}),el("span",{text:d.d}),extra,el("span",{class:"sub",text:`${({style:"Top",neck:"Neck",hat:"Head",hair:"Hairstyle",back:"Back",pet:"Companion",aura:"Aura"})[d.k]} slot · ${own?"You own this.":`${d.rp.toLocaleString()} RP · you have ${bal.toLocaleString()} RP`}`}))));
+  body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:d.n}),el("span",{text:d.d}),extra,el("span",{class:"sub",text:`${({style:"Top",neck:"Neck",hat:"Head",hair:"Hairstyle",back:"Back",pet:"Companion",aura:"Aura"})[d.k]} slot · ${own?"You own this.":`${price.toLocaleString()} RP · you have ${bal.toLocaleString()} RP`}`}))));
   const wear=()=>{ save.look={...fullLook(save.look),[d.k]:i}; persist(); pushPresence(true); emote("cheer"); toast(`Now wearing ${d.n}.`,"#cf72ff"); closePanel(); };
   const row=el("div",{class:"row"});
   if(own) row.append(el("button",{class:"btn hot",type:"button",text:"Wear it now",onclick:wear}));
-  else { const go=el("button",{class:"btn hot",type:"button",text:ok?`Redeem for ${d.rp.toLocaleString()} RP`:"🔒 Members only",onclick:()=>{ if(!canRedeem()||digiOwned(d)) return; if((+save.rp||0)<d.rp) return; save.rp-=d.rp; save.owned=save.owned||[]; save.owned.push(d.k+":"+i);
+  else { const go=el("button",{class:"btn hot",type:"button",text:!live?"Not in the shop right now":ok?`Redeem for ${price.toLocaleString()} RP`:"🔒 Members only",onclick:()=>{ const pr=digiPrice(d); if(!canRedeem()||digiOwned(d)||!(digiOn(d)||IS_ADMIN)) return; if((+save.rp||0)<pr) return; save.rp-=pr; save.owned=save.owned||[]; save.owned.push(d.k+":"+i);
         save.rpLog=Array.isArray(save.rpLog)?save.rpLog:[]; persist(); hud(); beep(1200,.08); setTimeout(()=>beep(1600,.12),90); toast(`${d.n} unlocked!`,"#cf72ff"); digiConfirm(d); }});
-    if(!ok||bal<d.rp) go.disabled=true; row.append(go); }
+    if(!ok||bal<price||!live) go.disabled=true; row.append(go); }
   row.append(el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openSmacked("digital")})); body.append(row);
-  if(!own&&ok&&bal<d.rp) body.append(el("div",{class:"r-epic",text:`You need ${(d.rp-bal).toLocaleString()} more RP.`})); }
+  if(!own&&ok&&live&&bal<price) body.append(el("div",{class:"r-epic",text:`You need ${(price-bal).toLocaleString()} more RP.`})); }
+// Owner tools → Digital items: price and show/hide every item.
+function digiAdmin(body){ body.append(el("p",{class:"sub",text:"Set the RP price for each digital item and choose which ones are in the shop. Digital items cost you nothing to hand out, so every RP spent on them is profit. Players who already own an item keep it even if you hide it."}));
+  const rows=[]; const l=el("div",{class:"list"});
+  for(const grp of ["Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
+    for(const d of DIGI.filter(x=>x.g===grp)){ const cv=lookCanvas({...fullLook(save.look),[d.k]:digiIndex(d)},44); cv.style.cssText+=";width:48px;height:48px;flex:none";
+      const rp=el("input",{class:"num",type:"number",min:"1",step:"100",value:String(digiPrice(d)),style:"width:110px","aria-label":`RP price for ${d.n}`});
+      const on=el("input",{type:"checkbox","aria-label":`${d.n} is in the shop`}); on.checked=digiOn(d); rows.push([d,rp,on]);
+      l.append(el("div",{class:"li"},cv,el("div",{class:"grow"},el("div",{text:d.n}),el("div",{class:"sub",text:`Suggested ${d.rp.toLocaleString()} RP`})),rp,el("label",{class:"row",style:"gap:6px;align-items:center"},on,"In shop"))); } }
+  const msg=el("div",{class:"sub",role:"status"});
+  const saveBtn=el("button",{class:"btn hot",type:"button",text:"Save prices",onclick:async()=>{ const items={}; for(const [d,rp,on] of rows){ const v=Math.floor(+rp.value)||0; if(v<1){ msg.textContent=`Set a price for ${d.n}.`; return; } items[d.n]={rp:v,on:on.checked}; }
+      try{ await DB.doc("shopinfo/digital").set({items,at:Date.now()}); digiCfg=items; msg.textContent="Saved. Players see the new prices right away."; toast("Digital prices saved.","#cf72ff"); }catch(e){ msg.textContent="Couldn't save. Only the shop owner can change prices."; } }});
+  const reset=el("button",{class:"btn",type:"button",text:"Use suggested prices",onclick:()=>{ for(const [d,rp] of rows) rp.value=String(d.rp); msg.textContent="Suggested prices filled in. Tap Save prices to keep them."; }});
+  const all=(v)=>el("button",{class:"btn",type:"button",text:v?"Show all":"Hide all",onclick:()=>{ for(const r of rows) r[2].checked=v; }});
+  body.append(el("div",{class:"row"},saveBtn,reset,all(true),all(false)),msg,l,el("div",{class:"row"},saveBtn.cloneNode(true)));
+  body.lastChild.firstChild.onclick=saveBtn.onclick; }
 
 Object.assign(PETS,DIGI_PETS); Object.assign(PET_ART,digiPetArt()); PET_GROUND.push(...DIGI_GROUND);
 function petStyleOf(n){ save.petStyle=save.petStyle||{}; return save.petStyle[n]||{}; }
@@ -7332,6 +7352,7 @@ setInterval(hud,1000);
     // Smacked Shop
     if(IS_ADMIN){ try{ ASSETS=await cl.use("assets"); }catch(e){} }
     db.collection("shop").onSnapshot(s=>{ shopItems=s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean); refreshSmacked(); },()=>{});
+    db.doc("shopinfo/digital").onSnapshot(s=>{ const d=s.exists?s.data()||{}:{}; digiCfg=d.items&&typeof d.items==="object"?d.items:{}; refreshSmacked(); },()=>{});
     db.doc("shopinfo/econ").onSnapshot(s=>{ ECON=cleanEcon(s.exists?s.data():null); hud(); refreshSmacked(); },()=>{});
     try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db); nrcWatch(db);
     db.doc("shopinfo/main").onSnapshot(s=>{ shopInfo={text:s.exists?String((s.data()||{}).text||"").slice(0,600):""}; refreshSmacked(); },()=>{});
