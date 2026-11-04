@@ -132,7 +132,9 @@
   function query(q){ return { where:(f,op,v)=>query(q.where(f,op,v)), orderBy:(f,d)=>query(q.orderBy(f,d||"asc")), limit:n=>query(q.limit(n)),
     get:async()=>wrapQuery(await q.get()), onSnapshot:(next,err)=>q.onSnapshot(s=>next(wrapQuery(s)),errOut(err)) }; }
   function collRef(path){ const c=fs.collection(path); return Object.assign(query(c),{ doc:id=>docRef(path+"/"+(id||c.doc().id)), add:async d=>{ const r=await c.add(clean(d)); return docRef(path+"/"+r.id); } }); }
-  const dbNS=Object.freeze({doc:docRef,collection:collRef});
+  // Atomic multi-document writes (both succeed or neither does). Takes the refs returned by doc().
+  function batch(){ const b=fs.batch(); const o={ set:(ref,d)=>{ b.set(fs.doc(ref.path),clean(d)); return o; }, update:(ref,d)=>{ b.update(fs.doc(ref.path),clean(d)); return o; }, delete:ref=>{ b.delete(fs.doc(ref.path)); return o; }, commit:()=>b.commit() }; return o; }
+  const dbNS=Object.freeze({doc:docRef,collection:collRef,batch});
 
   /* ---------- accounts ---------- */
   const profCache={};

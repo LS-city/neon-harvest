@@ -369,6 +369,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
     <div class="stats">
       <span class="pill cr">₵ <b id="credits">0</b></span>
       <span class="pill ch">CHIPS <b id="chips">0</b></span>
+      <button class="pill rp" id="nrcpill" type="button" hidden title="Neon Row Coins: everyone earns them by playing and spends them at Neon Row. Tap for details." style="cursor:pointer">NRC <b id="nrcv" style="color:#38e8ff">0</b></button>
       <button class="pill rp" id="rppill" type="button" hidden title="Reward Points: earned by members from work, spent at Smacked Shop. Tap for details.">RP <b id="rp">0</b></button>
       <span class="pill" id="hppill" hidden></span>
       <span class="pill" id="jobpill" hidden></span>
@@ -987,7 +988,7 @@ function renderChatLog(force){ const log=$("#chatlog"); if(!log) return; const n
   for(const d of log.children){ const h=d._h; if(!h) continue; const life=h.sys?SYS_LIFE:CHAT_LIFE, left=life-(now-h.at); d.style.opacity=chatTyping||(deck&&!h.sys)?"1":deck?".7":String(Math.max(0,Math.min(1,left/1500))); } }
 function COARSE_UI(){ return matchMedia("(max-width:520px)").matches; }
 setInterval(()=>renderChatLog(false),500);
-function hud(){ jobHud(); if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=MOBILE&&bf.length>1?`⚡ ${bf.length} boosts · ${Math.max(...bf.map(k=>Math.ceil((save.buffs[k]-Date.now())/60e3)))}m (☰ for details)`:bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); const rpp=$("#rppill"); if(rpp){ rpp.hidden=!(myId&&(dccActive(myId)||(+save.rp||0)>0)); $("#rp").textContent=Math.floor(+save.rp||0).toLocaleString(); } }
+function hud(){ jobHud(); try{ nrcHud(); }catch(e){} if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=MOBILE&&bf.length>1?`⚡ ${bf.length} boosts · ${Math.max(...bf.map(k=>Math.ceil((save.buffs[k]-Date.now())/60e3)))}m (☰ for details)`:bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); const rpp=$("#rppill"); if(rpp){ rpp.hidden=!(myId&&(dccActive(myId)||(+save.rp||0)>0)); $("#rp").textContent=Math.floor(+save.rp||0).toLocaleString(); } }
 
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
@@ -2069,7 +2070,7 @@ function tabEdge(t){ if(!t||t._edge) { if(t) t.classList.toggle("end",t.scrollLe
 function closePanel(){ currentView=null; tryOn=null; $("#overlay").hidden=true; $("#overlay").innerHTML=""; }
 $("#overlay").addEventListener("pointerdown",e=>{ if(e.target.id==="overlay") closePanel(); });
 $("#overlay").addEventListener("click",e=>{ if(e.target.closest&&e.target.closest(".panel .tabs")) panelFresh=1; setTimeout(()=>{ panelFresh=0; },0); },true);
-$("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
+$("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrcpill").onclick=()=>openNRC(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
 /* ============================================================ HOW TO PLAY */
 const GUIDE={
   start:{n:"Start here",secs:[
@@ -2126,7 +2127,8 @@ const GUIDE={
     ["Data Collectors Club",[()=>`A members-only club for $${ECON.price} a month. The game's owner turns your membership on for a set time.`,"Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members earn Reward Points and redeem Smacked Shop rewards. Anyone can browse the shop."]],
     ["Earn Reward Points (RP)",["Members earn 1 RP for every credit they earn from work:","Shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar and the Harvest Assembly line (pay, tips and wages).","Courier Hub package deliveries, story quest chapters (Q) and Story Mode endings.","RP Exchange machines (Sector 9, Byte Market, The Grid and Smacked Shop): members can trade ₵4,000 for 50 RP, up to 10 exchanges at a time. These points don't count toward the daily limit.","These don't earn RP: parts orders (Vex's jobs, parts deliveries and rig commissions), Credit Miners and other miners, Grid duels and arcades, The Void, gifts, the Trade Board, selling parts, home bonuses and anything else.",()=>`Daily limit: up to ${ECON.dayMax.toLocaleString()} RP a day. Your RP balance shows at the top of the screen on PC and phones. Tap it for your earnings history.`]],
     ["Redeem at Smacked Shop (Metro)",["Each reward has a price in RP. Pick one and tap Redeem to get a pickup code like SMK-AB12-CD34.","Show the code and a photo ID (21+) at the shop in person to collect your item. The owner checks every code before handing anything over. All your codes are under My pickup codes.","Monthly reward limit: there's a cap on how much you can redeem each month. Smacked Shop shows how much of it you have left, and it resets on the 1st.","Cancelled codes refund your RP automatically, but still count toward that month's limit. Codes you already have stay valid even if your membership ends."]],
-    ["Neon Row (Metro)",["Six storefronts rented by real local businesses. Each partner store stocks its own rewards and prices them in RP.","Redeem to get a code like NR-AB12-CD34, then show it and a photo ID (21+) at that business. The store checks the code and hands over the item. Your codes are under My codes in each store.","Neon Row rewards are given by the store, so they don't count toward your Smacked Shop monthly limit. If a store cancels a code, your RP comes back automatically.","Run a business? Ask the game's owner about renting a storefront."]]]}
+    ["Neon Row Coins (NRC)",[()=>`Everyone earns NRC, free players included: 1 NRC for every ₵10 earned from work (shifts, Harvest Assembly, courier runs, story quests) and a daily check-in at the NRC kiosk on Neon Row (+${NRC_CHECKIN}).`,()=>`Up to ${NRC_CAP} NRC a day. Data Collectors Club members earn double, up to ${NRC_CAP*2}.`,"NRC only works at Neon Row. It can't be bought, traded or gifted. Tap the NRC counter at the top to see your balance."]],
+    ["Neon Row (Metro)",["Six storefronts rented by real local businesses. Each partner store stocks its own rewards: NRC rewards are open to everyone, RP rewards are for members.","Redeem to get a code like NR-AB12-CD34, then show it and a photo ID (21+) at that business. The store checks the code and hands over the item. Your codes are under My codes in each store.","Neon Row rewards are given by the store, so they don't count toward your Smacked Shop monthly limit. If a store cancels a code, your NRC or RP comes back automatically.","Run a business? Ask the game's owner about renting a storefront."]]]}
 };
 let guideTab="start";
 function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_guide_seen","1"); }catch(e){}
@@ -3683,7 +3685,7 @@ let ECON={price:50,capc:1400,rate:8000,dayMax:6000};
 function cleanEcon(d){ d=d||{}; const n=(v,a,b,def)=>{ v=+v; return isFinite(v)&&v>0?clamp(v,a,b):def; }; return {price:n(d.price,1,1000,50),capc:Math.round(n(d.capc,1,100000,1400)),rate:Math.round(n(d.rate,1,1e7,8000)),dayMax:Math.round(n(d.dayMax,1,1e7,6000))}; }
 function dayKey(){ const t=new Date(); return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate(); }
 function monthKey(){ const t=new Date(); return t.getUTCFullYear()+"-"+(t.getUTCMonth()+1); }
-function earnRP(amount,src){ amount=Math.floor(+amount||0); if(amount<=0||!myId||!dccActive(myId)) return 0; const k=dayKey(); if(!save.rpDay||save.rpDay.d!==k) save.rpDay={d:k,n:0};
+function earnRP(amount,src){ try{ earnNRC(amount,src); }catch(e){} amount=Math.floor(+amount||0); if(amount<=0||!myId||!dccActive(myId)) return 0; const k=dayKey(); if(!save.rpDay||save.rpDay.d!==k) save.rpDay={d:k,n:0};
   const g=Math.min(amount,Math.max(0,ECON.dayMax-save.rpDay.n)); if(g<=0){ rpCapNote(); return 0; } save.rp=(+save.rp||0)+g; save.rpDay.n+=g; rpNote(g,src||"Work"); if(g<amount) rpCapNote(); return g; }
 /* show members when they earn RP: a log, a (batched) toast and a pulse on the RP pill */
 let rpPend=null, rpCapWarned="";
@@ -4078,6 +4080,41 @@ function drawSmacked(t){
   ctx.fillStyle="#1a0f20"; ctx.fillRect(camX,262,VW,80); ctx.fillStyle="rgba(255,63,168,.08)"; ctx.fillRect(700,266,200,60); ctx.fillStyle="#0e0a18"; ctx.fillRect(camX,342,VW,18);
 }
 
+/* ============================================================ NRC (Neon Row Coins) */
+// Everyone earns NRC by playing (members earn double), up to a daily cap, and spends it only at Neon Row.
+// The balance lives in the database (nrc/{uid}); the security rules enforce the daily cap, and every spend or
+// refund has to be paired with the matching pickup code in the same batch, so balances can't be edited by hand.
+var NRC_CAP=300, NRC_CHECKIN=50, NRC_X=250, nrc={bal:0,day:"",got:0,total:0,exists:false}, nrcPend=0, nrcFrac=0, nrcTimer=null, nrcReady=false, nrcToast=null;
+function utcDay(){ const d=new Date(); return d.getUTCFullYear()+"-"+(d.getUTCMonth()+1)+"-"+d.getUTCDate(); }
+function nrcMember(){ return !!(myId&&dccActive(myId)); }
+function nrcCap(){ return nrcMember()?NRC_CAP*2:NRC_CAP; }
+function nrcGotToday(){ return nrc.day===utcDay()?(nrc.got||0):0; }
+function nrcLeft(){ return Math.max(0,nrcCap()-nrcGotToday()-nrcPend); }
+function nrcBal(){ return Math.floor(+nrc.bal||0); }
+function nrcHud(){ const p=document.getElementById("nrcpill"); if(!p) return; p.hidden=!(DB&&myId); const b=document.getElementById("nrcv"); if(b) b.textContent=(nrcBal()+nrcPend).toLocaleString(); }
+// 1 NRC for every 10 credits earned from work (2 for members), plus the daily check-in on Neon Row.
+function earnNRC(credits,src){ if(!DB||!myId||!nrcReady) return 0; nrcFrac+=(+credits||0)/10*(nrcMember()?2:1); const n=Math.floor(nrcFrac); if(n<=0) return 0; nrcFrac-=n; return addNRC(n,src); }
+function addNRC(n,src){ const g=Math.min(Math.floor(n),nrcLeft()); if(g<=0) return 0; nrcPend+=g;
+  if(!nrcToast){ nrcToast={n:0,src}; setTimeout(()=>{ const T=nrcToast; nrcToast=null; if(T&&T.n) toast(`+${T.n} NRC · ${T.src}${nrcLeft()<=0?" (daily NRC limit reached)":""}`,"#38e8ff"); const p=document.getElementById("nrcpill"); if(p){ p.classList.remove("rpgain"); void p.offsetWidth; p.classList.add("rpgain"); } },1500); }
+  nrcToast.n+=g; clearTimeout(nrcTimer); nrcTimer=setTimeout(nrcFlush,nrcPend>=40?400:6000); nrcHud(); return g; }
+async function nrcFlush(){ if(!nrcPend||!DB||!myId) return; if(!nrcReady){ clearTimeout(nrcTimer); nrcTimer=setTimeout(nrcFlush,3000); return; } const add=Math.min(nrcPend,Math.max(0,nrcCap()-nrcGotToday())); nrcPend=0; if(add<=0){ nrcHud(); return; }
+  const d={bal:nrcBal()+add,day:utcDay(),got:nrcGotToday()+add,total:(Math.floor(+nrc.total)||0)+add}; const ref=DB.doc("nrc/"+myId);
+  try{ if(nrc.exists) await ref.update(d); else await ref.set(d); nrc={...nrc,...d,exists:true}; }catch(e){ console.warn("NRC save refused",e&&e.message); }
+  nrcHud(); }
+function nrcWatch(db){ db.doc("nrc/"+myId).onSnapshot(s=>{ const d=s.exists?s.data()||{}:{}; nrc={bal:Math.floor(+d.bal)||0,day:typeof d.day==="string"?d.day:"",got:Math.floor(+d.got)||0,total:Math.floor(+d.total)||0,exists:!!s.exists}; nrcReady=true; nrcHud(); refreshRow(); },()=>{ nrcReady=true; }); }
+function nrcCheckin(){ if(!DB||!myId){ toast("Sign in to earn NRC."); return; } if(!nrcReady){ toast("Loading your NRC… try again in a second."); return; } if(save.nrcCheck===utcDay()){ toast(`Already checked in today. Come back tomorrow for +${NRC_CHECKIN*(nrcMember()?2:1)} NRC.`); return; }
+  const g=addNRC(NRC_CHECKIN*(nrcMember()?2:1),"Neon Row check-in"); if(g<=0){ toast("You've hit today's NRC limit. Check in again tomorrow."); return; } save.nrcCheck=utcDay(); persist(); beep(1200,.06); setTimeout(()=>beep(1500,.08),80); emote("cheer"); nrcFlush(); }
+function openNRC(){ const body=panel("Neon Row Coins (NRC)","Everyone earns NRC by playing. Spend it on real rewards from local businesses at Neon Row."); currentView=null;
+  const cap=nrcCap(), got=Math.min(cap,nrcGotToday()+nrcPend);
+  body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:`${(nrcBal()+nrcPend).toLocaleString()} NRC`}),el("span",{text:`Earned today: ${got} of ${cap}${nrcMember()?" (members earn double)":""}. The limit resets at midnight UTC.`}),
+    el("span",{class:"sub",text:`Lifetime earned: ${((+nrc.total||0)+nrcPend).toLocaleString()} NRC`}))));
+  body.append(el("strong",{text:"How to earn NRC"}),el("div",{class:"list"},...[["Daily check-in",`+${NRC_CHECKIN*(nrcMember()?2:1)} NRC once a day at the NRC kiosk on Neon Row`],["Work",`+${nrcMember()?2:1} NRC for every ₵10 you earn from shifts, Harvest Assembly, courier runs and story quests`],["Members",`Data Collectors Club members earn double, up to ${NRC_CAP*2} a day (everyone else ${NRC_CAP})`]].map(([a,b])=>el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:a}),el("div",{class:"sub",text:b}))))),
+    el("p",{class:"sub",text:"NRC can't be bought, traded or gifted, and it only works at Neon Row."}),
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Go to Neon Row",onclick:()=>fastTravel("neonrow",140,"Neon Row")}))); }
+function drawNrcKiosk(t){ const x=NRC_X; ctx.fillStyle="#0b0716"; ctx.fillRect(x-22,180,44,82); ctx.strokeStyle="#38e8ff"; ctx.strokeRect(x-21.5,180.5,43,81);
+  ctx.fillStyle=`rgba(56,232,255,${.25+.15*Math.sin(t*3)})`; ctx.fillRect(x-16,188,32,26); neonText("NRC",x,206,10,"#38e8ff",flick(61,t)); ctx.fillStyle="#e9e2ff"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("CHECK IN",x,228);
+  ctx.fillStyle=save.nrcCheck===utcDay()?"#43f0a4":"#ffb84a"; ctx.beginPath(); ctx.arc(x,244,4,0,7); ctx.fill(); }
+
 /* ============================================================ NEON ROW (partner storefronts) */
 // Six storefronts that real businesses rent. The owner sets up each store's look, contact info, the
 // partner's sign-in email and the date the rent is paid until (Admin Panel → Neon Row).
@@ -4092,11 +4129,15 @@ function cleanRow(d){ if(!d||typeof d!=="object") return null; const web=String(
     email:String(d.email||"").trim().toLowerCase().slice(0,120), until:+d.until||0, addr:String(d.addr||"").slice(0,120), hours:String(d.hours||"").slice(0,120),
     web:/^https:\/\/[^\s"'<>]+$/i.test(web)?web.slice(0,200):"", active:d.active===true }; }
 function cleanRowItem(id,d){ if(!d||typeof d!=="object") return null; return { id, title:String(d.title||"Untitled").slice(0,60), desc:String(d.desc||"").slice(0,300),
-  rp:clamp(Math.floor(+d.rp)||0,0,1e9), stock:clamp(Math.floor(+d.stock)||0,0,100000), sold:clamp(Math.floor(+d.sold)||0,0,100000), active:d.active!==false, at:+d.at||0 }; }
+  rp:clamp(Math.floor(+d.rp)||0,0,1e9), nrc:clamp(Math.floor(+d.nrc)||0,0,1e9), cur:d.cur==="nrc"?"nrc":"rp", stock:clamp(Math.floor(+d.stock)||0,0,100000), sold:clamp(Math.floor(+d.sold)||0,0,100000), active:d.active!==false, at:+d.at||0 }; }
 function rowOpen(r){ return !!(r&&r.active&&r.name&&r.until>Date.now()); }
 function rowIsPartner(s){ const r=rowStores[s]; return !!(r&&myEmail&&r.email&&r.email===myEmail&&rowOpen(r)); }
 function rowCanManage(s){ return IS_ADMIN||(rowIsPartner(s)&&myVerified); }
-function rowLive(s){ return (rowItems[s]||[]).filter(i=>i.active).sort((a,b)=>a.rp-b.rp||a.title.localeCompare(b.title)); }
+function rowLive(s){ return (rowItems[s]||[]).filter(i=>i.active).sort((a,b)=>(a.cur<b.cur?-1:a.cur>b.cur?1:0)||rowPrice(a)-rowPrice(b)||a.title.localeCompare(b.title)); }
+function rowPrice(it){ return it.cur==="nrc"?it.nrc:it.rp; }
+function rowPriceTxt(it){ return it.cur==="nrc"?`${(it.nrc||0).toLocaleString()} NRC`:`${(it.rp||0).toLocaleString()} RP`; }
+function rowCanBuy(it){ return it.cur==="nrc"?!!(DB&&myId):canRedeem(); }
+function rowBal(it){ return it.cur==="nrc"?nrcBal():Math.floor(+save.rp||0); }
 function rowCol(r){ return ROW_COLS[(r&&r.color)||0][1]; }
 function genRowCode(){ const a=new Uint32Array(8); crypto.getRandomValues(a); const ch=[...a].map(x=>CODE_ABC[x%CODE_ABC.length]); return `NR-${ch.slice(0,4).join("")}-${ch.slice(4).join("")}`; }
 function normRowCode(s){ const t=String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,""); const b=t.startsWith("NR")?t.slice(2):t; return b.length===8?`NR-${b.slice(0,4)}-${b.slice(4)}`:""; }
@@ -4120,7 +4161,7 @@ function drawFront(c,cx,r,t,k,items){ const open=rowOpen(r), L=cx-140, col=open?
     rowNeon(c,nm,cx,93+sz/3,sz,col,t?flick(31+k,t):1); if(r.tagline){ c.fillStyle="#e9e2ff"; c.font="8px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(r.tagline.slice(0,44),cx,108); }
     // windows show the first rewards
     const live=items||[]; [[L+16],[L+188]].forEach(([wx],w)=>{ c.fillStyle="#0d0818"; c.fillRect(wx,150,76,62); c.strokeStyle=col; c.strokeRect(wx+.5,150.5,75,61); const it=live[w];
-      if(it){ c.fillStyle=col; c.fillRect(wx+26,166,24,18); c.fillStyle="#0b0716"; c.fillRect(wx+36,166,4,18); c.fillStyle="#e9e2ff"; c.font="7px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(it.title.slice(0,14),wx+38,198); c.fillStyle=col; c.fillText(it.rp.toLocaleString()+" RP",wx+38,207); }
+      if(it){ c.fillStyle=col; c.fillRect(wx+26,166,24,18); c.fillStyle="#0b0716"; c.fillRect(wx+36,166,4,18); c.fillStyle="#e9e2ff"; c.font="7px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(it.title.slice(0,14),wx+38,198); c.fillStyle=col; c.fillText(rowPriceTxt(it),wx+38,207); }
       else { c.fillStyle="rgba(255,255,255,.08)"; c.fillRect(wx+20,176,36,2); }
       c.fillStyle="rgba(255,255,255,.06)"; c.beginPath(); c.moveTo(wx,150); c.lineTo(wx+28,150); c.lineTo(wx,186); c.fill(); });
     c.fillStyle="#0a0510"; c.fillRect(cx-40,160,80,102); c.strokeStyle=col; c.lineWidth=2; c.strokeRect(cx-39,161,78,100); c.lineWidth=1;
@@ -4180,11 +4221,12 @@ function drawRow(t){
   ctx.fillStyle="#0b0716"; ctx.fillRect(228,30,8,232); ctx.fillRect(108,30,8,232); ctx.fillRect(100,24,144,26); ctx.strokeStyle="#ff3fa8"; ctx.strokeRect(100.5,24.5,143,25); neonText("NEON ROW",172,43,14,"#ff3fa8",flick(51,t));
   ctx.fillStyle="#0a0712"; ctx.fillRect(60,190,120,72); ctx.fillStyle="#ffb84a"; ctx.fillRect(56,180,128,8); neonText("◉ METRO",120,172,12,"#ffb84a",1);
   ROW_SLOTS.forEach((s,k)=>{ const cx=ROW_X[k]; if(cx+150<camX||cx-150>camX+VW) return; drawFront(ctx,cx,rowStores[s],t,k,rowLive(s)); });
-  for(const lx of [260,585,915,1245,1575,1905,2235]){ ctx.fillStyle="#1d1530"; ctx.fillRect(lx-2,120,4,142); ctx.fillStyle=`rgba(255,184,74,${.5+.2*Math.sin(t*2+lx)})`; ctx.beginPath(); ctx.arc(lx,118,7,0,7); ctx.fill(); }
+  drawNrcKiosk(t);
+  for(const lx of [585,915,1245,1575,1905,2235]){ ctx.fillStyle="#1d1530"; ctx.fillRect(lx-2,120,4,142); ctx.fillStyle=`rgba(255,184,74,${.5+.2*Math.sin(t*2+lx)})`; ctx.beginPath(); ctx.arc(lx,118,7,0,7); ctx.fill(); }
   if(IS_ADMIN) neonText("OWNER ACCESS · SET UP SPOTS IN THE ADMIN PANEL",1240,18,9,"#43f0a4",1);
   ctx.fillStyle="#17112a"; ctx.fillRect(camX,262,VW,80); ctx.fillStyle="rgba(255,63,168,.06)"; for(let i=Math.floor(camX/48)*48;i<camX+VW;i+=48) ctx.fillRect(i,262,1,80); ctx.fillStyle="#0e0a18"; ctx.fillRect(camX,342,VW,18);
 }
-function rowHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
+function rowHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:NRC_X,hw:24,label:save.nrcCheck===utcDay()?"NRC kiosk: checked in today (see your NRC)":"NRC kiosk: daily check-in",act:()=>save.nrcCheck===utcDay()?openNRC():nrcCheckin()},
   ...ROW_SLOTS.map((s,k)=>{ const r=rowStores[s], open=rowOpen(r);
     return {x:ROW_X[k],hw:120,label:open?`Enter ${r.name}`:IS_ADMIN?`Set up spot ${k+1} (owner)`:`Spot ${k+1}: for lease`,act:()=>open?openStore(s):IS_ADMIN?(rowEdit={slot:s,...(r||cleanRow({}))},openAdmin("row")):toast("This storefront is for lease. Businesses can rent it from the game's owner.")}; })]; }
 
@@ -4198,7 +4240,10 @@ function rowWatch(db){
 }
 async function rowCheck(){ if(!DB) return; for(const e of rowMine){ if(["picked","refunded"].includes(rowCodeSt[e.code])) continue;
   try{ const ref=DB.doc(`rowcodes/${e.slot}/codes/${e.code}`); const s=await ref.get(); if(!s.exists) continue; const d=s.data()||{};
-    if(d.status==="cancelled"&&!d.refunded){ await ref.update({refunded:true}); save.rp=(+save.rp||0)+(Math.floor(+e.rp)||0); persist(); hud(); rowCodeSt[e.code]="refunded"; toast(`${e.title} was cancelled by the store. ${(+e.rp||0).toLocaleString()} RP refunded.`,"#43f0a4"); }
+    if(d.status==="cancelled"&&!d.refunded){
+      if(d.cur==="nrc"){ const amt=Math.floor(+d.nrc)||0, ns=await DB.doc("nrc/"+myId).get(), nb=(ns.exists?Math.floor(+ns.data().bal)||0:0)+amt; await DB.batch().update(ref,{refunded:true}).update(DB.doc("nrc/"+myId),{bal:nb,rs:e.slot,rc:e.code}).commit(); nrc={...nrc,bal:nb}; nrcHud(); toast(`${e.title} was cancelled by the store. ${amt.toLocaleString()} NRC refunded.`,"#38e8ff"); }
+      else { await ref.update({refunded:true}); save.rp=(+save.rp||0)+(Math.floor(+e.rp)||0); persist(); hud(); toast(`${e.title} was cancelled by the store. ${(+e.rp||0).toLocaleString()} RP refunded.`,"#43f0a4"); }
+      rowCodeSt[e.code]="refunded"; }
     else rowCodeSt[e.code]=d.status==="cancelled"?"refunded":d.status; }catch(err){} } refreshRow(); }
 function refreshRow(){ if(!currentView||!currentView.startsWith("row:")||$("#overlay").hidden) return; const a=document.activeElement; if(a&&["INPUT","TEXTAREA","SELECT"].includes(a.tagName)&&a.closest(".panel")) return; const [,s,t]=currentView.split(":"); openStore(s,t,true); }
 
@@ -4216,30 +4261,34 @@ function openStore(s,tab="rewards",refresh){ const r=rowStores[s]; if(!r){ toast
   if(tab==="manage") return rowManage(body,s);
   if(tab==="codes"){ if(!mine.length){ body.append(el("div",{class:"empty",text:"You haven't redeemed anything here yet."})); return; }
     const l=el("div",{class:"list"}); for(const e of [...mine].reverse()){ const st=rowCodeSt[e.code]||"ready";
-      l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:e.code}),el("div",{text:e.title}),el("div",{class:"sub",text:`${(+e.rp||0).toLocaleString()} RP · ${new Date(e.at).toLocaleString()}`})),
+      l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:e.code}),el("div",{text:e.title}),el("div",{class:"sub",text:`${e.cur==="nrc"?(+e.nrc||0).toLocaleString()+" NRC":(+e.rp||0).toLocaleString()+" RP"} · ${new Date(e.at).toLocaleString()}`})),
         el("span",{class:"tag "+(st==="picked"?"r-uncommon":st==="refunded"?"r-epic":""),style:st==="ready"?"color:var(--amber)":"",text:st==="picked"?"Picked up":st==="refunded"?"Cancelled · refunded":"Ready for pickup"}))); }
     body.append(l); return; }
-  if(!canRedeem()) body.append(el("div",{class:"detail",style:"border-color:var(--mag)"},el("div",{class:"info"},el("strong",{text:"🔒 Members redeem with Reward Points"}),el("span",{text:`Neon Row rewards are redeemed with Reward Points, which Data Collectors Club members earn ($${ECON.price}/month). You can still look around, and visit the store in person anytime.`}))));
-  else body.append(el("div",{class:"sub",text:`You have ${Math.floor(+save.rp||0).toLocaleString()} RP. Neon Row rewards are given by the store and don't count toward your Smacked Shop monthly limit.`}));
+  body.append(el("div",{class:"sub",text:`You have ${nrcBal().toLocaleString()} NRC${canRedeem()?` and ${Math.floor(+save.rp||0).toLocaleString()} RP`:""}. NRC rewards are open to everyone; RP rewards are for Data Collectors Club members. Rewards are given by the store and don't count toward your Smacked Shop monthly limit.`}));
   const live=rowLive(s); if(!live.length){ body.append(el("div",{class:"empty",text:"No rewards on the shelves yet. Check back soon."})); return; }
   const g=el("div",{class:"grid",style:"grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"});
   for(const it of live){ const left=Math.max(0,it.stock-it.sold); const c=el("button",{class:"card",type:"button",onclick:()=>rowConfirm(s,it)}); const v=giftCanvas(96); v.style.cssText="width:100%;aspect-ratio:1;max-width:100%;background:radial-gradient(circle at 50% 45%,#2a1640,#0d0818 70%)";
-    c.append(v,el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:"r-uncommon",text:`${it.rp.toLocaleString()} RP`}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
+    c.append(v,el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:"r-uncommon",style:it.cur==="nrc"?"color:#38e8ff":"",text:rowPriceTxt(it)+(it.cur==="rp"?" · members":"")}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
   body.append(g); }
 function rowConfirm(s,it){ const r=rowStores[s]; const body=panel("Redeem: "+it.title,`A real item from ${r.name}. You get a pickup code to show at the store.`); currentView=null;
-  const bal=Math.floor(+save.rp||0), left=Math.max(0,it.stock-it.sold), ok=canRedeem();
-  body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:it.title}),it.desc?el("span",{style:"white-space:pre-wrap",text:it.desc}):null,el("span",{text:`Price: ${it.rp.toLocaleString()} Reward Points`}),el("span",{class:"sub",text:`You have ${bal.toLocaleString()} RP. ${left} left.`}))));
-  const go=el("button",{class:"btn hot",type:"button",text:ok?`Redeem for ${it.rp.toLocaleString()} RP`:"🔒 Members only",onclick:()=>rowRedeem(s,it,go)}); if(!ok||!(it.rp>0)||bal<it.rp||!left) go.disabled=true;
+  const bal=rowBal(it), price=rowPrice(it), left=Math.max(0,it.stock-it.sold), ok=rowCanBuy(it), unit=it.cur==="nrc"?"NRC":"RP";
+  body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:it.title}),it.desc?el("span",{style:"white-space:pre-wrap",text:it.desc}):null,el("span",{text:`Price: ${rowPriceTxt(it)}${it.cur==="rp"?" (Data Collectors Club members)":" (open to everyone)"}`}),el("span",{class:"sub",text:`You have ${bal.toLocaleString()} ${unit}. ${left} left.`}))));
+  const go=el("button",{class:"btn hot",type:"button",text:ok?`Redeem for ${rowPriceTxt(it)}`:"🔒 Members only",onclick:()=>rowRedeem(s,it,go)}); if(!ok||!(price>0)||bal<price||!left) go.disabled=true;
   body.append(el("div",{class:"row"},go,el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openStore(s)})));
-  if(ok&&bal<it.rp) body.append(el("div",{class:"r-epic",text:`You need ${(it.rp-bal).toLocaleString()} more Reward Points.`})); }
+  if(ok&&bal<price) body.append(el("div",{class:"r-epic",text:it.cur==="nrc"?`You need ${(price-bal).toLocaleString()} more NRC. Everyone earns NRC by working and with the daily check-in at the NRC kiosk.`:`You need ${(price-bal).toLocaleString()} more Reward Points.`}));
+  if(!ok&&it.cur==="rp") body.append(el("div",{class:"sub",text:`This reward is for Data Collectors Club members ($${ECON.price}/month). Look for rewards priced in NRC: everyone can redeem those.`})); }
 async function rowRedeem(s,it,btn){ const r=rowStores[s]; const fresh=(rowItems[s]||[]).find(x=>x.id===it.id);
-  if(!canRedeem()||!rowOpen(r)) return openStore(s); if(!fresh||!fresh.active||fresh.sold>=fresh.stock){ toast("That reward just sold out."); return openStore(s); }
-  const price=fresh.rp; if(!(price>0)||(+save.rp||0)<price) return; btn.disabled=true; save.rp-=price; persist(); hud();
-  const code=genRowCode(), at=Date.now();
-  try{ await DB.doc(`rowcodes/${s}/codes/${code}`).set({code,slot:s,item:fresh.id,title:fresh.title,rp:price,by:myId,name:myName||"Runner",at,status:"ready"}); }
-  catch(e){ save.rp+=price; persist(); hud(); toast("The redemption didn't go through. You weren't charged."); btn.disabled=false; return; }
+  if(!fresh||!rowCanBuy(fresh)||!rowOpen(r)) return openStore(s); if(!fresh.active||fresh.sold>=fresh.stock){ toast("That reward just sold out."); return openStore(s); }
+  const cur=fresh.cur, price=rowPrice(fresh); if(!(price>0)||rowBal(fresh)<price) return; btn.disabled=true;
+  const code=genRowCode(), at=Date.now(); const doc={code,slot:s,item:fresh.id,title:fresh.title,cur,rp:cur==="rp"?price:0,nrc:cur==="nrc"?price:0,by:myId,name:myName||"Runner",at,status:"ready"};
+  if(cur==="rp"){ save.rp-=price; persist(); hud();
+    try{ await DB.doc(`rowcodes/${s}/codes/${code}`).set(doc); }
+    catch(e){ save.rp+=price; persist(); hud(); toast("The redemption didn't go through. You weren't charged."); btn.disabled=false; return; } }
+  else { let have=nrcBal(); try{ const ns=await DB.doc("nrc/"+myId).get(); have=ns.exists?Math.floor(+ns.data().bal)||0:0; }catch(e){} const nb=have-price; if(nb<0){ toast("Not enough NRC."); btn.disabled=false; return; }
+    try{ await DB.batch().set(DB.doc(`rowcodes/${s}/codes/${code}`),doc).update(DB.doc("nrc/"+myId),{bal:nb,ls:s,lc:code}).commit(); nrc={...nrc,bal:nb}; nrcHud(); }
+    catch(e){ toast("The redemption didn't go through. You weren't charged."); btn.disabled=false; return; } }
   try{ await DB.doc(`rowitems/${s}/items/${fresh.id}`).update({sold:fresh.sold+1}); }catch(e){}
-  rowMine=[...rowMine,{code,slot:s,item:fresh.id,title:fresh.title,store:r.name,rp:price,at}].slice(-100); rowCodeSt[code]="ready";
+  rowMine=[...rowMine,{code,slot:s,item:fresh.id,title:fresh.title,store:r.name,cur,rp:doc.rp,nrc:doc.nrc,at}].slice(-100); rowCodeSt[code]="ready";
   try{ await DB.doc(`data/users/${myId}/rowcodes`).set({codes:rowMine}); }catch(e){}
   beep(1200,.08); setTimeout(()=>beep(1600,.12),90); emote("cheer");
   const body=panel("Redeemed!",`Show this code and a photo ID at ${r.name} to pick up your item. It's also saved under My codes.`); currentView=null; const codeEl=el("div",{class:"bigcode",text:code});
@@ -4263,24 +4312,28 @@ function rowManage(body,s){ const r=rowStores[s];
   if(rowTab==="codes"){ const rows=[...(rowStaff[s]||[])].sort((a,b)=>(b.at||0)-(a.at||0)); if(!rows.length){ body.append(el("div",{class:"empty",text:"No redemptions yet."})); return; }
     const l=el("div",{class:"list"}); rows.forEach(d=>l.append(rowCodeRow(s,d))); body.append(l); return; }
   if(rowEdit&&rowEdit.item) return rowItemForm(body,s,rowEdit.item);
-  body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Add a reward",onclick:()=>{ rowEdit={item:{id:"",title:"",desc:"",rp:0,stock:1,sold:0,active:true}}; openStore(s,"manage"); }})));
-  const items=[...(rowItems[s]||[])].sort((a,b)=>a.rp-b.rp); if(!items.length){ body.append(el("div",{class:"empty",text:"No rewards yet. Add one: a name, how many Reward Points it costs, and how many you're giving away."})); return; }
+  body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Add a reward",onclick:()=>{ rowEdit={item:{id:"",title:"",desc:"",cur:"nrc",nrc:0,rp:0,stock:1,sold:0,active:true}}; openStore(s,"manage"); }})));
+  const items=[...(rowItems[s]||[])].sort((a,b)=>rowPrice(a)-rowPrice(b)); if(!items.length){ body.append(el("div",{class:"empty",text:"No rewards yet. Add one: a name, who can redeem it, its price, and how many you're giving away."})); return; }
   const l=el("div",{class:"list"}); for(const it of items){ const del=el("button",{class:"btn",type:"button",text:rowDel===it.id?"Confirm delete":"Delete",onclick:async()=>{ if(rowDel!==it.id){ rowDel=it.id; openStore(s,"manage"); return; } rowDel=null; try{ await DB.doc(`rowitems/${s}/items/${it.id}`).delete(); toast("Reward deleted."); }catch(e){ toast("Couldn't delete that reward."); } openStore(s,"manage"); }});
-    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:it.title+(it.active?"":" (hidden)")}),el("div",{class:"sub",text:`${it.rp.toLocaleString()} RP · ${Math.max(0,it.stock-it.sold)} of ${it.stock} left · ${it.sold} redeemed`})),
+    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:it.title+(it.active?"":" (hidden)")}),el("div",{class:"sub",text:`${rowPriceTxt(it)}${it.cur==="rp"?" (members)":" (everyone)"} · ${Math.max(0,it.stock-it.sold)} of ${it.stock} left · ${it.sold} redeemed`})),
       el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Edit",onclick:()=>{ rowEdit={item:{...it}}; openStore(s,"manage"); }}),del))); }
   body.append(l); }
 function rowItemForm(body,s,it){ const f=(label,input)=>el("label",{class:"fld"},label,input);
   const title=el("input",{class:"num",id:"ri_title",maxlength:"60",value:it.title,placeholder:"e.g. Free hour of games"});
   const desc=el("textarea",{id:"ri_desc",rows:"3",maxlength:"300",style:"width:100%;font-family:var(--f-ui);background:#0d0818;color:var(--text);border:1px solid var(--line);padding:8px",placeholder:"What they get, and any fine print"}); desc.value=it.desc;
-  const rp=el("input",{class:"num",id:"ri_rp",type:"number",min:"1",step:"100",value:it.rp?String(it.rp):""}); const hint=el("span",{class:"sub"});
-  const showHint=()=>{ const v=Math.floor(+rp.value)||0; hint.textContent=v>0?`For comparison, Smacked Shop prices ${v.toLocaleString()} RP like a ${usd(v/ECON.rate*100)} item. A busy member earns a few thousand RP a day.`:"How many Reward Points it costs."; }; rp.addEventListener("input",showHint); showHint();
+  const cur=el("select",{id:"ri_cur",class:"num"}); [["nrc","Everyone: priced in NRC (Neon Row Coins)"],["rp","Members only: priced in RP"]].forEach(([v,n])=>cur.append(el("option",{value:v,text:n}))); cur.value=it.cur||"nrc";
+  const rp=el("input",{class:"num",id:"ri_rp",type:"number",min:"1",step:"50",value:String(rowPrice(it)||"")}); const hint=el("span",{class:"sub"});
+  const showHint=()=>{ const v=Math.floor(+rp.value)||0;
+    hint.textContent=cur.value==="nrc"?(v>0?`A player can earn up to ${NRC_CAP} NRC a day (members ${NRC_CAP*2}). At ${v.toLocaleString()} NRC, a player who maxes out every day could redeem this about every ${Math.max(1,Math.ceil(v/NRC_CAP))} day${Math.ceil(v/NRC_CAP)>1?"s":""}.`:"How many NRC it costs. Everyone earns NRC by playing.")
+      :(v>0?`For comparison, Smacked Shop prices ${v.toLocaleString()} RP like a ${usd(v/ECON.rate*100)} item. A busy member earns a few thousand RP a day.`:"How many Reward Points it costs."); };
+  rp.addEventListener("input",showHint); cur.addEventListener("input",showHint); showHint();
   const stock=el("input",{class:"num",id:"ri_stock",type:"number",min:"0",value:String(it.stock)}); const active=el("input",{type:"checkbox",id:"ri_active"}); active.checked=it.active; const msg=el("div",{class:"sub",role:"status"});
-  body.append(f("Reward name",title),f("Description",desc),el("label",{class:"fld"},"Price in Reward Points",rp,hint),f(`How many you're giving away (${it.sold} already redeemed)`,stock),el("label",{class:"row",style:"gap:8px;align-items:center"},active,"Show it in the store"),
-    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:it.id?"Save changes":"Add reward",onclick:async()=>{ const d={title:title.value.trim().slice(0,60),desc:desc.value.slice(0,300),rp:Math.floor(+rp.value)||0,stock:Math.max(0,Math.floor(+stock.value)||0),sold:it.sold||0,active:active.checked,at:Date.now()};
-      if(!d.title){ msg.textContent="Give the reward a name."; return; } if(d.rp<1){ msg.textContent="Set a price in Reward Points."; return; }
+  body.append(f("Reward name",title),f("Description",desc),f("Who can redeem it",cur),el("label",{class:"fld"},"Price",rp,hint),f(`How many you're giving away (${it.sold} already redeemed)`,stock),el("label",{class:"row",style:"gap:8px;align-items:center"},active,"Show it in the store"),
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:it.id?"Save changes":"Add reward",onclick:async()=>{ const pv=Math.floor(+rp.value)||0; const d={title:title.value.trim().slice(0,60),desc:desc.value.slice(0,300),cur:cur.value,rp:cur.value==="rp"?pv:0,nrc:cur.value==="nrc"?pv:0,stock:Math.max(0,Math.floor(+stock.value)||0),sold:it.sold||0,active:active.checked,at:Date.now()};
+      if(!d.title){ msg.textContent="Give the reward a name."; return; } if(pv<1){ msg.textContent="Set a price."; return; }
       try{ const ref=it.id?DB.doc(`rowitems/${s}/items/${it.id}`):DB.collection(`rowitems/${s}/items`).doc(); await ref.set(d); rowEdit=null; toast(it.id?"Reward saved.":"Reward added. Players can redeem it now.","#43f0a4"); openStore(s,"manage"); }
       catch(e){ msg.textContent="Couldn't save. Your rent may have run out; ask the game's owner."; } }}),el("button",{class:"btn",type:"button",text:"Cancel",onclick:()=>{ rowEdit=null; openStore(s,"manage"); }})),msg); }
-function rowCodeRow(s,d){ const st=d.status; const row=el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:d.code}),el("div",{text:`${d.title} · ${(+d.rp||0).toLocaleString()} RP`}),el("div",{class:"sub",text:`${cleanName(d.name||"")||"Runner"} · ${new Date(d.at).toLocaleString()}`})),
+function rowCodeRow(s,d){ const st=d.status; const row=el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"bigcode sm",text:d.code}),el("div",{text:`${d.title} · ${d.cur==="nrc"?(+d.nrc||0).toLocaleString()+" NRC":(+d.rp||0).toLocaleString()+" RP"}`}),el("div",{class:"sub",text:`${cleanName(d.name||"")||"Runner"} · ${new Date(d.at).toLocaleString()}`})),
     el("span",{class:"tag "+(st==="picked"?"r-uncommon":st==="cancelled"?"r-epic":""),style:st==="ready"?"color:var(--amber)":"",text:st==="picked"?"Picked up":st==="cancelled"?"Cancelled · refunded":"Ready for pickup"}));
   if(st==="ready") row.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Mark picked up",onclick:()=>rowSetCode(s,d,"picked")}),el("button",{class:"btn",type:"button",text:"Cancel & refund",onclick:()=>rowSetCode(s,d,"cancelled")})));
   return row; }
@@ -7103,7 +7156,7 @@ setInterval(hud,1000);
     if(IS_ADMIN){ try{ ASSETS=await cl.use("assets"); }catch(e){} }
     db.collection("shop").onSnapshot(s=>{ shopItems=s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean); refreshSmacked(); },()=>{});
     db.doc("shopinfo/econ").onSnapshot(s=>{ ECON=cleanEcon(s.exists?s.data():null); hud(); refreshSmacked(); },()=>{});
-    try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db);
+    try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db); nrcWatch(db);
     db.doc("shopinfo/main").onSnapshot(s=>{ shopInfo={text:s.exists?String((s.data()||{}).text||"").slice(0,600):""}; refreshSmacked(); },()=>{});
     db.collection("pickups").onSnapshot(s=>{ pickupStatus={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["ready","picked","cancelled"].includes(v.status)) pickupStatus[d.id]={status:v.status}; }); checkRefunds(); if(IS_ADMIN) syncSold(); refreshSmacked(); },()=>{});
     db.doc("redeem/"+myId).onSnapshot(s=>{ const d=s.exists?s.data():null; myRedeem={codes:Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string").map(e=>({...e})):[],...(d&&typeof d.month==="string"?{month:d.month,spentc:Math.floor(+d.spentc)||0}:{})}; hud(); Promise.all(myRedeem.codes.map(e=>hashOf(e.code))).then(()=>{ checkRefunds(); refreshSmacked(); }); },()=>{});

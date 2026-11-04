@@ -145,22 +145,72 @@ service cloud.firestore {
         && rowDoc(slot).get('until', 0) > request.time.toMillis();
     }
     match /row/{slot} { allow read: if signedIn(); allow write: if isOwner(); }
+
+    // Neon Row Coins (NRC): everyone earns them, up to a daily cap (double for members), and spends them only at Neon Row.
+    // Earning can only add up to the cap for today (UTC). Spending and refunds must be paired with their pickup code
+    // in the same batch, so a balance can only change through real play or a real redemption.
+    function today() { return string(request.time.year()) + '-' + string(request.time.month()) + '-' + string(request.time.day()); }
+    function nrcCap() { return isMember() ? 600 : 300; }
+    function nd() { return request.resource.data; }
+    function od() { return resource.data; }
+    function nrcEarn() {
+      return nd().diff(od()).affectedKeys().hasOnly(['bal', 'day', 'got', 'total'])
+        && nd().bal is int && nd().bal > od().bal && nd().day == today()
+        && nd().got == (od().get('day', '') == today() ? od().get('got', 0) : 0) + (nd().bal - od().bal)
+        && nd().got <= nrcCap() && nd().total == od().get('total', 0) + (nd().bal - od().bal);
+    }
+    function codeAt(slot, code) { return /databases/$(database)/documents/rowcodes/$(slot)/codes/$(code); }
+    function nrcSpend() {
+      return nd().diff(od()).affectedKeys().hasOnly(['bal', 'ls', 'lc'])
+        && nd().bal is int && nd().bal >= 0 && nd().bal < od().bal
+        && nd().ls is string && nd().lc is string
+        && !exists(codeAt(nd().ls, nd().lc))
+        && getAfter(codeAt(nd().ls, nd().lc)).data.by == me()
+        && getAfter(codeAt(nd().ls, nd().lc)).data.cur == 'nrc'
+        && getAfter(codeAt(nd().ls, nd().lc)).data.nrc == od().bal - nd().bal;
+    }
+    function nrcRefund() {
+      return nd().diff(od()).affectedKeys().hasOnly(['bal', 'rs', 'rc'])
+        && nd().rs is string && nd().rc is string
+        && get(codeAt(nd().rs, nd().rc)).data.by == me()
+        && get(codeAt(nd().rs, nd().rc)).data.cur == 'nrc'
+        && get(codeAt(nd().rs, nd().rc)).data.status == 'cancelled'
+        && get(codeAt(nd().rs, nd().rc)).data.get('refunded', false) == false
+        && getAfter(codeAt(nd().rs, nd().rc)).data.refunded == true
+        && nd().bal == od().bal + get(codeAt(nd().rs, nd().rc)).data.nrc;
+    }
+    match /nrc/{uid} {
+      allow read: if signedIn() && (me() == uid || isOwner());
+      allow create: if signedIn() && me() == uid && nd().keys().hasOnly(['bal', 'day', 'got', 'total'])
+        && nd().bal is int && nd().bal > 0 && nd().day == today() && nd().got == nd().bal
+        && nd().total == nd().bal && nd().bal <= nrcCap();
+      allow update: if signedIn() && me() == uid && (nrcEarn() || nrcSpend() || nrcRefund());
+      allow delete: if false;
+    }
     match /rowitems/{slot}/items/{id} {
       allow read: if signedIn();
       allow create, delete: if isOwner() || isPartner(slot);
-      // Partners edit their rewards; a member redeeming can only add 1 to "sold", up to the stock.
+      // Partners edit their rewards; a player redeeming can only add 1 to "sold", up to the stock.
       allow update: if isOwner() || isPartner(slot)
-        || (isMember() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sold'])
+        || (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sold'])
             && request.resource.data.sold == resource.data.sold + 1 && request.resource.data.sold <= resource.data.stock);
+    }
+    function rowPaid(slot, code, item) {
+      return (request.resource.data.cur == 'rp' && isMember() && item.get('cur', 'rp') == 'rp' && item.rp == request.resource.data.rp)
+        || (request.resource.data.cur == 'nrc' && item.get('cur', 'rp') == 'nrc' && item.nrc == request.resource.data.nrc
+            && getAfter(/databases/$(database)/documents/nrc/$(request.auth.uid)).data.bal
+               == get(/databases/$(database)/documents/nrc/$(request.auth.uid)).data.bal - request.resource.data.nrc
+            && getAfter(/databases/$(database)/documents/nrc/$(request.auth.uid)).data.lc == code);
     }
     match /rowcodes/{slot}/codes/{code} {
       allow read: if isOwner() || isPartner(slot) || (signedIn() && resource.data.by == me());
-      // Members redeem as themselves, at the reward's real RP price.
-      allow create: if signedIn() && isMember() && request.resource.data.by == me()
+      // Players redeem as themselves, at the reward's real price: NRC rewards are open to everyone and must be paid
+      // from the player's NRC balance in the same batch; RP rewards are for Data Collectors Club members.
+      allow create: if signedIn() && request.resource.data.by == me()
         && request.resource.data.status == 'ready' && request.resource.data.slot == slot && request.resource.data.code == code
         && request.resource.data.item is string
         && exists(/databases/$(database)/documents/rowitems/$(slot)/items/$(request.resource.data.item))
-        && get(/databases/$(database)/documents/rowitems/$(slot)/items/$(request.resource.data.item)).data.rp == request.resource.data.rp;
+        && rowPaid(slot, code, get(/databases/$(database)/documents/rowitems/$(slot)/items/$(request.resource.data.item)).data);
       // The store (or the owner) marks a ready code picked up or cancelled, once.
       // The player can only flag their own cancelled code as refunded, once.
       allow update: if ((isOwner() || isPartner(slot)) && resource.data.status == 'ready'
