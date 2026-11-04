@@ -931,6 +931,8 @@ function wxFoot(c,X,ft,fx2){ const {dir,t,AC,JC}=X; c.save();
   c.restore(); }
 
 const SLOTS=Object.keys(WARD);
+// Head items that sit on top of or around the hair (everything else covers the top of the head).
+const HAT_TOPPERS=["Halo","Headphones","Horns","Antenna","Cat ears","Bunny ears","Antler crown","Satellite dish","Holo crown","Flower crown","Mohawk","Rebel headband"];
 const DEFAULT_LOOK={skin:0,style:0,jacket:0,pants:7,feet:0,neck:0,visor:1,hair:0,hairCol:3,hat:0,back:0,pet:0,aura:0,nameCol:1,accent:1,hand:""};
 function slotLen(k){ return WARD[k].color?COLORS.length:WARD[k].opts.length; }
 function optName(k,i){ return WARD[k].color?COLOR_N[i]:WARD[k].opts[i][0]; }
@@ -1438,7 +1440,8 @@ function drawStick(c,x,y,s,o,t){
   else if(bk==="Neon wings"){ const f=Math.sin(t*3)*.25; c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=12; c.lineWidth=2;
     for(const side of [-1,1]){ c.save(); c.translate(bx,sh+4); c.rotate(side*(.4+f)); for(let k=0;k<3;k++){ c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(side*(14+k*4),-16-k*4,side*(22+k*5),-4+k*6); c.stroke(); } c.restore(); } c.shadowBlur=0; }
   wx2("back",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
-  // ---- hair (back layer)
+  // ---- hair (back layer). Under a covering hat, hair above the hat line is hidden so hats sit right on every hairstyle.
+  const capOn=ht!=="None"&&!HAT_TOPPERS.includes(ht); if(capOn){ c.save(); c.beginPath(); c.rect(-90,head-7,180,160); c.clip(); }
   if(hr==="Afro"){ c.fillStyle=HC; c.beginPath(); c.arc(0,head-3,12.5,0,7); c.fill(); for(let k=0;k<8;k++){ c.beginPath(); c.arc(Math.cos(k*.8)*11,head-3+Math.sin(k*.8)*11,3.2,0,7); c.fill(); } }
   else if(hr==="Long"||hr==="Neon streaks"){ c.fillStyle=HC; c.beginPath(); c.moveTo(-9,head-2); c.lineTo(9,head-2); c.lineTo(-dir*10+dir*8,sh+8); c.lineTo(-dir*12,sh+8); c.closePath(); c.fill();
     if(hr==="Neon streaks"){ for(let k=0;k<3;k++){ c.strokeStyle=`hsl(${(t*90+k*110)%360},100%,62%)`; c.shadowColor=c.strokeStyle; c.shadowBlur=6; c.lineWidth=1.3; c.beginPath(); c.moveTo(-dir*(2+k*3),head-2); c.lineTo(-dir*(9-k*1.5)+dir*k*1.5,sh+7); c.stroke(); } c.shadowBlur=0; } }
@@ -1517,8 +1520,10 @@ function drawStick(c,x,y,s,o,t){
   if(held&&em!=="use"&&!(o.sit&&!em)) drawInHand(c,held,hx,hy,ha,dir,t,em==="pose");
   if(em==="atk"&&!held){ c.fillStyle=SK; c.beginPath(); c.arc(hx,hy,3.2,0,7); c.fill(); }
   if(o.block&&!o.dead){ c.save(); c.strokeStyle="rgba(56,232,255,.8)"; c.shadowColor="#38e8ff"; c.shadowBlur=10; c.lineWidth=2; c.beginPath(); if(dir>0) c.arc(0,-32,24,-.85,.85); else c.arc(0,-32,24,Math.PI-.85,Math.PI+.85); c.stroke(); c.restore(); }
+  if(capOn) c.restore();
   // ---- head
   c.fillStyle="#0b0716"; c.strokeStyle=SK; c.lineWidth=2.5; c.beginPath(); c.arc(0,head,8,0,7); c.fill(); c.stroke();
+  if(capOn){ c.save(); c.beginPath(); c.rect(-90,head-7,180,160); c.clip(); }
   if(hr!=="None"){ c.fillStyle=HC; c.strokeStyle=HC;
     if(hr==="Buzz cut"){ c.lineWidth=2.6; c.beginPath(); c.arc(0,head,9,Math.PI*1.1,Math.PI*1.9); c.stroke(); }
     else if(hr==="Spiky"||hr==="Liberty spikes"){ const tall=hr==="Liberty spikes"; c.beginPath(); c.arc(0,head-1,9,Math.PI,0); c.fill(); for(let k=-2;k<=2;k++){ const a=-Math.PI/2+k*.42, r1=8, r2=tall?20:14; c.beginPath(); c.moveTo(Math.cos(a-.2)*r1,head-1+Math.sin(a-.2)*r1); c.lineTo(Math.cos(a)*r2,head-1+Math.sin(a)*r2); c.lineTo(Math.cos(a+.2)*r1,head-1+Math.sin(a+.2)*r1); c.fill(); } if(tall){ c.fillStyle=JC; for(let k=-2;k<=2;k++){ const a=-Math.PI/2+k*.42; c.fillRect(Math.cos(a)*19-1,head-1+Math.sin(a)*19-1,2,2); } } }
@@ -1535,6 +1540,7 @@ function drawStick(c,x,y,s,o,t){
     else { c.beginPath(); c.arc(0,head-1,9,Math.PI,0); c.fill(); }
     if(hr==="Afro"){ c.beginPath(); c.arc(0,head-3,9.5,Math.PI*1.05,Math.PI*1.95); c.fill(); } }
   wx2("hair",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
+  if(capOn) c.restore();
   const vc=COLORS[(L.jacket+1)%COLORS.length];
   c.fillStyle=vc; c.shadowColor=vc; c.shadowBlur=6;
   if(vs==="Shades") c.fillRect(dir>0?-3:-7,head-3,10,4);
@@ -4869,7 +4875,18 @@ function petPaint(c,PS,fn){ const T0=PS&&PS.t?PET_TINTS[PS.t]:null; if(!T0||!T0.
   oc.setTransform(1,0,0,1,0,0); oc.shadowBlur=0; oc.globalCompositeOperation="source-atop"; oc.globalAlpha=T0.a||.55; oc.fillStyle=tintCol(T0); oc.fillRect(0,0,PET_OFF.width,PET_OFF.height); oc.globalCompositeOperation="source-over"; oc.globalAlpha=1;
   c.drawImage(PET_OFF,-PO_X,-PO_Y,PO_W,PO_H); }
 const _petAnc={};
-function petAnchor(pet){ if(_petAnc[pet]) return _petAnc[pet]; if(PET_TALL.includes(pet)) return _petAnc[pet]={tall:1,hx:1.5,top:-65,nx:1,ny:-51,bx:-7,by:-42,sz:9};
+// Hand-set gear anchors (head top, neck, back, size) for companions whose shape fools the automatic one.
+var PET_ANC_FIX={"Cloud dragon":{hx:8,top:-3.6,nx:6.8,ny:1.6,bx:-2,by:-2.4,sz:5},"Wisp guardian":{hx:0,top:-4.4,nx:0,ny:2.6,bx:-3,by:-.5,sz:5},"Paper crane":{hx:8.4,top:-4,nx:6.4,ny:-.6,bx:-1.5,by:-1,sz:4.6},
+  "Moon rabbit":{hx:2,top:-6.9,nx:1.4,ny:-2.4,bx:-2.2,by:-1.4,sz:4.4},"Ember kit":{hx:5,top:-13,nx:4,ny:-8.4,bx:-1.5,by:-9,sz:5},"Thunder pup":{hx:6,top:-14,nx:5,ny:-8.4,bx:-1,by:-10,sz:5},
+  "Pocket titan":{hx:0,top:-21,nx:0,ny:-15,bx:-4,by:-13,sz:5},"Ink sprite":{hx:0,top:-5.6,nx:0,ny:3,bx:-3.4,by:-1,sz:5},"Lantern spirit":{hx:0,top:-9,nx:0,ny:4.6,bx:-4.4,by:-1,sz:5},"Chibi oni":{hx:0,top:-11,nx:0,ny:-2.4,bx:-4.2,by:-6,sz:5},
+  "Robo crab":{hx:0,top:-7.6,nx:0,ny:-3.6,bx:-3,by:-5,sz:5},"Holo unicorn":{hx:4.6,top:-15,nx:3.6,ny:-9.4,bx:-2,by:-9,sz:5},"Shadow wolf":{hx:6,top:-12,nx:4.2,ny:-7,bx:-2,by:-9,sz:5}};
+// Companions that hop or sway inside their own art: gear moves with them.
+var PET_MOVE={"Pixel frog":(c,t,o)=>c.translate(0,-(o.moving?Math.abs(Math.sin(t*6))*6:Math.max(0,Math.sin(t*1.5)-.9)*30)),"Glitch bunny":(c,t,o)=>c.translate(0,-Math.abs(Math.sin(t*5))*(o.moving?5:2)),
+  "Chibi oni":(c,t,o)=>c.translate(0,-Math.abs(Math.sin(t*(o.moving?7:3)))*(o.moving?3:1.5)),"Robo penguin":(c,t,o)=>c.rotate(o.moving?Math.sin(t*10)*.15:0),"Cloud dragon":(c,t,o)=>c.translate(0,Math.sin(t*4)*3)};
+// These pets' art leaves its hop/sway on the canvas, so front gear already follows them; only back gear needs the move.
+var PET_MOVE_LEAKS=["Pixel frog","Glitch bunny","Chibi oni","Robo penguin"];
+var _petO={};
+function petAnchor(pet){ if(_petAnc[pet]) return _petAnc[pet]; if(PET_ANC_FIX[pet]) return _petAnc[pet]=PET_ANC_FIX[pet]; if(PET_TALL.includes(pet)) return _petAnc[pet]={tall:1,hx:1.5,top:-65,nx:1,ny:-51,bx:-7,by:-42,sz:9};
   const cv=document.createElement("canvas"); cv.width=PO_W*2; cv.height=PO_H*2; const c=cv.getContext("2d"); c.setTransform(2,0,0,2,PO_X*2,PO_Y*2); c.lineCap="round";
   try{ petArtSmall(c,pet,1,0,{moving:false,phase:0},"#38e8ff"); }catch(e){}
   let top=99,bot=-99,lft=99,rgt=-99; const d=c.getImageData(0,0,cv.width,cv.height).data;
@@ -4877,7 +4894,13 @@ function petAnchor(pet){ if(_petAnc[pet]) return _petAnc[pet]; if(PET_TALL.inclu
   if(top>90){ top=-10; bot=2; lft=-6; rgt=6; }
   let sx=0,n=0; for(let y=Math.floor((top+PO_Y)*2);y<Math.floor((top+PO_Y+2.5)*2);y++) for(let x=Math.floor((PO_X-3)*2);x<cv.width;x++) if(d[(y*cv.width+x)*4+3]>90){ sx+=x/2-PO_X; n++; }
   const hx=n?sx/n:0, w=rgt-lft, h=bot-top;
-  return _petAnc[pet]={hx,top,nx:hx*.8,ny:top+h*.38,bx:-(w*.28),by:top+h*.45,sz:Math.max(4.5,Math.min(8,w*.42))}; }
+  // Find where the head ends: walk down from the top and watch the back edge of the shape that holds the head.
+  // When it jumps backwards, the body has started, so the neck goes there. Round or upright shapes keep the old ratio.
+  const filled=(ux,uy)=>{ const X=Math.round((ux+PO_X)*2), Y=Math.round((uy+PO_Y)*2); return X>=0&&Y>=0&&X<cv.width&&Y<cv.height&&d[(Y*cv.width+X)*4+3]>90; };
+  let neckY=null, headL=null; for(let uy=top+1;uy<=bot;uy+=.5){ let x=hx; if(!filled(x,uy)){ let f=null; for(let dx=.5;dx<6&&f==null;dx+=.5){ if(filled(hx-dx,uy)) f=hx-dx; else if(filled(hx+dx,uy)) f=hx+dx; } if(f==null) continue; x=f; }
+    let L=x; while(filled(L-.5,uy)&&L>lft-1) L-=.5; if(headL==null){ headL=L; continue; } if(uy-top<2.5){ headL=Math.max(headL,L); continue; } if(L<headL-3){ neckY=uy-.5; break; } headL=Math.max(headL,L); }
+  const ny=neckY!=null&&neckY-top>2.5&&neckY-top<h*.75?neckY:top+h*.56;
+  return _petAnc[pet]={hx,top,nx:neckY!=null?hx*.85:hx*.8,ny,bx:-(w*.28),by:top+h*.45,sz:Math.max(4.5,Math.min(8,w*.42))}; }
 // gear: slot h (hat), n (neck), b (back). draw(c,sz,col,t,dir) at anchor
 var PET_GEAR=[
   {k:"none_h",s:"h",n:"No hat",v:0,st:{}},
@@ -4946,12 +4969,12 @@ function tintCol(T0){ return T0?(T0.dyn?T0.dyn(performance.now()/1000):T0.c):nul
 const GEAR_NEW=new Set(["beret2","helm","antlers","dish","chef","pirate","flowers","holocrown","shroomcap","propeller","ledtag","pearls","cybercable","ruff","lei","medal","neonbandana","crystal","hexcollar","rainbowscarf","miniguitar","rocketpack","butterfly","hexshield","solar","swords2","holotail","speaker","cloud","halowings"]);
 
 var GEAR_BY=Object.fromEntries(PET_GEAR.map(g=>[g.k,g])); var GEAR_SLOT={h:PET_GEAR.filter(g=>g.s==="h"),n:PET_GEAR.filter(g=>g.s==="n"),b:PET_GEAR.filter(g=>g.s==="b")};
-function drawPetGear(c,pet,PS,dir,t,col,layer){ if(!PS||(!PS.h&&!PS.n&&!PS.b)) return; const A=petAnchor(pet); c.save();
+function drawPetGear(c,pet,PS,dir,t,col,layer){ if(!PS||(!PS.h&&!PS.n&&!PS.b)) return; const A=petAnchor(pet); c.save(); if(PET_MOVE[pet]&&(layer==="back"||!PET_MOVE_LEAKS.includes(pet))) try{ PET_MOVE[pet](c,t,_petO||{}); }catch(e){}
   try{ if(layer==="back"&&PS.b&&GEAR_SLOT.b[PS.b]&&GEAR_SLOT.b[PS.b].draw){ c.save(); c.translate(A.bx*dir,A.by); GEAR_SLOT.b[PS.b].draw(c,A.sz,col,t,dir); c.restore(); }
     if(layer==="front"){ if(PS.n&&GEAR_SLOT.n[PS.n]&&GEAR_SLOT.n[PS.n].draw){ c.save(); c.translate(A.nx*dir,A.ny); GEAR_SLOT.n[PS.n].draw(c,A.sz*.85,col,t,dir); c.restore(); }
       if(PS.h&&GEAR_SLOT.h[PS.h]&&GEAR_SLOT.h[PS.h].draw){ c.save(); c.translate(A.hx*dir,A.top+(A.tall?0:.6)); GEAR_SLOT.h[PS.h].draw(c,A.sz,col,t,dir); c.restore(); } } }catch(e){}
   c.restore(); }
-function drawPetAt(c,x,y,sc,pet,PS,dir,t,moving,JC){ if(!pet||pet==="None"||!PETS[pet]) return; const tall=PET_TALL.includes(pet), o={moving,phase:t*3}; JC=PS&&PS.g&&PET_TINTS[PS.g]&&PET_TINTS[PS.g].c?tintCol(PET_TINTS[PS.g]):(JC||"#38e8ff");
+function drawPetAt(c,x,y,sc,pet,PS,dir,t,moving,JC){ if(!pet||pet==="None"||!PETS[pet]) return; const tall=PET_TALL.includes(pet), o={moving,phase:t*3}; _petO=o; JC=PS&&PS.g&&PET_TINTS[PS.g]&&PET_TINTS[PS.g].c?tintCol(PET_TINTS[PS.g]):(JC||"#38e8ff");
   c.save(); c.translate(x,y); c.scale(sc,sc); c.lineCap="round"; c.lineJoin="round"; c.fillStyle="rgba(0,0,0,.4)"; c.beginPath(); c.ellipse(0,0,tall?13:9,tall?3.4:2.4,0,0,7); c.fill();
   if(tall){ drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>drawTallPet(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   else { if(!PET_GROUND.includes(pet)) c.translate(0,-12+Math.sin(t*2.5)*2); c.scale(PET_SCALE,PET_SCALE); drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
