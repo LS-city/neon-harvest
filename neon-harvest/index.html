@@ -1627,7 +1627,7 @@ function drawStick(c,x,y,s,o,t){
   // ---- labels (unscaled)
   c.save(); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace";
   const top=(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
-  if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; c.fillText(o.name,x,y-(top+bob)*s); c.globalAlpha=1;
+  if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; if(o.dcc>=0){ c.shadowColor=DCC_SYMS[o.dcc]?DCC_SYMS[o.dcc].c:c.fillStyle; c.shadowBlur=8+3*Math.sin(t*3); c.globalAlpha=1; } c.fillText(o.name,x,y-(top+bob)*s); c.shadowBlur=0; c.globalAlpha=1;
     if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; } }
   if(o.hp!=null&&!o.dead){ const bw=36, bx=x-bw/2, by2=y-(top+bob)*s+4, r=clamp(o.hp,0,100)/100; c.fillStyle="rgba(0,0,0,.75)"; c.fillRect(bx-1,by2-1,bw+2,6); c.fillStyle=r>.5?"#43f0a4":r>.25?"#ffb84a":"#ff5a4a"; c.fillRect(bx,by2,bw*r,4); }
   if(o.say&&t-o.say.t<6){ const txt=String(o.say.text).slice(0,80); c.font="11px 'IBM Plex Mono',monospace"; const w=Math.min(200,c.measureText(txt).width+14);
@@ -2131,7 +2131,7 @@ const GUIDE={
     ["Private messages and groups",["Press M or tap Messages to chat privately. Tap a player (or use Who's online) and choose Message.","Group chats hold up to 8 people: name it, invite more later, or leave anytime. Only members can read a chat. Block anyone to stop seeing their messages."]],
     ["Trade and compete",["Gift parts by tapping a player, sell on the Trade Board, challenge players in The Grid, and climb the Top Duelists and Top Fraggers boards."]]]},
   rewards:{n:"Rewards",secs:[
-    ["Data Collectors Club",[()=>`A members-only club for $${ECON.price} a month. The game's owner turns your membership on for a set time.`,"Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members earn Reward Points and redeem Smacked Shop rewards. Anyone can browse the shop."]],
+    ["Data Collectors Club",[()=>`A members-only club for $${ECON.price} a month. Join from your Character screen or Smacked Shop: pay with PayPal, pick your symbol, and send your request. The owner turns it on after the payment arrives.`,"Members pick their own symbol (change it anytime in Character), get a name glow, claim one free Neo Anime Drop item every month, and earn double NRC.","Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members earn Reward Points and redeem Smacked Shop rewards. Anyone can browse the shop."]],
     ["Earn Reward Points (RP)",["Members earn 1 RP for every credit they earn from work:","Shifts at The Glitch, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar and the Harvest Assembly line (pay, tips and wages).","Courier Hub package deliveries, story quest chapters (Q) and Story Mode endings.","RP Exchange machines (Sector 9, Byte Market, The Grid and Smacked Shop): members can trade ₵4,000 for 50 RP, up to 10 exchanges at a time. These points don't count toward the daily limit.","These don't earn RP: parts orders (Vex's jobs, parts deliveries and rig commissions), Credit Miners and other miners, Grid duels and arcades, The Void, gifts, the Trade Board, selling parts, home bonuses and anything else.",()=>`Daily limit: up to ${ECON.dayMax.toLocaleString()} RP a day. Your RP balance shows at the top of the screen on PC and phones. Tap it for your earnings history.`]],
     ["Redeem at Smacked Shop (Metro)",["Each reward has a price in RP. Pick one and tap Redeem to get a pickup code like SMK-AB12-CD34.","Show the code and a photo ID (21+) at the shop in person to collect your item. The owner checks every code before handing anything over. All your codes are under My pickup codes.","Monthly reward limit: there's a cap on how much you can redeem each month. Smacked Shop shows how much of it you have left, and it resets on the 1st.","Cancelled codes refund your RP automatically, but still count toward that month's limit. Codes you already have stay valid even if your membership ends."]],
     ["Digital rewards: Neo Anime Drop",["Smacked Shop's Digital tab has 30 original anime-style items: 10 clothes, 10 companions and 10 effects, all animated.","Members redeem them with RP and get them instantly. No pickup code, and they don't count toward the monthly reward limit.","You can try any of them on in Character first. They can't be bought with credits and never drop as loot."]],
@@ -2290,7 +2290,8 @@ function openWardrobe(tab="name",firstRun=false){
       else { status.textContent=res; status.className="r-epic"; } };
     btn.onclick=doIt; inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); doIt(); } });
     body.append(el("label",{class:"fld"},"Username",el("div",{class:"row"},inp,btn)),status);
-    if(dccActive(myId)){ const d=dcc[myId]; body.append(el("div",{class:"detail"},dccCanvas(d.sym,40),el("div",{class:"info"},el("strong",{text:"Data Collectors Club member"}),el("span",{class:"sub",text:`${DCC_SYMS[d.sym].n} symbol · ${d.until?"active until "+new Date(d.until).toLocaleDateString():"no expiration"}`})))); }
+    if(dccActive(myId)){ const d=dcc[myId]; body.append(el("div",{class:"detail"},dccCanvas(d.sym,40),el("div",{class:"info"},el("strong",{text:"Data Collectors Club member"}),el("span",{class:"sub",text:`${DCC_SYMS[d.sym].n} symbol · ${d.until?"active until "+new Date(d.until).toLocaleDateString():"no expiration"}`}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Change symbol",onclick:()=>openSymPick()}),el("button",{class:"btn",type:"button",text:"Renew",onclick:()=>openJoin()}))))); }
+    else if(!firstRun&&DB&&myId) body.append(el("div",{class:"detail",style:"border-color:#43f0a4"},el("div",{class:"info"},el("strong",{text:`Join the Data Collectors Club · $${ECON.price}/month`}),el("span",{class:"sub",text:"Real-life rewards, your own symbol, a name glow, a free digital item every month and double NRC."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"See membership",onclick:()=>openJoin()})))));
     if(firstRun) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Skip for now",onclick:closePanel})));
     setTimeout(()=>inp.focus(),30);
     return;
@@ -3692,8 +3693,8 @@ let IS_ADMIN=false, ASSETS=null;
 /* Reward Points: a members-only balance earned from work (shifts, jobs, quests, assembly line). Mined, won, traded,
    gifted or sold credits never become points. Smacked Shop takes points only, and each member can redeem at most
    ECON.capc cents of real cost per calendar month (UTC). The cap is also enforced by the Firestore rules. */
-let ECON={price:50,capc:1400,rate:8000,dayMax:6000};
-function cleanEcon(d){ d=d||{}; const n=(v,a,b,def)=>{ v=+v; return isFinite(v)&&v>0?clamp(v,a,b):def; }; return {price:n(d.price,1,1000,50),capc:Math.round(n(d.capc,1,100000,1400)),rate:Math.round(n(d.rate,1,1e7,8000)),dayMax:Math.round(n(d.dayMax,1,1e7,6000))}; }
+let ECON={price:7,capc:1400,rate:8000,dayMax:6000};
+function cleanEcon(d){ d=d||{}; const n=(v,a,b,def)=>{ v=+v; return isFinite(v)&&v>0?clamp(v,a,b):def; }; return {price:n(d.price,1,1000,7),capc:Math.round(n(d.capc,1,100000,1400)),rate:Math.round(n(d.rate,1,1e7,8000)),dayMax:Math.round(n(d.dayMax,1,1e7,6000))}; }
 function dayKey(){ const t=new Date(); return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate(); }
 function monthKey(){ const t=new Date(); return t.getUTCFullYear()+"-"+(t.getUTCMonth()+1); }
 function earnRP(amount,src){ try{ earnNRC(amount,src); }catch(e){} amount=Math.floor(+amount||0); if(amount<=0||!myId||!dccActive(myId)) return 0; const k=dayKey(); if(!save.rpDay||save.rpDay.d!==k) save.rpDay={d:k,n:0};
@@ -3763,7 +3764,7 @@ function smackedGate(){ if(IS_ADMIN) return el("div",{class:"detail"},el("div",{
     el("span",{text:`Reward Points: ${Math.floor(+save.rp||0).toLocaleString()} · Monthly reward limit: ${Math.round(capLeftC()/ECON.capc*100)}% left (resets on the 1st)`}),
     el("span",{class:"sub",text:"Earn points by working shifts, doing courier package runs, finishing story quests, and building on the assembly line."}))); }
   const d=dcc[myId]; const why=d&&d.on&&d.until&&d.until<=Date.now()?`Your membership expired on ${new Date(d.until).toLocaleDateString()}.`:d&&!d.on?"Your membership is switched off right now.":"You're not a member yet.";
-  return el("div",{class:"detail",style:"border-color:var(--mag)"},el("div",{class:"info"},el("strong",{text:"🔒 Members only: Data Collectors Club"}),el("span",{text:`Smacked Shop rewards can only be redeemed by Data Collectors Club members. ${why} Membership is $${ECON.price}/month. Ask the game's owner to join.`}),el("span",{class:"sub",text:"You can still browse what's in stock, and any pickup codes you already have stay valid."}))); }
+  return el("div",{class:"detail",style:"border-color:var(--mag)"},el("div",{class:"info"},el("strong",{text:"🔒 Members only: Data Collectors Club"}),el("span",{text:`Smacked Shop rewards can only be redeemed by Data Collectors Club members. ${why} Membership is $${ECON.price}/month.`}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:`Join for $${ECON.price}/month`,onclick:()=>openJoin()})),el("span",{class:"sub",text:"You can still browse what's in stock, and any pickup codes you already have stay valid."}))); }
 function redeemConfirm(it){
   const body=panel("Redeem: "+it.title,"This is a real item. After redeeming you get a pickup code to show in person."); currentView=null;
   const bal=Math.floor(+save.rp||0), left=remaining(it), price=itemRP(it), priced=it.cents>0, fits=it.cents<=capLeftC(), ok=canRedeem();
@@ -4979,6 +4980,49 @@ function drawPetAt(c,x,y,sc,pet,PS,dir,t,moving,JC){ if(!pet||pet==="None"||!PET
   if(tall){ drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>drawTallPet(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   else { if(!PET_GROUND.includes(pet)) c.translate(0,-12+Math.sin(t*2.5)*2); c.scale(PET_SCALE,PET_SCALE); drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   c.restore(); }
+/* ============================================================ JOIN THE DATA COLLECTORS CLUB (PayPal + owner approval) */
+// Players pay with the owner's PayPal link, then send a join request (their PayPal name/email and the symbol they want).
+// The owner checks PayPal and approves it in Admin Panel → Join requests, which turns the membership on for a month.
+var PAY={paypal:""}, dccReqs={}, myReq=null, joinSym=0;
+function payLinkOk(u){ return /^https:\/\/(www\.)?(paypal\.com|paypal\.me)\/[^\s"'<>]*$/i.test(String(u||"")); }
+const DCC_PERKS=[["Real-life rewards","Earn Reward Points from work and redeem them at Smacked Shop"],["Pick your own symbol","Choose any of the 20 animated symbols, shown by your name everywhere"],["Supporter glow","Your name glows over your head, with your symbol in chat and Who's online"],["A free digital item every month","Claim one Neo Anime Drop item free each month"],["Double NRC","Earn Neon Row Coins twice as fast, up to 600 a day"]];
+function symPicker(cur,onPick){ const g=el("div",{class:"dccgrid"}); DCC_SYMS.forEach((S,i)=>g.append(el("button",{class:"card",type:"button","aria-pressed":String(cur===i),style:cur===i?`outline:2px solid ${S.c};outline-offset:-2px`:"",onclick:()=>onPick(i)},dccCanvas(i,40),el("div",{class:"nm",text:S.n})))); return g; }
+function openJoin(){ const member=dccActive(myId); const body=panel(member?"Renew your membership":"Join the Data Collectors Club",`$${ECON.price} a month. Pay with PayPal, then send your request and the owner turns it on.`); currentView="join";
+  if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to join."})); return; }
+  if(member){ const d=dcc[myId]; body.append(el("div",{class:"detail"},dccCanvas(d.sym,40),el("div",{class:"info"},el("strong",{text:"You're a member"}),el("span",{class:"r-uncommon",text:d.until?`Active until ${new Date(d.until).toLocaleDateString()}`:"No expiration"})))); }
+  body.append(el("strong",{text:"What you get"}),el("div",{class:"list"},...DCC_PERKS.map(([a,b])=>el("div",{class:"li"},el("span",{class:"tag",style:"color:#43f0a4;border-color:#43f0a4",text:"✓"}),el("div",{class:"grow"},el("div",{text:a}),el("div",{class:"sub",text:b}))))));
+  if(myReq&&myReq.status==="pending"){ body.append(el("div",{class:"detail",style:"border-color:var(--amber)"},el("div",{class:"info"},el("strong",{text:"Request sent ✓"}),el("span",{text:`Waiting for the owner to confirm your PayPal payment (${myReq.paypal}). Your membership turns on as soon as it's approved.`}),el("span",{class:"sub",text:`Sent ${new Date(myReq.at).toLocaleString()}`})))); }
+  else if(myReq&&myReq.status==="declined") body.append(el("div",{class:"r-epic",text:"Your last request wasn't approved. Check that your PayPal payment went through, then send a new request."}));
+  body.append(el("strong",{text:"Step 1 · Pay with PayPal"}));
+  if(payLinkOk(PAY.paypal)) body.append(el("p",{class:"sub",text:"Opens PayPal in a new tab. Use the subscription so it renews each month."}),el("a",{class:"btn hot",href:PAY.paypal,target:"_blank",rel:"noopener noreferrer",style:"display:inline-block;text-decoration:none",text:`Pay $${ECON.price}/month with PayPal ↗`}));
+  else body.append(el("div",{class:"empty",text:"The owner hasn't connected PayPal yet. Check back soon."}));
+  body.append(el("strong",{text:"Step 2 · Pick your symbol"}));
+  const pickWrap=el("div"); const draw=()=>{ pickWrap.innerHTML=""; pickWrap.append(symPicker(joinSym,i=>{ joinSym=i; draw(); })); }; joinSym=member?dcc[myId].sym:(myReq?myReq.sym|0:joinSym); draw(); body.append(pickWrap);
+  body.append(el("strong",{text:"Step 3 · Tell the owner you paid"}));
+  const who=el("input",{class:"num",id:"join_paypal",maxlength:"120",placeholder:"The PayPal name or email you paid with",style:"width:100%",value:myReq&&myReq.paypal||""}); const msg=el("div",{class:"sub",role:"status"});
+  body.append(el("label",{class:"fld"},"PayPal name or email",who),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:member?"I renewed · send request":"I paid · send request",onclick:async()=>{ const v=who.value.trim().slice(0,120); if(v.length<3){ msg.textContent="Enter the PayPal name or email you paid with, so the owner can find your payment."; return; }
+      try{ await DB.doc("dccreq/"+myId).set({name:myName||"Runner",paypal:v,sym:joinSym,at:Date.now(),status:"pending"}); myReq={name:myName,paypal:v,sym:joinSym,at:Date.now(),status:"pending"}; toast("Request sent. The owner will approve it after checking PayPal.","#43f0a4"); openJoin(); }
+      catch(e){ msg.textContent="Couldn't send it. Try again in a minute."; } }})),msg,
+    el("p",{class:"sub",text:"Payments go straight to the game's owner through PayPal. Never share your PayPal password with anyone."})); }
+function openSymPick(){ if(!dccActive(myId)){ openJoin(); return; } const body=panel("Your symbol","Pick the symbol that shows next to your name. You can change it anytime."); currentView=null; const cur=dcc[myId].sym;
+  body.append(symPicker(cur,async i=>{ try{ await DB.doc("dcc/"+myId).update({sym:i}); dcc[myId]={...dcc[myId],sym:i}; pushPresence(true); toast(`Your symbol is now ${DCC_SYMS[i].n}.`,"#43f0a4"); openSymPick(); }catch(e){ toast("Couldn't change it. Try again."); } })); }
+function adminJoin(body){ body.append(el("p",{class:"sub",text:"Players pay you with your PayPal link, then send a request here. Check that the payment arrived in PayPal before you approve. Approving turns their membership on (or adds a month) with the symbol they picked."}));
+  const link=el("input",{class:"num",id:"pay_link",maxlength:"300",placeholder:"https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=…",style:"flex:1;min-width:0",value:PAY.paypal||""}); const lm=el("div",{class:"sub",role:"status"});
+  body.append(el("label",{class:"fld"},"Your PayPal subscription link",el("div",{class:"row"},link,el("button",{class:"btn hot",type:"button",text:"Save link",onclick:async()=>{ const v=link.value.trim(); if(v&&!payLinkOk(v)){ lm.textContent="Use a link that starts with https://www.paypal.com/ or https://paypal.me/"; return; }
+      try{ await DB.doc("shopinfo/pay").set({paypal:v,at:Date.now()}); PAY.paypal=v; lm.textContent="Saved. Players see the Pay button now."; }catch(e){ lm.textContent="Couldn't save."; } }}))),lm);
+  const ids=Object.keys(dccReqs).sort((a,b)=>(dccReqs[a].status==="pending"?0:1)-(dccReqs[b].status==="pending"?0:1)||(dccReqs[b].at||0)-(dccReqs[a].at||0));
+  if(!ids.length){ body.append(el("div",{class:"empty",text:"No join requests yet."})); return; }
+  const l=el("div",{class:"list"}); for(const id of ids){ const r=dccReqs[id], pend=r.status==="pending", cur=dcc[id];
+    const row=el("div",{class:"li"},dccCanvas(Math.max(0,Math.min(19,r.sym|0)),28),el("div",{class:"grow"},el("div",{text:`${cleanName(r.name||"")||nameOf(id)} · PayPal: ${String(r.paypal||"").slice(0,120)}`}),el("div",{class:"sub",text:`${new Date(r.at||0).toLocaleString()} · ${pend?"waiting":r.status}${cur&&dccActive(id)?` · member until ${cur.until?new Date(cur.until).toLocaleDateString():"forever"}`:""}`})));
+    if(pend) row.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Approve 1 month",onclick:async()=>{ const base=cur&&dccActive(id)&&cur.until?cur.until:Date.now(); const e=new Date(base+31*864e5); const until=new Date(e.getFullYear(),e.getMonth(),e.getDate(),23,59,59).getTime();
+        if(await saveDcc(id,{on:true,sym:Math.max(0,Math.min(19,r.sym|0)),until})){ try{ await DB.doc("dccreq/"+id).set({...r,status:"approved",done:Date.now()}); }catch(e2){} openAdmin("join"); } }}),
+      el("button",{class:"btn",type:"button",text:"Decline",onclick:async()=>{ try{ await DB.doc("dccreq/"+id).set({...r,status:"declined",done:Date.now()}); toast("Request declined."); }catch(e2){ toast("Couldn't update it."); } openAdmin("join"); }})));
+    l.append(row); } body.append(l); }
+function joinWatch(db){ db.doc("shopinfo/pay").onSnapshot(s=>{ PAY={paypal:s.exists&&payLinkOk((s.data()||{}).paypal)?s.data().paypal:""}; },()=>{});
+  db.doc("dccreq/"+myId).onSnapshot(s=>{ const d=s.exists?s.data():null; myReq=d&&typeof d.paypal==="string"?{...d}:null; if(currentView==="join"&&!$("#overlay").hidden&&!(document.activeElement&&document.activeElement.tagName==="INPUT")) openJoin(); },()=>{});
+  if(IS_ADMIN) db.collection("dccreq").onSnapshot(s=>{ dccReqs={}; s.docs.forEach(d=>dccReqs[d.id]=d.data()||{}); resolveNames(Object.keys(dccReqs)); updAdminBtn&&updAdminBtn(); if(currentView&&currentView.startsWith("admin")&&!$("#overlay").hidden&&!(document.activeElement&&document.activeElement.tagName==="INPUT")) refreshAdmin(); },()=>{}); }
+function joinPending(){ return Object.values(dccReqs).filter(r=>r.status==="pending").length; }
+
 /* ============================================================ UPDATE CHECK */
 // Browsers can keep an old copy of the game for a while. Check now and then for a newer version and offer a reload.
 (function(){ let shown=false; const mine=Date.parse(document.lastModified)||0;
@@ -5143,7 +5187,7 @@ function digiPetArt(){
 
 // --- Smacked Shop: the Digital tab
 function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
-    el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.`:"Members redeem digital rewards with RP. You can try anything on in Character first."}))));
+    el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.${save.digiFree!==monthKey()?" Your free monthly item is ready: open any item to claim it.":" You've claimed this month's free item."}`:"Members redeem digital rewards with RP and get one free each month. You can try anything on in Character first."}))));
   for(const grp of ["Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
     const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
       const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${digiPrice(d).toLocaleString()} RP`}),!digiOn(d)?el("span",{class:"r-epic",text:"Hidden"}):null));
@@ -5155,6 +5199,7 @@ function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(
   const wear=()=>{ save.look={...fullLook(save.look),[d.k]:i}; persist(); pushPresence(true); emote("cheer"); toast(`Now wearing ${d.n}.`,"#cf72ff"); closePanel(); };
   const row=el("div",{class:"row"});
   if(own) row.append(el("button",{class:"btn hot",type:"button",text:"Wear it now",onclick:wear}));
+  else if(ok&&live&&save.digiFree!==monthKey()) row.append(el("button",{class:"btn hot",type:"button",style:"border-color:#43f0a4;color:#43f0a4",text:"Claim free (monthly member gift)",onclick:()=>{ if(!canRedeem()||digiOwned(d)||save.digiFree===monthKey()) return; save.digiFree=monthKey(); save.owned=save.owned||[]; save.owned.push(d.k+":"+i); persist(); beep(1200,.08); setTimeout(()=>beep(1600,.12),90); toast(`${d.n} unlocked with your free monthly gift!`,"#43f0a4"); digiConfirm(d); }}));
   else { const go=el("button",{class:"btn hot",type:"button",text:!live?"Not in the shop right now":ok?`Redeem for ${price.toLocaleString()} RP`:"🔒 Members only",onclick:()=>{ const pr=digiPrice(d); if(!canRedeem()||digiOwned(d)||!(digiOn(d)||IS_ADMIN)) return; if((+save.rp||0)<pr) return; save.rp-=pr; save.owned=save.owned||[]; save.owned.push(d.k+":"+i);
         save.rpLog=Array.isArray(save.rpLog)?save.rpLog:[]; persist(); hud(); beep(1200,.08); setTimeout(()=>beep(1600,.12),90); toast(`${d.n} unlocked!`,"#cf72ff"); digiConfirm(d); }});
     if(!ok||bal<price||!live) go.disabled=true; row.append(go); }
@@ -5594,9 +5639,10 @@ let dccTab="dcc", dccQ="", stLastPanel="";
 function refreshAdmin(){ if(currentView==="admin") openAdmin(dccTab); }
 function adminPlayers(){ const ids=new Set([...Object.keys(homes||{}),...Object.keys(dcc)]); for(const p of peers.values()) if(p.by) ids.add(p.by); if(myId) ids.add(myId); return [...ids].filter(Boolean); }
 function openAdmin(tab){ if(!IS_ADMIN){ toast("Admins only."); return; } dccTab=tab||dccTab; const body=panel("Admin Panel","Owner-only tools. Only your account can see or use these."); currentView="admin";
-  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["stats","Player stats"],["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["symbols","Symbols"],["row","Neon Row"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["stats","Player stats"],["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["join",`Join requests${joinPending()?` (${joinPending()})`:""}`],["symbols","Symbols"],["row","Neon Row"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
   if(!DB){ body.append(el("div",{class:"empty",text:"Sign in with the owner account to manage memberships."})); return; }
   if(dccTab==="row") return adminRow(body);
+  if(dccTab==="join") return adminJoin(body);
   if(dccTab==="stats") return adminStats(body);
   if(dccTab==="symbols"){ body.append(el("p",{class:"sub",text:`The ${DCC_SYMS.length} Data Collectors Club symbols. Pick one per member when you grant or edit a membership.`})); const g=el("div",{class:"dccgrid"}); DCC_SYMS.forEach((S,i)=>g.append(el("div",{class:"card"},dccCanvas(i,46),el("div",{class:"nm",text:S.n})))); body.append(g); return; }
   if(dccTab==="members"){ const ids=Object.keys(dcc).sort((a,b)=>(dccActive(b)-dccActive(a))||((dcc[a].until||9e15)-(dcc[b].until||9e15)));
@@ -7385,7 +7431,7 @@ setInterval(hud,1000);
     db.collection("shop").onSnapshot(s=>{ shopItems=s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean); refreshSmacked(); },()=>{});
     db.doc("shopinfo/digital").onSnapshot(s=>{ const d=s.exists?s.data()||{}:{}; digiCfg=d.items&&typeof d.items==="object"?d.items:{}; refreshSmacked(); },()=>{});
     db.doc("shopinfo/econ").onSnapshot(s=>{ ECON=cleanEcon(s.exists?s.data():null); hud(); refreshSmacked(); },()=>{});
-    try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db); nrcWatch(db);
+    try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db); nrcWatch(db); joinWatch(db);
     db.doc("shopinfo/main").onSnapshot(s=>{ shopInfo={text:s.exists?String((s.data()||{}).text||"").slice(0,600):""}; refreshSmacked(); },()=>{});
     db.collection("pickups").onSnapshot(s=>{ pickupStatus={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["ready","picked","cancelled"].includes(v.status)) pickupStatus[d.id]={status:v.status}; }); checkRefunds(); if(IS_ADMIN) syncSold(); refreshSmacked(); },()=>{});
     db.doc("redeem/"+myId).onSnapshot(s=>{ const d=s.exists?s.data():null; myRedeem={codes:Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string").map(e=>({...e})):[],...(d&&typeof d.month==="string"?{month:d.month,spentc:Math.floor(+d.spentc)||0}:{})}; hud(); Promise.all(myRedeem.codes.map(e=>hashOf(e.code))).then(()=>{ checkRefunds(); refreshSmacked(); }); },()=>{});

@@ -93,7 +93,21 @@ service cloud.firestore {
     }
 
     // Data Collectors Club: everyone can see who is a member; only the owner can grant, change or remove.
-    match /dcc/{uid} { allow read: if signedIn(); allow write: if isOwner(); }
+    // Members can change only their own symbol.
+    match /dcc/{uid} {
+      allow read: if signedIn();
+      allow write: if isOwner();
+      allow update: if signedIn() && me() == uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sym'])
+        && request.resource.data.sym is int && request.resource.data.sym >= 0 && request.resource.data.sym < 20;
+    }
+    // Join requests: a player says they paid with PayPal and picks a symbol; only the owner approves.
+    match /dccreq/{uid} {
+      allow read: if signedIn() && (me() == uid || isOwner());
+      allow create, update: if isOwner() || (signedIn() && me() == uid && request.resource.data.status == 'pending'
+        && request.resource.data.sym is int && request.resource.data.sym >= 0 && request.resource.data.sym < 20
+        && request.resource.data.paypal is string && request.resource.data.paypal.size() <= 120);
+      allow delete: if isOwner();
+    }
 
     // Pickup codes: private to the player who redeemed them, plus the owner.
     // Adding a NEW code (redeeming) needs an active Data Collectors Club membership (or the owner).
