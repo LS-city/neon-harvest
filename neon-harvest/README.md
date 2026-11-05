@@ -41,7 +41,7 @@ After signing in, each new account confirms its date of birth once. Only "confir
 
 - **Reward Points (RP)** are the only way to pay at Smacked Shop. Only Data Collectors Club members earn them, and only from work: bar, store, club and noodle shifts, the assembly line, Courier Hub package runs, story quests and Story Mode. Parts orders, rig commissions and credits from miners, duels, the Void, gifts, trades and selling parts never turn into points, and points can't be traded or gifted.
 - **Monthly reward limit.** When you stock an item, enter what it costs you in dollars. Each member can redeem at most $14 of real cost per calendar month (UTC) by default. This limit is checked by the Firestore rules, not just the game, so even a player who cheats their point balance can't take more than the limit.
-- **Profit settings** (Smacked Shop → Owner tools → Profit settings) let you change the membership price, the monthly limit, how many points equal $1, and the daily point limit. It shows your worst-case profit per member; at $50 with a $14 limit that's about 69%.
+- **Profit settings** (Smacked Shop → Owner tools → Profit settings) let you change the monthly limit, how many points equal $1, and the daily point limit. Membership is donate-what-you-want (players see "Donate what you want to help the creator"); the price field there is only the typical donation you expect, used to estimate your worst-case profit per member. Keep the monthly limit well below what members usually donate.
 - Items stocked before this update have no cost yet and show "Not priced yet" until you edit them and enter what they cost you.
 - Cancelled redemptions refund the points but still count toward that month's limit.
 
@@ -53,11 +53,11 @@ After signing in, each new account confirms its date of birth once. Only "confir
 - Firebase's free plan covers roughly 100 players online at once and 50,000 database reads a day, which is plenty for a community game. The console shows usage under **Usage and billing**.
 - This `index.html` is now the main version of the game. `build.py` rebuilds it from the older claude.ai copy, which doesn't have Reward Points, so don't run it unless that copy is updated first.
 
-## Next step: paid memberships (needs Firebase's pay-as-you-go plan)
+## Next step: automatic memberships (needs Firebase's pay-as-you-go plan)
 
-Memberships are still switched on by hand in the Admin Panel. To make them automatic and to move balances onto a server:
+Members donate what they want through Cash App or PayPal, and memberships are still switched on by hand in the Admin Panel. To make them automatic and to move balances onto a server:
 
 1. Upgrade the Firebase project to the **Blaze** (pay-as-you-go) plan and set a budget alert.
-2. Create a **Stripe** account and a $50/month subscription product.
-3. Add a Cloud Function that receives Stripe's payment events and writes `dcc/{uid}` (on, and `until` set to the end of the paid period).
+2. Create a **Stripe** account and a pay-what-you-want donation link (Stripe Payment Links support "customer chooses price").
+3. Add a Cloud Function that receives Stripe's payment events and writes `dcc/{uid}` (on, and `until` set one month after the donation).
 4. Move Reward Point earning and redemption into Cloud Functions so the server, not the browser, keeps the balance.
