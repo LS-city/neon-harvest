@@ -1094,10 +1094,13 @@ function conPlay(id){ const K=CON_BY[id]; if(!K) return; const gi=conIns(id); if
   save.conPlays=(+save.conPlays||0)+1; try{ stTrack("act","Play "+K.n); }catch(e){} }
 setInterval(()=>{ if(!conSession) return; if(T>conSession.until||save.look.hand!==conSession.id||me.scene==="void"){ conSession=null; return; } if(T>=conSession.next){ conSession.next=T+2.8; const it=conSession.id+"|"+conSession.gi; me.emote={e:"game",t:T,it}; pushPresence(true,{emote:{e:"game",at:Date.now(),it}}); if(soundOn){ const KK=CON_BY[conSession.id], G=KK&&KK.games[conSession.gi]?KK.games[conSession.gi].st:GAME_STYLE[conSession.gi]; beep({kart:392,fps:1400,plat3d:880,sports:587,horror:110,stealth:247,party:1046,race:330,shoot:1200,jump:660,blocks:523,rpg:440,rhythm:784,fight:220}[G]||600,.05,"square",.03); } } },200);
 /* ---- console panels ---- */
+// Speed: animated previews (shop cards, wardrobe, consoles) only redraw while they're actually on screen.
+var CAN_IO=null; try{ CAN_IO=window.IntersectionObserver?new IntersectionObserver(es=>{ for(const e of es) e.target._vis=e.isIntersecting; }):null; }catch(e){}
+function canVis(cv){ if(!cv._io&&CAN_IO){ cv._io=1; CAN_IO.observe(cv); } return cv._vis!==false; }
 function conCanvas(K,size,gi){ const cv=document.createElement("canvas"); cv.width=size*2; cv.height=size*2; cv.style.cssText=`width:${size}px;height:${size}px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 75%);border:1px solid var(--line)`; const c=cv.getContext("2d");
-  const draw=()=>{ if(!cv.isConnected&&cv._started) return; cv._started=1; c.setTransform(2,0,0,2,0,0); c.clearRect(0,0,size,size); c.translate(size/2,size/2); drawConsoleArt(c,K,size*.7,performance.now()/1000,typeof gi==="function"?gi():gi); requestAnimationFrame(draw); }; requestAnimationFrame(draw); return cv; }
+  const draw=()=>{ if(!cv.isConnected&&cv._started) return; if(cv._started&&!canVis(cv)){ requestAnimationFrame(draw); return; } cv._started=1; c.setTransform(2,0,0,2,0,0); c.clearRect(0,0,size,size); c.translate(size/2,size/2); drawConsoleArt(c,K,size*.7,performance.now()/1000,typeof gi==="function"?gi():gi); requestAnimationFrame(draw); }; requestAnimationFrame(draw); return cv; }
 function gameCover(K,gi,size){ const cv=document.createElement("canvas"); cv.width=size*2; cv.height=size*1.4*2; cv.style.cssText=`width:${size}px;height:${size*1.4}px;flex:none`; const c=cv.getContext("2d");
-  const draw=()=>{ if(!cv.isConnected&&cv._started) return; cv._started=1; const t=performance.now()/1000; c.setTransform(2,0,0,2,0,0); const w=size, h=size*1.4, col=gameCol(K,gi); c.fillStyle="#120c22"; c.fillRect(0,0,w,h); c.fillStyle=col; c.fillRect(0,0,w,h*.16); c.fillStyle="#0b0716"; c.font=`bold ${size*.11}px monospace`; c.textAlign="center"; c.fillText(K.T.toUpperCase().slice(0,9),w/2,h*.115);
+  const draw=()=>{ if(!cv.isConnected&&cv._started) return; if(cv._started&&!canVis(cv)){ requestAnimationFrame(draw); return; } cv._started=1; const t=performance.now()/1000; c.setTransform(2,0,0,2,0,0); const w=size, h=size*1.4, col=gameCol(K,gi); c.fillStyle="#120c22"; c.fillRect(0,0,w,h); c.fillStyle=col; c.fillRect(0,0,w,h*.16); c.fillStyle="#0b0716"; c.font=`bold ${size*.11}px monospace`; c.textAlign="center"; c.fillText(K.T.toUpperCase().slice(0,9),w/2,h*.115);
     drawGameScreen(c,w*.08,h*.22,w*.84,h*.52,K,gi,t); c.fillStyle="#e9e2ff"; c.font=`${size*.09}px monospace`; const nm=K.games[gi].n; const words=nm.split(" "); let l1=words.slice(0,Math.ceil(words.length/2)).join(" "), l2=words.slice(Math.ceil(words.length/2)).join(" "); c.fillText(l1.slice(0,14),w/2,h*.84); c.fillText(l2.slice(0,14),w/2,h*.94); c.strokeStyle=col; c.lineWidth=1; c.strokeRect(.5,.5,w-1,h-1); requestAnimationFrame(draw); }; requestAnimationFrame(draw); return cv; }
 function openConsoles(){ const own=CONSOLES.filter(K=>conOwned(K.id)); const body=panel("My Game Consoles",`${own.length} of ${CONSOLES.length} consoles. Redeem more at Smacked Shop → Digital.`); currentView="consoles";
   if(!own.length){ body.append(el("div",{class:"empty",text:"You don't own a console yet. Members redeem them with Reward Points at Smacked Shop → Digital."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"See the consoles",onclick:()=>openSmacked("digital")}))); return; }
@@ -1372,7 +1375,9 @@ function phoneScreen(c,fx,x,y,w,h,t,tr){ c.save(); c.beginPath(); c.rect(x,y,w,h
   else if(fx==="omega"){ const g=c.createLinearGradient(x,y,x,y+h); g.addColorStop(0,"#2a1a08"); g.addColorStop(1,"#0b0716"); c.fillStyle=g; c.fillRect(x,y,w,h); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=10; c.font=`bold ${Math.max(6,S*.3)}px serif`; c.textAlign="center"; c.textBaseline="middle"; c.globalAlpha=.6+.4*Math.sin(t*2); c.fillText("Ω",x+w/2,y+h/2); }
   c.restore(); }
 
-function drawItem(c,id,cx,cy,S,t){
+// Speed: skip drawing world art that's off the edge of the screen (the street and shops are much wider than the view).
+function offWorld(c,x,y,r){ if(c!==ctx) return false; const m=ctx.getTransform(), dx=m.a*x+m.c*y+m.e, rr=r*Math.abs(m.a)+40; return dx<-rr||dx>cv.width+rr; }
+function drawItem(c,id,cx,cy,S,t){ if(offWorld(c,cx,cy,S)) return;
   const it=BY[id]; if(!it) return; const col=RAR[it.r].c; c.save(); c.translate(cx,cy); c.lineWidth=Math.max(1,S*.03);
   const glow=(a)=>{c.shadowColor=col;c.shadowBlur=S*.25*a;};
   switch(it.t){
@@ -1680,10 +1685,10 @@ function drawItem(c,id,cx,cy,S,t){
 /* live item canvases inside panels */
 const liveCans=new Set();
 function itemCanvas(id,px=96){ const cv=document.createElement("canvas"); cv.width=px*2; cv.height=px*2; cv.dataset.item=id; liveCans.add(cv); return cv; }
-function tickItemCans(t){ for(const cv of liveCans){ if(!cv.isConnected){liveCans.delete(cv);continue;} const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height); drawItem(c,cv.dataset.item,cv.width/2,cv.height/2,cv.width*.8,t); } }
+function tickItemCans(t){ for(const cv of liveCans){ if(!cv.isConnected){liveCans.delete(cv);continue;} if(!canVis(cv)) continue; const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height); drawItem(c,cv.dataset.item,cv.width/2,cv.height/2,cv.width*.8,t); } }
 
 /* ============================================================ STICK FIGURES */
-function drawStick(c,x,y,s,o,t){
+function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   // o: {dir, phase, moving, look, emote, say, name, me}
   const L=fullLook(o.look); const SK=(o.fx==="chrome"||o.fx==="mercury")?`hsl(215,25%,${78+Math.sin(t*4+x*.02)*12}%)`:o.fx==="void"||o.fx==="horizon"?"#e9e2ff":WARD.skin.opts[L.skin][2]==="holo"?`hsl(${(t*60+x*.3)%360},90%,78%)`:WARD.skin.opts[L.skin][2], JC=(o.fx==="shroom"||o.fx==="kaleido"||o.fx==="rave")?`hsl(${(t*120+x*.5)%360},100%,62%)`:COLORS[L.jacket], PC=COLORS[L.pants];
   const style=WARD.style.opts[L.style][0], vs=WARD.visor.opts[L.visor][0], ht=WARD.hat.opts[L.hat][0], bk=WARD.back.opts[L.back][0], pet=WARD.pet.opts[L.pet][0], aura=WARD.aura.opts[L.aura][0];
@@ -1897,7 +1902,7 @@ function drawStick(c,x,y,s,o,t){
     if(TALL){ if(pfOn) c.scale(pfu<=.7?-1:1,1); if(o.petGlow){ c.save(); c.globalAlpha=.22+.12*Math.sin(t*3); const g3=c.createRadialGradient(0,-34,2,0,-34,40); g3.addColorStop(0,"#ffd36a"); g3.addColorStop(1,"rgba(255,211,106,0)"); c.fillStyle=g3; c.beginPath(); c.arc(0,-34,40,0,7); c.fill(); c.restore(); } c.fillStyle="rgba(0,0,0,.4)"; c.beginPath(); c.ellipse(0,0,12,3.4,0,0,7); c.fill(); drawPetGear(c,pet,PS,dir,t,PJC,"back"); petPaint(c,PS,cc=>drawTallPet(cc,pet,dir,t,o,PJC)); drawPetGear(c,pet,PS,dir,t,PJC,"front"); c.restore(); }
     else { c.scale(PET_SCALE,PET_SCALE); if(pfOn) c.scale(pfu<=.7?-1:1,1); if(pa==="petplay"){ c.translate(0,-Math.abs(Math.sin(pu*7))*10); c.rotate(Math.min(1,pu/1.2)*Math.PI*2*(pu<1.2?1:0)); } if(pa==="petpat") c.scale(1+.12*Math.sin(pu*12),1-.08*Math.sin(pu*12)); if(pa==="petfeed") c.translate(0,Math.abs(Math.sin(pu*14))*1.5);
     if(o.petGlow){ c.save(); c.globalAlpha=.25+.15*Math.sin(t*3); const g2=c.createRadialGradient(0,-4,1,0,-4,14); g2.addColorStop(0,"#ffd36a"); g2.addColorStop(1,"rgba(255,211,106,0)"); c.fillStyle=g2; c.beginPath(); c.arc(0,-4,14,0,7); c.fill(); c.restore(); }
-    drawPetGear(c,pet,PS,dir,t,PJC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,PJC)); drawPetGear(c,pet,PS,dir,t,PJC,"front");
+    drawPetGear(c,pet,PS,dir,t,PJC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,PJC),1); drawPetGear(c,pet,PS,dir,t,PJC,"front");
     c.restore(); } }
   if(pet!=="None"&&em&&em.startsWith("pet")){ const pu=t-o.emote.t, ppx=-dir*(TALL?36:26), ppy=TALL?-46:PET_GROUND.includes(pet)?-11:-50; c.save();
     if(em==="petpat"){ for(let k=0;k<3;k++){ const u=(pu*.8+k/3)%1; c.globalAlpha=1-u; c.fillStyle="#ff3fa8"; c.save(); c.translate(ppx-6+k*6,ppy-8-u*18); c.beginPath(); c.moveTo(0,2.5); c.bezierCurveTo(-4,-1,-2,-4,0,-1.5); c.bezierCurveTo(2,-4,4,-1,0,2.5); c.fill(); c.restore(); } }
@@ -1934,7 +1939,8 @@ function drawStick(c,x,y,s,o,t){
 /* live character previews in panels */
 const liveLooks=new Set();
 function lookCanvas(look,px=96,emote){ const cv=document.createElement("canvas"); cv.width=px*2; cv.height=px*2; cv._look=look; cv._emote=emote; liveLooks.add(cv); return cv; }
-function tickLookCans(t){ for(const cv of liveLooks){ if(!cv.isConnected){liveLooks.delete(cv);continue;} const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height); const sc=cv.width/110; if(cv._pet){ const tall=PET_TALL.includes(cv._pet); drawPetAt(c,cv.width/2,cv.height*.86,cv.height/(tall?95:42),cv._pet,cv._ps,cv._dir||1,t,!!cv._walk); continue; }
+var _lkF=0;
+function tickLookCans(t){ _lkF++; const many=liveLooks.size>6; let li=0; for(const cv of liveLooks){ if(!cv.isConnected){liveLooks.delete(cv);continue;} if(!canVis(cv)) continue; if(many&&((li++ +_lkF)&1)) continue; const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height); const sc=cv.width/110; if(cv._pet){ const tall=PET_TALL.includes(cv._pet); drawPetAt(c,cv.width/2,cv.height*.86,cv.height/(tall?95:42),cv._pet,cv._ps,cv._dir||1,t,!!cv._walk); continue; }
   drawStick(c,cv.width/2,cv.height*.86,sc,{dir:cv._dir||1,phase:t*3,moving:!!cv._walk,look:cv._look,emote:cv._emote?{e:cv._emote,t:t-((t*1)%3)}:null},t); } }
 
 /* ============================================================ WORLD */
@@ -2109,9 +2115,22 @@ const npcs={
 
 /* ============================================================ CANVAS */
 const cv=$("#world"), ctx=cv.getContext("2d"); let scale=1, VW=640, camX=0;
+// Speed: full-screen vertical gradients (every scene's sky) are slow to paint each frame, so they're
+// painted once into a cached image and copied in. Looks identical; scrolling sideways reuses the same image.
+(function(c){ const GI=new WeakMap(), cLG=c.createLinearGradient.bind(c), oFR=c.fillRect.bind(c), cache=new Map();
+  c.createLinearGradient=function(x0,y0,x1,y1){ const g=cLG(x0,y0,x1,y1); if(x0===x1&&y0!==y1){ const rec={y0,y1,st:[]}; GI.set(g,rec); const add=g.addColorStop.bind(g); g.addColorStop=(o,col)=>{ rec.st.push(o,col); add(o,col); }; } return g; };
+  c.fillRect=function(x,y,w,h){ if(!(w*h>3000)){ oFR(x,y,w,h); return; } const fs=c.fillStyle, rec=typeof fs==="object"&&GI.get(fs);
+    if(rec&&w>0&&h>0&&c.globalAlpha===1&&c.globalCompositeOperation==="source-over"&&!c.shadowBlur){ const m=c.getTransform();
+      if(!m.b&&!m.c&&m.a>0&&m.d>0&&w*m.a*h*m.d>60000){ const W=Math.round(w*m.a), Hh=Math.round(h*m.d), dx=Math.round(x*m.a+m.e), dy=Math.round(y*m.d+m.f), g0=rec.y0*m.d+m.f-dy, g1=rec.y1*m.d+m.f-dy;
+        const key=rec.st.join(",")+"|"+g0.toFixed(1)+"|"+g1.toFixed(1)+"|"+W+"x"+Hh; let img=cache.get(key);
+        if(!img){ img=document.createElement("canvas"); img.width=W; img.height=Hh; const ic=img.getContext("2d"), g=ic.createLinearGradient(0,g0,0,g1); for(let i=0;i<rec.st.length;i+=2) g.addColorStop(rec.st[i],rec.st[i+1]); ic.fillStyle=g; ic.fillRect(0,0,W,Hh); if(cache.size>=24) cache.delete(cache.keys().next().value); cache.set(key,img); }
+        c.save(); c.setTransform(1,0,0,1,0,0); c.drawImage(img,dx,dy); c.restore(); return; } }
+    oFR(x,y,w,h); };
+})(ctx);
 const MOBILE=matchMedia("(pointer:coarse)").matches||(navigator.maxTouchPoints>0&&matchMedia("(max-width:1024px)").matches);
 // phones: softer, cheaper glow on the world canvas keeps the frame rate smooth (big blurs are the most expensive draw call)
-if(MOBILE){ try{ const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,"shadowBlur"); Object.defineProperty(ctx,"shadowBlur",{configurable:true,get(){ return d.get.call(ctx); },set(v){ d.set.call(ctx,Math.min(+v||0,6)); }}); }catch(e){} }
+// Glow cap: phones always use a softer glow; slower computers get a lower cap from Auto smooth mode (PERF) below.
+try{ const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,"shadowBlur"); Object.defineProperty(ctx,"shadowBlur",{configurable:true,get(){ return d.get.call(ctx); },set(v){ v=+v||0; const L=(typeof PERF!=="undefined"&&PERF)?PERF.lvl:0, cap=L>=2?0:L>=1?4:MOBILE?6:99; d.set.call(ctx,v>cap?cap:v); }}); }catch(e){}
 function applyMobileLayout(){ const g=$("#game"); if(!g) return; g.classList.toggle("mobile",MOBILE); g.classList.toggle("portrait",MOBILE&&innerHeight>innerWidth);
   if(MOBILE&&!g.dataset.mset){ g.dataset.mset="1";
     const lab=(id,txt,aria)=>{ const b=$(id); if(!b) return; const bd=b.querySelector(".badge"); b.textContent=txt; if(bd) b.append(bd); b.classList.add("mbtn"); if(aria) b.setAttribute("aria-label",aria); };
@@ -2120,7 +2139,15 @@ function applyMobileLayout(){ const g=$("#game"); if(!g) return; g.classList.tog
     const cr=document.querySelector(".pill.cr"); if(cr&&cr.firstChild&&cr.firstChild.nodeType===3) cr.firstChild.textContent="₵";
     const on=$("#online"); if(on&&on.firstChild&&on.firstChild.nodeType===3) on.firstChild.textContent="●";
     $("#chatin").placeholder="Say something…"; const bb=$("#btnBlock"), ba=$("#btnAtk"); if(bb) bb.textContent="Block"; if(ba) ba.textContent="Attack"; } }
-function resize(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(MOBILE?1.5:2,window.devicePixelRatio||1); cv.width=Math.max(2,Math.round(r.width*dpr)); cv.height=Math.max(2,Math.round(r.height*dpr)); scale=cv.height/H; VW=Math.min(4000,cv.width/scale); }
+/* Auto smooth mode: if the game runs below ~40 fps for 8 seconds straight, it lowers the glow and the screen resolution
+   one step at a time (up to 2 steps). The level is remembered on this device, and players can reset it in How to Play → Smooth mode. */
+var PERF={lvl:0,fr:[],last:0,t0:0}; try{ PERF.lvl=Math.max(0,Math.min(2,+localStorage.getItem("nh_perf")||0)); }catch(e){}
+function perfFrame(now){ if(document.hidden||!PERF.last){ PERF.last=now; return; } const d=now-PERF.last; PERF.last=now; if(d>250){ PERF.fr.length=0; PERF.t0=now; return; } PERF.fr.push(d); if(!PERF.t0) PERF.t0=now;
+  if(now-PERF.t0<4000) return; const avg=PERF.fr.reduce((a,b)=>a+b,0)/PERF.fr.length, fps=1000/avg; PERF.fr.length=0; PERF.t0=now;
+  PERF.slow=fps<40?(PERF.slow||0)+1:0;
+  if(PERF.slow>=2&&PERF.lvl<2&&now>12000){ PERF.slow=0; setPerf(PERF.lvl+1); try{ toast(PERF.lvl>=2?"Smooth mode: max (lower glow and resolution)":"Smooth mode on: lighter glow for a smoother game","#38e8ff"); }catch(e){} } }
+function setPerf(l){ PERF.lvl=Math.max(0,Math.min(2,l|0)); try{ localStorage.setItem("nh_perf",String(PERF.lvl)); }catch(e){} PERF.fr.length=0; PERF.t0=0; resize(); }
+function resize(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(PERF.lvl>=2?1:(MOBILE||PERF.lvl>=1)?1.5:2,window.devicePixelRatio||1); cv.width=Math.max(2,Math.round(r.width*dpr)); cv.height=Math.max(2,Math.round(r.height*dpr)); scale=cv.height/H; VW=Math.min(4000,cv.width/scale); }
 if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cv);
 applyMobileLayout(); addEventListener("resize",()=>{ applyMobileLayout(); resize(); }); addEventListener("orientationchange",()=>setTimeout(()=>{ applyMobileLayout(); resize(); },250));
 // seeded skyline
@@ -2129,7 +2156,7 @@ const sky=(()=>{ const r=seeded(7),a=[]; let x=-200; while(x<5000){ const w=40+r
 const rain=Array.from({length:120},()=>({x:Math.random(),y:Math.random(),v:.6+Math.random()*.6}));
 const cars=[{x:0,v:160,y:72,c:"#ff3fa8"},{x:800,v:-220,y:110,c:"#38e8ff"}];
 
-function neonText(txt,x,y,size,col,flick=1){ ctx.save(); ctx.font=`700 ${size}px Silkscreen, monospace`; ctx.textAlign="center"; ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=14*flick; ctx.globalAlpha=.5+.5*flick; ctx.fillText(txt,x,y); ctx.restore(); }
+function neonText(txt,x,y,size,col,flick=1){ if(offWorld(ctx,x,y,size*String(txt).length*.7)) return; ctx.save(); ctx.font=`700 ${size}px Silkscreen, monospace`; ctx.textAlign="center"; ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=14*flick; ctx.globalAlpha=.5+.5*flick; ctx.fillText(txt,x,y); ctx.restore(); }
 function flick(seed,t){ const v=Math.sin(t*7+seed)*Math.sin(t*13+seed*2); return v>.92?.25:1; }
 
 function drawStreet(t){
@@ -2300,6 +2327,7 @@ function step(now){
   requestAnimationFrame(step);
 }
 function stepInner(now){
+  try{ perfFrame(now); }catch(e){}
   dt=Math.min(.05,(now-last)/1000); last=now; T+=dt;
   const sc=SCENES[me.scene];
   // input
@@ -2317,7 +2345,9 @@ function stepInner(now){
   if(me.moving){ const n=Math.hypot(ix,iy)||1; me.x=clamp(me.x+ix/n*sp*dt,30,sc.w-30); me.y=clamp(me.y+iy/n*sp*.6*dt,LANE.top,LANE.bot); if(ix) me.dir=ix>0?1:-1; me.phase+=dt*7; }
   camX=me.scene==="ascend"?(SHOW_W-VW)/2:clamp(me.x-VW/2,0,Math.max(0,sc.w-VW));
   // hotspot proximity
-  nearHot=me.scene==="home"?(hotspots("home").filter(h=>Math.abs(h.x-me.x)<h.hw).sort((a,b)=>Math.abs(a.x-me.x)-Math.abs(b.x-me.x))[0]||null):hotspots(me.scene).find(h=>Math.abs(h.x-me.x)<h.hw)||null;
+  // Speed: rebuilding every interaction spot is costly, so it runs about 8 times a second instead of every frame.
+  if(T-(window._hotT||-9)>.12||window._hotS!==me.scene){ window._hotT=T; window._hotS=me.scene;
+  nearHot=me.scene==="home"?(hotspots("home").filter(h=>Math.abs(h.x-me.x)<h.hw).sort((a,b)=>Math.abs(a.x-me.x)-Math.abs(b.x-me.x))[0]||null):hotspots(me.scene).find(h=>Math.abs(h.x-me.x)<h.hw)||null; }
   const pr=$("#prompt"); if(nearHot&&$("#overlay").hidden){ const txt=(MOBILE?"▶ Tap: ":"[E] ")+nearHot.label; if(pr.textContent!==txt) pr.textContent=txt; if(pr.hidden) pr.hidden=false; } else if(!pr.hidden) pr.hidden=true;
   // peers smoothing
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
@@ -2444,6 +2474,7 @@ let guideTab="start";
 function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_guide_seen","1"); }catch(e){}
   const body=panel("How to Play","Everything you can do in NEON HARVEST, and how to earn credits, chips, Reward Points and every item."); currentView="guide";
   const tabs=el("div",{class:"tabs"}); for(const [k,g] of Object.entries(GUIDE)) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(guideTab===k),text:g.n,onclick:()=>openGuide(k)})); body.append(tabs);
+  { const names=["Off (full glow)","Light (softer glow)","Max (no glow, lower resolution)"]; body.append(el("div",{class:"row",style:"align-items:center;gap:8px;flex-wrap:wrap"},el("span",{class:"sub",text:`Smooth mode: ${names[PERF.lvl]}. It turns on by itself if the game runs slowly.`}),el("button",{class:"btn",type:"button",text:"Change",onclick:()=>{ setPerf((PERF.lvl+1)%3); toast("Smooth mode: "+names[PERF.lvl],"#38e8ff"); openGuide(); }}))); }
   const g=GUIDE[guideTab]; const wrap=el("div",{class:"guide"});
   for(const [h,lines] of g.secs){ const ul=el("ul"); for(const t of lines) ul.append(el("li",{text:typeof t==="function"?t():t})); wrap.append(el("h3",{text:h}),ul); }
   body.append(wrap);
@@ -5241,12 +5272,16 @@ var PET_ART={
 /* ============================================================ COMPANION CUSTOMS (colors + gear) */
 var PET_TINTS=[{n:"Original",c:null},{n:"Crimson",c:"#ff3f5a"},{n:"Sunset",c:"#ff8a3a"},{n:"Gold",c:"#ffd36a"},{n:"Lime",c:"#8fff5a"},{n:"Mint",c:"#43f0a4"},{n:"Cyan",c:"#38e8ff"},{n:"Azure",c:"#4aa8ff"},{n:"Violet",c:"#7c5cff"},{n:"Magenta",c:"#ff3fa8"},{n:"Rose",c:"#ff8ad8"},{n:"Snow",c:"#ffffff",a:.6},{n:"Chrome",c:"#c9d3e0",a:.6},{n:"Shadow",c:"#1b1530",a:.62},{n:"Toxic",c:"#c6ff00"},{n:"Blood",c:"#8a0a1a",a:.6}];
 var PO_X=46, PO_Y=96, PO_W=92, PO_H=146, PO_R=4, PET_OFF=null;
-function petPaint(c,PS,fn){ const T0=PS&&PS.t?PET_TINTS[PS.t]:null; if(!T0||!T0.c){ fn(c); return; }
+// Tinted companions are drawn offscreen and recolored. Speed: only the box the companion actually uses is
+// cleared and tinted (small companions use a much smaller box), at the resolution the screen needs (not always 4×).
+function petPaint(c,PS,fn,small){ const T0=PS&&PS.t?PET_TINTS[PS.t]:null; if(!T0||!T0.c){ fn(c); return; }
   if(!PET_OFF){ PET_OFF=document.createElement("canvas"); PET_OFF.width=PO_W*PO_R; PET_OFF.height=PO_H*PO_R; } const oc=PET_OFF.getContext("2d");
-  oc.setTransform(1,0,0,1,0,0); oc.globalCompositeOperation="source-over"; oc.globalAlpha=1; oc.shadowBlur=0; oc.clearRect(0,0,PET_OFF.width,PET_OFF.height);
-  oc.setTransform(PO_R,0,0,PO_R,PO_X*PO_R,PO_Y*PO_R); oc.lineCap="round"; oc.lineJoin="round"; oc.save(); try{ fn(oc); }catch(e){} oc.restore();
-  oc.setTransform(1,0,0,1,0,0); oc.shadowBlur=0; oc.globalCompositeOperation="source-atop"; oc.globalAlpha=T0.a||.55; oc.fillStyle=tintCol(T0); oc.fillRect(0,0,PET_OFF.width,PET_OFF.height); oc.globalCompositeOperation="source-over"; oc.globalAlpha=1;
-  c.drawImage(PET_OFF,-PO_X,-PO_Y,PO_W,PO_H); }
+  const BX=small?32:PO_X, BY=small?36:PO_Y, BW=small?64:PO_W, BH=small?56:PO_H; let R=PO_R; try{ const m=c.getTransform(); R=Math.max(1,Math.min(PO_R,Math.ceil(Math.hypot(m.a,m.b)))); }catch(e){}
+  const w=Math.ceil(BW*R), h=Math.ceil(BH*R);
+  oc.setTransform(1,0,0,1,0,0); oc.globalCompositeOperation="source-over"; oc.globalAlpha=1; oc.shadowBlur=0; oc.clearRect(0,0,w,h);
+  oc.setTransform(R,0,0,R,BX*R,BY*R); oc.lineCap="round"; oc.lineJoin="round"; oc.save(); try{ fn(oc); }catch(e){} oc.restore();
+  oc.setTransform(1,0,0,1,0,0); oc.shadowBlur=0; oc.globalCompositeOperation="source-atop"; oc.globalAlpha=T0.a||.55; oc.fillStyle=tintCol(T0); oc.fillRect(0,0,w,h); oc.globalCompositeOperation="source-over"; oc.globalAlpha=1;
+  c.drawImage(PET_OFF,0,0,w,h,-BX,-BY,BW,BH); }
 const _petAnc={};
 // Hand-set gear anchors (head top, neck, back, size) for companions whose shape fools the automatic one.
 var PET_ANC_FIX={"Storm heron":{hx:4,top:-11,nx:3.4,ny:-6,bx:-1,by:-1,sz:4},"Glass serpent":{hx:7.5,top:-2.6,nx:6,ny:1.6,bx:-2,by:-1,sz:4.4},"Molten boar":{hx:6,top:-9.6,nx:4.6,ny:-4.6,bx:-1,by:-9,sz:5},"Static moth":{hx:0,top:-6,nx:0,ny:-2,bx:0,by:0,sz:4},"Tide koi":{hx:2,top:-3,nx:2,ny:1,bx:-2,by:0,sz:4},"Frost owl":{hx:0,top:-6.6,nx:0,ny:2,bx:-3,by:0,sz:5},"Gravel tortoise":{hx:7,top:-5.6,nx:6,ny:-2.4,bx:-1,by:-8,sz:4.4},"Void jackal":{hx:7,top:-14,nx:5,ny:-9,bx:-1,by:-10,sz:4.6},"Bloom stag":{hx:5,top:-16.6,nx:4,ny:-12,bx:-1,by:-11,sz:4.4},"Solar lynx":{hx:5,top:-14,nx:4,ny:-8.4,bx:-1,by:-9,sz:4.6},"Cloud dragon":{hx:8,top:-3.6,nx:6.8,ny:1.6,bx:-2,by:-2.4,sz:5},"Wisp guardian":{hx:0,top:-4.4,nx:0,ny:2.6,bx:-3,by:-.5,sz:5},"Paper crane":{hx:8.4,top:-4,nx:6.4,ny:-.6,bx:-1.5,by:-1,sz:4.6},
@@ -5350,7 +5385,7 @@ function drawPetGear(c,pet,PS,dir,t,col,layer){ if(!PS||(!PS.h&&!PS.n&&!PS.b)) r
 function drawPetAt(c,x,y,sc,pet,PS,dir,t,moving,JC){ if(!pet||pet==="None"||!PETS[pet]) return; const tall=PET_TALL.includes(pet), o={moving,phase:t*3}; _petO=o; JC=PS&&PS.g&&PET_TINTS[PS.g]&&PET_TINTS[PS.g].c?tintCol(PET_TINTS[PS.g]):(JC||"#38e8ff");
   c.save(); c.translate(x,y); c.scale(sc,sc); c.lineCap="round"; c.lineJoin="round"; c.fillStyle="rgba(0,0,0,.4)"; c.beginPath(); c.ellipse(0,0,tall?13:9,tall?3.4:2.4,0,0,7); c.fill();
   if(tall){ drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>drawTallPet(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
-  else { if(!PET_GROUND.includes(pet)) c.translate(0,-12+Math.sin(t*2.5)*2); c.scale(PET_SCALE,PET_SCALE); drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,JC)); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
+  else { if(!PET_GROUND.includes(pet)) c.translate(0,-12+Math.sin(t*2.5)*2); c.scale(PET_SCALE,PET_SCALE); drawPetGear(c,pet,PS,dir,t,JC,"back"); petPaint(c,PS,cc=>petArtSmall(cc,pet,dir,t,o,JC),1); drawPetGear(c,pet,PS,dir,t,JC,"front"); }
   c.restore(); }
 /* ============================================================ JOIN THE DATA COLLECTORS CLUB (PayPal + owner approval) */
 // Players pay with the owner's PayPal link, then send a join request (their PayPal name/email and the symbol they want).
