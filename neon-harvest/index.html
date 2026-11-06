@@ -2816,6 +2816,30 @@ function openPlayer(pid){
   if(p.by&&p.by!==myId&&ROOM) row.append(el("button",{class:"btn",type:"button",text:"Invite to my apartment",onclick:()=>{ inviteToHome(p.by); closePanel(); }}));
   if(p.by&&p.by!==myId&&DB&&me.scene==="grid") row.prepend(el("button",{class:"btn hot",type:"button",text:"Challenge to a duel",onclick:()=>openChallenge(p.by)}));
   if(p.by&&homes[p.by]&&((homes[p.by].display&&homes[p.by].display.some(Boolean))||(homes[p.by].decor&&[...(homes[p.by].decor.wall||[]),...(homes[p.by].decor.floor||[])].some(Boolean)))) row.append(el("button",{class:"btn",type:"button",text:"Visit their apartment",onclick:()=>{ closePanel(); const h=homes[p.by]; viewHome={owner:p.by,display:h.display.map(x=>BY[x]?x:null).slice(0,6),label:nm}; me.visiting=p.by; go("home",120); }}));
+
+  // --- ROLE ACTIONS ---
+  if(p.by&&p.by!==myId && DB){
+    if(save.role==="thief"){
+      row.append(el("button",{class:"btn hot",type:"button",text:"Steal",onclick:async()=>{
+        if(!confirm(`Attempt to steal from ${nm}? (Risky!)`)) return;
+        const success=Math.random()>.6; if(success){
+          const loot=Math.round(Math.random()*100); save.credits+=loot; persist(); toast(`Stole ₵${loot} from ${nm}!`,"#ffb84a");
+        }else{
+          toast(`Caught by ${nm}! You lost ₵50 in fines.`, "#ff3f5a"); save.credits=Math.max(0,save.credits-50); persist();
+        }
+        openPlayer(pid);
+      }}));
+    }
+    if(save.role==="police"){
+      row.append(el("button",{class:"btn hot",type:"button",text:"Arrest",onclick:async()=>{
+        if(!confirm(`Arrest ${nm}?`)) return;
+        await DB.doc("players/"+p.by).update({status:"imprisoned",arrestedBy:myId});
+        toast(`${nm} has been arrested and sent to prison!`, "#38e8ff");
+        openPlayer(pid);
+      }}));
+    }
+  }
+
   body.append(row);
   if(!DB||!p.by){ body.append(el("div",{class:"empty",text:"Gifting needs both players signed in to claude.ai."})); return; }
   body.append(el("strong",{text:"Send a gift"}));
