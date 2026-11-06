@@ -2732,7 +2732,7 @@ const ROLE_DATA={
   mayor:{n:"Mayor",d:"Leader of the district. Special political powers. Elected by players.",col:"#ffd36a"}
 };
 function openRoleSelect(){
-  const body=panel("CITIZEN REGISTRATION","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
+  const body=panel("CITIZEN REGISTRY","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
   const g=el("div",{class:"grid"});
   Object.entries(ROLE_DATA).forEach(([id,r])=>{
     const c=el("button",{class:"card",type:"button",onclick:()=>{
