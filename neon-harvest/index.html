@@ -2664,7 +2664,7 @@ let shopStock=null, shopDay=-1;
 // Stores list each item once: if the same reward was added twice, only the oldest copy shows (the one with stock left wins).
 function dedupeBy(arr,key){ const m=new Map(); for(const x of arr){ const k=key(x), o=m.get(k); if(!o||((o.stock-(o.sold||0))<=0&&(x.stock-(x.sold||0))>0)||((o.at||0)>(x.at||0)&&((x.stock-(x.sold||0))>0)===((o.stock-(o.sold||0))>0))) m.set(k,x); } return [...m.values()]; }
 function getStock(){ const d=Math.floor(Date.now()/36e5); if(d!==shopDay){ shopDay=d; const r=seeded(d*31+7); const inStalls=new Set(); STALLS.forEach((st,i)=>{ if(st.types||st.builds) try{ stallStock(i).forEach(x=>inStalls.add(x.id)); }catch(e){} }); // never stock what a stall is selling this hour
-    const pool=[...PARTS].sort(()=>r()-.5).filter(i=>!inStalls.has(i.id)); shopStock=pool.slice(0,12).map(i=>({id:i.id,price:Math.round(i.v*1.35),cur:i.r==="epic"?"chips":"credits"})).map(s=>s.cur==="chips"?{...s,price:Math.round(BY[s.id].v/2)}:s); } return shopStock; }
+    const pool=[...PARTS].sort(()=>r()-.5).filter(i=>!inStalls.has(i.id)); shopStock=dedupeBy(pool.slice(0,12),x=>x.id).map(i=>({id:i.id,price:Math.round(i.v*1.35),cur:i.r==="epic"?"chips":"credits"})).map(s=>s.cur==="chips"?{...s,price:Math.round(BY[s.id].v/2)}:s); } return shopStock; }
 function openShop(tab="buy"){
   const body=panel("PARTS DEPOT","Stock rotates every hour. Epic parts are priced in chips. Sell-back pays full worth in credits.");
   const tabs=el("div",{class:"tabs"}); ["buy","sell"].forEach(k=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:k==="buy"?"Buy parts":"Sell parts",onclick:()=>openShop(k)}))); body.append(tabs);
@@ -4094,7 +4094,7 @@ function openSmacked(tab="shop"){
   if(tab==="codes") return myCodesView(body);
   if(tab==="digital") return digitalView(body);
   body.append(smackedGate());
-  const live=shopItems.filter(i=>i.active).sort((a,b)=>a.order-b.order||a.title.localeCompare(b.title));
+  const live=dedupeBy(shopItems.filter(i=>i.active).sort((a,b)=>a.order-b.order||a.title.localeCompare(b.title)),x=>x.id);
   if(!live.length){ body.append(el("div",{class:"empty",text:IS_ADMIN?"Your shop is empty. Open Owner tools to add your first item.":"The shelves are empty right now. New rewards drop here when the owner stocks them."})); return; }
   const g=el("div",{class:"grid",style:"grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"});
   const okRedeem=canRedeem(); for(const it of live){ const left=remaining(it); const c=el("button",{class:"card",type:"button",onclick:()=>redeemConfirm(it)}); if(!okRedeem) c.append(el("div",{class:"r-epic",style:"font-size:10px",text:"🔒 Members only"})); c.append(itemVisual(it,96),el("div",{class:"nm",text:it.title}),el("div",{class:"meta"},el("span",{class:"r-uncommon",text:it.cents>0?`${itemRP(it).toLocaleString()} RP`:"Not priced yet"}),el("span",{class:left?"":"r-epic",text:left?`${left} left`:"Sold out"}))); if(!left) c.disabled=true; g.append(c); }
