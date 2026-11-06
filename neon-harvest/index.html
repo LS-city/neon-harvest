@@ -1289,7 +1289,10 @@ function renderChatLog(force){ const log=$("#chatlog"); if(!log) return; const n
   for(const d of log.children){ const h=d._h; if(!h) continue; const life=h.sys?SYS_LIFE:CHAT_LIFE, left=life-(now-h.at); d.style.opacity=chatTyping||(deck&&!h.sys)?"1":deck?".7":String(Math.max(0,Math.min(1,left/1500))); } }
 function COARSE_UI(){ return matchMedia("(max-width:520px)").matches; }
 setInterval(()=>renderChatLog(false),500);
-function hud(){ jobHud(); try{ nrcHud(); }catch(e){} if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=MOBILE&&bf.length>1?`⚡ ${bf.length} boosts · ${Math.max(...bf.map(k=>Math.ceil((save.buffs[k]-Date.now())/60e3)))}m (☰ for details)`:bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); const rpp=$("#rppill"); if(rpp){ rpp.hidden=!(myId&&(dccActive(myId)||(+save.rp||0)>0)); $("#rp").textContent=Math.floor(+save.rp||0).toLocaleString(); } }
+function hud(){
+  if(!save.role){ openRoleSelect(); }
+  jobHud(); try{ nrcHud(); }catch(e){} if(save.look&&save.look.hand&&!hasItem(save.look.hand)){ save.look={...save.look,hand:""}; pushPresence(true); } const bf=Object.keys(BUFF_N).filter(buffOn); const be=$("#buffs"); be.hidden=!bf.length; be.textContent=MOBILE&&bf.length>1?`⚡ ${bf.length} boosts · ${Math.max(...bf.map(k=>Math.ceil((save.buffs[k]-Date.now())/60e3)))}m (☰ for details)`:bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "); $("#credits").textContent=Math.floor(save.credits).toLocaleString(); $("#chips").textContent=Math.floor(save.chips).toLocaleString(); const rpp=$("#rppill"); if(rpp){ rpp.hidden=!(myId&&(dccActive(myId)||(+save.rp||0)>0)); $("#rp").textContent=Math.floor(+save.rp||0).toLocaleString(); }
+}
 
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
@@ -2659,7 +2662,29 @@ async function claimName(n){
   }
   save.name=n; save.handleKey=key; myName=n; if(myId) names[myId]=n; lastHomeSig=""; persist(); pushPresence(true); return true;
 }
-/* --- shop */
+/* --- roles --- */
+const ROLE_DATA={
+  hardworker:{n:"Hard Worker",d:"Dedicated and reliable. Bonus credits from shifts and faster build times.",col:"#43f0a4"},
+  dealer:{n:"Underworld Dealer",d:"Specializes in illegal parts. Higher margins on black-market trade.",col:"#ffb84a"},
+  police:{n:"Police Force",d:"Protects the city. Can arrest criminals and maintain order.",col:"#38e8ff"},
+  medic:{n:"Street Medic",d:"Saves lives. Ability to heal others and clear prison status.",col:"#ffffff"},
+  thief:{n:"Shadow Thief",d:"Master of stealth. Can steal from players and NPCs.",col:"#9a8cc0"},
+  cultleader:{n:"Cult Leader",d:"Inspires devotion. Can recruit others for shared bonuses.",col:"#ff3fa8"},
+  mayor:{n:"Mayor",d:"Leader of the district. Special political powers. Elected by players.",col:"#ffd36a"}
+};
+function openRoleSelect(){
+  const body=panel("CITIZEN REGISTRATION","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
+  const g=el("div",{class:"grid"});
+  Object.entries(ROLE_DATA).forEach(([id,r])=>{
+    const c=el("button",{class:"card",type:"button",onclick:()=>{
+      save.role=id; persist(); toast(`Registered as ${r.n}!`,r.col); closePanel(); hud();
+    }});
+    c.append(el("div",{class:"nm",text:r.n}),el("div",{class:"sub",text:r.d}));
+    g.append(c);
+  });
+  body.append(g);
+}
+
 let shopStock=null, shopDay=-1;
 // Stores list each item once: if the same reward was added twice, only the oldest copy shows (the one with stock left wins).
 function dedupeBy(arr,key){ const m=new Map(); for(const x of arr){ const k=key(x), o=m.get(k); if(!o||((o.stock-(o.sold||0))<=0&&(x.stock-(x.sold||0))>0)||((o.at||0)>(x.at||0)&&((x.stock-(x.sold||0))>0)===((o.stock-(o.sold||0))>0))) m.set(k,x); } return [...m.values()]; }
