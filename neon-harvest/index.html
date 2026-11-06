@@ -1164,7 +1164,7 @@ const WARD_ADD={
   neck:[["Data scarf",120],["LED necklace",110],["Holo tag",90],["Circuit torc",160]],
   visor:[["Hex visor",180],["Holo glasses",140],["Target HUD",200],["Kitsune mask",240],["Visor band",120]],
   hair:[["Fiber optic",220],["Long waves",60],["Space buns",70],["Shag",50],["Circuit braids",160]],
-  hat:[["Holo crown",420],["Cyber helm",300],["Antler crown",260],["Neon beret",110],["Satellite dish",180]],
+  hat:[["Prism crown",420],["Cyber helm",300],["Antler crown",260],["Neon beret",110],["Satellite dish",180]],
   back:[["Data wings",520],["Hex shield",280],["Solar panels",240],["Holo tail",300],["Floating swords",460]],
   aura:[["Hex grid",260],["Code orbit",280],["Neon pulse",220],["Fireflies",200],["Comet tail",340],["Prism shards",380]]};
 const WARD_BASE_LEN={}; for(const [k,list] of Object.entries(WARD_ADD)){ WARD_BASE_LEN[k]=WARD[k].opts.length; WARD[k].opts.push(...list); }
@@ -1214,7 +1214,7 @@ function wx2(layer,c,X){ const {L,dir,t,head,sh,hip,AC,JC}=X; const W2=k=>WARD[k
     if(v==="Kitsune mask"){ c.fillStyle="#f4f0ff"; c.beginPath(); c.moveTo(-7,head-5); c.lineTo(-5,head-11); c.lineTo(-2,head-6); c.lineTo(2,head-6); c.lineTo(5,head-11); c.lineTo(7,head-5); c.lineTo(dir*10,head+3); c.lineTo(0,head+6); c.lineTo(-7,head+2); c.closePath(); c.fill(); c.strokeStyle=AC; c.lineWidth=1; glowOn(c,AC,6); c.beginPath(); c.moveTo(-4,head-3); c.lineTo(-1,head-1.5); c.moveTo(dir*7,head-3); c.lineTo(dir*4,head-1.5); c.moveTo(-4,head-9); c.lineTo(-4.5,head-6); c.moveTo(4,head-9); c.lineTo(4.5,head-6); c.stroke(); }
     if(v==="Visor band"){ c.fillStyle="#1b1530"; c.fillRect(-9,head-3.5,18,4); c.fillStyle=AC; glowOn(c,AC,8); const sx=((t*14)%16)-8; c.fillRect(sx,head-2.5,4,2); } }
   if(layer==="hat"){ const h=W2("hat");
-    if(h==="Holo crown"){ c.strokeStyle=AC; glowOn(c,AC,10); c.lineWidth=1.2; c.globalAlpha=.85; for(let k=0;k<5;k++){ const x=-8+k*4, top=head-15-(k===2?5:k%2?0:3)+Math.sin(t*3+k); c.beginPath(); c.moveTo(x,head-7); c.lineTo(x,top); c.stroke(); c.fillStyle="#fff"; c.beginPath(); c.arc(x,top,1.1,0,7); c.fill(); } c.beginPath(); c.ellipse(0,head-7,9,2,0,0,7); c.stroke(); }
+    if(h==="Prism crown"){ c.strokeStyle=AC; glowOn(c,AC,10); c.lineWidth=1.2; c.globalAlpha=.85; for(let k=0;k<5;k++){ const x=-8+k*4, top=head-15-(k===2?5:k%2?0:3)+Math.sin(t*3+k); c.beginPath(); c.moveTo(x,head-7); c.lineTo(x,top); c.stroke(); c.fillStyle="#fff"; c.beginPath(); c.arc(x,top,1.1,0,7); c.fill(); } c.beginPath(); c.ellipse(0,head-7,9,2,0,0,7); c.stroke(); }
     if(h==="Cyber helm"){ c.fillStyle="#3d3456"; c.beginPath(); c.arc(0,head-1,10,Math.PI,0); c.fill(); c.fillRect(-10,head-1,3,7); c.fillRect(7,head-1,3,7); c.fillStyle=AC; glowOn(c,AC,8); c.fillRect(-9,head-4,18,1.6); c.fillRect(-1,head-12,2,5); }
     if(h==="Antler crown"){ c.strokeStyle="#e8d7b8"; c.lineWidth=1.5; c.lineCap="round"; for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sd*4,head-7); c.lineTo(sd*8,head-16); c.lineTo(sd*12,head-20); c.moveTo(sd*7,head-13); c.lineTo(sd*11,head-13); c.moveTo(sd*9,head-17); c.lineTo(sd*8,head-22); c.stroke(); } c.fillStyle=AC; glowOn(c,AC,8); for(const sd of [-1,1]){ c.beginPath(); c.arc(sd*12,head-20,1.3,0,7); c.arc(sd*8,head-22,1.1,0,7); c.fill(); } }
     if(h==="Neon beret"){ c.fillStyle=JC; c.beginPath(); c.ellipse(-dir*1.5,head-7,10,4,-dir*.15,0,7); c.fill(); c.strokeStyle=AC; glowOn(c,AC,8); c.lineWidth=1; c.beginPath(); c.ellipse(-dir*1.5,head-7,10,4,-dir*.15,0,Math.PI); c.stroke(); c.fillStyle=AC; c.fillRect(-dir*1.5-.6,head-12,1.2,2); }
@@ -1230,7 +1230,7 @@ function wxFoot(c,X,ft,fx2){ const {dir,t,AC,JC}=X; c.save();
 
 const SLOTS=Object.keys(WARD);
 // Head items that sit on top of or around the hair (everything else covers the top of the head).
-const HAT_TOPPERS=["Halo","Headphones","Horns","Antenna","Cat ears","Bunny ears","Antler crown","Satellite dish","Holo crown","Flower crown","Mohawk","Rebel headband"];
+const HAT_TOPPERS=["Halo","Headphones","Horns","Antenna","Cat ears","Bunny ears","Antler crown","Satellite dish","Holo crown","Prism crown","Flower crown","Mohawk","Rebel headband"];
 const DEFAULT_LOOK={skin:0,style:0,jacket:0,pants:7,feet:0,neck:0,visor:1,hair:0,hairCol:3,hat:0,back:0,pet:0,aura:0,nameCol:1,accent:1,hand:""};
 function slotLen(k){ return WARD[k].color?COLORS.length:WARD[k].opts.length; }
 function optName(k,i){ return WARD[k].color?COLOR_N[i]:WARD[k].opts[i][0]; }
@@ -1927,7 +1927,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   c.restore();
   // ---- labels (unscaled)
   c.save(); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace";
-  const top=(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
+  const top=(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Prism crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
   if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; if(o.dcc>=0){ c.shadowColor=DCC_SYMS[o.dcc]?DCC_SYMS[o.dcc].c:c.fillStyle; c.shadowBlur=8+3*Math.sin(t*3); c.globalAlpha=1; } c.fillText(o.name,x,y-(top+bob)*s); c.shadowBlur=0; c.globalAlpha=1;
     if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; } }
   if(o.hp!=null&&!o.dead){ const bw=36, bx=x-bw/2, by2=y-(top+bob)*s+4, r=clamp(o.hp,0,100)/100; c.fillStyle="rgba(0,0,0,.75)"; c.fillRect(bx-1,by2-1,bw+2,6); c.fillStyle=r>.5?"#43f0a4":r>.25?"#ffb84a":"#ff5a4a"; c.fillRect(bx,by2,bw*r,4); }
@@ -2634,7 +2634,9 @@ function openWardrobe(tab="name",firstRun=false){
   }
   if(tab==="hand"){ handTab(body,firstRun); return; }
   const g=el("div",{class:"grid wgrid"});
+  const seenN=new Set();
   for(let i=0;i<slotLen(tab);i++){
+    if(!WARD[tab].color){ const nm=optName(tab,i).toLowerCase(); if(seenN.has(nm)&&tryOn[tab]!==i&&fullLook(save.look)[tab]!==i) continue; seenN.add(nm); } // hide repeat items with the same name
     const l={...tryOn,[tab]:i}; const cvs=lookCanvas(l,64); const own=isOwned(tab,i), cur=fullLook(save.look)[tab]===i, sel=tryOn[tab]===i;
     const card=el("button",{class:"card"+(sel?" sel":""),type:"button","aria-pressed":String(sel),onclick:()=>{ tryOn[tab]=i; openWardrobe(tab,firstRun); }});
     if(WARD[tab].color){ const sw=el("div",{style:`height:6px;background:${COLORS[i]}`}); card.append(cvs,sw); } else card.append(cvs);
@@ -2659,7 +2661,10 @@ async function claimName(n){
 }
 /* --- shop */
 let shopStock=null, shopDay=-1;
-function getStock(){ const d=Math.floor(Date.now()/36e5); if(d!==shopDay){ shopDay=d; const r=seeded(d*31+7); const pool=[...PARTS].sort(()=>r()-.5); shopStock=pool.slice(0,12).map(i=>({id:i.id,price:Math.round(i.v*1.35),cur:i.r==="epic"?"chips":"credits"})).map(s=>s.cur==="chips"?{...s,price:Math.round(BY[s.id].v/2)}:s); } return shopStock; }
+// Stores list each item once: if the same reward was added twice, only the oldest copy shows (the one with stock left wins).
+function dedupeBy(arr,key){ const m=new Map(); for(const x of arr){ const k=key(x), o=m.get(k); if(!o||((o.stock-(o.sold||0))<=0&&(x.stock-(x.sold||0))>0)||((o.at||0)>(x.at||0)&&((x.stock-(x.sold||0))>0)===((o.stock-(o.sold||0))>0))) m.set(k,x); } return [...m.values()]; }
+function getStock(){ const d=Math.floor(Date.now()/36e5); if(d!==shopDay){ shopDay=d; const r=seeded(d*31+7); const inStalls=new Set(); STALLS.forEach((st,i)=>{ if(st.types||st.builds) try{ stallStock(i).forEach(x=>inStalls.add(x.id)); }catch(e){} }); // never stock what a stall is selling this hour
+    const pool=[...PARTS].sort(()=>r()-.5).filter(i=>!inStalls.has(i.id)); shopStock=pool.slice(0,12).map(i=>({id:i.id,price:Math.round(i.v*1.35),cur:i.r==="epic"?"chips":"credits"})).map(s=>s.cur==="chips"?{...s,price:Math.round(BY[s.id].v/2)}:s); } return shopStock; }
 function openShop(tab="buy"){
   const body=panel("PARTS DEPOT","Stock rotates every hour. Epic parts are priced in chips. Sell-back pays full worth in credits.");
   const tabs=el("div",{class:"tabs"}); ["buy","sell"].forEach(k=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:k==="buy"?"Buy parts":"Sell parts",onclick:()=>openShop(k)}))); body.append(tabs);
@@ -3291,7 +3296,7 @@ const STALL_BY=Object.fromEntries(STALLS.map((s,i)=>[s.id,i]));
 const hourSeed=()=>Math.floor(Date.now()/36e5);
 function stallStock(i){
   const st=STALLS[i]; const r=seeded(hourSeed()*97+i*13+1);
-  if(st.drinks) return [...BB_FOODS,...FOODS,...DRINKS].map(d=>({id:d.id,price:d.v,cur:"credits"}));
+  if(st.drinks) return [...BB_FOODS].map(d=>({id:d.id,price:d.v,cur:"credits"}));
   if(st.builds){ const out=[]; for(const rc of [...RECIPES].sort(()=>r()-.5).slice(0,14)){ if(rc.k==="qrig"&&r()<.6) continue; const tier=r()<.06?3:r()<.25?2:r()<.55?1:0; const id=`b_${rc.k}_${BY_R[tier]}`; out.push(tier===3?{id,price:Math.round(BY[id].v*.6),cur:"chips"}:{id,price:Math.round(BY[id].v*1.45),cur:"credits"}); } return out; }
   if(st.types){ const pool=COMP.filter(p=>st.types.includes(p.t)&&p.id!=="flop_blank").sort(()=>r()-.5).slice(0,st.types.includes("weapon")?14:6); for(const a of st.always||[]) if(!pool.some(p=>p.id===a)) pool.unshift(BY[a]); return pool.map(p=>p.r==="epic"?{id:p.id,price:Math.round(p.v/2*st.disc),cur:"chips"}:{id:p.id,price:Math.round(p.v*1.3*st.disc),cur:"credits"}); }
   return [];
@@ -4650,7 +4655,7 @@ function rowHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro
 /* --- live data */
 function rowWatch(db){
   db.collection("row").onSnapshot(s=>{ rowStores={}; s.docs.forEach(d=>{ if(ROW_SLOTS.includes(d.id)){ const r=cleanRow(d.data()); if(r) rowStores[d.id]=r; } });
-    for(const sl of ROW_SLOTS){ if(!rowSubs[sl]){ rowSubs[sl]=1; db.collection(`rowitems/${sl}/items`).onSnapshot(q=>{ rowItems[sl]=q.docs.map(d=>cleanRowItem(d.id,d.data())).filter(Boolean); refreshRow(); },()=>{}); }
+    for(const sl of ROW_SLOTS){ if(!rowSubs[sl]){ rowSubs[sl]=1; db.collection(`rowitems/${sl}/items`).onSnapshot(q=>{ rowItems[sl]=dedupeBy(q.docs.map(d=>cleanRowItem(d.id,d.data())).filter(Boolean),x=>(x.title||"").trim().toLowerCase()+"|"+x.cur); refreshRow(); },()=>{}); }
       if(rowCanManage(sl)&&!rowStaffSubs[sl]){ rowStaffSubs[sl]=1; db.collection(`rowcodes/${sl}/codes`).onSnapshot(q=>{ rowStaff[sl]=q.docs.map(d=>({id:d.id,...d.data()})).filter(x=>typeof x.code==="string"); refreshRow(); },()=>{ rowStaffSubs[sl]=0; }); } }
     refreshRow(); },()=>{});
   db.doc(`data/users/${myId}/rowcodes`).onSnapshot(s=>{ const d=s.exists?s.data():null; rowMine=Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string"&&ROW_SLOTS.includes(e.slot)):[]; rowCheck(); },()=>{});
@@ -6293,7 +6298,7 @@ async function saveDcc(id,dr){ if(!IS_ADMIN||!DB) return false; const rec={on:!!
 /* ============================================================ APARTMENT: room styles, Home Vibe, interactive decor */
 const ROOM_STYLES={
   wall:{n:"Wallpaper",opts:[["Midnight plum",0],["Neon grid",150],["Exposed brick",120],["Wood panels",180],["Circuit board",250],["Graffiti",220],["Holo waves",300],["Starfield",400]]},
-  floor:{n:"Flooring",opts:[["Dark carpet",0],["Checker tile",100],["Hardwood",120],["Tatami",160],["Neon grid",250],["Marble",300]]},
+  floor:{n:"Flooring",opts:[["Dark carpet",0],["Checker tile",100],["Hardwood",120],["Tatami",160],["Neon grid tiles",250],["Marble",300]]},
   light:{n:"Lighting",opts:[["Pink glow",0,"#ff3fa8"],["Cyan glow",60,"#38e8ff"],["Gold glow",60,"#ffd36a"],["Toxic green",60,"#43f0a4"],["Ultraviolet",80,"#7c5cff"],["Blood red",80,"#ff5a4a"],["Rainbow cycle",300,"rainbow"]]},
 };
 function roomOwnedIn(list,k,i){ return !ROOM_STYLES[k].opts[i]||ROOM_STYLES[k].opts[i][1]===0||list.includes(k+":"+i); }
@@ -7966,7 +7971,7 @@ setInterval(hud,1000);
     for(const x of save.settled||[]) settled.add(x);
     // Smacked Shop
     if(IS_ADMIN){ try{ ASSETS=await cl.use("assets"); }catch(e){} }
-    db.collection("shop").onSnapshot(s=>{ shopItems=s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean); refreshSmacked(); },()=>{});
+    db.collection("shop").onSnapshot(s=>{ shopItems=dedupeBy(s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean),x=>(x.title||"").trim().toLowerCase()+"|"+x.cur); refreshSmacked(); },()=>{});
     db.doc("shopinfo/digital").onSnapshot(s=>{ const d=s.exists?s.data()||{}:{}; digiCfg=d.items&&typeof d.items==="object"?d.items:{}; refreshSmacked(); },()=>{});
     db.doc("shopinfo/econ").onSnapshot(s=>{ ECON=cleanEcon(s.exists?s.data():null); hud(); refreshSmacked(); },()=>{});
     try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db); nrcWatch(db); joinWatch(db);
