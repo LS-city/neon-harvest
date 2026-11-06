@@ -2110,6 +2110,40 @@ function spawnStreetNpcs(){
   const x=Math.random()*4000, dir=Math.random()>.5?1:-1;
   npcs.street.push({x,y:268+Math.random()*50,look:d.look,dir,vx:dir*d.vx,min:x-500,max:x+500,name:d.n,type:t});
 }
+const ROLE_DATA={
+  hardworker:{n:"Hard Worker",d:"Dedicated and reliable. Bonus credits from shifts and faster build times.",col:"#43f0a4"},
+  dealer:{n:"Underworld Dealer",d:"Specializes in illegal parts. Higher margins on black-market trade.",col:"#ffb84a"},
+  police:{n:"Police Force",d:"Protects the city. Can arrest criminals and maintain order.",col:"#38e8ff"},
+  medic:{n:"Street Medic",d:"Saves lives. Ability to heal others and clear prison status.",col:"#ffffff"},
+  thief:{n:"Shadow Thief",d:"Master of stealth. Can steal from players and NPCs.",col:"#9a8cc0"},
+  cultleader:{n:"Cult Leader",d:"Inspires devotion. Can recruit others for shared bonuses.",col:"#ff3fa8"},
+  mayor:{n:"Mayor",d:"Leader of the district. Special political powers. Elected by players.",col:"#ffd36a"}
+};
+const NPC_TYPES={
+  civilian:{n:"Civilian",v:15,vx:20,look:{jacket:0,visor:0,hat:0},say:["I heard the Mayor is stepping down...","Tired of these rain cycles.","Anyone seen a floating chip?","This city never sleeps, and neither do I."]},
+  police:{n:"Police Officer",v:40,vx:10,look:{jacket:1,visor:1,hat:1},say:["Move along, citizen.","Keep it clean on the streets.","I've got my eye on you.","Stop right there!"]},
+  gang:{n:"Robot Gang",v:60,vx:35,look:{jacket:5,visor:5,hat:5},say:["This is our turf.","Hand over the credits.","You're in the wrong alley, Runner.","Access denied. Pay up."]}
+};
+function spawnStreetNpcs(){
+  try {
+    if(!npcs||!npcs.street||npcs.street.length>15) return;
+    const t=Object.keys(NPC_TYPES)[(Math.random()*3)|0], d=NPC_TYPES[t];
+    const x=Math.random()*4000, dir=Math.random()>.5?1:-1;
+    npcs.street.push({x,y:268+Math.random()*50,look:d.look,dir,vx:dir*d.vx,min:x-500,max:x+500,name:d.n,type:t});
+  } catch(e){ console.error("NPC Spawn Error:", e); }
+}
+function openRoleSelect(){
+  const body=panel("CITIZEN REGISTRY","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
+  const g=el("div",{class:"grid"});
+  Object.entries(ROLE_DATA).forEach(([id,r])=>{
+    const c=el("button",{class:"card",type:"button",onclick:()=>{
+      save.role=id; persist(); toast(`Registered as ${r.n}!`,r.col); closePanel(); hud();
+    }});
+    c.append(el("div",{class:"nm",text:r.n}),el("div",{class:"sub",text:r.d}));
+    g.append(c);
+  });
+  body.append(g);
+}
 const npcs={
   street:[],
   bar:[{x:380,y:262,look:{jacket:0,visor:2,hat:2},dir:1,vx:0,name:"Vex"},{x:612,y:262,look:{jacket:3,visor:0,hat:1},dir:1,vx:0,name:"Kai"},{x:640,y:330,look:{jacket:5,visor:3,hat:0},dir:1,vx:0,dance:true,name:""},{x:1210,y:300,look:{jacket:1,visor:1,hat:3},dir:-1,vx:0,name:""}],
@@ -2705,21 +2739,40 @@ async function claimName(n){
   }
   save.name=n; save.handleKey=key; myName=n; if(myId) names[myId]=n; lastHomeSig=""; persist(); pushPresence(true); return true;
 }
-/* --- prison --- */
-function openPrison(){
-  const body=panel("CITY HOLDING CELLS","The walls are cold, dampened concrete. A single flickering neon tube hums overhead. There is no way out but through the law or a very skilled medic.");
-  const row=el("div",{class:"row"});
-  if(save.role==="medic"){
-    row.append(el("button",{class:"btn hot",type:"button",text:"Bribe Guard (₵100)",onclick:async()=>{
-      if(save.credits<100){ toast("Not enough credits."); return; }
-      save.credits-=100; save.status="free"; persist(); toast("The guard takes the money and looks the other way. You're free!", "#43f0a4"); closePanel(); go("street",300);
-    }}));
-  } else {
-    row.append(el("button",{class:"btn",type:"button",text:"Wait for Release (10 min)",onclick:()=>{
-      toast("You'll be released soon. Just stay put.");
-    }}));
-  }
-  body.append(row);
+/* --- roles & npcs --- */
+const ROLE_DATA={
+  hardworker:{n:"Hard Worker",d:"Dedicated and reliable. Bonus credits from shifts and faster build times.",col:"#43f0a4"},
+  dealer:{n:"Underworld Dealer",d:"Specializes in illegal parts. Higher margins on black-market trade.",col:"#ffb84a"},
+  police:{n:"Police Force",d:"Protects the city. Can arrest criminals and maintain order.",col:"#38e8ff"},
+  medic:{n:"Street Medic",d:"Saves lives. Ability to heal others and clear prison status.",col:"#ffffff"},
+  thief:{n:"Shadow Thief",d:"Master of stealth. Can steal from players and NPCs.",col:"#9a8cc0"},
+  cultleader:{n:"Cult Leader",d:"Inspires devotion. Can recruit others for shared bonuses.",col:"#ff3fa8"},
+  mayor:{n:"Mayor",d:"Leader of the district. Special political powers. Elected by players.",col:"#ffd36a"}
+};
+const NPC_TYPES={
+  civilian:{n:"Civilian",v:15,vx:20,look:{jacket:0,visor:0,hat:0},say:["I heard the Mayor is stepping down...","Tired of these rain cycles.","Anyone seen a floating chip?","This city never sleeps, and neither do I."]},
+  police:{n:"Police Officer",v:40,vx:10,look:{jacket:1,visor:1,hat:1},say:["Move along, citizen.","Keep it clean on the streets.","I've got my eye on you.","Stop right there!"]},
+  gang:{n:"Robot Gang",v:60,vx:35,look:{jacket:5,visor:5,hat:5},say:["This is our turf.","Hand over the credits.","You're in the wrong alley, Runner.","Access denied. Pay up."]}
+};
+function spawnStreetNpcs(){
+  try {
+    if(!npcs||!npcs.street||npcs.street.length>15) return;
+    const t=Object.keys(NPC_TYPES)[(Math.random()*3)|0], d=NPC_TYPES[t];
+    const x=Math.random()*4000, dir=Math.random()>.5?1:-1;
+    npcs.street.push({x,y:268+Math.random()*50,look:d.look,dir,vx:dir*d.vx,min:x-500,max:x+500,name:d.n,type:t});
+  } catch(e){ console.error("NPC Spawn Error:", e); }
+}
+function openRoleSelect(){
+  const body=panel("CITIZEN REGISTRY","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
+  const g=el("div",{class:"grid"});
+  Object.entries(ROLE_DATA).forEach(([id,r])=>{
+    const c=el("button",{class:"card",type:"button",onclick:()=>{
+      save.role=id; persist(); toast(`Registered as ${r.n}!`,r.col); closePanel(); hud();
+    }});
+    c.append(el("div",{class:"nm",text:r.n}),el("div",{class:"sub",text:r.d}));
+    g.append(c);
+  });
+  body.append(g);
 }
 
 const ROLE_DATA={
