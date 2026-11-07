@@ -2027,7 +2027,7 @@ function rstat(k,n=1){ save.rstat=save.rstat||{}; save.rstat[k]=(+save.rstat[k]|
 function earn(n,why,col){ n=Math.round(n); if(!(n>0)) return; save.credits+=n; persist(); toast(`+₵${n} · ${why}`,col||"#43f0a4"); beep(880,.06); }
 function addHeat(n,why){ if(roleIs("worker")||roleIs("police")) return; const before=heatStars(); save.heat=Math.min(5,(+save.heat||0)+n); save.heatAt=Date.now(); const st=heatStars(); persist(); pushPresence(true);
   if(st>before) toast(`Wanted ${"★".repeat(st)}${why?" · "+why:""}`,"#ff3f5a"); }
-function roleSanitize(o,s){ o.role=ROLES[s.role]?s.role:""; o.roleAt=+s.roleAt||0; o.heat=Math.max(0,Math.min(5,+s.heat||0)); o.heatAt=+s.heatAt||0;
+function roleSanitize(o,s){ o.admImm=!!s.admImm; o.admMayor=!!s.admMayor; o.role=ROLES[s.role]?s.role:""; o.roleAt=+s.roleAt||0; o.heat=Math.max(0,Math.min(5,+s.heat||0)); o.heatAt=+s.heatAt||0;
   o.jail=s.jail&&+s.jail.until>0?{until:+s.jail.until,why:String(s.jail.why||"").slice(0,60),stars:Math.max(0,Math.min(5,+s.jail.stars||0))}:null;
   o.rcd=s.rcd&&typeof s.rcd==="object"?Object.fromEntries(Object.entries(s.rcd).filter(([k,v])=>isFinite(+v)&&+v>Date.now()).slice(0,80).map(([k,v])=>[String(k).slice(0,40),+v])):{};
   o.rstat=s.rstat&&typeof s.rstat==="object"?Object.fromEntries(Object.entries(s.rstat).filter(([k,v])=>isFinite(+v)).slice(0,30).map(([k,v])=>[String(k).slice(0,20),Math.floor(+v)])):{};
@@ -2042,7 +2042,7 @@ function rolePres(){ return {rl:pRole(),hz:heatStars(),jl:jailed()?1:0,cu:roleIs
 function rolePeer(q,pr){ q.rl=ROLES[pr.rl]?pr.rl:""; q.hz=Math.max(0,Math.min(5,Math.floor(+pr.hz||0))); q.jl=pr.jl===1; q.ac=Math.max(0,Math.min(4,Math.floor(+pr.ac||0)));
   q.cu=null; if(typeof pr.cu==="string"){ const [by,n,col]=pr.cu.split("|"); if(by&&n) q.cu={by,n:n.slice(0,24),col:/^#[0-9a-f]{6}$/i.test(col)?col:"#ff3f5a"}; } }
 function roleO(who){ // role info to draw on a character
-  if(who==="me") return {rk:pRole()||null,hz:heatStars(),jl:jailed(),cu:roleIs("cult")&&save.myCult?{by:myId,...save.myCult}:save.cult,mayor:!!myId&&mayorId()===myId};
+  if(who==="me") return {rk:pRole()||null,hz:heatStars(),jl:jailed(),cu:roleIs("cult")&&save.myCult?{by:myId,...save.myCult}:save.cult,mayor:(!!myId&&mayorId()===myId)||!!(IS_ADMIN&&save.admMayor)};
   return {rk:who.rl||null,hz:who.hz||0,jl:!!who.jl,cu:who.cu||null,mayor:!!who.by&&mayorId()===who.by}; }
 
 /* ---------- drawing: gear, tags, wanted stars ---------- */
@@ -2138,11 +2138,11 @@ function tickCity(dt){ const now=Date.now();
   for(const n of L){ if(n.say&&T-n.say.t>4) n.say=null;
     if(n.k==="bot"&&n.out){ if(now>n.out){ n.out=0; n.x=n.min+Math.random()*(n.max-n.min); } else continue; }
     if(n.k==="cop"){ const chaseAt=policy("crackdown")?1:2; const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5);
-      if(n.state!=="chase"&&stars>=chaseAt&&!jailed()&&d<300&&$("#overlay").hidden){ n.state="chase"; npcSay(n,"STOP! Police!"); beep(1200,.08,"square"); setTimeout(()=>beep(900,.08,"square"),120); }
+      if(n.state!=="chase"&&stars>=chaseAt&&!jailed()&&!(IS_ADMIN&&save.admImm)&&d<300&&$("#overlay").hidden){ n.state="chase"; npcSay(n,"STOP! Police!"); beep(1200,.08,"square"); setTimeout(()=>beep(900,.08,"square"),120); }
       if(n.state==="chase"){ if(stars<chaseAt||jailed()||d>460){ n.state="patrol"; n.vx=24*(n.vx<0?-1:1); npcSay(n,stars?"Lost 'em.":"Carry on."); continue; }
         const sp=165; n.x+=Math.sign(me.x-n.x)*Math.min(Math.abs(me.x-n.x),sp*dt); n.y+=Math.sign(me.y-n.y)*Math.min(Math.abs(me.y-n.y),sp*.6*dt); n.dir=me.x>=n.x?1:-1; n.phase+=dt*9;
         if(d<22){ n.state="patrol"; npcSay(n,"You're under arrest."); goJail(stars,"Caught by "+n.name,null); } continue; } }
-    if(n.k==="bot"&&!jailed()&&!roleIs("police")&&now>gangCd&&$("#overlay").hidden){ const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5); if(d<70&&!n.mug){ n.mug=1; gangMug(n); } }
+    if(n.k==="bot"&&!jailed()&&!roleIs("police")&&!(IS_ADMIN&&save.admImm)&&now>gangCd&&$("#overlay").hidden){ const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5); if(d<70&&!n.mug){ n.mug=1; gangMug(n); } }
     if(n.pause>0){ n.pause-=dt; continue; }
     if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; n.x=clamp(n.x,n.min,n.max); } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; }
     if(n.k==="civ"&&Math.random()<dt/40){ n.pause=2+Math.random()*3; if(Math.random()<.4) npcSay(n,n.hurt?"Ugh… I need a medic.":n.buyer&&roleIs("dealer")?"Psst… holding any Dust?":CIV_LINES[(Math.random()*CIV_LINES.length)|0]); }
@@ -2172,7 +2172,7 @@ function cityEnts(ents){ const L=cityGen(me.scene);
   for(const p of peers.values()) if(p.ac&&p.s===me.scene&&(p.home||null)===curHomeKey()) for(let i=0;i<p.ac;i++) ents.push({x:p.dx-(p.dir||1)*(26+i*16),y:clamp(p.dy+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:p.dir,phase:p.phase+i,moving:p.moving,look:acoLook(i),name:"",rk:"cult",cu:p.cu,aco:1}}); }
 
 /* ---------- jail ---------- */
-function goJail(stars,why,byCop){ if(jailed()) return 0; stars=Math.max(1,stars||1); let sec=40*stars*(policy("crackdown")?1.5:1)*(policy("amnesty")?.5:1); const fine=Math.min(400,Math.floor(save.credits*.1));
+function goJail(stars,why,byCop){ if(jailed()) return 0; if(IS_ADMIN&&save.admImm){ toast("Owner: immune to arrest. Turn it off in Admin \u2192 City & Roles to test jail."); if(save.heat){ save.heat=0; persist(); pushPresence(true); } return 0; } stars=Math.max(1,stars||1); let sec=40*stars*(policy("crackdown")?1.5:1)*(policy("amnesty")?.5:1); const fine=Math.min(400,Math.floor(save.credits*.1));
   save.credits-=fine; save.jail={until:Date.now()+sec*1000,why:String(why||"").slice(0,60),stars}; save.heat=0; save.heatAt=Date.now(); rstat("jailed"); persist();
   closePanel(); go("prison"); me.x=PRISON.spawn; me.y=308; pushPresence(true); beep(200,.3,"square");
   card(`⛓ Arrested${why?": "+why:""}. ${Math.round(sec)}s in Rust Gate Prison${fine?`, fined ₵${fine}`:""}. Work jobs, lift, or risk a tunnel to get out — or pay bail.`,[["OK",null,true]],15e3);
@@ -2284,7 +2284,7 @@ function onRoleEv(m){ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{};
 /* ---------- elections (stored in the club collection: one vote doc per voter) ---------- */
 function termNow(){ return Math.floor(Date.now()/TERM_MS); }
 function termLeftTxt(){ const ms=(termNow()+1)*TERM_MS-Date.now(), h=Math.floor(ms/36e5); return h>=24?`${Math.floor(h/24)}d ${h%24}h`:`${h}h ${Math.floor(ms%36e5/6e4)}m`; }
-let elDocs={cur:{},prev:{}}, elWatched=0;
+let elDocs={cur:{},prev:{}}, elWatched=0, cityLawAdmin=null;
 function elWatch(){ if(elWatched||!DB) return; elWatched=1; const N=termNow();
   const take=k=>s=>{ const o={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["vote","cand","city"].includes(v.kind)) o[d.id]=v; }); elDocs[k]=o; if(currentView==="election") openElection(); };
   try{ DB.collection("club").where("term","==",N).onSnapshot(take("cur"),()=>{}); DB.collection("club").where("term","==",N-1).onSnapshot(take("prev"),()=>{}); }catch(e){}
@@ -2293,15 +2293,15 @@ function tally(docs){ const cands={}; for(const [id,v] of Object.entries(docs)) 
   for(const [id,v] of Object.entries(docs)) if(v.kind==="vote"&&id.startsWith("ev_")&&cands[v.cand]) cands[v.cand].votes++; return Object.values(cands).sort((a,b)=>b.votes-a.votes||a.at-b.at); }
 function candList(){ return tally(elDocs.cur); }
 function mayorId(){ const t=tally(elDocs.prev); return t.length&&t[0].votes>0?t[0].uid:null; }
-function cityPolicies(){ const m=mayorId(); if(!m) return []; const d=elDocs.cur["city_"+termNow()]; return d&&d.by===m&&Array.isArray(d.pol)?d.pol.filter(k=>POLICIES[k]).slice(0,2):[]; }
+function cityPolicies(){ if(cityLawAdmin!==null) return cityLawAdmin; const m=mayorId(); if(!m) return []; const d=elDocs.cur["city_"+termNow()]; return d&&d.by===m&&Array.isArray(d.pol)?d.pol.filter(k=>POLICIES[k]).slice(0,2):[]; }
 function wantedList(){ const L=[]; if(heatStars()) L.push({name:myName||"You",hz:heatStars(),s:me.scene,me:1}); for(const p of onlinePeers()) if(p.hz>0) L.push({name:nameOf(p.by),hz:p.hz,s:p.s}); return L.sort((a,b)=>b.hz-a.hz); }
 
 /* ---------- panels ---------- */
 function roleCard(k){ const R=ROLES[k]; const mine=pRole()===k; const c=el("div",{class:"card",style:`text-align:left;padding:10px;border-color:${mine?R.col:"var(--line)"}`});
   const lk={...fullLook(save.look)}; const cv=lookCanvas(lk,70); cv._roleK=k; cv.style.cssText="width:70px;height:70px;float:right;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 75%);border-radius:6px";
   c.append(cv,el("div",{style:`font-family:var(--f-display);color:${R.col};font-size:14px`,text:`${R.ic} ${R.n}`}),el("div",{class:"sub",style:"margin:4px 0",text:R.d}),el("ul",{style:"margin:6px 0 8px 16px;padding:0;font-size:11px;line-height:1.45"},...R.perks.map(p=>el("li",{text:p}))));
-  const left=save.role&&!mine?Math.max(0,(save.roleAt||0)+ROLE_SWITCH_MS-Date.now()):0; const b=el("button",{class:"btn"+(mine?"":" hot"),type:"button",text:mine?"Your role":left?`Switch in ${cdTxt(left)}`:`Become a ${R.n}`,onclick:()=>chooseRole(k)}); if(mine||left||jailed()||heatStars()) b.disabled=true; c.append(b); return c; }
-function chooseRole(k){ if(jailed()) return toast("Not from a jail cell."); if(heatStars()) return toast("City Hall won't process Wanted runners. Lose the heat first.");
+  const left=save.role&&!mine?Math.max(0,(save.roleAt||0)+ROLE_SWITCH_MS-Date.now()):0; const b=el("button",{class:"btn"+(mine?"":" hot"),type:"button",text:mine?"Your role":left?`Switch in ${cdTxt(left)}`:`Become a ${R.n}`,onclick:()=>chooseRole(k)}); if(mine||(!IS_ADMIN&&(left||jailed()||heatStars()))) b.disabled=true; c.append(b); return c; }
+function chooseRole(k){ if(!IS_ADMIN){ if(jailed()) return toast("Not from a jail cell."); if(heatStars()) return toast("City Hall won't process Wanted runners. Lose the heat first."); }
   if(k==="cult"&&!save.myCult) return openFoundCult();
   const was=pRole(); save.role=k; save.roleAt=Date.now(); if(was==="cult"&&k!=="cult"){ save.acolytes=0; } persist(); pushPresence(true); toast(`You're now a ${ROLES[k].n}.`,ROLES[k].col); beep(700,.08); setTimeout(()=>beep(1050,.12),90);
   broadcastSys(`became a ${ROLES[k].n}${k==="cult"?` and founded "${save.myCult.n}"`:""}`); openRoleOffice(); }
@@ -5303,6 +5303,46 @@ async function rowSetCode(s,d,status){ try{ await DB.doc(`rowcodes/${s}/codes/${
   catch(e){ toast("Couldn't update that code."); } openStore(s,"manage"); }
 
 /* --- the owner's side: Admin Panel → Neon Row */
+async function adminGiveNrc(amt){ amt=Math.floor(+amt||0); if(amt<=0) return toast("Enter an NRC amount."); if(!DB||!myId) return toast("Sign in first.");
+  const day=nrc.day||utcDay(), nb=nrcBal()+amt, nt=(Math.floor(+nrc.total)||0)+amt, ng=nrcGotToday(); const ref=DB.doc("nrc/"+myId);
+  try{ if(nrc.exists){ await ref.update({bal:nb,day,got:ng,total:nt}); } else { const first=Math.min(amt,nrcCap()); await ref.set({bal:first,day,got:first,total:first}); if(amt>first) await ref.update({bal:amt,day,got:first,total:amt}); }
+    nrc={...nrc,bal:nb,day,got:ng,total:nt,exists:true}; try{ nrcHud(); }catch(e){} toast(`+${amt.toLocaleString()} NRC (owner)`,"#38e8ff"); }
+  catch(e){ try{ addNRC(amt,"owner"); }catch(_){} toast("Server capped the NRC grant to today's limit."); } }
+function adminCity(body){ currentView="admincity";
+  // ---- City laws (apply to everyone) ----
+  body.append(el("div",{class:"detail",style:"border-color:#ffd36a"},el("div",{class:"info"},el("strong",{style:"color:#ffd36a",text:"City laws (override the election)"}),
+    el("span",{class:"sub",text:cityLawAdmin!==null?("Your override is live for all players: "+(cityLawAdmin.length?cityLawAdmin.map(k=>POLICIES[k].n).join(", "):"no laws (election ignored).")):"The elected Mayor's laws are in effect (or none). Set your own below to override them for everyone."}))));
+  const sel=new Set(cityLawAdmin||[]); const ll=el("div",{class:"list"});
+  for(const [k,P] of Object.entries(POLICIES)){ const cb=el("input",{type:"checkbox"}); cb.checked=sel.has(k); cb.onchange=()=>{ if(cb.checked){ if(sel.size>=2){ cb.checked=false; return toast("Two laws at most."); } sel.add(k); } else sel.delete(k); };
+    ll.append(el("label",{class:"li",style:"cursor:pointer"},cb,el("div",{class:"grow"},el("strong",{text:P.n}),el("div",{class:"sub",text:P.d})))); }
+  body.append(ll,el("div",{class:"row"},
+    el("button",{class:"btn hot",type:"button",text:"Apply to everyone",onclick:async()=>{ try{ await DB.doc("shopinfo/citylaw").set({pol:[...sel],by:myId,at:Date.now()}); toast("City laws applied for all players.","#ffd36a"); }catch(e){ toast("Couldn't save (owner account only)."); } }}),
+    el("button",{class:"btn",type:"button",text:"Clear override",onclick:async()=>{ try{ await DB.doc("shopinfo/citylaw").delete(); toast("Override cleared. The election decides again."); }catch(e){ toast("Couldn't clear that."); } }})));
+  // ---- Your role ----
+  body.append(el("strong",{text:"Your role (instant, no cooldown)"}));
+  const rg=el("div",{class:"ftgrid"}); for(const [k,R] of Object.entries(ROLES)){ const mine=pRole()===k; rg.append(el("button",{class:"fttile"+(mine?" here":""),type:"button",disabled:mine,title:R.d,onclick:()=>{ chooseRole(k); openAdmin("city"); }},el("div",{class:"ftname",text:`${R.ic} ${R.n}`}),el("div",{class:"ftsub",text:mine?"Current":"Become"}))); }
+  const civ=el("button",{class:"fttile",type:"button",title:"No role",onclick:()=>{ save.role=""; save.roleAt=Date.now(); save.acolytes=0; persist(); pushPresence(true); openAdmin("city"); }},el("div",{class:"ftname",text:"🚶 Civilian"}),el("div",{class:"ftsub",text:"Clear role"})); rg.append(civ); body.append(rg);
+  // ---- Your status ----
+  body.append(el("strong",{text:"Your status"}));
+  const starSel=el("select",{class:"num"}); for(let i=0;i<=5;i++) starSel.append(el("option",{value:String(i),text:i?("★".repeat(i)+` (${i})`):"Clean (0)"})); starSel.value=String(heatStars());
+  body.append(el("div",{class:"row",style:"flex-wrap:wrap;gap:6px;align-items:center"},
+    el("button",{class:"btn",type:"button",text:"Clear my Wanted",onclick:()=>{ save.heat=0; save.heatAt=Date.now(); persist(); pushPresence(true); toast("Wanted cleared."); openAdmin("city"); }}),
+    el("span",{class:"sub",text:"Set stars:"}),starSel,el("button",{class:"btn",type:"button",text:"Set",onclick:()=>{ save.heat=Math.max(0,Math.min(5,+starSel.value||0)); save.heatAt=Date.now(); persist(); pushPresence(true); openAdmin("city"); }}),
+    jailed()?el("button",{class:"btn hot",type:"button",text:`Release me (${jailLeft()}s)`,onclick:()=>{ save.jail=null; persist(); pushPresence(true); toast("Released."); openAdmin("city"); }}):el("button",{class:"btn",type:"button",text:"Send me to prison",onclick:()=>{ const was=save.admImm; save.admImm=false; goJail(2,"Owner test"); save.admImm=was; openAdmin("city"); }})));
+  const imm=el("input",{type:"checkbox"}); imm.checked=!!save.admImm; imm.onchange=()=>{ save.admImm=imm.checked; persist(); toast(imm.checked?"Owner immunity on: NPC police and gangs will leave you alone.":"Owner immunity off: you can be chased, mugged and jailed like anyone."); };
+  const may=el("input",{type:"checkbox"}); may.checked=!!save.admMayor; may.onchange=()=>{ save.admMayor=may.checked; persist(); pushPresence(true); toast(may.checked?"Showing you as Mayor.":"Mayor badge off."); };
+  body.append(el("label",{class:"li",style:"cursor:pointer"},imm,el("div",{class:"grow"},el("strong",{text:"Immune to NPC police & gangs"}),el("div",{class:"sub",text:"Owner can't be chased, mugged or jailed by NPCs while this is on."}))),
+    el("label",{class:"li",style:"cursor:pointer"},may,el("div",{class:"grow"},el("strong",{text:"Wear the Mayor badge"}),el("div",{class:"sub",text:"Shows the MAYOR tag over your head."}))));
+  if(save.cult) body.append(el("div",{class:"row"},el("span",{class:"sub",style:`color:${save.cult.col}`,text:`In cult: ${save.cult.n}`}),el("button",{class:"btn",type:"button",text:"Leave cult",onclick:()=>{ save.cult=null; persist(); pushPresence(true); openAdmin("city"); }})));
+  // ---- Give yourself currency ----
+  body.append(el("strong",{text:"Give yourself currency (testing)"}));
+  const mk=(label,ph)=>{ const i=el("input",{class:"num",type:"number",min:"0",step:"100",placeholder:ph,style:"width:110px"}); return [i,el("label",{class:"fld",style:"flex:1;min-width:120px"},label,i)]; };
+  const [cIn,cW]=mk("Credits ₵","e.g. 5000"),[chIn,chW]=mk("Chips","e.g. 500"),[rpIn,rpW]=mk("RP","e.g. 1000"),[nrcIn,nrcW]=mk("NRC","e.g. 1000");
+  body.append(el("div",{class:"row",style:"flex-wrap:wrap;gap:8px;align-items:flex-end"},cW,el("button",{class:"btn",type:"button",text:"Add ₵",onclick:()=>{ save.credits+=Math.max(0,Math.floor(+cIn.value||0)); persist(); hud(); toast("Credits added."); cIn.value=""; }})));
+  body.append(el("div",{class:"row",style:"flex-wrap:wrap;gap:8px;align-items:flex-end"},chW,el("button",{class:"btn",type:"button",text:"Add chips",onclick:()=>{ save.chips+=Math.max(0,Math.floor(+chIn.value||0)); persist(); hud(); toast("Chips added."); chIn.value=""; }})));
+  body.append(el("div",{class:"row",style:"flex-wrap:wrap;gap:8px;align-items:flex-end"},rpW,el("button",{class:"btn",type:"button",text:"Add RP",onclick:()=>{ save.rp=(Math.floor(+save.rp||0))+Math.max(0,Math.floor(+rpIn.value||0)); persist(); hud(); toast("RP added."); rpIn.value=""; }})));
+  body.append(el("div",{class:"row",style:"flex-wrap:wrap;gap:8px;align-items:flex-end"},nrcW,el("button",{class:"btn",type:"button",text:"Add NRC",onclick:()=>{ adminGiveNrc(+nrcIn.value||0); nrcIn.value=""; }})));
+  body.append(el("p",{class:"sub",text:"These owner tools only affect your own account, except City laws, which apply to every player. Role changes here skip the usual cooldown and Wanted checks."})); }
 function adminRow(body){
   body.append(el("p",{class:"sub",text:"Rent storefronts to local businesses. You set how each store looks, its info, the partner's sign-in email and the date their rent is paid until. While it's paid, the partner signs in with that email and adds their own rewards. Collect rent outside the game (cash, Cash App, an invoice)."}));
   if(rowEdit&&rowEdit.slot) return rowSpotForm(body,rowEdit);
@@ -6716,8 +6756,9 @@ let dccTab="dcc", dccQ="", stLastPanel="";
 function refreshAdmin(){ if(currentView==="admin") openAdmin(dccTab); }
 function adminPlayers(){ const ids=new Set([...Object.keys(homes||{}),...Object.keys(dcc)]); for(const p of peers.values()) if(p.by) ids.add(p.by); if(myId) ids.add(myId); return [...ids].filter(Boolean); }
 function openAdmin(tab){ if(!IS_ADMIN){ toast("Admins only."); return; } dccTab=tab||dccTab; const body=panel("Admin Panel","Owner-only tools. Only your account can see or use these."); currentView="admin";
-  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["stats","Player stats"],["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["join",`Join requests${joinPending()?` (${joinPending()})`:""}`],["symbols","Symbols"],["row","Neon Row"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); for(const [k,n] of [["stats","Player stats"],["city","City & Roles"],["dcc","Data Collectors Club"],["members",`Members (${Object.keys(dcc).filter(dccActive).length})`],["join",`Join requests${joinPending()?` (${joinPending()})`:""}`],["symbols","Symbols"],["row","Neon Row"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(dccTab===k),text:n,onclick:()=>openAdmin(k)})); body.append(tabs);
   if(!DB){ body.append(el("div",{class:"empty",text:"Sign in with the owner account to manage memberships."})); return; }
+  if(dccTab==="city") return adminCity(body);
   if(dccTab==="row") return adminRow(body);
   if(dccTab==="join") return adminJoin(body);
   if(dccTab==="stats") return adminStats(body);
@@ -8512,6 +8553,7 @@ setInterval(hud,1000);
     db.collection("shop").onSnapshot(s=>{ shopItems=dedupeBy(s.docs.map(d=>cleanItem(d.id,d.data())).filter(Boolean),x=>(x.title||"").trim().toLowerCase()+"|"+x.cur); refreshSmacked(); },()=>{});
     db.doc("shopinfo/digital").onSnapshot(s=>{ const d=s.exists?s.data()||{}:{}; digiCfg=d.items&&typeof d.items==="object"?d.items:{}; refreshSmacked(); },()=>{});
     db.doc("shopinfo/econ").onSnapshot(s=>{ ECON=cleanEcon(s.exists?s.data():null); hud(); refreshSmacked(); },()=>{});
+    db.doc("shopinfo/citylaw").onSnapshot(s=>{ const d=s.exists?s.data()||{}:null; cityLawAdmin=d&&Array.isArray(d.pol)?d.pol.filter(k=>POLICIES[k]).slice(0,2):(d?[]:null); if(currentView==="admincity"||currentView==="election") try{ dccTab==="city"?openAdmin("city"):openElection(); }catch(e){} },()=>{});
     try{ myEmail=String((await u.email())||"").toLowerCase(); myVerified=!!(u.emailVerified&&await u.emailVerified()); }catch(e){} rowWatch(db); nrcWatch(db); joinWatch(db);
     db.doc("shopinfo/main").onSnapshot(s=>{ shopInfo={text:s.exists?String((s.data()||{}).text||"").slice(0,600):""}; refreshSmacked(); },()=>{});
     db.collection("pickups").onSnapshot(s=>{ pickupStatus={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["ready","picked","cancelled"].includes(v.status)) pickupStatus[d.id]={status:v.status}; }); checkRefunds(); if(IS_ADMIN) syncSold(); refreshSmacked(); },()=>{});
