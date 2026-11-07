@@ -2289,7 +2289,7 @@ function hackATM(sc){ const k="atm_"+sc; if(rcd(k)) return toast(`This ATM's sec
 /* ---------- multiplayer role events ---------- */
 const ritualFx={}; let lastStolenAt=0;
 function peerOf(by){ for(const p of peers.values()) if(p.by===by) return p; return null; }
-function onRoleEv(m){ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; const from=peerOf(m.by), who=nameOf(m.by); resolveNames([m.by]);
+function onRoleEv(m){ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; if(d.k==="sd"){ sdRefresh(Math.floor(+d.i)); return; } const from=peerOf(m.by), who=nameOf(m.by); resolveNames([m.by]);
   if(d.k==="ritual"){ if(d.s===me.scene&&from){ ritualFx[m.by]={t:T,s:d.s,col:/^#[0-9a-f]{6}$/i.test(d.col)?d.col:"#ff3f5a",x:from.dx,y:from.dy};
       if(save.cult&&save.cult.by===m.by&&!jailed()){ save.buffs=save.buffs||{}; const u=Date.now()+10*6e4; save.buffs.luck=Math.max(+save.buffs.luck||0,u); save.buffs.tips=Math.max(+save.buffs.tips||0,u); save.credits+=25; persist(); toast(`Blessed by ${String(d.n||"the cult").slice(0,24)}: Lucky salvage + tips for 10 min, +₵25`,save.cult.col); rEmit({k:"ritual_ok",to:m.by}); } } return; }
   if(d.to!==myId) return;
@@ -2484,27 +2484,70 @@ function drawPrisonFront(t){ if(camX>PRISON.x1+40||camX+VW<PRISON.x0-40) return;
 const SD_N=10, SD_SPAWN=200, SD_W=3400, SD_RENT=20, SD_MIN=30; // 20 chips buys 30 minutes
 function SD_X(i){ return 400+i*320; }
 let sdBooths={}, sdWatched=false;
-const SD_HOSTS={youtube:{n:"YouTube",c:"#ff0000"},twitch:{n:"Twitch",c:"#9147ff"},kick:{n:"Kick",c:"#53fc18"}};
+const SD_HOSTS={youtube:{n:"YouTube",c:"#ff0000"},twitch:{n:"Twitch",c:"#9147ff"},kick:{n:"Kick",c:"#53fc18"},mp4:{n:"MP4 link",c:"#ffb13f"},file:{n:"MP4 video",c:"#ffb13f"},asset:{n:"MP4 video",c:"#ffb13f"}};
+// Device videos are shared by splitting them into database chunks (GitHub build) or the artifact's asset store (claude.ai).
+const SD_CHUNK=640*1024, SD_MAXMB=24;
+let SD_DB=null, sdKeys={}, sdLastRefresh=-99, sdVidCache={}, sdLocal={}, sdThumbs={};
+const SD_VID=h=>h==="mp4"||h==="file"||h==="asset";
+function sdOkUrl(s){ s=String(s||""); if(s.length>500) return false; try{ const u=new URL(s); return u.protocol==="https:"&&/\.(mp4|webm|m4v|mov)$/i.test(u.pathname); }catch(e){ return false; } }
 function sdClean(d){ if(!d||typeof d!=="object") return null; const host=SD_HOSTS[d.host]?d.host:null; const ref=String(d.ref||"");
-  if(!host||!/^[A-Za-z0-9_\-]{2,40}$/.test(ref)||!(+d.until>Date.now())) return null;
-  return {by:String(d.by||"").slice(0,80),host,ref,title:String(d.title||"").slice(0,60),until:+d.until,at:+d.at||0}; }
+  if(!host||!(+d.until>Date.now())) return null;
+  if(host==="mp4"){ if(!sdOkUrl(ref)) return null; }
+  else if(host==="file"||host==="asset"){ if(!/^[A-Za-z0-9_\-]{4,80}$/.test(ref)) return null; }
+  else if(!/^[A-Za-z0-9_\-]{2,40}$/.test(ref)) return null;
+  const o={by:String(d.by||"").slice(0,80),host,ref,title:String(d.title||"").slice(0,60),until:+d.until,at:+d.at||0};
+  if(host==="file"){ const n=Math.floor(+d.n); if(!(n>=1&&n<=60)) return null; o.n=n; o.mime=/^video\/(mp4|webm|quicktime|x-m4v)$/.test(d.mime)?d.mime:"video/mp4"; o.mb=Math.max(0,Math.min(99,+d.mb||0)); }
+  return o; }
 function sdActive(i){ const b=sdBooths[i]; return b&&b.until>Date.now()?b:null; }
 function sdEmbed(b){ const host=location.hostname||"localhost";
   if(b.host==="youtube") return `https://www.youtube.com/embed/${b.ref}?autoplay=1&rel=0&playsinline=1`;
   if(b.host==="twitch") return `https://player.twitch.tv/?channel=${b.ref}&parent=${host}&autoplay=true&muted=false`;
   if(b.host==="kick") return `https://player.kick.com/${b.ref}?autoplay=true`; return ""; }
-function sdLink(b){ if(b.host==="youtube") return `https://youtu.be/${b.ref}`; if(b.host==="twitch") return `https://twitch.tv/${b.ref}`; if(b.host==="kick") return `https://kick.com/${b.ref}`; return ""; }
-function sdWho(b){ return b.title||`${SD_HOSTS[b.host].n} · ${b.host==="youtube"?"video":b.ref}`; }
-// Parse a pasted link. Returns {host, ref} only for YouTube / Twitch / Kick; null for anything else.
+function sdLink(b){ if(b.host==="youtube") return `https://youtu.be/${b.ref}`; if(b.host==="twitch") return `https://twitch.tv/${b.ref}`; if(b.host==="kick") return `https://kick.com/${b.ref}`; if(b.host==="mp4") return b.ref; return ""; }
+function sdWho(b){ return b.title||(SD_VID(b.host)?"MP4 video":`${SD_HOSTS[b.host].n} · ${b.host==="youtube"?"video":b.ref}`); }
+function sdKey(b){ return b?[b.by,b.host,b.ref,b.title,b.until].join("|"):""; }
+// Parse a pasted link. Returns {host, ref} for YouTube / Twitch / Kick, or a direct https .mp4/.webm file; null for anything else.
 function parseStream(raw){ let str=String(raw||"").trim(); if(!str) return null; if(!/^https?:\/\//i.test(str)) str="https://"+str; let u; try{ u=new URL(str); }catch(e){ return null; }
   const h=u.hostname.replace(/^www\./,"").toLowerCase(), yt=id=>/^[\w-]{6,20}$/.test(id);
   if(h==="youtu.be"){ const id=u.pathname.slice(1).split("/")[0]; if(yt(id)) return {host:"youtube",ref:id}; return null; }
   if(h==="youtube.com"||h.endsWith(".youtube.com")){ let id=u.searchParams.get("v"); if(!id){ const m=u.pathname.match(/\/(?:embed|live|shorts|v)\/([\w-]{6,20})/); if(m) id=m[1]; } if(id&&yt(id)) return {host:"youtube",ref:id}; return null; }
   if(h==="twitch.tv"||h.endsWith(".twitch.tv")){ const c=(u.pathname.split("/").filter(Boolean)[0]||""); if(/^[A-Za-z0-9_]{2,30}$/.test(c)) return {host:"twitch",ref:c.toLowerCase()}; return null; }
   if(h==="kick.com"||h.endsWith(".kick.com")){ const c=(u.pathname.split("/").filter(Boolean)[0]||""); if(/^[A-Za-z0-9_-]{2,30}$/.test(c)) return {host:"kick",ref:c.toLowerCase()}; return null; }
+  if(sdOkUrl(u.href)) return {host:"mp4",ref:u.href};
   return null; }
-function streamWatch(db){ if(sdWatched) return; sdWatched=true; for(let i=0;i<SD_N;i++){ (function(i){ try{ db.doc("club/sd_"+i).onSnapshot(s=>{ sdBooths[i]=s.exists?sdClean(s.data()):null;
-  if(me.scene==="streamdome"&&(currentView==="streamview_"+i||currentView==="streamdome")) try{ currentView==="streamdome"?openStreamDome():openStreamView(i); }catch(e){} },()=>{}); }catch(e){} })(i); } }
+// Booth state: live listener for everyone who has a database (signed in, even view-only), plus a re-read
+// while you're in the dome and a nudge event when someone goes live, so nobody is stuck on a stale TV.
+function sdApply(i,s){ const nb=s&&s.exists?sdClean(s.data()):null, k=sdKey(nb); if(k===sdKeys[i]) return; sdKeys[i]=k; sdBooths[i]=nb; if(nb) resolveNames([nb.by]);
+  if(me.scene==="streamdome"&&!$("#overlay").hidden&&!(document.activeElement&&document.activeElement.tagName==="INPUT")){
+    try{ if(currentView==="streamdome") openStreamDome(); else if(currentView==="streamview_"+i) openStreamView(i); }catch(e){} } }
+function streamWatch(db){ if(!db) return; SD_DB=SD_DB||db; if(sdWatched) return; sdWatched=true; for(let i=0;i<SD_N;i++){ (function(i){ try{ db.doc("club/sd_"+i).onSnapshot(s=>sdApply(i,s),()=>{}); }catch(e){} })(i); } }
+function sdRefresh(i){ if(!SD_DB) return; const list=i==null?[...Array(SD_N).keys()]:[i]; for(const j of list){ if(!(j>=0&&j<SD_N)) continue; try{ SD_DB.doc("club/sd_"+j).get().then(s=>sdApply(j,s)).catch(()=>{}); }catch(e){} } }
+function sdPing(i){ if(ROOM) ROOM.emit("role",{k:"sd",i}).catch(()=>{}); }
+
+/* ---- device video sharing ---- */
+function sdB64(u8){ let s=""; for(let k=0;k<u8.length;k+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(k,k+0x8000)); return btoa(s); }
+function sdUnB64(str){ const s=atob(str), u=new Uint8Array(s.length); for(let k=0;k<s.length;k++) u[k]=s.charCodeAt(k); return u; }
+async function sdUploadFile(i,file,prog){ const vid=(Math.random().toString(36).slice(2,9)+Date.now().toString(36)).replace(/[^a-z0-9]/g,"");
+  if(!window.NH_FIREBASE_CONFIG){ // claude.ai artifact: use the asset store (editors)
+    let A=null; try{ A=await window.claude.use("assets"); }catch(e){} if(!A) return null; prog(.3); const r=await A.upload(file); prog(1); return {host:"asset",ref:String(r.id)}; }
+  if(!DB) return null; const buf=new Uint8Array(await file.arrayBuffer()), n=Math.ceil(buf.length/SD_CHUNK);
+  for(let k=0;k<n;k++){ await DB.doc(`club/sdv_${i}_${k}`).set({vid,k,by:myId,d:sdB64(buf.subarray(k*SD_CHUNK,(k+1)*SD_CHUNK)),at:Date.now()}); prog((k+1)/n); }
+  return {host:"file",ref:vid,n,mime:/^video\//.test(file.type)?file.type:"video/mp4",mb:+(file.size/1048576).toFixed(1)}; }
+async function sdVideoSrc(i,b,prog){ if(b.host==="mp4") return b.ref; if(b.host==="asset") return "/_blob/"+b.ref;
+  if(sdLocal[b.ref]) return sdLocal[b.ref]; if(sdVidCache[b.ref]) return sdVidCache[b.ref]; if(!SD_DB) throw new Error("offline");
+  const parts=new Array(b.n); let done=0;
+  for(let k0=0;k0<b.n;k0+=4){ await Promise.all([...Array(Math.min(4,b.n-k0)).keys()].map(async j=>{ const k=k0+j, s=await SD_DB.doc(`club/sdv_${i}_${k}`).get(); const d=s.exists?s.data():null;
+    if(!d||d.vid!==b.ref||typeof d.d!=="string") throw new Error("changed"); parts[k]=sdUnB64(d.d); done++; prog(done/b.n); })); }
+  const keys=Object.keys(sdVidCache); if(keys.length>=3){ try{ URL.revokeObjectURL(sdVidCache[keys[0]]); }catch(e){} delete sdVidCache[keys[0]]; }
+  return sdVidCache[b.ref]=URL.createObjectURL(new Blob(parts,{type:b.mime||"video/mp4"})); }
+function sdPlayer(i,b){ const wrap=el("div",{style:"position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0"});
+  if(!SD_VID(b.host)){ const frame=el("iframe",{src:sdEmbed(b),style:"position:absolute;inset:0;width:100%;height:100%;border:0","allow":"autoplay; fullscreen; encrypted-media; picture-in-picture","allowfullscreen":"true",referrerpolicy:"strict-origin-when-cross-origin",title:"Stream"}); wrap.append(frame); wrap._reload=()=>{ frame.src="about:blank"; setTimeout(()=>frame.src=sdEmbed(b),60); }; return wrap; }
+  const v=el("video",{controls:"",playsinline:"",preload:"auto",style:"position:absolute;inset:0;width:100%;height:100%;background:#000"}); const note=el("div",{style:"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ffb13f;font:12px monospace;text-align:center;padding:12px",text:"Loading video…"});
+  wrap.append(v,note);
+  const load=()=>{ note.hidden=false; note.textContent="Loading video…"; sdVideoSrc(i,b,p=>note.textContent=`Loading video… ${Math.round(p*100)}%`).then(src=>{ v.src=src; note.hidden=true; v.play().catch(()=>{}); })
+    .catch(e=>{ note.textContent=String(e&&e.message)==="changed"?"This TV just switched videos — reopen it.":"Couldn't load this video. Check your connection and tap Reload."; }); };
+  v.addEventListener("error",()=>{ if(v.getAttribute("src")){ note.hidden=false; note.textContent=b.host==="mp4"?"That site won't let the video play here. Use “Open video ↗”.":"This video format can't play in your browser (MP4 / H.264 works best)."; } });
+  load(); wrap._reload=load; return wrap; }
 
 /* ---- hotspots ---- */
 function streamHot(){ const out=[{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:SD_W-180,hw:90,label:"Stream Dome board: what's on",act:()=>openStreamDome()}];
@@ -2514,47 +2557,77 @@ function streamHot(){ const out=[{x:120,hw:60,label:"Take the metro",act:()=>ope
   return out; }
 
 /* ---- rent / manage ---- */
-function openRentBooth(i){ if(sdActive(i)&&sdActive(i).by!==myId&&!IS_ADMIN) return openStreamView(i);
-  const body=panel(`Stream Dome · TV #${i+1}`,`Go live for everyone in the dome. ${SD_RENT} chips for ${SD_MIN} minutes.`); currentView=null;
+function openRentBooth(i,mode){ if(sdActive(i)&&sdActive(i).by!==myId&&!IS_ADMIN) return openStreamView(i);
+  const body=panel(`Stream Dome · TV #${i+1}`,`Go live for everyone in the dome. ${SD_RENT} chips for ${SD_MIN} minutes.`); currentView=null; mode=mode==="file"?"file":"link";
   if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to rent a TV and broadcast."})); return; }
-  body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:"Paste a stream link"}),el("span",{class:"sub",text:"Works with YouTube, Twitch and Kick. Examples: youtube.com/watch?v=…, youtu.be/…, twitch.tv/yourname, kick.com/yourname. Live streams and normal videos both work."}))));
-  const link=el("input",{type:"url",placeholder:"https://… your stream or video",style:"width:100%;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit;font-size:16px"});
-  const title=el("input",{type:"text",maxlength:"60",placeholder:"Channel name / what you're streaming (optional)",style:"width:100%;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
-  const msg=el("div",{class:"sub",role:"status"}); const preview=el("div",{class:"sub"});
-  const check=()=>{ const p=parseStream(link.value); preview.textContent=p?`✓ ${SD_HOSTS[p.host].n} detected`:(link.value.trim()?"✗ Not a YouTube, Twitch or Kick link":""); preview.style.color=p?"#43f0a4":"#ff7a7a"; return p; };
-  link.addEventListener("input",check);
-  body.append(el("label",{class:"fld"},"Stream link",link),preview,el("label",{class:"fld"},"Title",title),
-    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:`Go live (${SD_RENT} chips)`,onclick:async()=>{ const p=check(); if(!p){ msg.textContent="Paste a valid YouTube, Twitch or Kick link."; return; }
-      const cur=sdActive(i); if(cur&&cur.by!==myId&&!IS_ADMIN){ msg.textContent="Someone just took this TV. Pick another."; return; }
-      if(save.chips<SD_RENT){ msg.textContent=`You need ${SD_RENT} chips.`; return; }
-      const b={by:myId,host:p.host,ref:p.ref,title:title.value.trim().slice(0,60),until:Date.now()+SD_MIN*60e3,at:Date.now()};
-      try{ await DB.doc("club/sd_"+i).set(b); save.chips-=SD_RENT; persist(); hud(); toast(`You're live on TV #${i+1}!`,"#38e8ff"); broadcastSys(`went live on Stream Dome TV #${i+1}${b.title?": "+b.title:""}`); sdBooths[i]=b; openStreamView(i); }
-      catch(e){ msg.textContent="Couldn't start the broadcast. Try again."; } }}),
-    el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openStreamDome()})),msg);
-  setTimeout(()=>link.focus(),40); }
-function openStreamView(i){ const b=sdActive(i); if(!b) return openRentBooth(i); const mine=b.by===myId, can=mine||IS_ADMIN;
-  const body=panel(`TV #${i+1} — ${sdWho(b)}`,`Live from ${SD_HOSTS[b.host].n}, by ${nameOf(b.by)}. ${Math.max(0,Math.ceil((b.until-Date.now())/6e4))} min left.`); currentView="streamview_"+i;
-  const wrap=el("div",{style:"position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0"});
-  const frame=el("iframe",{src:sdEmbed(b),style:"position:absolute;inset:0;width:100%;height:100%;border:0","allow":"autoplay; fullscreen; encrypted-media; picture-in-picture","allowfullscreen":"true",referrerpolicy:"strict-origin-when-cross-origin",title:"Stream"});
-  wrap.append(frame); body.append(wrap);
-  body.append(el("div",{class:"sub",text:"If the player stays black, your browser or network may block embeds — open it directly:"}),
-    el("div",{class:"row"},el("a",{class:"btn hot",href:sdLink(b),target:"_blank",rel:"noopener noreferrer",text:`Open on ${SD_HOSTS[b.host].n} ↗`}),
+  const cur=sdActive(i), renew=cur&&cur.by===myId; // changing your own stream doesn't charge again
+  body.append(el("div",{class:"tabs"},el("button",{class:"btn",type:"button","aria-pressed":String(mode==="link"),text:"🔗 Stream / video link",onclick:()=>openRentBooth(i,"link")}),el("button",{class:"btn",type:"button","aria-pressed":String(mode==="file"),text:"📁 MP4 from my device",onclick:()=>openRentBooth(i,"file")})));
+  const title=el("input",{type:"text",maxlength:"60",placeholder:"What you're showing (optional)",style:"width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
+  const msg=el("div",{class:"sub",role:"status"}), preview=el("div",{class:"sub"}), bar=el("div",{style:"height:6px;background:#1a1530;border-radius:3px;overflow:hidden;display:none"}), fill=el("div",{style:"height:100%;width:0;background:#ffb13f"}); bar.append(fill);
+  const cost=renew?0:SD_RENT;
+  const goLive=async extra=>{ const now=sdActive(i); if(now&&now.by!==myId&&!IS_ADMIN){ msg.textContent="Someone just took this TV. Pick another."; return false; }
+    const b={by:myId,...extra,title:title.value.trim().slice(0,60),until:renew?cur.until:Date.now()+SD_MIN*60e3,at:Date.now()};
+    await DB.doc("club/sd_"+i).set(b); if(cost){ save.chips-=cost; persist(); hud(); }
+    toast(`You're live on TV #${i+1}!`,"#38e8ff"); broadcastSys(`went live on Stream Dome TV #${i+1}${b.title?": "+b.title:""}`); sdPing(i); sdKeys[i]=null; sdApply(i,{exists:true,data:()=>b}); openStreamView(i); return true; };
+  if(mode==="link"){
+    body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:"Paste a link"}),el("span",{class:"sub",text:"YouTube, Twitch or Kick (live or normal videos), or a direct https link to an .mp4 / .webm file."}))));
+    const link=el("input",{type:"url",placeholder:"https://… stream, video or .mp4 link",style:"width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit;font-size:16px"});
+    const check=()=>{ const p=parseStream(link.value); preview.textContent=p?`✓ ${SD_HOSTS[p.host].n} detected`:(link.value.trim()?"✗ Not a YouTube, Twitch, Kick or .mp4 link":""); preview.style.color=p?"#43f0a4":"#ff7a7a"; return p; };
+    link.addEventListener("input",check); if(renew&&!SD_VID(cur.host)||renew&&cur.host==="mp4"){ link.value=sdLink(cur); title.value=cur.title; check(); }
+    body.append(el("label",{class:"fld"},"Link",link),preview,el("label",{class:"fld"},"Title",title),
+      el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:cost?`Go live (${cost} chips)`:"Update my TV",onclick:async()=>{ const p=check(); if(!p){ msg.textContent="Paste a valid YouTube, Twitch, Kick or .mp4 link."; return; }
+        if(save.chips<cost){ msg.textContent=`You need ${cost} chips.`; return; }
+        try{ await goLive({host:p.host,ref:p.ref}); }catch(e){ msg.textContent="Couldn't start the broadcast. Try again."; } }}),
+      el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openStreamDome()})),msg);
+    setTimeout(()=>link.focus(),40); return; }
+  // device file
+  const shareable=!!window.NH_FIREBASE_CONFIG||IS_ADMIN;
+  body.append(el("div",{class:"detail",style:"border-color:#ffb13f"},el("div",{class:"info"},el("strong",{text:"Play a video from your phone or computer"}),
+    el("span",{class:"sub",text:`Pick an .mp4 (best), .webm or .mov up to ${SD_MAXMB} MB. It uploads once, then everyone who taps this TV can watch it.`+(shareable?"":" In this claude.ai view only editors can share device videos — you can still play it on your own screen.")}))));
+  const file=el("input",{type:"file",accept:"video/mp4,video/webm,video/quicktime,.mp4,.m4v,.webm,.mov",style:"width:100%;box-sizing:border-box;padding:8px;background:#0d0818;color:#e9e2ff;border:1px dashed #ffb13f;font:inherit"});
+  const pick=()=>{ const f=file.files&&file.files[0]; if(!f){ preview.textContent=""; return null; } const mb=f.size/1048576, ok=/^video\//.test(f.type)||/\.(mp4|m4v|webm|mov)$/i.test(f.name);
+    preview.textContent=!ok?"✗ That isn't a video file.":mb>SD_MAXMB?`✗ ${mb.toFixed(1)} MB — the limit is ${SD_MAXMB} MB. Trim or compress it first.`:`✓ ${f.name} · ${mb.toFixed(1)} MB`; preview.style.color=ok&&mb<=SD_MAXMB?"#43f0a4":"#ff7a7a"; if(ok&&!title.value) title.value=f.name.replace(/\.[^.]+$/,"").slice(0,60); return ok&&mb<=SD_MAXMB?f:null; };
+  file.addEventListener("change",pick);
+  const goBtn=el("button",{class:"btn hot",type:"button",text:cost?`Upload & go live (${cost} chips)`:"Upload & update my TV",onclick:async()=>{ const f=pick(); if(!f){ msg.textContent="Choose a video file first."; return; }
+    if(save.chips<cost){ msg.textContent=`You need ${cost} chips.`; return; } const now=sdActive(i); if(now&&now.by!==myId&&!IS_ADMIN){ msg.textContent="Someone just took this TV. Pick another."; return; }
+    goBtn.disabled=true; bar.style.display="block"; msg.textContent="Uploading… keep this open.";
+    try{ const r=await sdUploadFile(i,f,p=>{ fill.style.width=Math.round(p*100)+"%"; msg.textContent=`Uploading… ${Math.round(p*100)}%`; });
+      if(!r){ msg.textContent="Sharing device videos isn't available in this view. Use “Play just for me”, or open the game on GitHub."; goBtn.disabled=false; return; }
+      sdLocal[r.ref]=URL.createObjectURL(f); await goLive(r); }
+    catch(e){ goBtn.disabled=false; msg.textContent=/size|large|quota/i.test(String(e&&e.message))?"That file is too large to share. Try a smaller one.":"Upload failed. Check your connection and try again."; } }});
+  body.append(el("label",{class:"fld"},"Video file",file),preview,el("label",{class:"fld"},"Title",title),bar,
+    el("div",{class:"row"},goBtn,el("button",{class:"btn",type:"button",text:"▶ Play just for me (free)",onclick:()=>{ const f=pick(); if(!f){ msg.textContent="Choose a video file first."; return; } openLocalVideo(i,f,title.value.trim()); }}),
+      el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openStreamDome()})),msg); }
+function openLocalVideo(i,f,t){ const body=panel(`TV #${i+1} — ${t||f.name}`,"Playing from your device — only you can see this one."); currentView=null;
+  const url=URL.createObjectURL(f), wrap=el("div",{style:"position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0"});
+  const v=el("video",{controls:"",playsinline:"",autoplay:"",src:url,style:"position:absolute;inset:0;width:100%;height:100%"}); wrap.append(v); body.append(wrap);
+  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back",onclick:()=>{ try{ URL.revokeObjectURL(url); }catch(e){} openRentBooth(i,"file"); }}))); }
+function openStreamView(i){ const b=sdActive(i); if(!b) return openRentBooth(i); const mine=b.by===myId, can=mine||IS_ADMIN, mins=Math.max(0,Math.ceil((b.until-Date.now())/6e4));
+  const src=SD_VID(b.host)?(b.host==="mp4"?"a video link":"a shared video file"+(b.mb?` (${b.mb} MB)`:"")):SD_HOSTS[b.host].n;
+  const body=panel(`TV #${i+1} — ${sdWho(b)}`,`Now playing from ${src}, shared by ${nameOf(b.by)}. ${mins} min left.`); currentView="streamview_"+i;
+  const player=sdPlayer(i,b); body.append(player);
+  const link=sdLink(b);
+  body.append(el("div",{class:"sub",text:SD_VID(b.host)?"Everyone who taps this TV gets the same video. Use the player controls for sound and fullscreen.":"Everyone who taps this TV sees the same stream. If the player stays black, your browser may block embeds — open it directly:"}),
+    el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"↻ Reload player",onclick:()=>player._reload&&player._reload()}),
+      link?el("a",{class:"btn hot",href:link,target:"_blank",rel:"noopener noreferrer",text:SD_VID(b.host)?"Open video ↗":`Open on ${SD_HOSTS[b.host].n} ↗`}):null,
       el("button",{class:"btn",type:"button",text:"Back to the dome",onclick:()=>openStreamDome()})));
   if(can){ body.append(el("div",{class:"detail",style:"border-color:var(--amber);margin-top:6px"},el("div",{class:"info"},el("strong",{text:mine?"Your broadcast":"Owner controls"}),
-    el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Change stream",onclick:()=>openRentBooth(i)}),
-      el("button",{class:"btn",type:"button",text:mine?"End broadcast":"End (owner)",onclick:async()=>{ try{ await DB.doc("club/sd_"+i).delete(); }catch(e){} sdBooths[i]=null; toast("Broadcast ended."); openStreamDome(); }}))))); }
+    el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Change link",onclick:()=>openRentBooth(i,"link")}),el("button",{class:"btn",type:"button",text:"Change to MP4 file",onclick:()=>openRentBooth(i,"file")}),
+      el("button",{class:"btn",type:"button",text:mine?"End broadcast":"End (owner)",onclick:async()=>{ try{ await DB.doc("club/sd_"+i).delete(); }catch(e){}
+        if(b.host==="file") for(let k=0;k<b.n;k++) DB.doc(`club/sdv_${i}_${k}`).delete().catch(()=>{});
+        sdKeys[i]=""; sdBooths[i]=null; sdPing(i); toast("Broadcast ended."); openStreamDome(); }}))))); }
 }
-function openStreamDome(){ const body=panel("Stream Dome","10 player TVs. Rent one with chips and share your stream, or tap a TV to watch what others are broadcasting."); currentView="streamdome";
+function openStreamDome(){ const body=panel("Stream Dome","10 player TVs. Rent one with chips and share a stream, a video link or an MP4 from your device — or tap a TV to watch what others are playing."); currentView="streamdome"; sdRefresh();
   const l=el("div",{class:"list"}); let on=0;
   for(let i=0;i<SD_N;i++){ const b=sdActive(i); if(b) on++; const mine=b&&b.by===myId;
     l.append(el("div",{class:"li"},el("span",{class:"tag",style:`color:${b?SD_HOSTS[b.host].c:"var(--dim)"}`,text:b?"●":"○"}),
       el("div",{class:"grow"},el("div",{text:`TV #${i+1}`+(b?` — ${sdWho(b)}`:" — free")}),el("div",{class:"sub",text:b?`${SD_HOSTS[b.host].n} · ${nameOf(b.by)} · ${Math.max(0,Math.ceil((b.until-Date.now())/6e4))} min left`:`Rent for ${SD_RENT} chips / ${SD_MIN} min`})),
       b?el("button",{class:"btn hot",type:"button",text:mine?"Manage":"Watch",onclick:()=>openStreamView(i)}):el("button",{class:"btn",type:"button",text:"Rent",onclick:()=>openRentBooth(i)}))); }
   body.append(el("div",{class:"sub",text:`${on} of ${SD_N} TVs live right now.`}),l);
-  body.append(el("p",{class:"sub",text:"Only YouTube, Twitch and Kick links work, and the dome plays the official player — nothing else is embedded. Keep it friendly; the owner can end any broadcast."})); }
+  body.append(el("p",{class:"sub",text:"Works with YouTube, Twitch, Kick, direct .mp4 links, and MP4 files from your device (up to "+SD_MAXMB+" MB). Keep it friendly; the owner can end any broadcast."})); }
 
 /* ---- drawing ---- */
-function drawStreamDome(t){ const W=SCENES.streamdome.w, X0=camX, X1=camX+VW;
+function drawStreamDome(t){ const W=SCENES.streamdome.w, X0=camX, X1=camX+VW; if(t-sdLastRefresh>20||t<sdLastRefresh){ sdLastRefresh=t; sdRefresh(); }
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#0a0a1e"); g.addColorStop(.5,"#140a2e"); g.addColorStop(1,"#07040f"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
   // dome ribs overhead
   ctx.strokeStyle="rgba(120,90,200,.3)"; ctx.lineWidth=2; for(let k=-2;k<Math.ceil(W/400)+2;k++){ const cx=k*400; if(cx+360<X0||cx-360>X1) continue; ctx.beginPath(); ctx.moveTo(cx-200,120); ctx.quadraticCurveTo(cx,10,cx+200,120); ctx.stroke(); }
@@ -2576,6 +2649,9 @@ function drawStreamDome(t){ const W=SCENES.streamdome.w, X0=camX, X1=camX+VW;
       // moving scanline shimmer to feel "live"
       ctx.save(); ctx.beginPath(); ctx.rect(sx,sy,sw,sh); ctx.clip();
       for(let k=0;k<4;k++){ ctx.fillStyle=`rgba(${k%2?"176,107,255":"56,232,255"},.10)`; const yy=sy+((t*40+k*30)%sh); ctx.fillRect(sx,yy,sw,8); }
+      if(b.host==="youtube"){ let im=sdThumbs[b.ref]; if(!im){ im=sdThumbs[b.ref]=new Image(); im.src=`https://i.ytimg.com/vi/${b.ref}/mqdefault.jpg`; }
+        if(im.complete&&im.naturalWidth){ ctx.globalAlpha=.85; ctx.drawImage(im,sx,sy,sw,sh); ctx.globalAlpha=1; ctx.fillStyle="rgba(5,4,10,.45)"; ctx.fillRect(sx,sy+sh-30,sw,30); } }
+      else if(SD_VID(b.host)){ ctx.fillStyle="rgba(255,177,63,.18)"; ctx.beginPath(); ctx.moveTo(x-12,sy+30); ctx.lineTo(x+14,sy+44); ctx.lineTo(x-12,sy+58); ctx.closePath(); ctx.fill(); }
       // host logo chip
       ctx.fillStyle=col; ctx.globalAlpha=.9; ctx.fillRect(sx+8,sy+8,Math.min(74,8+SD_HOSTS[b.host].n.length*8),16); ctx.globalAlpha=1; ctx.fillStyle="#0b0716"; ctx.font="bold 10px monospace"; ctx.textAlign="left"; ctx.fillText(SD_HOSTS[b.host].n.toUpperCase(),sx+12,sy+20);
       // ON AIR
@@ -3114,7 +3190,7 @@ const GUIDE={
     ["Sector 9",["The Glitch: Vex's bar (11 drinks), Kai's Kitchen (7 dishes), the Job Board, a jukebox with 13 tracks (₵5 a play, everyone in the bar hears it), CHIP PRINT arcade and two backrooms.","Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley, and The Third Eye club with its stage, a DJ booth with 13 tracks (synthwave, house, deep house, techno, acid, tech house, minimal and more; ₵10 a request), seats, club bar and two backrooms."]],
     ["Backrooms (The Glitch and The Third Eye)",["Four rentable high-tech rooms behind each venue's back wall: Neon Lounge (40 chips/day) and Server Den (60) at The Glitch, Void Suite (60) and Prism Room (80) at The Third Eye. A week costs 5 days' price. One room per player at a time.","Keep it public, or make it private and invite players to your guest list; uninvited people are moved out. Inside: seating, free drinks from the bar, music and party lights, an arcade, an overclock server, a decrypt terminal, a laser dance floor and more, with boosts that last longer than home ones."]],
     ["The Third Eye menu",["34 club items, each with its own screen effect, body animation and boost. They only work inside the club.","Take the same item again for ×2 and then PEAK ×3. Take the right different item while one is active to fuse them into one of 22 fusions with bigger effects and more boosts. Every recipe is listed under My club items at the club bar (with a one-tap Mix it when you own both), and the Fusion Lab tracks your discoveries."]],
-    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, Byte Bowl Noodles, Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons).","The Grid: wager duels, the Top Duelists board and the UPLOAD arcade.","Harvest Assembly: the 10-bay assembly line (see Earn ₵ credits).","Linx Land: plots and Credit Miners (see Earn ₵ credits).","Smacked Shop: real-life rewards for Data Collectors Club members (see the Rewards tab).","Neon Row: storefronts rented by real local businesses. Each store sets its own rewards (see the Rewards tab).","Stream Dome: 10 player TVs. Rent one with chips (20 chips for 30 minutes) and paste a YouTube, Twitch or Kick link to broadcast to everyone in the dome; tap any ON AIR TV to watch. Only those three platforms work, and the owner can end any stream.","The Void: PvP arena with health bars. The safe zone by the Metro heals you and has Bot Control (Off, Easy, Normal, Hard). Watch for red warning rings and aim lines and step away to dodge. Getting deleted costs 15% and sends you home.","Civic Center: City Hall (roles and elections), Precinct 9 (the Wanted board), the Clinic, a back alley with the Black Market and a hacker terminal, plus a plaza anyone can use \u2014 a coffee cart (Speed), a wishing fountain (a random buff), City Services (pay off your Wanted the honest way, claim a daily civic credit) and the notice board.","Rust Gate Prison: where arrested runners do their time \u2014 press plates, work the laundry, shoot hoops, read in the library or sit in the chapel to shorten your sentence, lift weights for a buff, hit the commissary for snacks and phone cards, pay bail, or risk the tunnel. Anyone can visit the yard, see who's locked up, and use the hoops, library, chapel and commissary too."]]]},
+    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, Byte Bowl Noodles, Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons).","The Grid: wager duels, the Top Duelists board and the UPLOAD arcade.","Harvest Assembly: the 10-bay assembly line (see Earn ₵ credits).","Linx Land: plots and Credit Miners (see Earn ₵ credits).","Smacked Shop: real-life rewards for Data Collectors Club members (see the Rewards tab).","Neon Row: storefronts rented by real local businesses. Each store sets its own rewards (see the Rewards tab).","Stream Dome: 10 player TVs. Rent one with chips (20 chips for 30 minutes) and paste a YouTube, Twitch or Kick link, a direct .mp4 link, or upload an MP4 from your device (up to 24 MB) to broadcast to everyone; tap any ON AIR TV to watch exactly what that player is showing. YouTube TVs show the video thumbnail right on the screen. The owner can end any stream.","The Void: PvP arena with health bars. The safe zone by the Metro heals you and has Bot Control (Off, Easy, Normal, Hard). Watch for red warning rings and aim lines and step away to dodge. Getting deleted costs 15% and sends you home.","Civic Center: City Hall (roles and elections), Precinct 9 (the Wanted board), the Clinic, a back alley with the Black Market and a hacker terminal, plus a plaza anyone can use \u2014 a coffee cart (Speed), a wishing fountain (a random buff), City Services (pay off your Wanted the honest way, claim a daily civic credit) and the notice board.","Rust Gate Prison: where arrested runners do their time \u2014 press plates, work the laundry, shoot hoops, read in the library or sit in the chapel to shorten your sentence, lift weights for a buff, hit the commissary for snacks and phone cards, pay bail, or risk the tunnel. Anyone can visit the yard, see who's locked up, and use the hoops, library, chapel and commissary too."]]]},
   social:{n:"Play with others",secs:[
     ["Story quests",["People around the city have stories that need you. Look for markers over their heads: gold ! = a new chapter, … = in progress, green ? = ready to turn in.","Walk up and press E (or tap them) to talk. Quest givers stop to chat. Seven storylines with 3–4 chapters each: Vex (The Glitch) “Ghost in the Taps”, Kai (The Glitch) “Recipe from the Old Net”, Juno and Rook (Sector 9 street) “The Lost Signal” and “The Void Hunter”, Mira (Byte Market) “Club Secrets”, Pixel (Cyber Buys) “Smart Home Dream” and Agent Linx (Linx Land) “Land Baron”.","Objectives use everything in the game: digging scrap, deleting Void bots, assembling rigs, Assembly shifts, companion fetches, battles and expeditions, club items and fusions, drinks, decor and deliveries. Delivery items are handed over when you turn in.","Every chapter pays credits and chips, and finishing a story pays a rare or epic part. Progress is saved, so come back anytime. Press Q (☰ → Quests on phones) for the Quest Log, which shows where each person is and lets you travel there.","Everyone else you meet has something to say too: tap them to chat."]],
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes. Chat lines fade after a few seconds; tap Log for the full history, filtered by chat or events.","Invite players to your apartment from the intercom or to your backroom from its room controls; they get a card that brings them straight to you."]],
@@ -4205,7 +4281,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},streamdome:{n:"Stream Dome",x:200,d:"10 player TVs \u2014 rent one with chips and share your YouTube, Twitch or Kick stream"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},streamdome:{n:"Stream Dome",x:200,d:"10 player TVs \u2014 rent one with chips and share a stream, video link or MP4 from your device"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -8701,6 +8777,7 @@ setInterval(hud,1000);
   if(u){ try{ IS_ADMIN=!!(await u.isOwner()); }catch(e){} updAdminBtn(); try{ myId=await u.id(); setTimeout(()=>stLoad(),3000); if(!save.name) myName=(await u.name())||"Runner"; if(myId) names[myId]=myName; }catch(e){} }
   let canWrite=true; if(u&&myId){ try{ const c=await u.can("data.write"); canWrite=c!==false; }catch(e){} }
   ACCESS.mode=!db?"signedout":!myId?"limited":!canWrite?"readonly":room?"full":"full";
+  if(db) try{ streamWatch(db); }catch(e){}
   if(db&&myId&&canWrite){ DB=db;
     try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ save=sanitizeSave(snap.data()); hud(); } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
     db.collection("market").orderBy("at","desc").limit(60).onSnapshot(s=>{ market=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>BY[m.item]&&typeof m.seller==="string"&&+m.price>0); const ids=[...new Set(market.map(m=>m.seller))]; resolveNames(ids);  refreshView("trade");},()=>{});
