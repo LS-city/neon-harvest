@@ -2953,8 +2953,8 @@ const GUIDE={
     ["Redeem at Smacked Shop (Metro)",["Each reward has a price in RP. Pick one and tap Redeem to get a pickup code like SMK-AB12-CD34.","Show the code and a photo ID (21+) at the shop in person to collect your item. The owner checks every code before handing anything over. All your codes are under My pickup codes.","Monthly reward limit: there's a cap on how much you can redeem each month. Smacked Shop shows how much of it you have left, and it resets on the 1st.","Cancelled codes refund your RP automatically, but still count toward that month's limit. Codes you already have stay valid even if your membership ends."]],
     ["Digital rewards: Game Consoles",["60 consoles in Smacked Shop → Digital: 14 retro, 13 modern, 13 future-tech, and 20 Living Room Legends inspired by real home consoles, each with its own game play-effect over your head. Members redeem them with RP.","Every console has 7 games (racing, shooter, platformer, puzzle, adventure, rhythm and fighting) with their own animated screens. The first game comes free; buy the rest with credits in the console's Game library.","Hold a console in your hand (Character → Hand, your stash, or the console screen). Insert a game and its screen plays on the console. Tap 🎮 Play for a 12-second session: a holo screen of the game floats over your head for everyone to see. The first session every 20 minutes pays 2–5 chips.","Show consoles off on your apartment shelves, or try the Pose emote. Find them all in ☰ → Game consoles or Stash → Game consoles. Consoles are account-bound: they can't be sold, gifted, staked or traded."]],
     ["Digital rewards: Neo Anime Drop",["Smacked Shop's Digital tab has original animated sets: the Neo Anime Drop (10 clothes, 10 companions, 10 effects) and the 10 Spirit-Bound companions, each with a bond effect that surrounds you and a matching outfit.","Members redeem them with RP and get them instantly. No pickup code, and they don't count toward the monthly reward limit.","You can try any of them on in Character first. They can't be bought with credits and never drop as loot."]],
-    ["Neon Row Coins (NRC)",[()=>`Everyone earns NRC, free players included: 1 NRC for every ₵10 earned from work (shifts, Harvest Assembly, courier runs, story quests) and a daily check-in at the NRC kiosk on Neon Row (+${NRC_CHECKIN}).`,()=>`Up to ${NRC_CAP} NRC a day. Data Collectors Club members earn double, up to ${NRC_CAP*2}.`,"NRC only works at Neon Row. It can't be bought, traded or gifted. Tap the NRC counter at the top to see your balance."]],
-    ["Neon Row (Metro)",["Six storefronts rented by real local businesses. Each partner store stocks its own rewards: NRC rewards are open to everyone, RP rewards are for members.","Redeem to get a code like NR-AB12-CD34, then show it and a photo ID (21+) at that business. The store checks the code and hands over the item. Your codes are under My codes in each store.","Neon Row rewards are given by the store, so they don't count toward your Smacked Shop monthly limit. If a store cancels a code, your NRC or RP comes back automatically.","Run a business? Ask the game's owner about renting a storefront."]]]}
+    ["Neon Row Coins (NRC)",[()=>`Everyone earns NRC, free players included: 1 NRC for every ₵10 earned from work (shifts, Harvest Assembly, courier runs, story quests) and a daily check-in at the NRC kiosk on Neon Row (+${NRC_CHECKIN}).`,()=>`Up to ${NRC_CAP} NRC a day. Data Collectors Club members earn double, up to ${NRC_CAP*2}.`,"A Neon Row store owner can also send you NRC for visiting their shop in person \u2014 it arrives in your game, and anything over your daily limit reaches you on later days.","NRC only works at Neon Row. It can't be bought or traded, but store owners can reward you with it. Tap the NRC counter at the top to see your balance."]],
+    ["Neon Row (Metro)",["Six storefronts rented by real local businesses. Each partner store stocks its own rewards: NRC rewards are open to everyone, RP rewards are for members.","Redeem to get a code like NR-AB12-CD34, then show it and a photo ID (21+) at that business. The store checks the code and hands over the item. Your codes are under My codes in each store.","Neon Row rewards are given by the store, so they don't count toward your Smacked Shop monthly limit. If a store cancels a code, your NRC or RP comes back automatically.","Store owners: thank your in-person visitors by sending them NRC \u2014 open your storefront, choose Manage my store \u2192 Reward a visitor, pick a player who's online (visitors at Neon Row are marked) and send any amount.","Run a business? Ask the game's owner about renting a storefront."]]]}
 };
 let guideTab="start";
 function openGuide(tab){ guideTab=tab||guideTab; try{ localStorage.setItem("nh_guide_seen","1"); }catch(e){}
@@ -3289,12 +3289,31 @@ function openPlayer(pid){
 }
 async function claimGift(doc){
   const d=doc.data(); if(!d||d.to!==myId) return;
+  if(d.kind==="nrc") return claimNrcGift(doc,d,0);
   try{ await DB.doc("gifts/"+doc.id).delete(); }catch(e){ return; }
   const from=nameOf(d.from);
   if(d.kind==="credits"){ const a=clamp(Math.round(+d.amount||0),0,99999); save.credits+=a; toast(`${from} sent you ₵${a}${d.note?" · "+String(d.note).slice(0,40):""}`,"#ffb84a"); }
   else if(d.kind==="chips"){ const a=clamp(Math.round(+d.amount||0),0,99999); save.chips+=a; toast(`${from} sent you ${a} chips${d.note?" · "+String(d.note).slice(0,40):""}`,"#38e8ff"); }
   else if(d.kind==="item"&&BY[d.item]){ addItem(d.item,1); toast(`${from} gifted you ${BY[d.item].n}!`,RAR[BY[d.item].r].c); }
   persist(); beep(1046,.1); setTimeout(()=>beep(1318,.12),100);
+}
+// A Neon Row store owner's NRC payout, delivered through the gift inbox. It credits up to today's NRC limit and
+// carries any remainder to later days, so the owner can send any amount without it being lost.
+let nrcGiftToast=0;
+async function claimNrcGift(doc,d,tries){
+  if(!DB||!myId) return; const amt=clamp(Math.round(+d.amount||0),0,1e7);
+  if(amt<=0){ try{ await DB.doc("gifts/"+doc.id).delete(); }catch(e){} return; }
+  if(!nrcReady){ if(tries<6) setTimeout(()=>claimNrcGift(doc,d,tries+1),1500); return; }
+  const left=nrcLeft();
+  if(left<=0){ // maxed for today — leave the payout for a later day (don't delete)
+    if(Date.now()-nrcGiftToast>8000){ nrcGiftToast=Date.now(); toast(`An NRC payout from ${String(d.note||"a store").slice(0,24)} is waiting — you've hit today's NRC limit. It'll arrive on later days.`,"#ffb84a"); }
+    return; }
+  const g=Math.min(amt,left);
+  try{ await DB.doc("gifts/"+doc.id).delete(); }catch(e){ return; }
+  addNRC(g,`${String(d.note||"Neon Row").slice(0,24)} payout`);
+  toast(`${nameOf(d.from)}${d.note?` (${String(d.note).slice(0,24)})`:""} paid you ${g.toLocaleString()} NRC for your visit!`,"#38e8ff");
+  beep(1046,.1); setTimeout(()=>beep(1318,.12),100);
+  const rem=amt-g; if(rem>0){ try{ await DB.collection("gifts").add({to:myId,from:d.from||myId,kind:"nrc",amount:rem,note:(String(d.note||"").slice(0,22)+" carryover").trim(),at:Date.now()}); }catch(e){} }
 }
 
 /* ============================================================ BUFFS */
@@ -5212,13 +5231,22 @@ function rowManage(body,s){ const r=rowStores[s];
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Send verification email",onclick:async()=>{ try{ const u=await window.claude.use("user"); await u.sendVerification(); msg.textContent="Sent. Open the link in that email, then tap I've verified."; }catch(e){ msg.textContent="Couldn't send it. Try again in a minute."; } }}),
         el("button",{class:"btn",type:"button",text:"I've verified",onclick:async()=>{ try{ const u=await window.claude.use("user"); myVerified=!!(await u.refresh()); }catch(e){} if(myVerified){ toast("Email verified. Welcome to Neon Row!","#43f0a4"); rowWatch(DB); openStore(s,"manage"); } else msg.textContent="Not verified yet. Open the link in the email first."; }})),msg))); return; }
   body.append(el("div",{class:"sub",text:`Rent paid until ${rowDay(r.until)}. ${IS_ADMIN?"You're managing this store as the owner.":"Store look and info are set by the game's owner; ask them for changes."}`}));
-  const tabs=el("div",{class:"tabs"}); [["items","My rewards"],["verify","Check a code"],["codes",`Redemptions (${(rowStaff[s]||[]).filter(c=>c.status==="ready").length} waiting)`]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(rowTab===k),text:l,onclick:()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }}))); body.append(tabs);
+  const tabs=el("div",{class:"tabs"}); [["items","My rewards"],["payout","Reward a visitor"],["verify","Check a code"],["codes",`Redemptions (${(rowStaff[s]||[]).filter(c=>c.status==="ready").length} waiting)`]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(rowTab===k),text:l,onclick:()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }}))); body.append(tabs);
   if(rowTab==="verify"){ const inp=el("input",{class:"num",id:"rowcode",placeholder:"NR-XXXX-XXXX",autocomplete:"off",style:"flex:1;min-width:0;text-transform:uppercase;font-size:16px;letter-spacing:.08em"}); const res=el("div",{class:"list"});
     const check=async()=>{ res.innerHTML=""; const code=normRowCode(inp.value); if(!code){ res.append(el("div",{class:"r-epic",text:"Enter the full code, like NR-AB12-CD34."})); return; }
       let d=null; try{ const sn=await DB.doc(`rowcodes/${s}/codes/${code}`).get(); d=sn.exists?{id:sn.id,...sn.data()}:null; }catch(e){}
       if(!d){ res.append(el("div",{class:"r-epic",text:"No reward from this store has that code. Check it with the customer."})); beep(150,.15); return; } res.append(rowCodeRow(s,d)); beep(1000,.06); };
     inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); check(); } });
     body.append(el("label",{class:"fld"},"Customer's code",el("div",{class:"row"},inp,el("button",{class:"btn hot",type:"button",text:"Look up",onclick:check}))),res); setTimeout(()=>inp.focus(),30); return; }
+  if(rowTab==="payout"){ const r=rowStores[s];
+    body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:"Reward a visitor with NRC"}),el("span",{class:"sub",text:"Thank a player who came to your store in person. Pick them from the players online now and send any amount of NRC — it lands in their game. If they've hit today's NRC limit, the rest reaches them on later days."}))));
+    const amt=el("input",{class:"num",id:"rw_pay",type:"number",min:"1",max:"100000",step:"10",placeholder:"e.g. 100",style:"flex:1;min-width:0;font-size:16px"});
+    body.append(el("label",{class:"fld"},"NRC to send",amt));
+    const list=el("div",{class:"list"}); const peers=onlinePeers().filter(p=>p.by&&p.by!==myId).sort((a,b)=>(b.s==="neonrow"?1:0)-(a.s==="neonrow"?1:0)||nameOf(a.by).localeCompare(nameOf(b.by)));
+    if(!peers.length) list.append(el("div",{class:"empty",text:"No other players are online right now. Ask your visitor to open NEON HARVEST and sign in, then tap Refresh."}));
+    for(const p of peers){ const atRow=p.s==="neonrow"; list.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:nameOf(p.by)}),el("div",{class:atRow?"r-uncommon":"sub",text:atRow?"At Neon Row now":"In "+sceneName(p.s)})),
+      el("button",{class:"btn hot",type:"button",text:"Send NRC",onclick:()=>rowSendNrc(s,p.by,Math.floor(+amt.value)||0)}))); }
+    body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Refresh players",onclick:()=>openStore(s,"manage")})),list); return; }
   if(rowTab==="codes"){ const rows=[...(rowStaff[s]||[])].sort((a,b)=>(b.at||0)-(a.at||0)); if(!rows.length){ body.append(el("div",{class:"empty",text:"No redemptions yet."})); return; }
     const l=el("div",{class:"list"}); rows.forEach(d=>l.append(rowCodeRow(s,d))); body.append(l); return; }
   if(rowEdit&&rowEdit.item) return rowItemForm(body,s,rowEdit.item);
@@ -5247,6 +5275,14 @@ function rowCodeRow(s,d){ const st=d.status; const row=el("div",{class:"li"},el(
     el("span",{class:"tag "+(st==="picked"?"r-uncommon":st==="cancelled"?"r-epic":""),style:st==="ready"?"color:var(--amber)":"",text:st==="picked"?"Picked up":st==="cancelled"?"Cancelled · refunded":"Ready for pickup"}));
   if(st==="ready") row.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Mark picked up",onclick:()=>rowSetCode(s,d,"picked")}),el("button",{class:"btn",type:"button",text:"Cancel & refund",onclick:()=>rowSetCode(s,d,"cancelled")})));
   return row; }
+async function rowSendNrc(s,to,amount){ amount=Math.floor(+amount||0);
+  if(!rowCanManage(s)){ toast("Only this store's owner can send NRC."); return; }
+  if(amount<=0){ toast("Enter how much NRC to send first."); return; }
+  if(amount>100000){ toast("Max 100,000 NRC at once."); return; }
+  if(!DB||!myId||!to){ toast("Sign in to send NRC."); return; }
+  const r=rowStores[s], note=((r&&r.name)||"Neon Row").slice(0,40);
+  try{ await DB.collection("gifts").add({to,from:myId,kind:"nrc",amount,note,at:Date.now()}); toast(`Sent ${amount.toLocaleString()} NRC to ${nameOf(to)}. It arrives in their game.`,"#38e8ff"); beep(1000,.07); setTimeout(()=>beep(1300,.08),90); }
+  catch(e){ toast("Couldn't send that right now. Try again."); } }
 async function rowSetCode(s,d,status){ try{ await DB.doc(`rowcodes/${s}/codes/${d.code}`).update({status,done:Date.now()}); d.status=status;
     if(status==="cancelled"){ const it=(rowItems[s]||[]).find(x=>x.id===d.item); if(it&&it.sold>0) try{ await DB.doc(`rowitems/${s}/items/${it.id}`).update({sold:it.sold-1}); }catch(e){} }
     toast(status==="picked"?`${d.code} marked picked up.`:`${d.code} cancelled. The player gets their RP back automatically.`); }
