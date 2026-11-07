@@ -2710,6 +2710,15 @@ function drawPrisonFront(t){ if(camX>PRISON.x1+40||camX+VW<PRISON.x0-40) return;
    "now showing" card, the house-lights setting and the connection handshakes. */
 const TH_W=2400, TH_FEE=40, TH_MAX=12, TH_MAXH=3, TH_SX=1100, TH_SY=14, TH_SW=400, TH_SH=225;
 const TH_ICE={iceServers:[{urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]}]};
+// Direct connections fail on many phone networks and strict routers, so a free public TURN relay (Open Relay, metered.ca)
+// is added as a fallback. It uses the relay's published static-auth secret to make short-lived credentials (TURN REST scheme).
+let thIceP=null, thIceAt=0;
+function thIceCfg(){ if(thIceP&&Date.now()-thIceAt<6*36e5) return thIceP; thIceAt=Date.now();
+  thIceP=(async()=>{ const L=[...TH_ICE.iceServers];
+    try{ const user=(Math.floor(Date.now()/1000)+24*3600)+":nh", enc=new TextEncoder(), key=await crypto.subtle.importKey("raw",enc.encode("openrelayprojectsecret"),{name:"HMAC",hash:"SHA-1"},false,["sign"]);
+      const sig=new Uint8Array(await crypto.subtle.sign("HMAC",key,enc.encode(user))); let b=""; for(const x of sig) b+=String.fromCharCode(x);
+      L.push({urls:["turn:staticauth.openrelay.metered.ca:80","turn:staticauth.openrelay.metered.ca:80?transport=tcp","turn:staticauth.openrelay.metered.ca:443","turns:staticauth.openrelay.metered.ca:443?transport=tcp"],username:user,credential:btoa(b)}); }catch(e){}
+    return {iceServers:L}; })(); return thIceP; }
 const TH_LV=[{n:"Lights up",a:0},{n:"Dimmed",a:.45},{n:"Dark (movie mode)",a:.74}];
 const TH_SEATS=[]; for(let k=0;k<14;k++) TH_SEATS.push({id:"thA"+k,row:"A",n:k+1,x:650+k*100,y:290}); for(let k=0;k<13;k++) TH_SEATS.push({id:"thB"+k,row:"B",n:k+1,x:700+k*100,y:326});
 let TH_DB=null, thWatched=false, thShow=null, thKey="", thLights={lv:0,by:"",at:0}, thHost=null, thView=null, thVid=null, thTries={}, thLastRead=-99, thAnnounced="", thNeedTap=false, thVol=1;
@@ -2717,15 +2726,18 @@ try{ const v=localStorage.getItem("nh_thvol"); if(v!=null) thVol=Math.max(0,Math
 function thClean(d){ if(!d||typeof d!=="object") return null; const sid=String(d.sid||""); if(!/^[a-z0-9]{6,32}$/.test(sid)) return null;
   const until=+d.until, hb=+d.hb; if(!(until>0&&hb>0)) return null;
   return {by:String(d.by||"").slice(0,80),sid,title:String(d.title||"").slice(0,60)||"Untitled",until,hb,at:+d.at||0,dur:Math.max(0,Math.floor(+d.dur||0))}; }
-function thLive(){ const s=thShow; return s&&s.until>Date.now()&&s.hb>Date.now()-45e3?s:null; }
+let thSeenAt=0, thSeenHb=null, thSeenSid="";
+function thSeen(s){ if(!s){ thSeenHb=null; thSeenSid=""; return; } if(s.sid!==thSeenSid){ thSeenSid=s.sid; thSeenHb=null; }
+  if(s.hb!==thSeenHb){ thSeenAt=thSeenHb==null?Date.now()-Math.min(6e4,Math.max(0,Date.now()-s.hb)):Date.now(); thSeenHb=s.hb; } }
+function thLive(){ const s=thShow; if(!s) return null; if(thHost&&thHost.sid===s.sid) return s; return Date.now()-thSeenAt<50e3&&Date.now()-thSeenAt<s.until-s.hb+3e4?s:null; }
 function thMins(s){ return Math.max(0,Math.ceil((s.until-120e3-Date.now())/6e4)); }
-function thHidden(v){ v.setAttribute("playsinline",""); v.style.cssText="position:fixed;left:-4px;top:-4px;width:2px;height:2px;opacity:0;pointer-events:none"; document.body.append(v); return v; }
-function thIce(pc){ return new Promise(res=>{ if(pc.iceGatheringState==="complete") return res(); const f=()=>{ if(pc.iceGatheringState==="complete"){ pc.removeEventListener("icegatheringstatechange",f); res(); } }; pc.addEventListener("icegatheringstatechange",f); setTimeout(res,4000); }); }
+function thHidden(v){ v.setAttribute("playsinline",""); v.setAttribute("webkit-playsinline",""); v.style.cssText="position:fixed;left:0;bottom:0;width:4px;height:4px;opacity:0.01;pointer-events:none;z-index:-1"; document.body.append(v); return v; }
+function thIce(pc){ return new Promise(res=>{ if(pc.iceGatheringState==="complete") return res(); const f=()=>{ if(pc.iceGatheringState==="complete"){ pc.removeEventListener("icegatheringstatechange",f); res(); } }; pc.addEventListener("icegatheringstatechange",f); setTimeout(res,5000); }); }
 function thPanelOpen(){ return currentView&&currentView.startsWith("th")&&!$("#overlay").hidden; }
 function thRepaint(){ if(!thPanelOpen()||(document.activeElement&&["INPUT","SELECT"].includes(document.activeElement.tagName))) return; try{ if(currentView==="thbooth") openTheaterBooth(); else if(currentView==="thlights") openTheaterLights(); else if(currentView==="thwatch") openTheaterWatch(); }catch(e){} }
 
 /* ---- shared state ---- */
-function thApply(s){ thShow=s&&s.exists?thClean(s.data()):null; const now=thLive(), k=now?[now.sid,now.by,now.title].join("|"):"";
+function thApply(s){ thShow=s&&s.exists?thClean(s.data()):null; thSeen(thShow); const now=thLive(), k=now?[now.sid,now.by,now.title].join("|"):"";
   if(now) resolveNames([now.by]);
   if(thHost&&thHost.live&&(!thShow||thShow.sid!==thHost.sid)){ thStopHost(true); toast("Your movie was stopped by the owner."); }
   if(now&&now.sid!==thAnnounced){ thAnnounced=now.sid; if(now.by!==myId&&me.scene!=="streamdome") chatLine(null,`🎬 ${nameOf(now.by)} is showing “${now.title}” on the big screen at the Stream Dome. Take the Metro to watch!`,"sys"); }
@@ -2743,9 +2755,9 @@ async function thSetLights(lv){ lv=Math.max(0,Math.min(TH_LV.length-1,Math.floor
 function thCapture(v){ if(v.captureStream) return v.captureStream();
   // Safari / Firefox: paint the video into a canvas and route the sound through Web Audio
   const c=document.createElement("canvas"); c.width=Math.min(1280,v.videoWidth||1280); c.height=Math.max(2,Math.round(c.width*(v.videoHeight||720)/(v.videoWidth||1280))); const g=c.getContext("2d");
-  const paint=()=>{ if(thHost&&thHost.v===v){ try{ g.drawImage(v,0,0,c.width,c.height); }catch(e){} requestAnimationFrame(paint); } }; setTimeout(paint,0);
+  const iv=setInterval(()=>{ if(!(thHost&&thHost.v===v)&&Date.now()-t0>5000){ clearInterval(iv); return; } try{ g.drawImage(v,0,0,c.width,c.height); }catch(e){} },33), t0=Date.now();
   const out=c.captureStream(30);
-  try{ const AC=window.AudioContext||window.webkitAudioContext, ac=new AC(), src=ac.createMediaElementSource(v), dst=ac.createMediaStreamDestination(); src.connect(dst); src.connect(ac.destination); dst.stream.getAudioTracks().forEach(t=>out.addTrack(t)); v._ac=ac; }catch(e){}
+  try{ const AC=window.AudioContext||window.webkitAudioContext, ac=new AC(), src=ac.createMediaElementSource(v), dst=ac.createMediaStreamDestination(); src.connect(dst); src.connect(ac.destination); dst.stream.getAudioTracks().forEach(t=>out.addTrack(t)); v._ac=ac; if(ac.state==="suspended") ac.resume().catch(()=>{}); }catch(e){}
   return out; }
 async function thStart(file,title){ if(!DB||!myId) throw new Error("Sign in to run the projector.");
   const cur=thLive(), swap=!!(thHost&&cur&&cur.by===myId); if(cur&&cur.by!==myId&&!IS_ADMIN) throw new Error("Someone's movie is already playing. Wait for it to finish.");
@@ -2775,7 +2787,7 @@ async function thStart(file,title){ if(!DB||!myId) throw new Error("Sign in to r
 async function thServe(d){ const H=thHost; if(!H) return; const by=d.by;
   if(H.peers[by]){ try{ H.peers[by].close(); }catch(e){} delete H.peers[by]; }
   if(Object.keys(H.peers).length>=TH_MAX){ await DB.doc("club/thans_"+by).set({k:"thans",sid:H.sid,to:by,full:true,at:+d.at}); return; }
-  const pc=new RTCPeerConnection(TH_ICE); H.peers[by]=pc;
+  const pc=new RTCPeerConnection(await thIceCfg()); if(thHost!==H) return; if(H.peers[by]){ try{ H.peers[by].close(); }catch(e){} } H.peers[by]=pc;
   pc.onconnectionstatechange=()=>{ if(["failed","closed"].includes(pc.connectionState)&&H.peers[by]===pc) delete H.peers[by]; if(currentView==="thbooth") thRepaint(); };
   await pc.setRemoteDescription({type:"offer",sdp:d.offer});
   for(const t of H.stream.getTracks()) pc.addTrack(t,H.stream);
@@ -2791,13 +2803,15 @@ addEventListener("pagehide",()=>{ if(thHost&&DB) try{ DB.doc("club/theater").del
 
 /* ---- viewers: receive the live picture + sound ---- */
 function thWant(){ const s=thLive(); return !!(s&&s.by!==myId&&!thHost&&DB&&myId&&(me.scene==="streamdome"||currentView==="thwatch")); }
-async function thConnect(s){ thDisconnect(true); if(typeof RTCPeerConnection==="undefined") return;
+let thConnecting=false;
+async function thConnect(s){ if(thConnecting) return; thDisconnect(true); if(typeof RTCPeerConnection==="undefined") return; thConnecting=true; try{ await thConnect2(s); }finally{ thConnecting=false; } }
+async function thConnect2(s){
   if(!thVid){ thVid=thHidden(document.createElement("video")); thVid.autoplay=true; }
   thTries[s.sid]=(thTries[s.sid]||0)+1;
-  const V=thView={sid:s.sid,pc:new RTCPeerConnection(TH_ICE),ms:new MediaStream(),state:"connecting",at:Date.now(),t:Date.now(),unsub:null}, pc=V.pc;
+  const ice=await thIceCfg(); if(thView) return; const V=thView={sid:s.sid,pc:new RTCPeerConnection(ice),ms:new MediaStream(),state:"connecting",at:Date.now(),t:Date.now(),unsub:null}, pc=V.pc;
   pc.addTransceiver("video",{direction:"recvonly"}); pc.addTransceiver("audio",{direction:"recvonly"});
-  pc.ontrack=e=>{ if(thView!==V) return; if(!V.ms.getTracks().includes(e.track)) V.ms.addTrack(e.track); thVid.srcObject=V.ms; thVid.volume=thVol; thVid.muted=false;
-    thVid.play().then(()=>{ thNeedTap=false; }).catch(()=>{ thVid.muted=true; thNeedTap=true; thVid.play().catch(()=>{}); }); };
+  pc.ontrack=e=>{ if(thView!==V) return; const src=e.streams&&e.streams[0]; if(src) V.ms=src; else if(!V.ms.getTracks().includes(e.track)) V.ms.addTrack(e.track);
+    if(thVid.srcObject!==V.ms) thVid.srcObject=V.ms; thPlayVid(); };
   pc.onconnectionstatechange=()=>{ if(thView!==V) return; const c=pc.connectionState; if(c==="connected"){ V.state="live"; thTries[s.sid]=0; } else if(c==="failed"||c==="closed"){ V.state="lost"; V.t=Date.now(); } if(currentView==="thwatch") thRepaint(); };
   try{ await pc.setLocalDescription(await pc.createOffer()); await thIce(pc); if(thView!==V) return;
     V.unsub=DB.doc("club/thans_"+myId).onSnapshot(a=>{ const d=a&&a.exists?a.data()||{}:null; if(thView!==V||!d||d.sid!==V.sid||+d.at!==V.at) return;
@@ -2805,25 +2819,35 @@ async function thConnect(s){ thDisconnect(true); if(typeof RTCPeerConnection==="
       if(typeof d.answer==="string"&&pc.signalingState==="have-local-offer") pc.setRemoteDescription({type:"answer",sdp:d.answer}).catch(()=>{ V.state="lost"; V.t=Date.now(); }); },()=>{});
     await DB.doc("club/threq_"+myId).set({k:"threq",sid:V.sid,by:myId,offer:pc.localDescription.sdp,at:V.at}); }
   catch(e){ if(thView===V){ V.state="lost"; V.t=Date.now(); } } }
+function thPlayVid(){ if(!thVid) return; thVid.volume=thVol; thVid.muted=false;
+  // only a real autoplay block (NotAllowedError) means "start muted and wait for a tap"; an interrupted play() just retries
+  thVid.play().then(()=>{ thNeedTap=false; }).catch(e=>{ if(e&&e.name==="NotAllowedError"){ thVid.muted=true; thNeedTap=true; thVid.play().catch(()=>{}); } else setTimeout(()=>{ if(thVid&&thVid.paused&&thView) thPlayVid(); },400); }); }
 function thDisconnect(keepDoc){ const V=thView; if(!V) return; thView=null; try{ V.unsub&&V.unsub(); }catch(e){} try{ V.pc.close(); }catch(e){}
   if(thVid){ try{ thVid.pause(); }catch(e){} thVid.srcObject=null; } thNeedTap=false; if(!keepDoc&&DB&&myId) DB.doc("club/threq_"+myId).delete().catch(()=>{}); }
 // one tap or key press anywhere turns the sound on if the browser started the movie muted
-for(const ev of ["pointerdown","keydown"]) addEventListener(ev,()=>{ if(thNeedTap&&thVid&&thView){ thVid.muted=false; thVid.play().then(()=>{ thNeedTap=false; }).catch(()=>{ thVid.muted=true; }); } },true);
+for(const ev of ["pointerdown","keydown"]) addEventListener(ev,()=>{ if(thNeedTap&&thVid&&thView){ thVid.muted=false; thVid.volume=thVol; thVid.play().then(()=>{ thNeedTap=false; }).catch(e=>{ if(e&&e.name==="NotAllowedError") thVid.muted=true; }); } if(thHost&&thHost.v._ac&&thHost.v._ac.state==="suspended") thHost.v._ac.resume().catch(()=>{}); },true);
 function thTick(){ const s=thLive();
   if(thHost&&DB&&Date.now()-thHost.hbT>15e3){ const H=thHost, v=H.v; H.hbT=Date.now(); const rem=isFinite(v.duration)?Math.max(0,v.duration-v.currentTime):3600;
-    const d={by:myId,sid:H.sid,title:H.title,at:H.at,hb:Date.now(),until:Date.now()+rem*1000+120e3,dur:H.dur}; DB.doc("club/theater").set(d).catch(()=>{}); thShow=thClean(d); }
+    const d={by:myId,sid:H.sid,title:H.title,at:H.at,hb:Date.now(),until:Date.now()+rem*1000+120e3,dur:H.dur}; DB.doc("club/theater").set(d).catch(()=>{}); thShow=thClean(d); thSeen(thShow); }
   if(thWant()){ const V=thView, tries=thTries[s.sid]||0;
     if(!V||V.sid!==s.sid) thConnect(s);
-    else if((V.state==="lost"&&Date.now()-V.t>5e3&&tries<8)||(V.state==="connecting"&&Date.now()-V.at>25e3&&tries<8)||(V.state==="full"&&Date.now()-V.t>30e3)) thConnect(s); }
+    else if((V.state==="lost"&&Date.now()-V.t>5e3&&tries<8)||(V.state==="connecting"&&Date.now()-V.at>25e3&&tries<8)||(V.state==="full"&&Date.now()-V.t>30e3)||(V.state==="live"&&!thSource()&&Date.now()-V.at>2e4&&tries<8)) thConnect(s);
+    else if(V.state==="live"&&thVid&&thVid.paused&&!thNeedTap) thPlayVid(); }
   else if(thView) thDisconnect();
+  thNowBtn();
   if(me.scene==="streamdome"&&TH_DB&&T-thLastRead>30){ thLastRead=T; thRefresh(); } }
 setInterval(()=>{ try{ thTick(); }catch(e){} },1000);
+// "Now showing" button so players anywhere in the world can watch
+let thBtnEl=null;
+function thNowBtn(){ const s=thLive(), show=!!(s&&!thHost&&me.scene!=="streamdome"&&$("#overlay").hidden&&DB&&myId);
+  if(!thBtnEl){ if(!show) return; thBtnEl=el("button",{class:"btn hot",type:"button",style:"position:fixed;right:12px;bottom:82px;z-index:40;max-width:min(340px,72vw);white-space:nowrap;overflow:hidden;text-overflow:ellipsis",onclick:()=>openTheaterWatch()}); document.body.append(thBtnEl); }
+  thBtnEl.hidden=!show; if(show){ const t=`🎬 Now showing: ${s.title} — Watch`; if(thBtnEl.textContent!==t) thBtnEl.textContent=t; } }
 function thSource(){ if(thHost&&thHost.v.readyState>=2) return thHost.v; if(thView&&thVid&&thVid.readyState>=2&&thVid.videoWidth>0) return thVid; return null; }
 function thStatus(){ const s=thLive(); if(!s) return "";
   if(thHost) return "You're running the projector.";
   if(!DB||!myId) return "Sign in to watch movies.";
   if(!thView) return "Step into the theater to watch.";
-  return {connecting:"Connecting to the projector…",live:thSource()?"":"Starting picture…",lost:"Lost the signal — reconnecting…",full:`Theater's full (${TH_MAX} viewers max). You'll get in when a seat opens.`}[thView.state]||""; }
+  return {connecting:"Connecting to the projector…",live:thSource()?"":"Starting picture…",lost:(thTries[s.sid]||0)>=8?"Can't reach the projectionist. Open the big screen and tap Reconnect.":"Lost the signal — reconnecting…",full:`Theater's full (${TH_MAX} viewers max). You'll get in when a seat opens.`}[thView.state]||""; }
 
 /* ---- hotspots ---- */
 function streamHot(){ const s=thLive(), out=[{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
@@ -2837,9 +2861,9 @@ function streamHot(){ const s=thLive(), out=[{x:120,hw:60,label:"Take the metro"
 /* ---- panels ---- */
 function openTheaterBooth(){ const s=thLive(), mine=!!thHost;
   const body=panel("Stream Dome · Projection booth",`Play a video from your own device on the big screen for ${TH_FEE} chips. Everyone in the theater watches it live.`); currentView="thbooth";
-  if(s){ const peers=mine?Object.values(thHost.peers).filter(p=>p.connectionState==="connected").length:0;
+  if(s){ const st=mine?Object.values(thHost.peers).map(p=>p.connectionState):[], peers=st.filter(x=>x==="connected").length, joining=st.filter(x=>x==="new"||x==="connecting").length;
     body.append(el("div",{class:"detail",style:"border-color:#ffb13f"},el("div",{class:"info"},el("strong",{text:`🎬 Now showing: ${s.title}`}),
-      el("span",{class:"sub",text:`Playing live from ${mine?"your":nameOf(s.by)+"'s"} device${s.dur?` · about ${thMins(s)} min left`:""}${mine?` · ${peers} watching right now`:""}`})),
+      el("span",{class:"sub",text:`Playing live from ${mine?"your":nameOf(s.by)+"'s"} device${s.dur?` · about ${thMins(s)} min left`:""}${mine?` · ${peers} watching right now${joining?`, ${joining} connecting`:""}`:""}`})),
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Watch fullscreen",onclick:()=>openTheaterWatch()}))));
     if(mine){ const v=thHost.v;
       body.append(el("div",{class:"detail",style:"border-color:var(--amber)"},el("div",{class:"info"},el("strong",{text:"Projector controls"}),el("span",{class:"sub",text:"Pausing or skipping changes it for everyone. Keep this tab open until the movie ends — closing it stops the show."}),
@@ -2876,8 +2900,9 @@ function openTheaterWatch(){ const s=thLive(); const body=panel(s?`Big screen �
   vol.addEventListener("input",()=>{ thVol=+vol.value; try{ localStorage.setItem("nh_thvol",String(thVol)); }catch(e){} if(thVid) thVid.volume=thVol; if(thHost) thHost.v.volume=thVol; });
   body.append(el("div",{class:"row",style:"align-items:center"},el("span",{class:"sub",text:"🔊"}),vol,
     el("button",{class:"btn hot",type:"button",text:"⛶ Fullscreen",onclick:()=>{ try{ (v.requestFullscreen||v.webkitRequestFullscreen||v.webkitEnterFullscreen).call(v); }catch(e){} }}),
+    s.by!==myId?el("button",{class:"btn",type:"button",text:"↻ Reconnect",onclick:()=>{ thTries={}; thDisconnect(); toast("Reconnecting to the projector…"); }}):null,
     el("button",{class:"btn",type:"button",text:"Back",onclick:()=>closePanel()})),
-    el("p",{class:"sub",text:"The picture is streamed live from the projectionist's device, so it can stutter if their internet is slow."})); }
+    el("p",{class:"sub",text:(me.scene!=="streamdome"?"You can watch from anywhere, or walk into the Stream Dome and see it on the big screen with everyone. ":"")+"The picture streams live from the projectionist's device, so it can stutter if their internet is slow. No sound? Tap anywhere or raise the volume."})); }
 
 /* ---- drawing ---- */
 function thDrawSeat(s){ const x=s.x, y=s.y; ctx.fillStyle="#2a1420"; ctx.fillRect(x-19,y-18,4,14); ctx.fillRect(x+15,y-18,4,14); ctx.fillRect(x-12,y-4,3,6); ctx.fillRect(x+9,y-4,3,6);
