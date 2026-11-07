@@ -2289,7 +2289,7 @@ function hackATM(sc){ const k="atm_"+sc; if(rcd(k)) return toast(`This ATM's sec
 /* ---------- multiplayer role events ---------- */
 const ritualFx={}; let lastStolenAt=0;
 function peerOf(by){ for(const p of peers.values()) if(p.by===by) return p; return null; }
-function onRoleEv(m){ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; if(d.k==="sd"){ sdRefresh(Math.floor(+d.i)); return; } const from=peerOf(m.by), who=nameOf(m.by); resolveNames([m.by]);
+function onRoleEv(m){ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; if(d.k==="sd"){ thRefresh(); return; } const from=peerOf(m.by), who=nameOf(m.by); resolveNames([m.by]);
   if(d.k==="ritual"){ if(d.s===me.scene&&from){ ritualFx[m.by]={t:T,s:d.s,col:/^#[0-9a-f]{6}$/i.test(d.col)?d.col:"#ff3f5a",x:from.dx,y:from.dy};
       if(save.cult&&save.cult.by===m.by&&!jailed()){ save.buffs=save.buffs||{}; const u=Date.now()+10*6e4; save.buffs.luck=Math.max(+save.buffs.luck||0,u); save.buffs.tips=Math.max(+save.buffs.tips||0,u); save.credits+=25; persist(); toast(`Blessed by ${String(d.n||"the cult").slice(0,24)}: Lucky salvage + tips for 10 min, +₵25`,save.cult.col); rEmit({k:"ritual_ok",to:m.by}); } } return; }
   if(d.to!==myId) return;
@@ -2475,201 +2475,226 @@ function drawPrisonFront(t){ if(camX>PRISON.x1+40||camX+VW<PRISON.x0-40) return;
   const fx=PRISON.x0-6; if(fx>camX-20&&fx<camX+VW+20){ ctx.fillStyle="#5a5248"; for(let y=250;y<H;y+=14) ctx.fillRect(fx,y,3,9); ctx.fillStyle="#6a6258"; for(let y=256;y<H;y+=28){ ctx.fillRect(fx-10,y,24,2); } ctx.fillStyle="#8a8278"; ctx.fillRect(fx-2,250,2,H-250); } }
 
 
-/* ============================================================ STREAM DOME */
-/* ============================================================ STREAM DOME
-   10 rentable TV booths. Players pay chips to rent a booth, then paste a YouTube, Twitch or Kick link.
-   Only those three platforms are allowed, and the game builds the official embed from the parsed id —
-   it never embeds a raw user URL, so a pasted link can't inject anything. Everyone in the dome sees which
-   booths are ON AIR and can tap a TV to watch the stream play. Booth state lives in the shared database. */
-const SD_N=10, SD_SPAWN=200, SD_W=3400, SD_RENT=20, SD_MIN=30; // 20 chips buys 30 minutes
-function SD_X(i){ return 400+i*320; }
-let sdBooths={}, sdWatched=false;
-const SD_HOSTS={youtube:{n:"YouTube",c:"#ff0000"},twitch:{n:"Twitch",c:"#9147ff"},kick:{n:"Kick",c:"#53fc18"},mp4:{n:"MP4 link",c:"#ffb13f"},file:{n:"MP4 video",c:"#ffb13f"},asset:{n:"MP4 video",c:"#ffb13f"}};
-// Device videos are shared by splitting them into database chunks (GitHub build) or the artifact's asset store (claude.ai).
-const SD_CHUNK=640*1024, SD_MAXMB=24;
-let SD_DB=null, sdKeys={}, sdLastRefresh=-99, sdVidCache={}, sdLocal={}, sdThumbs={};
-const SD_VID=h=>h==="mp4"||h==="file"||h==="asset";
-function sdOkUrl(s){ s=String(s||""); if(s.length>500) return false; try{ const u=new URL(s); return u.protocol==="https:"&&/\.(mp4|webm|m4v|mov)$/i.test(u.pathname); }catch(e){ return false; } }
-function sdClean(d){ if(!d||typeof d!=="object") return null; const host=SD_HOSTS[d.host]?d.host:null; const ref=String(d.ref||"");
-  if(!host||!(+d.until>Date.now())) return null;
-  if(host==="mp4"){ if(!sdOkUrl(ref)) return null; }
-  else if(host==="file"||host==="asset"){ if(!/^[A-Za-z0-9_\-]{4,80}$/.test(ref)) return null; }
-  else if(!/^[A-Za-z0-9_\-]{2,40}$/.test(ref)) return null;
-  const o={by:String(d.by||"").slice(0,80),host,ref,title:String(d.title||"").slice(0,60),until:+d.until,at:+d.at||0};
-  if(host==="file"){ const n=Math.floor(+d.n); if(!(n>=1&&n<=60)) return null; o.n=n; o.mime=/^video\/(mp4|webm|quicktime|x-m4v)$/.test(d.mime)?d.mime:"video/mp4"; o.mb=Math.max(0,Math.min(99,+d.mb||0)); }
-  return o; }
-function sdActive(i){ const b=sdBooths[i]; return b&&b.until>Date.now()?b:null; }
-function sdEmbed(b){ const host=location.hostname||"localhost";
-  if(b.host==="youtube") return `https://www.youtube.com/embed/${b.ref}?autoplay=1&rel=0&playsinline=1`;
-  if(b.host==="twitch") return `https://player.twitch.tv/?channel=${b.ref}&parent=${host}&autoplay=true&muted=false`;
-  if(b.host==="kick") return `https://player.kick.com/${b.ref}?autoplay=true`; return ""; }
-function sdLink(b){ if(b.host==="youtube") return `https://youtu.be/${b.ref}`; if(b.host==="twitch") return `https://twitch.tv/${b.ref}`; if(b.host==="kick") return `https://kick.com/${b.ref}`; if(b.host==="mp4") return b.ref; return ""; }
-function sdWho(b){ return b.title||(SD_VID(b.host)?"MP4 video":`${SD_HOSTS[b.host].n} · ${b.host==="youtube"?"video":b.ref}`); }
-function sdKey(b){ return b?[b.by,b.host,b.ref,b.title,b.until].join("|"):""; }
-// Parse a pasted link. Returns {host, ref} for YouTube / Twitch / Kick, or a direct https .mp4/.webm file; null for anything else.
-function parseStream(raw){ let str=String(raw||"").trim(); if(!str) return null; if(!/^https?:\/\//i.test(str)) str="https://"+str; let u; try{ u=new URL(str); }catch(e){ return null; }
-  const h=u.hostname.replace(/^www\./,"").toLowerCase(), yt=id=>/^[\w-]{6,20}$/.test(id);
-  if(h==="youtu.be"){ const id=u.pathname.slice(1).split("/")[0]; if(yt(id)) return {host:"youtube",ref:id}; return null; }
-  if(h==="youtube.com"||h.endsWith(".youtube.com")){ let id=u.searchParams.get("v"); if(!id){ const m=u.pathname.match(/\/(?:embed|live|shorts|v)\/([\w-]{6,20})/); if(m) id=m[1]; } if(id&&yt(id)) return {host:"youtube",ref:id}; return null; }
-  if(h==="twitch.tv"||h.endsWith(".twitch.tv")){ const c=(u.pathname.split("/").filter(Boolean)[0]||""); if(/^[A-Za-z0-9_]{2,30}$/.test(c)) return {host:"twitch",ref:c.toLowerCase()}; return null; }
-  if(h==="kick.com"||h.endsWith(".kick.com")){ const c=(u.pathname.split("/").filter(Boolean)[0]||""); if(/^[A-Za-z0-9_-]{2,30}$/.test(c)) return {host:"kick",ref:c.toLowerCase()}; return null; }
-  if(sdOkUrl(u.href)) return {host:"mp4",ref:u.href};
-  return null; }
-// Booth state: live listener for everyone who has a database (signed in, even view-only), plus a re-read
-// while you're in the dome and a nudge event when someone goes live, so nobody is stuck on a stale TV.
-function sdApply(i,s){ const nb=s&&s.exists?sdClean(s.data()):null, k=sdKey(nb); if(k===sdKeys[i]) return; sdKeys[i]=k; sdBooths[i]=nb; if(nb) resolveNames([nb.by]);
-  if(me.scene==="streamdome"&&!$("#overlay").hidden&&!(document.activeElement&&document.activeElement.tagName==="INPUT")){
-    try{ if(currentView==="streamdome") openStreamDome(); else if(currentView==="streamview_"+i) openStreamView(i); }catch(e){} } }
-function streamWatch(db){ if(!db) return; SD_DB=SD_DB||db; if(sdWatched) return; sdWatched=true; for(let i=0;i<SD_N;i++){ (function(i){ try{ db.doc("club/sd_"+i).onSnapshot(s=>sdApply(i,s),()=>{}); }catch(e){} })(i); } }
-function sdRefresh(i){ if(!SD_DB) return; const list=i==null?[...Array(SD_N).keys()]:[i]; for(const j of list){ if(!(j>=0&&j<SD_N)) continue; try{ SD_DB.doc("club/sd_"+j).get().then(s=>sdApply(j,s)).catch(()=>{}); }catch(e){} } }
-function sdPing(i){ if(ROOM) ROOM.emit("role",{k:"sd",i}).catch(()=>{}); }
+/* ============================================================ STREAM DOME THEATER
+   One big movie screen with seats and house lights. A player pays chips, picks an MP4 on their own device,
+   and it plays FROM THEIR COMPUTER: the file is never uploaded or stored anywhere. Their browser streams the
+   picture and sound live, peer-to-peer (WebRTC), to everyone watching. The shared database only carries the
+   "now showing" card, the house-lights setting and the connection handshakes. */
+const TH_W=2400, TH_FEE=40, TH_MAX=12, TH_MAXH=3, TH_SX=1100, TH_SY=14, TH_SW=400, TH_SH=225;
+const TH_ICE={iceServers:[{urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]}]};
+const TH_LV=[{n:"Lights up",a:0},{n:"Dimmed",a:.45},{n:"Dark (movie mode)",a:.74}];
+const TH_SEATS=[]; for(let k=0;k<14;k++) TH_SEATS.push({id:"thA"+k,row:"A",n:k+1,x:650+k*100,y:290}); for(let k=0;k<13;k++) TH_SEATS.push({id:"thB"+k,row:"B",n:k+1,x:700+k*100,y:326});
+let TH_DB=null, thWatched=false, thShow=null, thKey="", thLights={lv:0,by:"",at:0}, thHost=null, thView=null, thVid=null, thTries={}, thLastRead=-99, thAnnounced="", thNeedTap=false, thVol=1;
+try{ const v=localStorage.getItem("nh_thvol"); if(v!=null) thVol=Math.max(0,Math.min(1,+v||0)); }catch(e){}
+function thClean(d){ if(!d||typeof d!=="object") return null; const sid=String(d.sid||""); if(!/^[a-z0-9]{6,32}$/.test(sid)) return null;
+  const until=+d.until, hb=+d.hb; if(!(until>0&&hb>0)) return null;
+  return {by:String(d.by||"").slice(0,80),sid,title:String(d.title||"").slice(0,60)||"Untitled",until,hb,at:+d.at||0,dur:Math.max(0,Math.floor(+d.dur||0))}; }
+function thLive(){ const s=thShow; return s&&s.until>Date.now()&&s.hb>Date.now()-45e3?s:null; }
+function thMins(s){ return Math.max(0,Math.ceil((s.until-120e3-Date.now())/6e4)); }
+function thHidden(v){ v.setAttribute("playsinline",""); v.style.cssText="position:fixed;left:-4px;top:-4px;width:2px;height:2px;opacity:0;pointer-events:none"; document.body.append(v); return v; }
+function thIce(pc){ return new Promise(res=>{ if(pc.iceGatheringState==="complete") return res(); const f=()=>{ if(pc.iceGatheringState==="complete"){ pc.removeEventListener("icegatheringstatechange",f); res(); } }; pc.addEventListener("icegatheringstatechange",f); setTimeout(res,4000); }); }
+function thPanelOpen(){ return currentView&&currentView.startsWith("th")&&!$("#overlay").hidden; }
+function thRepaint(){ if(!thPanelOpen()||(document.activeElement&&["INPUT","SELECT"].includes(document.activeElement.tagName))) return; try{ if(currentView==="thbooth") openTheaterBooth(); else if(currentView==="thlights") openTheaterLights(); else if(currentView==="thwatch") openTheaterWatch(); }catch(e){} }
 
-/* ---- device video sharing ---- */
-function sdB64(u8){ let s=""; for(let k=0;k<u8.length;k+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(k,k+0x8000)); return btoa(s); }
-function sdUnB64(str){ const s=atob(str), u=new Uint8Array(s.length); for(let k=0;k<s.length;k++) u[k]=s.charCodeAt(k); return u; }
-async function sdUploadFile(i,file,prog){ const vid=(Math.random().toString(36).slice(2,9)+Date.now().toString(36)).replace(/[^a-z0-9]/g,"");
-  if(!window.NH_FIREBASE_CONFIG){ // claude.ai artifact: use the asset store (editors)
-    let A=null; try{ A=await window.claude.use("assets"); }catch(e){} if(!A) return null; prog(.3); const r=await A.upload(file); prog(1); return {host:"asset",ref:String(r.id)}; }
-  if(!DB) return null; const buf=new Uint8Array(await file.arrayBuffer()), n=Math.ceil(buf.length/SD_CHUNK);
-  for(let k=0;k<n;k++){ await DB.doc(`club/sdv_${i}_${k}`).set({vid,k,by:myId,d:sdB64(buf.subarray(k*SD_CHUNK,(k+1)*SD_CHUNK)),at:Date.now()}); prog((k+1)/n); }
-  return {host:"file",ref:vid,n,mime:/^video\//.test(file.type)?file.type:"video/mp4",mb:+(file.size/1048576).toFixed(1)}; }
-async function sdVideoSrc(i,b,prog){ if(b.host==="mp4") return b.ref; if(b.host==="asset") return "/_blob/"+b.ref;
-  if(sdLocal[b.ref]) return sdLocal[b.ref]; if(sdVidCache[b.ref]) return sdVidCache[b.ref]; if(!SD_DB) throw new Error("offline");
-  const parts=new Array(b.n); let done=0;
-  for(let k0=0;k0<b.n;k0+=4){ await Promise.all([...Array(Math.min(4,b.n-k0)).keys()].map(async j=>{ const k=k0+j, s=await SD_DB.doc(`club/sdv_${i}_${k}`).get(); const d=s.exists?s.data():null;
-    if(!d||d.vid!==b.ref||typeof d.d!=="string") throw new Error("changed"); parts[k]=sdUnB64(d.d); done++; prog(done/b.n); })); }
-  const keys=Object.keys(sdVidCache); if(keys.length>=3){ try{ URL.revokeObjectURL(sdVidCache[keys[0]]); }catch(e){} delete sdVidCache[keys[0]]; }
-  return sdVidCache[b.ref]=URL.createObjectURL(new Blob(parts,{type:b.mime||"video/mp4"})); }
-function sdPlayer(i,b){ const wrap=el("div",{style:"position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0"});
-  if(!SD_VID(b.host)){ const frame=el("iframe",{src:sdEmbed(b),style:"position:absolute;inset:0;width:100%;height:100%;border:0","allow":"autoplay; fullscreen; encrypted-media; picture-in-picture","allowfullscreen":"true",referrerpolicy:"strict-origin-when-cross-origin",title:"Stream"}); wrap.append(frame); wrap._reload=()=>{ frame.src="about:blank"; setTimeout(()=>frame.src=sdEmbed(b),60); }; return wrap; }
-  const v=el("video",{controls:"",playsinline:"",preload:"auto",style:"position:absolute;inset:0;width:100%;height:100%;background:#000"}); const note=el("div",{style:"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ffb13f;font:12px monospace;text-align:center;padding:12px",text:"Loading video…"});
-  wrap.append(v,note);
-  const load=()=>{ note.hidden=false; note.textContent="Loading video…"; sdVideoSrc(i,b,p=>note.textContent=`Loading video… ${Math.round(p*100)}%`).then(src=>{ v.src=src; note.hidden=true; v.play().catch(()=>{}); })
-    .catch(e=>{ note.textContent=String(e&&e.message)==="changed"?"This TV just switched videos — reopen it.":"Couldn't load this video. Check your connection and tap Reload."; }); };
-  v.addEventListener("error",()=>{ if(v.getAttribute("src")){ note.hidden=false; note.textContent=b.host==="mp4"?"That site won't let the video play here. Use “Open video ↗”.":"This video format can't play in your browser (MP4 / H.264 works best)."; } });
-  load(); wrap._reload=load; return wrap; }
+/* ---- shared state ---- */
+function thApply(s){ thShow=s&&s.exists?thClean(s.data()):null; const now=thLive(), k=now?[now.sid,now.by,now.title].join("|"):"";
+  if(now) resolveNames([now.by]);
+  if(thHost&&thHost.live&&(!thShow||thShow.sid!==thHost.sid)){ thStopHost(true); toast("Your movie was stopped by the owner."); }
+  if(now&&now.sid!==thAnnounced){ thAnnounced=now.sid; if(now.by!==myId&&me.scene!=="streamdome") chatLine(null,`🎬 ${nameOf(now.by)} is showing “${now.title}” on the big screen at the Stream Dome. Take the Metro to watch!`,"sys"); }
+  if(k!==thKey){ thKey=k; thRepaint(); } }
+function thApplyLights(s){ const d=s&&s.exists?s.data()||{}:{}; const lv=Math.floor(+d.lv); thLights={lv:lv>=0&&lv<TH_LV.length?lv:0,by:String(d.by||""),at:+d.at||0}; if(currentView==="thlights") thRepaint(); }
+function streamWatch(db){ if(!db) return; TH_DB=TH_DB||db; if(thWatched) return; thWatched=true;
+  try{ db.doc("club/theater").onSnapshot(thApply,()=>{}); }catch(e){} try{ db.doc("club/theater_lights").onSnapshot(thApplyLights,()=>{}); }catch(e){} }
+function thRefresh(){ if(!TH_DB) return; try{ TH_DB.doc("club/theater").get().then(thApply).catch(()=>{}); TH_DB.doc("club/theater_lights").get().then(thApplyLights).catch(()=>{}); }catch(e){} }
+function thNudge(){ if(ROOM) ROOM.emit("role",{k:"sd"}).catch(()=>{}); }
+function thCanLights(){ const s=thLive(); return IS_ADMIN||!s||s.by===myId; }
+async function thSetLights(lv){ lv=Math.max(0,Math.min(TH_LV.length-1,Math.floor(lv))); if(!thCanLights()){ toast("Only the person running the movie can change the lights right now."); return false; }
+  thLights={lv,by:myId||"",at:Date.now()}; if(DB&&myId) try{ await DB.doc("club/theater_lights").set({lv,by:myId,at:Date.now()}); thNudge(); }catch(e){} return true; }
+
+/* ---- host: play a file from this device and stream it live ---- */
+function thCapture(v){ if(v.captureStream) return v.captureStream();
+  // Safari / Firefox: paint the video into a canvas and route the sound through Web Audio
+  const c=document.createElement("canvas"); c.width=Math.min(1280,v.videoWidth||1280); c.height=Math.max(2,Math.round(c.width*(v.videoHeight||720)/(v.videoWidth||1280))); const g=c.getContext("2d");
+  const paint=()=>{ if(thHost&&thHost.v===v){ try{ g.drawImage(v,0,0,c.width,c.height); }catch(e){} requestAnimationFrame(paint); } }; setTimeout(paint,0);
+  const out=c.captureStream(30);
+  try{ const AC=window.AudioContext||window.webkitAudioContext, ac=new AC(), src=ac.createMediaElementSource(v), dst=ac.createMediaStreamDestination(); src.connect(dst); src.connect(ac.destination); dst.stream.getAudioTracks().forEach(t=>out.addTrack(t)); v._ac=ac; }catch(e){}
+  return out; }
+async function thStart(file,title){ if(!DB||!myId) throw new Error("Sign in to run the projector.");
+  const cur=thLive(), swap=!!(thHost&&cur&&cur.by===myId); if(cur&&cur.by!==myId&&!IS_ADMIN) throw new Error("Someone's movie is already playing. Wait for it to finish.");
+  if(!swap&&save.chips<TH_FEE) throw new Error(`You need ${TH_FEE} chips.`);
+  if(typeof RTCPeerConnection==="undefined") throw new Error("This browser can't stream video. Try Chrome, Edge, Firefox or Safari.");
+  const v=thHidden(document.createElement("video")), url=URL.createObjectURL(file); v.preload="auto"; v.volume=thVol; v.src=url;
+  const drop=()=>{ try{ v.pause(); }catch(e){} v.remove(); try{ URL.revokeObjectURL(url); }catch(e){} };
+  try{ await new Promise((res,rej)=>{ v.onloadedmetadata=res; v.onerror=()=>rej(0); setTimeout(()=>rej(0),15000); }); }catch(e){ drop(); throw new Error("Your browser can't play that file. MP4 (H.264) works best."); }
+  if(!(v.videoWidth>0)){ drop(); throw new Error("That file has no video picture."); }
+  if(isFinite(v.duration)&&v.duration>TH_MAXH*3600){ drop(); throw new Error(`Movies can be up to ${TH_MAXH} hours long.`); }
+  try{ await v.play(); }catch(e){ drop(); throw new Error("Couldn't start playback. Tap Start again."); }
+  const stream=thCapture(v); for(let k=0;k<20&&!stream.getVideoTracks().length;k++) await new Promise(r=>setTimeout(r,100));
+  try{ const s=await DB.doc("club/theater").get(); const c=s.exists?thClean(s.data()):null; if(c&&c.by!==myId&&!IS_ADMIN&&c.until>Date.now()&&c.hb>Date.now()-45e3){ drop(); throw new Error("Someone just started a movie. Wait for it to finish."); } }catch(e){ if(/movie/.test(e.message)) throw e; }
+  if(thHost) thStopHost(true,true);
+  const now=Date.now(), sid=(Math.random().toString(36).slice(2,10)+now.toString(36)).replace(/[^a-z0-9]/g,"").slice(0,24), t=String(title||"").trim().slice(0,60)||file.name.replace(/\.[^.]+$/,"").slice(0,60)||"Untitled";
+  const dur=isFinite(v.duration)?Math.round(v.duration):0, doc={by:myId,sid,title:t,at:now,hb:now,until:now+(dur||7200)*1000+120e3,dur};
+  try{ await DB.doc("club/theater").set(doc); }catch(e){ drop(); throw new Error("Couldn't reach the server. Try again."); }
+  if(!swap){ save.chips-=TH_FEE; persist(); hud(); }
+  thHost={sid,v,url,stream,title:t,at:now,dur,peers:{},handled:{},hbT:now,live:true,unsub:null};
+  v.onended=()=>{ if(thHost&&thHost.v===v){ thStopHost(); toast("Your movie finished. Thanks for running the projector!"); } };
+  try{ thHost.unsub=DB.collection("club").where("k","==","threq").onSnapshot(qs=>{ const H=thHost; if(!H) return; for(const ch of qs.docChanges()){ const d=ch.doc.data()||{};
+      if(ch.type==="removed"){ const by=String(ch.doc.id||"").replace(/^threq_/,""); if(H.peers[by]){ try{ H.peers[by].close(); }catch(e){} delete H.peers[by]; } continue; }
+      if(d.sid!==H.sid||typeof d.by!=="string"||typeof d.offer!=="string"||d.offer.length>30000||!(+d.at>Date.now()-120e3)||H.handled[d.by]===+d.at) continue;
+      H.handled[d.by]=+d.at; thServe(d).catch(()=>{}); } },()=>{}); }catch(e){}
+  thApply({exists:true,data:()=>doc}); if(thLights.lv===0) thSetLights(2); thNudge();
+  broadcastSys(`started a movie on the big screen at the Stream Dome: “${t}”`); return true; }
+async function thServe(d){ const H=thHost; if(!H) return; const by=d.by;
+  if(H.peers[by]){ try{ H.peers[by].close(); }catch(e){} delete H.peers[by]; }
+  if(Object.keys(H.peers).length>=TH_MAX){ await DB.doc("club/thans_"+by).set({k:"thans",sid:H.sid,to:by,full:true,at:+d.at}); return; }
+  const pc=new RTCPeerConnection(TH_ICE); H.peers[by]=pc;
+  pc.onconnectionstatechange=()=>{ if(["failed","closed"].includes(pc.connectionState)&&H.peers[by]===pc) delete H.peers[by]; if(currentView==="thbooth") thRepaint(); };
+  await pc.setRemoteDescription({type:"offer",sdp:d.offer});
+  for(const t of H.stream.getTracks()) pc.addTrack(t,H.stream);
+  await pc.setLocalDescription(await pc.createAnswer()); await thIce(pc);
+  for(const s of pc.getSenders()) if(s.track&&s.track.kind==="video"){ try{ const p=s.getParameters(); if(!p.encodings||!p.encodings.length) p.encodings=[{}]; p.encodings[0].maxBitrate=1500000; await s.setParameters(p); }catch(e){} }
+  if(thHost!==H) return; await DB.doc("club/thans_"+by).set({k:"thans",sid:H.sid,to:by,answer:pc.localDescription.sdp,at:+d.at}); }
+function thStopHost(silent,keepDoc){ const H=thHost; if(!H) return; thHost=null;
+  for(const pc of Object.values(H.peers)) try{ pc.close(); }catch(e){} try{ H.unsub&&H.unsub(); }catch(e){}
+  try{ H.stream.getTracks().forEach(t=>t.stop()); }catch(e){} try{ H.v.pause(); }catch(e){} try{ H.v._ac&&H.v._ac.close(); }catch(e){} H.v.remove(); try{ URL.revokeObjectURL(H.url); }catch(e){}
+  if(!keepDoc&&DB){ DB.doc("club/theater").get().then(s=>{ const c=s.exists?thClean(s.data()):null; if(c&&c.sid===H.sid) return DB.doc("club/theater").delete().then(()=>thNudge()); }).catch(()=>{}); if(thShow&&thShow.sid===H.sid) thShow=null; if(thLights.lv&&!thLive()) thSetLights(0); }
+  thKey=""; thRepaint(); }
+addEventListener("pagehide",()=>{ if(thHost&&DB) try{ DB.doc("club/theater").delete(); }catch(e){} });
+
+/* ---- viewers: receive the live picture + sound ---- */
+function thWant(){ const s=thLive(); return !!(s&&s.by!==myId&&!thHost&&DB&&myId&&(me.scene==="streamdome"||currentView==="thwatch")); }
+async function thConnect(s){ thDisconnect(true); if(typeof RTCPeerConnection==="undefined") return;
+  if(!thVid){ thVid=thHidden(document.createElement("video")); thVid.autoplay=true; }
+  thTries[s.sid]=(thTries[s.sid]||0)+1;
+  const V=thView={sid:s.sid,pc:new RTCPeerConnection(TH_ICE),ms:new MediaStream(),state:"connecting",at:Date.now(),t:Date.now(),unsub:null}, pc=V.pc;
+  pc.addTransceiver("video",{direction:"recvonly"}); pc.addTransceiver("audio",{direction:"recvonly"});
+  pc.ontrack=e=>{ if(thView!==V) return; if(!V.ms.getTracks().includes(e.track)) V.ms.addTrack(e.track); thVid.srcObject=V.ms; thVid.volume=thVol; thVid.muted=false;
+    thVid.play().then(()=>{ thNeedTap=false; }).catch(()=>{ thVid.muted=true; thNeedTap=true; thVid.play().catch(()=>{}); }); };
+  pc.onconnectionstatechange=()=>{ if(thView!==V) return; const c=pc.connectionState; if(c==="connected"){ V.state="live"; thTries[s.sid]=0; } else if(c==="failed"||c==="closed"){ V.state="lost"; V.t=Date.now(); } if(currentView==="thwatch") thRepaint(); };
+  try{ await pc.setLocalDescription(await pc.createOffer()); await thIce(pc); if(thView!==V) return;
+    V.unsub=DB.doc("club/thans_"+myId).onSnapshot(a=>{ const d=a&&a.exists?a.data()||{}:null; if(thView!==V||!d||d.sid!==V.sid||+d.at!==V.at) return;
+      if(d.full){ V.state="full"; V.t=Date.now(); return; }
+      if(typeof d.answer==="string"&&pc.signalingState==="have-local-offer") pc.setRemoteDescription({type:"answer",sdp:d.answer}).catch(()=>{ V.state="lost"; V.t=Date.now(); }); },()=>{});
+    await DB.doc("club/threq_"+myId).set({k:"threq",sid:V.sid,by:myId,offer:pc.localDescription.sdp,at:V.at}); }
+  catch(e){ if(thView===V){ V.state="lost"; V.t=Date.now(); } } }
+function thDisconnect(keepDoc){ const V=thView; if(!V) return; thView=null; try{ V.unsub&&V.unsub(); }catch(e){} try{ V.pc.close(); }catch(e){}
+  if(thVid){ try{ thVid.pause(); }catch(e){} thVid.srcObject=null; } thNeedTap=false; if(!keepDoc&&DB&&myId) DB.doc("club/threq_"+myId).delete().catch(()=>{}); }
+// one tap or key press anywhere turns the sound on if the browser started the movie muted
+for(const ev of ["pointerdown","keydown"]) addEventListener(ev,()=>{ if(thNeedTap&&thVid&&thView){ thVid.muted=false; thVid.play().then(()=>{ thNeedTap=false; }).catch(()=>{ thVid.muted=true; }); } },true);
+function thTick(){ const s=thLive();
+  if(thHost&&DB&&Date.now()-thHost.hbT>15e3){ const H=thHost, v=H.v; H.hbT=Date.now(); const rem=isFinite(v.duration)?Math.max(0,v.duration-v.currentTime):3600;
+    const d={by:myId,sid:H.sid,title:H.title,at:H.at,hb:Date.now(),until:Date.now()+rem*1000+120e3,dur:H.dur}; DB.doc("club/theater").set(d).catch(()=>{}); thShow=thClean(d); }
+  if(thWant()){ const V=thView, tries=thTries[s.sid]||0;
+    if(!V||V.sid!==s.sid) thConnect(s);
+    else if((V.state==="lost"&&Date.now()-V.t>5e3&&tries<8)||(V.state==="connecting"&&Date.now()-V.at>25e3&&tries<8)||(V.state==="full"&&Date.now()-V.t>30e3)) thConnect(s); }
+  else if(thView) thDisconnect();
+  if(me.scene==="streamdome"&&TH_DB&&T-thLastRead>30){ thLastRead=T; thRefresh(); } }
+setInterval(()=>{ try{ thTick(); }catch(e){} },1000);
+function thSource(){ if(thHost&&thHost.v.readyState>=2) return thHost.v; if(thView&&thVid&&thVid.readyState>=2&&thVid.videoWidth>0) return thVid; return null; }
+function thStatus(){ const s=thLive(); if(!s) return "";
+  if(thHost) return "You're running the projector.";
+  if(!DB||!myId) return "Sign in to watch movies.";
+  if(!thView) return "Step into the theater to watch.";
+  return {connecting:"Connecting to the projector…",live:thSource()?"":"Starting picture…",lost:"Lost the signal — reconnecting…",full:`Theater's full (${TH_MAX} viewers max). You'll get in when a seat opens.`}[thView.state]||""; }
 
 /* ---- hotspots ---- */
-function streamHot(){ const out=[{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:SD_W-180,hw:90,label:"Stream Dome board: what's on",act:()=>openStreamDome()}];
-  for(let i=0;i<SD_N;i++){ const x=SD_X(i), b=sdActive(i);
-    if(b){ const mine=b.by===myId; out.push({x,hw:80,label:mine?`Your TV #${i+1}: manage broadcast`:`Watch TV #${i+1} — ${sdWho(b).slice(0,28)}`,act:()=>openStreamView(i)}); }
-    else out.push({x,hw:80,label:`Rent TV #${i+1} (${SD_RENT} chips / ${SD_MIN} min)`,act:()=>openRentBooth(i)}); }
+function streamHot(){ const s=thLive(), out=[{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
+    {x:300,hw:60,label:thHost?"Projection booth: your movie controls":s?`Projection booth: now showing “${s.title.slice(0,24)}”`:`Projection booth: play your MP4 (${TH_FEE} chips)`,act:()=>openTheaterBooth()},
+    {x:470,hw:50,label:`House lights: ${TH_LV[thLights.lv].n}`,act:()=>openTheaterLights()},
+    {x:2150,hw:70,label:s?"Big screen: watch fullscreen & sound":"Big screen (nothing playing yet)",act:()=>openTheaterWatch()}];
+  for(const st of TH_SEATS){ const mine=!!(me.homeSit&&me.homeSit.key===st.id);
+    out.push({x:st.x,hw:22,label:mine?"Stand up":`Take a seat (row ${st.row}, seat ${st.n})`,act:()=>{ if(mine){ me.homeSit=null; pushPresence(true); return; } me.homeSit={key:st.id,x:st.x,y:st.y}; me.x=st.x; me.y=st.y; target=null; pushPresence(true); }}); }
   return out; }
 
-/* ---- rent / manage ---- */
-function openRentBooth(i,mode){ if(sdActive(i)&&sdActive(i).by!==myId&&!IS_ADMIN) return openStreamView(i);
-  const body=panel(`Stream Dome · TV #${i+1}`,`Go live for everyone in the dome. ${SD_RENT} chips for ${SD_MIN} minutes.`); currentView=null; mode=mode==="file"?"file":"link";
-  if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to rent a TV and broadcast."})); return; }
-  const cur=sdActive(i), renew=cur&&cur.by===myId; // changing your own stream doesn't charge again
-  body.append(el("div",{class:"tabs"},el("button",{class:"btn",type:"button","aria-pressed":String(mode==="link"),text:"🔗 Stream / video link",onclick:()=>openRentBooth(i,"link")}),el("button",{class:"btn",type:"button","aria-pressed":String(mode==="file"),text:"📁 MP4 from my device",onclick:()=>openRentBooth(i,"file")})));
-  const title=el("input",{type:"text",maxlength:"60",placeholder:"What you're showing (optional)",style:"width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
-  const msg=el("div",{class:"sub",role:"status"}), preview=el("div",{class:"sub"}), bar=el("div",{style:"height:6px;background:#1a1530;border-radius:3px;overflow:hidden;display:none"}), fill=el("div",{style:"height:100%;width:0;background:#ffb13f"}); bar.append(fill);
-  const cost=renew?0:SD_RENT;
-  const goLive=async extra=>{ const now=sdActive(i); if(now&&now.by!==myId&&!IS_ADMIN){ msg.textContent="Someone just took this TV. Pick another."; return false; }
-    const b={by:myId,...extra,title:title.value.trim().slice(0,60),until:renew?cur.until:Date.now()+SD_MIN*60e3,at:Date.now()};
-    await DB.doc("club/sd_"+i).set(b); if(cost){ save.chips-=cost; persist(); hud(); }
-    toast(`You're live on TV #${i+1}!`,"#38e8ff"); broadcastSys(`went live on Stream Dome TV #${i+1}${b.title?": "+b.title:""}`); sdPing(i); sdKeys[i]=null; sdApply(i,{exists:true,data:()=>b}); openStreamView(i); return true; };
-  if(mode==="link"){
-    body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:"Paste a link"}),el("span",{class:"sub",text:"YouTube, Twitch or Kick (live or normal videos), or a direct https link to an .mp4 / .webm file."}))));
-    const link=el("input",{type:"url",placeholder:"https://… stream, video or .mp4 link",style:"width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit;font-size:16px"});
-    const check=()=>{ const p=parseStream(link.value); preview.textContent=p?`✓ ${SD_HOSTS[p.host].n} detected`:(link.value.trim()?"✗ Not a YouTube, Twitch, Kick or .mp4 link":""); preview.style.color=p?"#43f0a4":"#ff7a7a"; return p; };
-    link.addEventListener("input",check); if(renew&&!SD_VID(cur.host)||renew&&cur.host==="mp4"){ link.value=sdLink(cur); title.value=cur.title; check(); }
-    body.append(el("label",{class:"fld"},"Link",link),preview,el("label",{class:"fld"},"Title",title),
-      el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:cost?`Go live (${cost} chips)`:"Update my TV",onclick:async()=>{ const p=check(); if(!p){ msg.textContent="Paste a valid YouTube, Twitch, Kick or .mp4 link."; return; }
-        if(save.chips<cost){ msg.textContent=`You need ${cost} chips.`; return; }
-        try{ await goLive({host:p.host,ref:p.ref}); }catch(e){ msg.textContent="Couldn't start the broadcast. Try again."; } }}),
-      el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openStreamDome()})),msg);
-    setTimeout(()=>link.focus(),40); return; }
-  // device file
-  const shareable=!!window.NH_FIREBASE_CONFIG||IS_ADMIN;
-  body.append(el("div",{class:"detail",style:"border-color:#ffb13f"},el("div",{class:"info"},el("strong",{text:"Play a video from your phone or computer"}),
-    el("span",{class:"sub",text:`Pick an .mp4 (best), .webm or .mov up to ${SD_MAXMB} MB. It uploads once, then everyone who taps this TV can watch it.`+(shareable?"":" In this claude.ai view only editors can share device videos — you can still play it on your own screen.")}))));
+/* ---- panels ---- */
+function openTheaterBooth(){ const s=thLive(), mine=!!thHost;
+  const body=panel("Stream Dome · Projection booth",`Play a video from your own device on the big screen for ${TH_FEE} chips. Everyone in the theater watches it live.`); currentView="thbooth";
+  if(s){ const peers=mine?Object.values(thHost.peers).filter(p=>p.connectionState==="connected").length:0;
+    body.append(el("div",{class:"detail",style:"border-color:#ffb13f"},el("div",{class:"info"},el("strong",{text:`🎬 Now showing: ${s.title}`}),
+      el("span",{class:"sub",text:`Playing live from ${mine?"your":nameOf(s.by)+"'s"} device${s.dur?` · about ${thMins(s)} min left`:""}${mine?` · ${peers} watching right now`:""}`})),
+      el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Watch fullscreen",onclick:()=>openTheaterWatch()}))));
+    if(mine){ const v=thHost.v;
+      body.append(el("div",{class:"detail",style:"border-color:var(--amber)"},el("div",{class:"info"},el("strong",{text:"Projector controls"}),el("span",{class:"sub",text:"Pausing or skipping changes it for everyone. Keep this tab open until the movie ends — closing it stops the show."}),
+        el("div",{class:"row"},el("button",{class:"btn",type:"button",text:v.paused?"▶ Play":"⏸ Pause",onclick:()=>{ v.paused?v.play().catch(()=>{}):v.pause(); openTheaterBooth(); }}),
+          el("button",{class:"btn",type:"button",text:"⏪ 10s",onclick:()=>{ v.currentTime=Math.max(0,v.currentTime-10); }}),el("button",{class:"btn",type:"button",text:"⏩ 10s",onclick:()=>{ v.currentTime=Math.min(v.duration||0,v.currentTime+10); }}),
+          el("button",{class:"btn",type:"button",text:"⏹ End the movie",onclick:()=>{ thStopHost(); toast("Movie ended."); openTheaterBooth(); }}))))); }
+    else if(IS_ADMIN) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"End this movie (owner)",onclick:async()=>{ try{ await DB.doc("club/theater").delete(); }catch(e){} thShow=null; thNudge(); thSetLights(0); toast("Movie ended."); openTheaterBooth(); }}))); }
+  if(s&&!mine&&!IS_ADMIN){ body.append(el("p",{class:"sub",text:"The screen is taken. When this movie ends, you can run the projector."})); return; }
+  if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to run the projector."})); return; }
   const file=el("input",{type:"file",accept:"video/mp4,video/webm,video/quicktime,.mp4,.m4v,.webm,.mov",style:"width:100%;box-sizing:border-box;padding:8px;background:#0d0818;color:#e9e2ff;border:1px dashed #ffb13f;font:inherit"});
-  const pick=()=>{ const f=file.files&&file.files[0]; if(!f){ preview.textContent=""; return null; } const mb=f.size/1048576, ok=/^video\//.test(f.type)||/\.(mp4|m4v|webm|mov)$/i.test(f.name);
-    preview.textContent=!ok?"✗ That isn't a video file.":mb>SD_MAXMB?`✗ ${mb.toFixed(1)} MB — the limit is ${SD_MAXMB} MB. Trim or compress it first.`:`✓ ${f.name} · ${mb.toFixed(1)} MB`; preview.style.color=ok&&mb<=SD_MAXMB?"#43f0a4":"#ff7a7a"; if(ok&&!title.value) title.value=f.name.replace(/\.[^.]+$/,"").slice(0,60); return ok&&mb<=SD_MAXMB?f:null; };
-  file.addEventListener("change",pick);
-  const goBtn=el("button",{class:"btn hot",type:"button",text:cost?`Upload & go live (${cost} chips)`:"Upload & update my TV",onclick:async()=>{ const f=pick(); if(!f){ msg.textContent="Choose a video file first."; return; }
-    if(save.chips<cost){ msg.textContent=`You need ${cost} chips.`; return; } const now=sdActive(i); if(now&&now.by!==myId&&!IS_ADMIN){ msg.textContent="Someone just took this TV. Pick another."; return; }
-    goBtn.disabled=true; bar.style.display="block"; msg.textContent="Uploading… keep this open.";
-    try{ const r=await sdUploadFile(i,f,p=>{ fill.style.width=Math.round(p*100)+"%"; msg.textContent=`Uploading… ${Math.round(p*100)}%`; });
-      if(!r){ msg.textContent="Sharing device videos isn't available in this view. Use “Play just for me”, or open the game on GitHub."; goBtn.disabled=false; return; }
-      sdLocal[r.ref]=URL.createObjectURL(f); await goLive(r); }
-    catch(e){ goBtn.disabled=false; msg.textContent=/size|large|quota/i.test(String(e&&e.message))?"That file is too large to share. Try a smaller one.":"Upload failed. Check your connection and try again."; } }});
-  body.append(el("label",{class:"fld"},"Video file",file),preview,el("label",{class:"fld"},"Title",title),bar,
-    el("div",{class:"row"},goBtn,el("button",{class:"btn",type:"button",text:"▶ Play just for me (free)",onclick:()=>{ const f=pick(); if(!f){ msg.textContent="Choose a video file first."; return; } openLocalVideo(i,f,title.value.trim()); }}),
-      el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openStreamDome()})),msg); }
-function openLocalVideo(i,f,t){ const body=panel(`TV #${i+1} — ${t||f.name}`,"Playing from your device — only you can see this one."); currentView=null;
-  const url=URL.createObjectURL(f), wrap=el("div",{style:"position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0"});
-  const v=el("video",{controls:"",playsinline:"",autoplay:"",src:url,style:"position:absolute;inset:0;width:100%;height:100%"}); wrap.append(v); body.append(wrap);
-  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back",onclick:()=>{ try{ URL.revokeObjectURL(url); }catch(e){} openRentBooth(i,"file"); }}))); }
-function openStreamView(i){ const b=sdActive(i); if(!b) return openRentBooth(i); const mine=b.by===myId, can=mine||IS_ADMIN, mins=Math.max(0,Math.ceil((b.until-Date.now())/6e4));
-  const src=SD_VID(b.host)?(b.host==="mp4"?"a video link":"a shared video file"+(b.mb?` (${b.mb} MB)`:"")):SD_HOSTS[b.host].n;
-  const body=panel(`TV #${i+1} — ${sdWho(b)}`,`Now playing from ${src}, shared by ${nameOf(b.by)}. ${mins} min left.`); currentView="streamview_"+i;
-  const player=sdPlayer(i,b); body.append(player);
-  const link=sdLink(b);
-  body.append(el("div",{class:"sub",text:SD_VID(b.host)?"Everyone who taps this TV gets the same video. Use the player controls for sound and fullscreen.":"Everyone who taps this TV sees the same stream. If the player stays black, your browser may block embeds — open it directly:"}),
-    el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"↻ Reload player",onclick:()=>player._reload&&player._reload()}),
-      link?el("a",{class:"btn hot",href:link,target:"_blank",rel:"noopener noreferrer",text:SD_VID(b.host)?"Open video ↗":`Open on ${SD_HOSTS[b.host].n} ↗`}):null,
-      el("button",{class:"btn",type:"button",text:"Back to the dome",onclick:()=>openStreamDome()})));
-  if(can){ body.append(el("div",{class:"detail",style:"border-color:var(--amber);margin-top:6px"},el("div",{class:"info"},el("strong",{text:mine?"Your broadcast":"Owner controls"}),
-    el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Change link",onclick:()=>openRentBooth(i,"link")}),el("button",{class:"btn",type:"button",text:"Change to MP4 file",onclick:()=>openRentBooth(i,"file")}),
-      el("button",{class:"btn",type:"button",text:mine?"End broadcast":"End (owner)",onclick:async()=>{ try{ await DB.doc("club/sd_"+i).delete(); }catch(e){}
-        if(b.host==="file") for(let k=0;k<b.n;k++) DB.doc(`club/sdv_${i}_${k}`).delete().catch(()=>{});
-        sdKeys[i]=""; sdBooths[i]=null; sdPing(i); toast("Broadcast ended."); openStreamDome(); }}))))); }
-}
-function openStreamDome(){ const body=panel("Stream Dome","10 player TVs. Rent one with chips and share a stream, a video link or an MP4 from your device — or tap a TV to watch what others are playing."); currentView="streamdome"; sdRefresh();
-  const l=el("div",{class:"list"}); let on=0;
-  for(let i=0;i<SD_N;i++){ const b=sdActive(i); if(b) on++; const mine=b&&b.by===myId;
-    l.append(el("div",{class:"li"},el("span",{class:"tag",style:`color:${b?SD_HOSTS[b.host].c:"var(--dim)"}`,text:b?"●":"○"}),
-      el("div",{class:"grow"},el("div",{text:`TV #${i+1}`+(b?` — ${sdWho(b)}`:" — free")}),el("div",{class:"sub",text:b?`${SD_HOSTS[b.host].n} · ${nameOf(b.by)} · ${Math.max(0,Math.ceil((b.until-Date.now())/6e4))} min left`:`Rent for ${SD_RENT} chips / ${SD_MIN} min`})),
-      b?el("button",{class:"btn hot",type:"button",text:mine?"Manage":"Watch",onclick:()=>openStreamView(i)}):el("button",{class:"btn",type:"button",text:"Rent",onclick:()=>openRentBooth(i)}))); }
-  body.append(el("div",{class:"sub",text:`${on} of ${SD_N} TVs live right now.`}),l);
-  body.append(el("p",{class:"sub",text:"Works with YouTube, Twitch, Kick, direct .mp4 links, and MP4 files from your device (up to "+SD_MAXMB+" MB). Keep it friendly; the owner can end any broadcast."})); }
+  const title=el("input",{type:"text",maxlength:"60",placeholder:"Movie title (optional)",style:"width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
+  const msg=el("div",{class:"sub",role:"status"});
+  file.addEventListener("change",()=>{ const f=file.files&&file.files[0]; if(f&&!title.value) title.value=f.name.replace(/\.[^.]+$/,"").slice(0,60); msg.textContent=f?`✓ ${f.name} · ${(f.size/1048576).toFixed(0)} MB (stays on your device)`:""; msg.style.color="#43f0a4"; });
+  const go=el("button",{class:"btn hot",type:"button",text:mine?"Swap to this movie (free)":`▶ Start the movie (${TH_FEE} chips)`,onclick:async()=>{ const f=file.files&&file.files[0]; msg.style.color="#ff7a7a"; if(!f){ msg.textContent="Pick a video file first."; return; }
+    if(!(/^video\//.test(f.type)||/\.(mp4|m4v|webm|mov)$/i.test(f.name))){ msg.textContent="That isn't a video file."; return; }
+    go.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading your movie…";
+    try{ await thStart(f,title.value); toast("You're on the big screen!","#ffb13f"); openTheaterBooth(); }catch(e){ go.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } }});
+  body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:mine?"Swap the movie":"Run the projector"}),
+    el("span",{class:"sub",text:`Pick an MP4 (best), .webm or .mov from your phone or computer. It never uploads — it plays from your device and streams live to up to ${TH_MAX} viewers. Up to ${TH_MAXH} hours. The house lights dim automatically.`}))),
+    el("label",{class:"fld"},"Video file",file),el("label",{class:"fld"},"Title",title),el("div",{class:"row"},go),msg,
+    el("p",{class:"sub",text:"Only show videos you have the right to share. The owner can end any movie."})); }
+function openTheaterLights(){ const body=panel("Stream Dome · House lights","Dim the theater for the movie."); currentView="thlights"; const can=thCanLights(), s=thLive();
+  const row=el("div",{class:"row"}); TH_LV.forEach((L,i)=>row.append(el("button",{class:"btn"+(thLights.lv===i?" hot":""),type:"button","aria-pressed":String(thLights.lv===i),text:(i===0?"💡 ":i===1?"🔅 ":"🌑 ")+L.n,onclick:async()=>{ if(await thSetLights(i)) openTheaterLights(); }})));
+  body.append(row,el("p",{class:"sub",text:can?(s?"You're running the movie, so you control the lights.":"No movie is playing, so anyone can set the lights."):`${nameOf(s.by)} is running the movie, so they control the lights right now.`})); }
+function openTheaterWatch(){ const s=thLive(); const body=panel(s?`Big screen — ${s.title}`:"Big screen",s?`Playing live from ${s.by===myId?"your":nameOf(s.by)+"'s"} device.`:"Nothing is playing right now."); currentView="thwatch";
+  if(!s){ body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:`Run the projector (${TH_FEE} chips)`,onclick:()=>openTheaterBooth()}))); return; }
+  const wrap=el("div",{style:"position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0"});
+  const v=el("video",{playsinline:"",autoplay:"",style:"position:absolute;inset:0;width:100%;height:100%;background:#000"}); v.muted=true;
+  const note=el("div",{style:"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ffb13f;font:12px monospace;text-align:center;padding:12px"});
+  wrap.append(v,note); body.append(wrap);
+  const hook=()=>{ const src=thHost?thHost.stream:thView&&thView.ms; if(src&&v.srcObject!==src){ v.srcObject=src; v.play().catch(()=>{}); } const st=thStatus(); note.textContent=st; note.hidden=!st||(!!thSource()&&!/full|lost/.test(st)); if(!$("#overlay").contains(v)) clearInterval(iv); };
+  const iv=setInterval(hook,500); hook();
+  const vol=el("input",{type:"range",min:"0",max:"1",step:"0.05",value:String(thVol),style:"flex:1;min-width:120px","aria-label":"Volume"});
+  vol.addEventListener("input",()=>{ thVol=+vol.value; try{ localStorage.setItem("nh_thvol",String(thVol)); }catch(e){} if(thVid) thVid.volume=thVol; if(thHost) thHost.v.volume=thVol; });
+  body.append(el("div",{class:"row",style:"align-items:center"},el("span",{class:"sub",text:"🔊"}),vol,
+    el("button",{class:"btn hot",type:"button",text:"⛶ Fullscreen",onclick:()=>{ try{ (v.requestFullscreen||v.webkitRequestFullscreen||v.webkitEnterFullscreen).call(v); }catch(e){} }}),
+    el("button",{class:"btn",type:"button",text:"Back",onclick:()=>closePanel()})),
+    el("p",{class:"sub",text:"The picture is streamed live from the projectionist's device, so it can stutter if their internet is slow."})); }
 
 /* ---- drawing ---- */
-function drawStreamDome(t){ const W=SCENES.streamdome.w, X0=camX, X1=camX+VW; if(t-sdLastRefresh>20||t<sdLastRefresh){ sdLastRefresh=t; sdRefresh(); }
-  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#0a0a1e"); g.addColorStop(.5,"#140a2e"); g.addColorStop(1,"#07040f"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
-  // dome ribs overhead
-  ctx.strokeStyle="rgba(120,90,200,.3)"; ctx.lineWidth=2; for(let k=-2;k<Math.ceil(W/400)+2;k++){ const cx=k*400; if(cx+360<X0||cx-360>X1) continue; ctx.beginPath(); ctx.moveTo(cx-200,120); ctx.quadraticCurveTo(cx,10,cx+200,120); ctx.stroke(); }
-  ctx.fillStyle="rgba(56,232,255,.5)"; for(let k=0;k<Math.ceil(W/120);k++){ const x=k*120+((t*20)%120); if(x<X0||x>X1) continue; ctx.globalAlpha=.3+.3*Math.sin(t*2+k); ctx.fillRect(x,16,2,2); } ctx.globalAlpha=1;
-  // back wall + floor
-  ctx.fillStyle="#120c24"; ctx.fillRect(camX,120,VW,140); ctx.fillStyle="#17132e"; ctx.fillRect(camX,250,VW,H-250); ctx.fillStyle="#241c42"; ctx.fillRect(camX,250,VW,3);
-  for(let x=Math.floor(X0/80)*80;x<X1;x+=80){ ctx.fillStyle="rgba(120,90,200,.08)"; ctx.fillRect(x,250,2,H-250); }
+function thDrawSeat(s){ const x=s.x, y=s.y; ctx.fillStyle="#2a1420"; ctx.fillRect(x-19,y-18,4,14); ctx.fillRect(x+15,y-18,4,14); ctx.fillRect(x-12,y-4,3,6); ctx.fillRect(x+9,y-4,3,6);
+  ctx.fillStyle="#8a1230"; ctx.fillRect(x-15,y-36,30,24); ctx.fillStyle="#a8173c"; ctx.fillRect(x-13,y-34,26,4); ctx.fillStyle="#6e0e26"; ctx.fillRect(x-16,y-12,32,8); }
+function drawStreamDome(t){ const W=TH_W, X0=camX, X1=camX+VW, s=thLive(), src=thSource();
+  ctx.fillStyle="#0d0612"; ctx.fillRect(camX,0,VW,H);
+  for(let x=Math.floor(X0/120)*120;x<X1;x+=120){ ctx.fillStyle="#1a0b1e"; ctx.fillRect(x+6,34,108,206); ctx.fillStyle="#200e27"; ctx.fillRect(x+10,38,100,198); }
+  for(let x=180;x<W;x+=300){ if(x<X0-60||x>X1+60||(x>TH_SX-160&&x<TH_SX+TH_SW+160)) continue; const g=ctx.createRadialGradient(x,96,2,x,96,64); g.addColorStop(0,"rgba(255,190,120,.5)"); g.addColorStop(1,"rgba(255,190,120,0)"); ctx.fillStyle=g; ctx.fillRect(x-64,32,128,128); ctx.fillStyle="#ffcf8a"; ctx.fillRect(x-5,88,10,14); }
+  // curtains + valance
+  const cl=TH_SX-100, cr=TH_SX+TH_SW+20;
+  if(cr+80>X0&&cl<X1){ for(const cx of [cl,cr]) for(let k=0;k<8;k++){ ctx.fillStyle=k%2?"#7a0f2a":"#5c0a20"; ctx.fillRect(cx+k*10,0,10,248); }
+    ctx.fillStyle="#6a0c24"; ctx.fillRect(cl,0,cr+80-cl,12); ctx.fillStyle="#ffb13f"; for(let x=cl;x<cr+80;x+=20){ ctx.beginPath(); ctx.arc(x+10,12,4,0,Math.PI); ctx.fill(); }
+    // the big screen
+    ctx.fillStyle="#050308"; ctx.fillRect(TH_SX-6,TH_SY-4,TH_SW+12,TH_SH+8); ctx.fillStyle="#0a0912"; ctx.fillRect(TH_SX,TH_SY,TH_SW,TH_SH);
+    if(src){ const vw=src.videoWidth||16, vh=src.videoHeight||9, k=Math.min(TH_SW/vw,TH_SH/vh), dw=vw*k, dh=vh*k; try{ ctx.drawImage(src,TH_SX+(TH_SW-dw)/2,TH_SY+(TH_SH-dh)/2,dw,dh); }catch(e){} }
+    else { ctx.save(); ctx.beginPath(); ctx.rect(TH_SX,TH_SY,TH_SW,TH_SH); ctx.clip(); const cx=TH_SX+TH_SW/2; ctx.textAlign="center";
+      if(s){ ctx.fillStyle="#ffb13f"; ctx.font="bold 12px monospace"; ctx.fillText("NOW SHOWING",cx,TH_SY+78); ctx.fillStyle="#fff2dc"; ctx.font="bold 18px 'IBM Plex Mono',monospace"; ctx.fillText(s.title.slice(0,30),cx,TH_SY+104);
+        ctx.fillStyle="#9a8cc0"; ctx.font="11px 'IBM Plex Mono',monospace"; ctx.fillText("from "+String(nameOf(s.by)).slice(0,20)+"'s device",cx,TH_SY+124); ctx.fillStyle="#ff7a7a"; ctx.fillText(thStatus().slice(0,52),cx,TH_SY+150); }
+      else { for(let k=0;k<40;k++){ ctx.fillStyle=`rgba(255,255,255,${.02+Math.random()*.05})`; ctx.fillRect(TH_SX+Math.random()*TH_SW,TH_SY+Math.random()*TH_SH,2,2); }
+        ctx.fillStyle="#b06bff"; ctx.font="bold 20px monospace"; ctx.fillText("STREAM DOME THEATER",cx,TH_SY+96); ctx.fillStyle="#43f0a4"; ctx.font="11px monospace"; ctx.fillText(`Screen's free · play your MP4 at the projection booth (${TH_FEE} chips)`,cx,TH_SY+126); }
+      ctx.restore(); }
+    if(src&&thNeedTap){ ctx.fillStyle="rgba(0,0,0,.6)"; ctx.fillRect(TH_SX+TH_SW/2-90,TH_SY+TH_SH-26,180,18); ctx.fillStyle="#ffb13f"; ctx.font="10px monospace"; ctx.textAlign="center"; ctx.fillText("🔇 tap or press any key for sound",TH_SX+TH_SW/2,TH_SY+TH_SH-13); }
+    ctx.fillStyle="#2a1220"; ctx.fillRect(cl,TH_SY+TH_SH+4,cr+80-cl,250-(TH_SY+TH_SH+4)); }
+  // floor
+  ctx.fillStyle="#1c0a18"; ctx.fillRect(camX,250,VW,H-250); ctx.fillStyle="#2a1024"; ctx.fillRect(camX,250,VW,3);
+  ctx.fillStyle="rgba(255,177,63,.08)"; for(let x=Math.floor(X0/40)*40;x<X1;x+=40) for(let y=262;y<H;y+=24) ctx.fillRect(x+((y/24)%2)*20,y,3,3);
   // metro
   if(X0<260){ ctx.fillStyle="#0e0c1e"; ctx.fillRect(60,170,120,80); ctx.fillStyle="#38e8ff"; ctx.fillRect(60,166,120,6); neonText("METRO",120,158,12,"#38e8ff"); }
-  neonText("STREAM DOME",Math.max(X0+VW/2,520),44,Math.min(26,VW/18),"#b06bff",flick(3,t));
-  // booths
-  for(let i=0;i<SD_N;i++){ const x=SD_X(i); if(x+150<X0||x-150>X1) continue; const b=sdActive(i), col=b?SD_HOSTS[b.host].c:"#3a3250";
-    // cabinet + stand
-    ctx.fillStyle="#0c0a18"; ctx.fillRect(x-96,96,192,128); ctx.strokeStyle=b?col:"#2a2440"; ctx.lineWidth=3; ctx.strokeRect(x-96,96,192,128);
-    ctx.fillStyle="#1a1530"; ctx.fillRect(x-10,224,20,28); ctx.fillStyle="#241c42"; ctx.fillRect(x-40,250,80,6);
-    // screen
-    const sx=x-86, sy=106, sw=172, sh=108;
-    if(b){ const bg=ctx.createLinearGradient(sx,sy,sx,sy+sh); bg.addColorStop(0,"#1a1030"); bg.addColorStop(1,"#05040a"); ctx.fillStyle=bg; ctx.fillRect(sx,sy,sw,sh);
-      // moving scanline shimmer to feel "live"
-      ctx.save(); ctx.beginPath(); ctx.rect(sx,sy,sw,sh); ctx.clip();
-      for(let k=0;k<4;k++){ ctx.fillStyle=`rgba(${k%2?"176,107,255":"56,232,255"},.10)`; const yy=sy+((t*40+k*30)%sh); ctx.fillRect(sx,yy,sw,8); }
-      if(b.host==="youtube"){ let im=sdThumbs[b.ref]; if(!im){ im=sdThumbs[b.ref]=new Image(); im.src=`https://i.ytimg.com/vi/${b.ref}/mqdefault.jpg`; }
-        if(im.complete&&im.naturalWidth){ ctx.globalAlpha=.85; ctx.drawImage(im,sx,sy,sw,sh); ctx.globalAlpha=1; ctx.fillStyle="rgba(5,4,10,.45)"; ctx.fillRect(sx,sy+sh-30,sw,30); } }
-      else if(SD_VID(b.host)){ ctx.fillStyle="rgba(255,177,63,.18)"; ctx.beginPath(); ctx.moveTo(x-12,sy+30); ctx.lineTo(x+14,sy+44); ctx.lineTo(x-12,sy+58); ctx.closePath(); ctx.fill(); }
-      // host logo chip
-      ctx.fillStyle=col; ctx.globalAlpha=.9; ctx.fillRect(sx+8,sy+8,Math.min(74,8+SD_HOSTS[b.host].n.length*8),16); ctx.globalAlpha=1; ctx.fillStyle="#0b0716"; ctx.font="bold 10px monospace"; ctx.textAlign="left"; ctx.fillText(SD_HOSTS[b.host].n.toUpperCase(),sx+12,sy+20);
-      // ON AIR
-      const blink=Math.sin(t*4)>-.2; ctx.fillStyle=blink?"#ff3f3f":"#5a1a1a"; ctx.beginPath(); ctx.arc(sx+sw-40,sy+16,4,0,7); ctx.fill(); ctx.fillStyle=blink?"#fff":"#888"; ctx.font="bold 9px monospace"; ctx.fillText("ON AIR",sx+sw-32,sy+20);
-      // title
-      ctx.fillStyle="#e9e2ff"; ctx.font="11px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText(sdWho(b).slice(0,22),x,sy+sh/2+2);
-      ctx.fillStyle="#9a8cc0"; ctx.font="9px 'IBM Plex Mono',monospace"; ctx.fillText("by "+String(nameOf(b.by)).slice(0,16),x,sy+sh-12);
-      ctx.restore(); ctx.strokeStyle=col; ctx.globalAlpha=.5+.3*Math.sin(t*3+i); ctx.strokeRect(sx-1.5,sy-1.5,sw+3,sh+3); ctx.globalAlpha=1;
-    } else { ctx.fillStyle="#08070e"; ctx.fillRect(sx,sy,sw,sh); // static noise
-      ctx.save(); ctx.beginPath(); ctx.rect(sx,sy,sw,sh); ctx.clip(); for(let k=0;k<60;k++){ ctx.fillStyle=`rgba(255,255,255,${.04+Math.random()*.1})`; ctx.fillRect(sx+Math.random()*sw,sy+Math.random()*sh,2,2); } ctx.restore();
-      ctx.fillStyle="#6a5a9a"; ctx.font="bold 12px monospace"; ctx.textAlign="center"; ctx.fillText("TV #"+(i+1),x,sy+sh/2-6); ctx.fillStyle="#43f0a4"; ctx.font="10px monospace"; ctx.fillText("FREE · "+SD_RENT+" chips",x,sy+sh/2+12); }
-    // little number plate
-    ctx.fillStyle="#1a1530"; ctx.fillRect(x-18,228,36,14); ctx.fillStyle=b?col:"#6a5a9a"; ctx.font="bold 9px monospace"; ctx.textAlign="center"; ctx.fillText("#"+(i+1),x,238);
-  }
-  // board at the far end
-  if(X1>W-320){ ctx.fillStyle="#0c0a18"; ctx.fillRect(W-250,120,150,120); ctx.strokeStyle="#b06bff"; ctx.lineWidth=2; ctx.strokeRect(W-250,120,150,120); neonText("LIVE",W-175,150,16,"#b06bff"); let on=0; for(let i=0;i<SD_N;i++) if(sdActive(i)) on++; ctx.fillStyle="#43f0a4"; ctx.font="11px monospace"; ctx.textAlign="center"; ctx.fillText(on+" / "+SD_N+" live",W-175,210); }
-}
-
+  // projection booth + beam
+  if(X0<420){ ctx.fillStyle="#140a18"; ctx.fillRect(250,150,100,100); ctx.strokeStyle="#ffb13f"; ctx.lineWidth=2; ctx.strokeRect(250,150,100,100); ctx.fillStyle="#ffb13f"; ctx.font="bold 9px monospace"; ctx.textAlign="center"; ctx.fillText("PROJECTION",300,166);
+    ctx.fillStyle="#1d0f22"; ctx.fillRect(268,176,64,40); ctx.fillStyle="#3a2a50"; ctx.fillRect(286,186,28,18); ctx.fillStyle=s?"#fff2dc":"#555"; ctx.beginPath(); ctx.arc(314,195,4,0,7); ctx.fill(); }
+  ctx.fillStyle="#120814"; ctx.fillRect(272,40,60,34); ctx.fillStyle=s?"rgba(255,242,220,.9)":"#2a1a30"; ctx.fillRect(316,50,10,12);
+  if(s&&X0<TH_SX+TH_SW){ ctx.save(); ctx.globalCompositeOperation="lighter"; const g=ctx.createLinearGradient(326,0,TH_SX,0); g.addColorStop(0,"rgba(200,210,255,.18)"); g.addColorStop(1,"rgba(200,210,255,.02)"); ctx.fillStyle=g;
+    ctx.beginPath(); ctx.moveTo(326,52); ctx.lineTo(TH_SX,TH_SY); ctx.lineTo(TH_SX,TH_SY+TH_SH); ctx.lineTo(326,60); ctx.fill(); ctx.restore(); }
+  // house-lights panel
+  if(X0<540&&X1>400){ ctx.fillStyle="#1a1020"; ctx.fillRect(450,150,40,58); ctx.strokeStyle="#6a5a9a"; ctx.lineWidth=1; ctx.strokeRect(450,150,40,58); for(let i=0;i<3;i++){ ctx.fillStyle=thLights.lv===i?"#ffb13f":"#3a2a50"; ctx.fillRect(458+i*9,162,6,34); } ctx.fillStyle="#9a8cc0"; ctx.font="8px monospace"; ctx.textAlign="center"; ctx.fillText("LIGHTS",470,218); }
+  // big-screen spot (fullscreen)
+  if(X0<2240&&X1>2060){ ctx.fillStyle="#140a18"; ctx.fillRect(2110,180,80,70); ctx.strokeStyle="#38e8ff"; ctx.strokeRect(2110,180,80,70); ctx.fillStyle="#38e8ff"; ctx.font="bold 9px monospace"; ctx.textAlign="center"; ctx.fillText("WATCH",2150,206); ctx.fillText("FULLSCREEN",2150,220); }
+  neonText("STREAM DOME",Math.min(Math.max(X0+120,180),720),26,14,"#b06bff",flick(3,t));
+  for(const st of TH_SEATS) if(st.x>X0-40&&st.x<X1+40) thDrawSeat(st); }
+function drawStreamDomeFront(t){ const a=(TH_LV[thLights.lv]||TH_LV[0]).a, X0=camX;
+  if(a>0){ ctx.save(); ctx.fillStyle=`rgba(4,2,8,${a})`; ctx.beginPath(); ctx.rect(X0,0,VW,H); ctx.rect(TH_SX,TH_SY,TH_SW,TH_SH); ctx.fill("evenodd"); ctx.restore();
+    ctx.fillStyle="rgba(255,177,63,.85)"; for(let x=Math.floor(X0/60)*60;x<X0+VW;x+=60) ctx.fillRect(x,254,3,2); }
+  if(thSource()){ ctx.save(); ctx.globalCompositeOperation="lighter"; const g=ctx.createLinearGradient(0,TH_SY+TH_SH,0,H); g.addColorStop(0,`rgba(140,160,255,${.06+.1*a})`); g.addColorStop(1,"rgba(140,160,255,0)"); ctx.fillStyle=g;
+    ctx.beginPath(); ctx.moveTo(TH_SX,TH_SY+TH_SH); ctx.lineTo(TH_SX+TH_SW,TH_SY+TH_SH); ctx.lineTo(TH_SX+TH_SW+260,H); ctx.lineTo(TH_SX-260,H); ctx.fill(); ctx.restore(); } }
 
 /* ============================================================ WORLD */
 const H=360;                  // logical height
@@ -2694,7 +2719,7 @@ const SCENES={
   clash:{w:2500, spawn:140},
   civic:{w:2600, spawn:200},
   prison:{w:2600, spawn:200},
-  streamdome:{w:3400, spawn:200},
+  streamdome:{w:2400, spawn:200},
 };
 // hotspots: x center, half-width, label, act
 function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
@@ -3073,7 +3098,7 @@ function stepInner(now){
   let sp=(buffOn("speed")?195:150)*(1+petTrait("speed")/100); if(me.blocking||(me.slowUntil||0)>T) sp*=.5; if(me.dead) sp=0; me.moving=!!(ix||iy)&&$("#overlay").hidden;
   if(me.seat!=null&&me.moving){ me.seat=null; pushPresence(true); }
   if(me.seat!=null){ me.moving=false; me.x=SEATS[me.seat].x; me.y=SEATS[me.seat].y; }
-  if(me.homeSit&&(me.moving||(me.scene!=="home"&&me.scene!=="vip"&&me.scene!=="ascend"&&me.scene!=="line"))){ me.homeSit=null; pushPresence(true); }
+  if(me.homeSit&&(me.moving||(me.scene!=="home"&&me.scene!=="vip"&&me.scene!=="ascend"&&me.scene!=="line"&&me.scene!=="streamdome"))){ me.homeSit=null; pushPresence(true); }
   if(me.homeSit){ me.moving=false; me.x=me.homeSit.x; me.y=me.homeSit.y||272; }
   if(me.trainUntil>T&&T-(me.lastPunch||0)>.32){ me.lastPunch=T; me.emote={e:"atk",t:T}; beep(110+Math.random()*40,.04,"square",.03); }
   if(me.moving){ const n=Math.hypot(ix,iy)||1; me.x=clamp(me.x+ix/n*sp*dt,30,sc.w-30); me.y=clamp(me.y+iy/n*sp*.6*dt,LANE.top,LANE.bot); if(ix) me.dir=ix>0?1:-1; me.phase+=dt*7; }
@@ -3113,7 +3138,7 @@ function render(){
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
-  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); }catch(e){}
+  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); }catch(e){}
   // rain (street)
   if(me.scene==="street"){ ctx.strokeStyle="rgba(170,190,255,.25)"; ctx.beginPath(); for(const r of rain){ r.y+=r.v*dt; if(r.y>1) r.y-=1; const x=camX+((r.x*VW+T*30)%VW), y=r.y*H; ctx.moveTo(x,y); ctx.lineTo(x-2,y+9); } ctx.stroke(); }
   ctx.setTransform(1,0,0,1,0,0);
@@ -3190,7 +3215,7 @@ const GUIDE={
     ["Sector 9",["The Glitch: Vex's bar (11 drinks), Kai's Kitchen (7 dishes), the Job Board, a jukebox with 13 tracks (₵5 a play, everyone in the bar hears it), CHIP PRINT arcade and two backrooms.","Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley, and The Third Eye club with its stage, a DJ booth with 13 tracks (synthwave, house, deep house, techno, acid, tech house, minimal and more; ₵10 a request), seats, club bar and two backrooms."]],
     ["Backrooms (The Glitch and The Third Eye)",["Four rentable high-tech rooms behind each venue's back wall: Neon Lounge (40 chips/day) and Server Den (60) at The Glitch, Void Suite (60) and Prism Room (80) at The Third Eye. A week costs 5 days' price. One room per player at a time.","Keep it public, or make it private and invite players to your guest list; uninvited people are moved out. Inside: seating, free drinks from the bar, music and party lights, an arcade, an overclock server, a decrypt terminal, a laser dance floor and more, with boosts that last longer than home ones."]],
     ["The Third Eye menu",["34 club items, each with its own screen effect, body animation and boost. They only work inside the club.","Take the same item again for ×2 and then PEAK ×3. Take the right different item while one is active to fuse them into one of 22 fusions with bigger effects and more boosts. Every recipe is listed under My club items at the club bar (with a one-tap Mix it when you own both), and the Fusion Lab tracks your discoveries."]],
-    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, Byte Bowl Noodles, Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons).","The Grid: wager duels, the Top Duelists board and the UPLOAD arcade.","Harvest Assembly: the 10-bay assembly line (see Earn ₵ credits).","Linx Land: plots and Credit Miners (see Earn ₵ credits).","Smacked Shop: real-life rewards for Data Collectors Club members (see the Rewards tab).","Neon Row: storefronts rented by real local businesses. Each store sets its own rewards (see the Rewards tab).","Stream Dome: 10 player TVs. Rent one with chips (20 chips for 30 minutes) and paste a YouTube, Twitch or Kick link, a direct .mp4 link, or upload an MP4 from your device (up to 24 MB) to broadcast to everyone; tap any ON AIR TV to watch exactly what that player is showing. YouTube TVs show the video thumbnail right on the screen. The owner can end any stream.","The Void: PvP arena with health bars. The safe zone by the Metro heals you and has Bot Control (Off, Easy, Normal, Hard). Watch for red warning rings and aim lines and step away to dodge. Getting deleted costs 15% and sends you home.","Civic Center: City Hall (roles and elections), Precinct 9 (the Wanted board), the Clinic, a back alley with the Black Market and a hacker terminal, plus a plaza anyone can use \u2014 a coffee cart (Speed), a wishing fountain (a random buff), City Services (pay off your Wanted the honest way, claim a daily civic credit) and the notice board.","Rust Gate Prison: where arrested runners do their time \u2014 press plates, work the laundry, shoot hoops, read in the library or sit in the chapel to shorten your sentence, lift weights for a buff, hit the commissary for snacks and phone cards, pay bail, or risk the tunnel. Anyone can visit the yard, see who's locked up, and use the hoops, library, chapel and commissary too."]]]},
+    ["Metro lines",["Byte Market: NPC stalls, prebuilt rigs, the Courier Hub, Byte Bowl Noodles, Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons).","The Grid: wager duels, the Top Duelists board and the UPLOAD arcade.","Harvest Assembly: the 10-bay assembly line (see Earn ₵ credits).","Linx Land: plots and Credit Miners (see Earn ₵ credits).","Smacked Shop: real-life rewards for Data Collectors Club members (see the Rewards tab).","Neon Row: storefronts rented by real local businesses. Each store sets its own rewards (see the Rewards tab).","Stream Dome: a movie theater with one big screen, two rows of seats and house lights. At the projection booth, pay 40 chips and pick an MP4 (or .webm/.mov) on your phone or computer. It never uploads: it plays from your device and streams live to everyone in the theater (up to 12 viewers). Keep your tab open until it ends; you control pause/skip and the lights. Everyone else just walks in, takes a seat and watches on the big screen, or opens the fullscreen view by the far wall. Tap or press any key if the sound starts muted. The owner can end any movie.","The Void: PvP arena with health bars. The safe zone by the Metro heals you and has Bot Control (Off, Easy, Normal, Hard). Watch for red warning rings and aim lines and step away to dodge. Getting deleted costs 15% and sends you home.","Civic Center: City Hall (roles and elections), Precinct 9 (the Wanted board), the Clinic, a back alley with the Black Market and a hacker terminal, plus a plaza anyone can use \u2014 a coffee cart (Speed), a wishing fountain (a random buff), City Services (pay off your Wanted the honest way, claim a daily civic credit) and the notice board.","Rust Gate Prison: where arrested runners do their time \u2014 press plates, work the laundry, shoot hoops, read in the library or sit in the chapel to shorten your sentence, lift weights for a buff, hit the commissary for snacks and phone cards, pay bail, or risk the tunnel. Anyone can visit the yard, see who's locked up, and use the hoops, library, chapel and commissary too."]]]},
   social:{n:"Play with others",secs:[
     ["Story quests",["People around the city have stories that need you. Look for markers over their heads: gold ! = a new chapter, … = in progress, green ? = ready to turn in.","Walk up and press E (or tap them) to talk. Quest givers stop to chat. Seven storylines with 3–4 chapters each: Vex (The Glitch) “Ghost in the Taps”, Kai (The Glitch) “Recipe from the Old Net”, Juno and Rook (Sector 9 street) “The Lost Signal” and “The Void Hunter”, Mira (Byte Market) “Club Secrets”, Pixel (Cyber Buys) “Smart Home Dream” and Agent Linx (Linx Land) “Land Baron”.","Objectives use everything in the game: digging scrap, deleting Void bots, assembling rigs, Assembly shifts, companion fetches, battles and expeditions, club items and fusions, drinks, decor and deliveries. Delivery items are handed over when you turn in.","Every chapter pays credits and chips, and finishing a story pays a rare or epic part. Progress is saved, so come back anytime. Press Q (☰ → Quests on phones) for the Quest Log, which shows where each person is and lets you travel there.","Everyone else you meet has something to say too: tap them to chat."]],
     ["Hang out",["Everyone in the same place sees each other live. Chat with Enter and use emotes. Chat lines fade after a few seconds; tap Log for the full history, filtered by chat or events.","Invite players to your apartment from the intercom or to your backroom from its room controls; they get a card that brings them straight to you."]],
@@ -4269,7 +4294,7 @@ function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):me.s
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {streamdome:"the Stream Dome",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
+function sceneName(s){ return {streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -4281,7 +4306,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},streamdome:{n:"Stream Dome",x:200,d:"10 player TVs \u2014 rent one with chips and share a stream, video link or MP4 from your device"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
