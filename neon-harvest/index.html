@@ -46,6 +46,9 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .btn.hot{border-color:var(--mag);color:#fff;box-shadow:0 0 10px rgba(255,63,168,.35) inset}
 .btn:disabled{opacity:.4;cursor:not-allowed}
+#rolechip{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom,0px));font-family:var(--f-display);font-size:12px;background:rgba(11,7,22,.9);border:1px solid var(--cyan);color:#e9e2ff;padding:5px 12px;cursor:pointer;white-space:nowrap;z-index:6;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#rolechip:hover{background:rgba(30,16,48,.95)}
+#game.mobile.portrait.mq #rolechip{bottom:auto;top:calc(var(--top) + var(--cvh) + 118px)}
 #prompt{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(64px + env(safe-area-inset-bottom,0px));font-family:var(--f-display);font-size:12px;
   background:rgba(11,7,22,.85);border:1px solid var(--cyan);color:var(--cyan);padding:6px 12px;pointer-events:none;white-space:nowrap}
 #chatbar{position:absolute;left:0;right:0;bottom:0;display:flex;gap:6px;align-items:flex-end;
@@ -397,6 +400,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" id="btnMsg" type="button">Messages [M]</button>
       <button class="btn" id="btnTravel" type="button" title="Fast travel anywhere (T)">Fast Travel [T]</button>
       <button class="btn" id="btnQuests" type="button" title="Story quests (Q)">Quests [Q]</button>
+      <button class="btn" id="btnRole" type="button" title="Your role (R)">Role [R]</button>
       <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
       <button class="btn hot" id="btnAdmin" type="button" hidden>Admin</button>
@@ -409,6 +413,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
     <button class="btn" type="button" data-q="travel" aria-label="Fast travel"><span>🚇</span><small>Travel</small></button>
     <button class="btn" type="button" data-q="quests" aria-label="Quests"><span>📜</span><small>Quests</small></button>
     <button class="btn" type="button" data-q="pet" aria-label="Companion"><span>🐾</span><small>Pet</small></button>
+    <button class="btn" type="button" data-q="role" aria-label="Role"><span>🎭</span><small>Role</small></button>
     <button class="btn" type="button" data-q="online" aria-label="Who's online"><span>🟢</span><small>Online</small></button>
     <button class="btn" type="button" data-q="help" aria-label="How to Play"><span>❓</span><small>Help</small></button>
   </div>
@@ -416,6 +421,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
   <div id="invites" aria-live="polite"></div>
   <div id="chatlog" aria-live="polite"></div>
   <div id="prompt" hidden></div>
+  <div id="rolechip" hidden role="button" tabindex="0" aria-label="Role action"></div>
   <div id="pad">
     <div class="dpad">
       <span></span><div class="k" data-k="up">▲</div><span></span>
@@ -1249,7 +1255,7 @@ function nameKey(n){ return "h"+Array.from(new TextEncoder().encode(n.toLowerCas
 let save = defaultSave();
 function defaultSave(){
   return { credits:250, chips:40, inv:{chip_cu:2,fan_80:1,ram_8:1}, display:[null,null,null,null,null,null],
-    look:{...DEFAULT_LOOK}, story:{paidC:0,paidCh:0,endings:[],run:null,runs:0}, owned:[], name:"", handleKey:"", quest:null, scrap:{}, printBest:0, rack:[], buffs:{}, jobs:[], taken:[], jobsDone:0, duelWins:0, voidKills:0, voidDeaths:0, botKills:0, settled:[], decor:{wall:Array(8).fill(null),floor:Array(9).fill(null)}, room:{wall:0,floor:0,light:0}, roomOwned:[], home:{cd:{},off:[],plants:{},clean:0,bonusAt:0}, upload:{cleared:0,best:0}, rp:0, rpDay:{d:"",n:0}, v:5 };
+    look:{...DEFAULT_LOOK}, role:"", roleAt:0, heat:0, heatAt:0, jail:null, rcd:{}, rstat:{}, cult:null, myCult:null, acolytes:0, followers:[], dust:0, hot:0, union:{ms:0,day:""}, mayorDay:"", slogan:"", story:{paidC:0,paidCh:0,endings:[],run:null,runs:0}, owned:[], name:"", handleKey:"", quest:null, scrap:{}, printBest:0, rack:[], buffs:{}, jobs:[], taken:[], jobsDone:0, duelWins:0, voidKills:0, voidDeaths:0, botKills:0, settled:[], decor:{wall:Array(8).fill(null),floor:Array(9).fill(null)}, room:{wall:0,floor:0,light:0}, roomOwned:[], home:{cd:{},off:[],plants:{},clean:0,bonusAt:0}, upload:{cleared:0,best:0}, rp:0, rpDay:{d:"",n:0}, v:5 };
 }
 const me = { scene:"street", x:440+Math.random()*180, y:276+Math.random()*48, dir:1, phase:0, moving:false, emote:null, say:null, visiting:null };
 let viewHome = null;           // {owner, display, look} when visiting another home
@@ -1924,12 +1930,14 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   if(aura==="Orbit rings"){ c.save(); c.translate(0,-34); c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=8; c.lineWidth=1.2; for(let k=0;k<2;k++){ c.beginPath(); c.ellipse(0,0,24,7,(k?1:-1)*.5+Math.sin(t)*.1,0,Math.PI); c.stroke(); } c.shadowBlur=0; c.fillStyle="#fff"; const oa=t*2.4; c.beginPath(); c.arc(Math.cos(oa)*24*Math.cos(.5),Math.sin(oa)*7+Math.cos(oa)*24*Math.sin(.5)*.3,1.8,0,7); c.fill(); c.restore(); }
   // ---- glitch aura (overlay)
   if(aura==="Glitch"&&Math.sin(t*11)*Math.sin(t*7)>.3){ for(let i=0;i<3;i++){ c.fillStyle=i%2?"rgba(56,232,255,.5)":"rgba(255,63,168,.5)"; c.fillRect(-12+Math.random()*6,-70+Math.random()*66,20+Math.random()*10,2); } }
+  if((o.role&&o.role.rk)||o.rk){ try{ drawRoleGear(c,o.role||{rk:o.rk,cu:o.cu||null,mayor:false},t,head,sh,hip,dir); }catch(e){} }
   c.restore();
   // ---- labels (unscaled)
   c.save(); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace";
   const top=(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Prism crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
   if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; if(o.dcc>=0){ c.shadowColor=DCC_SYMS[o.dcc]?DCC_SYMS[o.dcc].c:c.fillStyle; c.shadowBlur=8+3*Math.sin(t*3); c.globalAlpha=1; } c.fillText(o.name,x,y-(top+bob)*s); c.shadowBlur=0; c.globalAlpha=1;
-    if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; } }
+    if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }
+    if(o.role||o.rk){ try{ drawRoleTag(c,x,y-(top+bob)*s,o.role||{rk:o.rk,cu:o.cu||null},t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }catch(e){} } }
   if(o.hp!=null&&!o.dead){ const bw=36, bx=x-bw/2, by2=y-(top+bob)*s+4, r=clamp(o.hp,0,100)/100; c.fillStyle="rgba(0,0,0,.75)"; c.fillRect(bx-1,by2-1,bw+2,6); c.fillStyle=r>.5?"#43f0a4":r>.25?"#ffb84a":"#ff5a4a"; c.fillRect(bx,by2,bw*r,4); }
   if(o.say&&t-o.say.t<6){ const txt=String(o.say.text).slice(0,80); c.font="11px 'IBM Plex Mono',monospace"; const w=Math.min(200,c.measureText(txt).width+14);
     const by=y-(top+18+bob)*s; c.fillStyle="rgba(11,7,22,.92)"; c.strokeStyle="#ff3fa8"; c.lineWidth=1; c.fillRect(x-w/2,by-14,w,20); c.strokeRect(x-w/2+.5,by-13.5,w-1,19);
@@ -1942,6 +1950,467 @@ function lookCanvas(look,px=96,emote){ const cv=document.createElement("canvas")
 var _lkF=0;
 function tickLookCans(t){ _lkF++; const many=liveLooks.size>6; let li=0; for(const cv of liveLooks){ if(!cv.isConnected){liveLooks.delete(cv);continue;} if(!canVis(cv)) continue; if(many&&((li++ +_lkF)&1)) continue; const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height); const sc=cv.width/110; if(cv._pet){ const tall=PET_TALL.includes(cv._pet); drawPetAt(c,cv.width/2,cv.height*.86,cv.height/(tall?95:42),cv._pet,cv._ps,cv._dir||1,t,!!cv._walk); continue; }
   drawStick(c,cv.width/2,cv.height*.86,sc,{dir:cv._dir||1,phase:t*3,moving:!!cv._walk,look:cv._look,emote:cv._emote?{e:cv._emote,t:t-((t*1)%3)}:null},t); } }
+
+/* ============================================================ ROLES / CITY LIFE */
+/* ============================================================ ROLES & CITY LIFE
+   Players pick a role at City Hall (Civic Center). Roles change what you can do everywhere:
+   thieves steal, police arrest, medics heal, dealers deal, hackers crack ATMs, cult leaders gather
+   followers, politicians run for Mayor. Crimes raise your Wanted level (★); police players and
+   police NPCs can put you in jail. Robot gangs, police patrols and civilians roam the city. */
+const ROLES={
+  worker:{n:"Hard Worker",ic:"🔧",col:"#ffb84a",tag:"WORKER",d:"Honest work, honest pay. The backbone of Sector 9.",
+    perks:["Union bonus: +₵120 for every 10 minutes you're clocked in on any shift","Daily union stipend: ₵250 at City Hall","Can't be pickpocketed while on shift","Can never be Wanted: no crimes, no jail"]},
+  police:{n:"Police",ic:"👮",col:"#3a7bff",tag:"POLICE",d:"Keep the peace. Catch thieves, bust gangs, run the precinct.",
+    perks:["Arrest Wanted players (★) nearby: they go to jail, you get ₵80 per star","Bust robot gang members for ₵80","Patrol pay: ₵60 every 5 minutes you're out on patrol","Thieves who try to rob you get caught on the spot"]},
+  medic:{n:"Medic",ic:"✚",col:"#43f0a4",tag:"MEDIC",d:"Patch people up, revive runners in The Void, treat hurt civilians.",
+    perks:["Treat players: they get Speed for 5 min and full Void HP, you get ₵60","Revive deleted players in The Void","Treat injured civilians (🩹) for ₵40","Free Clinic patch-ups for yourself"]},
+  thief:{n:"Thief",ic:"🦝",col:"#a0a6bc",tag:"THIEF",d:"Light fingers, fast feet. Every pocket is an opportunity.",
+    perks:["Pickpocket civilians for ₵15–60 and the odd part","Steal 6% of another player's credits (up to ₵300)","+15% move speed: outrun the cops","Crimes make you Wanted: police can jail you"]},
+  dealer:{n:"Dealer",ic:"💊",col:"#c95cff",tag:"DEALER",d:"Runs Neon Dust and hot parts through the back alleys.",
+    perks:["Buy Neon Dust and hot parts at the Black Market crate (Civic Center alley)","Sell Dust to buyers on the street (💊) for ₵55–90","Hot parts cost half price: resell them for profit","Deals make you Wanted: watch for cops"]},
+  hacker:{n:"Hacker",ic:"💻",col:"#38e8ff",tag:"HACKER",d:"Cracks ATMs, scrubs police records, sees the whole grid.",
+    perks:["Hack ATMs around the city for ₵90–200","Scrub other players' Wanted records for ₵150","Scrub your own record at the Hacker terminal","Police radio: see every Wanted runner and cop"]},
+  cult:{n:"Cult Leader",ic:"🜏",col:"#ff3f5a",tag:"CULT",d:"Found a cult, recruit the lost, hold rituals under the neon.",
+    perks:["Name your cult and pick its color","Recruit civilians: robed acolytes follow you and donate ₵10 every 2 min","Invite players to join: they wear your cult's name","Rituals bless followers (luck + tips) and pay you ₵40 per follower"]},
+  politician:{n:"Politician",ic:"🎙",col:"#ffd36a",tag:"POLITICIAN",d:"Run for Mayor. Win the vote, run the city.",
+    perks:["Register as a candidate at City Hall (₵500)","Campaign rallies: crowds cheer and donate","The Mayor sets 2 city laws that change everyone's game","Mayor salary: ₵800 a day"]},
+};
+const CRIME_ROLES=["thief","dealer","hacker"];
+const ROLE_SWITCH_MS=6*36e5, TERM_MS=3*864e5;
+const POLICIES={
+  overtime:{n:"Overtime Act",d:"Union bonus and police patrol pay are 50% higher."},
+  crackdown:{n:"Crackdown",d:"Arrest bounties and jail time ×1.5. Police NPCs chase at ★1."},
+  amnesty:{n:"Amnesty",d:"Wanted levels fade twice as fast. Jail time is halved."},
+  freemarket:{n:"Free Market",d:"Black Market prices −25%, street deals pay +20%."},
+  healthcare:{n:"Public Healthcare",d:"Medics earn double. Clinic patch-ups are free."},
+  festival:{n:"Neon Festival",d:"Rally and ritual donations +50%. Civilians tip more."},
+};
+const CIVIC={hall:520,vote:760,precinct:1130,clinic:1860,crate:2330,term:2500,atm:960};
+const PRISON={w:2600,x0:362,x1:2360,spawn:520,press:660,laundry:940,weight:1200,phone:1480,tunnel:1780,canteen:2060,warden:2280};
+const ATM_SPOTS={street:1580,byte:2520,neonrow:1180,civic:960,grid:1300};
+const CIV_NAMES=["Mina","Dex","Old Ruiz","Kip","Sol","Nova","Bram","Ivy","Taz","Juno-2","Pell","Rhea","Otis","Quill","Vega","Moss","Lark","Ziggy","Fen","Halo"];
+const CIV_LINES=["Rain hasn't stopped in three years.","Watch your pockets around here.","The Rust Jaws took my scooter.","Vote for whoever fixes the street lights.","You smell like solder.","I heard the Mayor's office is hiring.","Cops doubled their patrols tonight.","Got any spare chips?","That club never closes.","Stay out of the alley after dark."];
+
+/* ---------- state helpers ---------- */
+function pRole(){ return ROLES[save.role]?save.role:""; }
+function roleIs(k){ return pRole()===k; }
+function heatStars(){ return Math.max(0,Math.min(5,Math.ceil(+save.heat||0))); }
+function jailed(){ return !!(save.jail&&+save.jail.until>Date.now()); }
+function jailLeft(){ return jailed()?Math.ceil((save.jail.until-Date.now())/1000):0; }
+function onShift(){ return mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0; }
+function rcd(k){ return Math.max(0,((save.rcd||{})[k]||0)-Date.now()); }
+function setCd(k,ms){ save.rcd=save.rcd||{}; save.rcd[k]=Date.now()+ms; }
+function cdTxt(ms){ const s=Math.ceil(ms/1000); return s>=60?`${Math.ceil(s/60)}m`:`${s}s`; }
+function policy(k){ try{ return cityPolicies().includes(k); }catch(e){ return false; } }
+function rstat(k,n=1){ save.rstat=save.rstat||{}; save.rstat[k]=(+save.rstat[k]||0)+n; }
+function earn(n,why,col){ n=Math.round(n); if(!(n>0)) return; save.credits+=n; persist(); toast(`+₵${n} · ${why}`,col||"#43f0a4"); beep(880,.06); }
+function addHeat(n,why){ if(roleIs("worker")||roleIs("police")) return; const before=heatStars(); save.heat=Math.min(5,(+save.heat||0)+n); save.heatAt=Date.now(); const st=heatStars(); persist(); pushPresence(true);
+  if(st>before) toast(`Wanted ${"★".repeat(st)}${why?" · "+why:""}`,"#ff3f5a"); }
+function roleSanitize(o,s){ o.role=ROLES[s.role]?s.role:""; o.roleAt=+s.roleAt||0; o.heat=Math.max(0,Math.min(5,+s.heat||0)); o.heatAt=+s.heatAt||0;
+  o.jail=s.jail&&+s.jail.until>0?{until:+s.jail.until,why:String(s.jail.why||"").slice(0,60),stars:Math.max(0,Math.min(5,+s.jail.stars||0))}:null;
+  o.rcd=s.rcd&&typeof s.rcd==="object"?Object.fromEntries(Object.entries(s.rcd).filter(([k,v])=>isFinite(+v)&&+v>Date.now()).slice(0,80).map(([k,v])=>[String(k).slice(0,40),+v])):{};
+  o.rstat=s.rstat&&typeof s.rstat==="object"?Object.fromEntries(Object.entries(s.rstat).filter(([k,v])=>isFinite(+v)).slice(0,30).map(([k,v])=>[String(k).slice(0,20),Math.floor(+v)])):{};
+  o.cult=s.cult&&typeof s.cult.by==="string"?{by:s.cult.by.slice(0,80),n:String(s.cult.n||"").slice(0,24),col:/^#[0-9a-f]{6}$/i.test(s.cult.col)?s.cult.col:"#ff3f5a"}:null;
+  o.myCult=s.myCult&&typeof s.myCult.n==="string"?{n:s.myCult.n.slice(0,24),col:/^#[0-9a-f]{6}$/i.test(s.myCult.col)?s.myCult.col:"#ff3f5a"}:null;
+  o.acolytes=Math.max(0,Math.min(4,Math.floor(+s.acolytes||0))); o.followers=Array.isArray(s.followers)?s.followers.filter(x=>typeof x==="string").slice(0,60):[];
+  o.dust=Math.max(0,Math.min(20,Math.floor(+s.dust||0))); o.hot=Math.max(0,Math.floor(+s.hot||0)); o.union=s.union&&typeof s.union==="object"?{ms:+s.union.ms||0,day:String(s.union.day||"")}:{ms:0,day:""};
+  o.mayorDay=String(s.mayorDay||""); o.slogan=String(s.slogan||"").slice(0,60); return o; }
+
+/* ---------- presence ---------- */
+function rolePres(){ return {rl:pRole(),hz:heatStars(),jl:jailed()?1:0,cu:roleIs("cult")&&save.myCult?`${myId}|${save.myCult.n}|${save.myCult.col}`:save.cult?`${save.cult.by}|${save.cult.n}|${save.cult.col}`:null,ac:roleIs("cult")?save.acolytes:0}; }
+function rolePeer(q,pr){ q.rl=ROLES[pr.rl]?pr.rl:""; q.hz=Math.max(0,Math.min(5,Math.floor(+pr.hz||0))); q.jl=pr.jl===1; q.ac=Math.max(0,Math.min(4,Math.floor(+pr.ac||0)));
+  q.cu=null; if(typeof pr.cu==="string"){ const [by,n,col]=pr.cu.split("|"); if(by&&n) q.cu={by,n:n.slice(0,24),col:/^#[0-9a-f]{6}$/i.test(col)?col:"#ff3f5a"}; } }
+function roleO(who){ // role info to draw on a character
+  if(who==="me") return {rk:pRole()||null,hz:heatStars(),jl:jailed(),cu:roleIs("cult")&&save.myCult?{by:myId,...save.myCult}:save.cult,mayor:!!myId&&mayorId()===myId};
+  return {rk:who.rl||null,hz:who.hz||0,jl:!!who.jl,cu:who.cu||null,mayor:!!who.by&&mayorId()===who.by}; }
+
+/* ---------- drawing: gear, tags, wanted stars ---------- */
+function drawRoleGear(c,o,t,head,sh,hip,dir){ const k=o.rk;
+  if(o.mayor){ c.strokeStyle="#ffd36a"; c.lineWidth=3; c.globalAlpha=.95; c.beginPath(); c.moveTo(-dir*5,sh+1); c.lineTo(dir*5,hip-2); c.stroke(); c.globalAlpha=1; c.fillStyle="#ffd36a"; c.beginPath(); c.arc(dir*2,sh+9,2.2,0,7); c.fill(); }
+  if(k==="police"){ c.fillStyle="#1a2a6a"; c.beginPath(); c.arc(0,head-4,8.6,Math.PI,0); c.fill(); c.fillRect(-9,head-5,18,2.4); c.fillRect(dir*2,head-5,dir*8,2); c.fillStyle="#ffd36a"; c.fillRect(-1.5,head-10,3,3);
+    c.beginPath(); for(let i=0;i<5;i++){ const a=-Math.PI/2+i*Math.PI*.4; c.lineTo(dir*3+Math.cos(a)*2.4,sh+6+Math.sin(a)*2.4); c.lineTo(dir*3+Math.cos(a+.63)*1,sh+6+Math.sin(a+.63)*1); } c.fill();
+    const on=Math.sin(t*8)>0; c.fillStyle=on?"#ff3f5a":"#3a7bff"; glowOn(c,c.fillStyle,6); c.fillRect(-dir*5,sh-1,2,2); c.shadowBlur=0; }
+  else if(k==="medic"){ c.fillStyle="#f4f6fa"; c.fillRect(-9,head-6,18,2.4); c.fillStyle="#43f0a4"; c.fillRect(-1,head-7,2,4.4); c.fillRect(-2.2,head-5.8,4.4,2); c.fillStyle="#f4f6fa"; c.fillRect(-dir*7,sh+5,4,5); c.fillStyle="#2fbf80"; c.fillRect(-dir*7+1.4,sh+5.6,1.2,3.8); c.fillRect(-dir*7+.4,sh+6.9,3.2,1.2); }
+  else if(k==="thief"){ c.fillStyle="#111118"; c.fillRect(-8.5,head-3,17,4); c.fillStyle="#fff"; c.fillRect(dir*1.5,head-2,2,1.6); c.fillRect(dir*5,head-2,2,1.6); c.fillStyle="#5a4a3a"; c.beginPath(); c.ellipse(-dir*7,sh+10,4,5.5,0,0,7); c.fill(); c.fillStyle="#ffd36a"; c.font="5px monospace"; c.textAlign="center"; c.fillText("₵",-dir*7,sh+12); }
+  else if(k==="worker"){ c.fillStyle="#ffd23a"; c.beginPath(); c.arc(0,head-3,9,Math.PI,0); c.fill(); c.fillRect(-10.5,head-3.5,21,2); c.fillStyle="#f4b400"; c.fillRect(-1,head-11.5,2,8); c.strokeStyle="#ff8a1a"; c.lineWidth=1.6; c.beginPath(); c.moveTo(-5,sh+2); c.lineTo(-5,hip-1); c.moveTo(5,sh+2); c.lineTo(5,hip-1); c.stroke(); c.strokeStyle="#e8ffe8"; c.lineWidth=.8; c.beginPath(); c.moveTo(-6,sh+9); c.lineTo(6,sh+9); c.stroke(); }
+  else if(k==="dealer"){ c.fillStyle="#3a1a4a"; c.beginPath(); c.arc(0,head-1,10,Math.PI*1.05,Math.PI*1.95); c.lineTo(9,head+6); c.lineTo(-9,head+6); c.closePath(); c.globalAlpha=.85; c.fill(); c.globalAlpha=1; c.fillStyle="#c95cff"; c.beginPath(); c.ellipse(dir*4,sh+5,2.2,1.1,.6,0,7); c.fill(); c.fillStyle="#2a2030"; c.fillRect(-6,hip-4,12,3.5); }
+  else if(k==="hacker"){ c.strokeStyle="#38e8ff"; c.lineWidth=1.2; c.beginPath(); c.arc(0,head,9.5,Math.PI*1.1,Math.PI*1.9); c.stroke(); c.fillStyle="#38e8ff"; c.fillRect(dir*8,head-1,2,4); c.globalAlpha=.8; c.font="5px monospace"; c.textAlign="center"; for(let i=0;i<3;i++){ const u=(t*.6+i/3)%1; c.globalAlpha=(1-u)*.8; c.fillText(["0","1","x"][(i+Math.floor(t*2))%3],-dir*12+i*2,head-4-u*14); } c.globalAlpha=1; }
+  else if(k==="cult"){ const col=o.cu&&o.cu.col||"#ff3f5a"; c.fillStyle="#2a0a14"; c.beginPath(); c.moveTo(-10,head+6); c.quadraticCurveTo(-11,head-12,0,head-13); c.quadraticCurveTo(11,head-12,10,head+6); c.lineTo(11,hip+18); c.lineTo(-11,hip+18); c.closePath(); c.globalAlpha=.78; c.fill(); c.globalAlpha=1;
+    c.strokeStyle=col; c.lineWidth=.9; glowOn(c,col,6+3*Math.sin(t*3)); c.beginPath(); c.arc(0,sh+9,3,0,7); c.moveTo(0,sh+5); c.lineTo(0,sh+13); c.moveTo(-3,sh+9); c.lineTo(3,sh+9); c.stroke(); c.shadowBlur=0; }
+  else if(k==="politician"&&!o.mayor){ c.fillStyle="#c83a3a"; c.beginPath(); c.moveTo(0,sh+1); c.lineTo(1.6,sh+4); c.lineTo(0,sh+13); c.lineTo(-1.6,sh+4); c.closePath(); c.fill(); c.fillStyle="#ffd36a"; c.beginPath(); c.arc(dir*5,sh+4,1.8,0,7); c.fill(); }
+}
+function drawRoleTag(c,x,y,o,t){ // y = name baseline (world units, unscaled)
+  let yy=y-12; const R=ROLES[o.rk];
+  if(o.jl){ c.font="bold 8px monospace"; c.fillStyle="#ff9a3a"; c.fillText("⛓ IN JAIL",x,yy); yy-=10; }
+  if(o.hz>0){ c.font="10px monospace"; c.fillStyle="#ff3f5a"; c.globalAlpha=.75+.25*Math.sin(t*6); c.fillText("★".repeat(o.hz),x,yy); c.globalAlpha=1; yy-=10; }
+  const tags=[]; if(o.mayor) tags.push(["MAYOR","#ffd36a"]); else if(R) tags.push([R.tag,R.col]); if(o.cu&&o.rk!=="cult") tags.push([o.cu.n.toUpperCase(),o.cu.col]); else if(o.rk==="cult"&&o.cu) tags[0]=[`${o.cu.n.toUpperCase()} · LEADER`,o.cu.col];
+  if(!tags.length) return; c.font="bold 7px monospace"; const txt=tags.map(z=>z[0]).join("  ·  "), w=c.measureText(txt).width+8; c.fillStyle="rgba(11,7,22,.82)"; c.fillRect(x-w/2,y+3,w,9); let cx=x-w/2+4; c.textAlign="left";
+  tags.forEach(([s,col],i)=>{ c.fillStyle=col; c.fillText(s,cx,y+10); cx+=c.measureText(s+(i<tags.length-1?"  ·  ":"")).width; }); c.textAlign="center"; }
+
+/* ---------- Civic Center scene ---------- */
+function drawCivic(t){ const W=SCENES.civic.w, X0=camX, X1=camX+VW;
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#0b0a24"); g.addColorStop(.6,"#1a1238"); g.addColorStop(1,"#0a0716"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
+  const p=camX*.3; ctx.fillStyle="#120e2c"; for(let i=0;i<40;i++){ const x=p+i*90-200, h=60+((i*53)%90); if(x+80<X0||x>X1) continue; ctx.fillRect(x,200-h,70,h+60); ctx.fillStyle="#2a2350"; for(let k=0;k<6;k++) if((i+k)%3) ctx.fillRect(x+8+(k%3)*20,210-h+Math.floor(k/3)*20,6,8); ctx.fillStyle="#120e2c"; }
+  // ground
+  ctx.fillStyle="#17142a"; ctx.fillRect(camX,250,VW,H-250); ctx.fillStyle="#211c3a"; for(let x=Math.floor(X0/60)*60;x<X1;x+=60) ctx.fillRect(x,250,2,H-250); ctx.fillStyle="#2a2448"; ctx.fillRect(camX,250,VW,3);
+  // metro
+  if(X0<260){ ctx.fillStyle="#0e0c1e"; ctx.fillRect(60,170,130,80); ctx.fillStyle="#38e8ff"; ctx.fillRect(60,166,130,6); neonText("METRO",125,158,14,"#38e8ff"); }
+  // City Hall
+  if(X1>300&&X0<900){ ctx.fillStyle="#d8d2ea"; ctx.fillRect(330,120,540,130); ctx.fillStyle="#bdb4d8"; ctx.beginPath(); ctx.moveTo(310,122); ctx.lineTo(600,60); ctx.lineTo(890,122); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#efeaff"; for(let i=0;i<8;i++) ctx.fillRect(350+i*66,132,16,110); ctx.fillStyle="#9a90b8"; ctx.fillRect(320,240,560,10);
+    ctx.fillStyle="#2a2448"; ctx.fillRect(560,180,80,62); ctx.fillStyle="#ffd36a"; ctx.globalAlpha=.25+.1*Math.sin(t*2); ctx.fillRect(564,184,72,56); ctx.globalAlpha=1;
+    ctx.save(); ctx.translate(600,90); ctx.strokeStyle="#ffd36a"; glowOn(ctx,"#ffd36a",10); ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,12,0,7); ctx.stroke(); ctx.rotate(t*.6); for(let k=0;k<6;k++){ ctx.rotate(Math.PI/3); ctx.beginPath(); ctx.moveTo(0,4); ctx.lineTo(0,10); ctx.stroke(); } ctx.restore(); ctx.shadowBlur=0;
+    ctx.strokeStyle="#9a90b8"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(870,120); ctx.lineTo(870,30); ctx.stroke(); ctx.fillStyle="#ffd36a"; ctx.beginPath(); ctx.moveTo(870,30); for(let k=0;k<=8;k++) ctx.lineTo(870+k*5,32+Math.sin(t*3+k*.7)*2.5); for(let k=8;k>=0;k--) ctx.lineTo(870+k*5,48+Math.sin(t*3+k*.7)*2.5); ctx.fill();
+    neonText("CITY HALL",600,112,15,"#ffd36a");
+    // election board
+    ctx.fillStyle="#0e0c1e"; ctx.fillRect(712,180,96,60); ctx.strokeStyle="#ffd36a"; ctx.strokeRect(712.5,180.5,95,59); ctx.fillStyle="#ffd36a"; ctx.font="8px monospace"; ctx.textAlign="center"; ctx.fillText("ELECTION",760,194); const mz=mayorId(); ctx.fillStyle="#e9e2ff"; ctx.fillText(mz?("MAYOR: "+String(nameOf(mz)).slice(0,10)):"NO MAYOR",760,208); ctx.fillStyle="#9a8cc0"; ctx.fillText(`ENDS ${termLeftTxt()}`,760,222); ctx.fillText(`${candList().length} RUNNING`,760,234); }
+  // Precinct
+  if(X1>1000&&X0<1640){ ctx.fillStyle="#1a2440"; ctx.fillRect(1000,110,620,140); ctx.fillStyle="#24325a"; ctx.fillRect(1000,104,620,10); const on=Math.sin(t*7)>0;
+    ctx.fillStyle=on?"#ff3f5a":"#3a7bff"; glowOn(ctx,ctx.fillStyle,14); ctx.fillRect(1250,96,30,8); ctx.fillStyle=on?"#3a7bff":"#ff3f5a"; ctx.fillRect(1282,96,30,8); ctx.shadowBlur=0; neonText("PRECINCT 9",1170,134,15,"#5aa0ff");
+    ctx.fillStyle="#0c1226"; ctx.fillRect(1080,170,100,72); ctx.fillStyle="#3a7bff"; ctx.globalAlpha=.2; ctx.fillRect(1084,174,92,64); ctx.globalAlpha=1;
+    // wanted board
+    ctx.fillStyle="#e8dcc0"; ctx.fillRect(1196,160,140,80); ctx.fillStyle="#3a2a1a"; ctx.font="bold 9px monospace"; ctx.fillText("WANTED",1266,173); ctx.font="7px monospace"; const wl=wantedList().slice(0,4); if(!wl.length) ctx.fillText("— nobody, for now —",1266,200); wl.forEach((w,i)=>{ ctx.fillStyle="#3a2a1a"; ctx.fillText(`${String(w.name).slice(0,12)} ${"★".repeat(w.hz)}`,1266,188+i*12); });
+    // transport sign to the prison
+    ctx.fillStyle="#1a1020"; ctx.fillRect(1392,196,150,46); ctx.fillStyle="#ff9a3a"; ctx.font="7px monospace"; ctx.fillText("PRISONER",1467,210); ctx.fillText("TRANSPORT",1467,220); ctx.fillStyle="#3a2a1a"; ctx.fillText("→ RUST GATE",1467,232); }
+  // ATM (civic)
+  // Clinic
+  if(X1>1680&&X0<2080){ ctx.fillStyle="#e8f4f0"; ctx.fillRect(1700,130,330,120); ctx.fillStyle="#cfe6de"; ctx.fillRect(1700,124,330,8); ctx.save(); ctx.translate(1865,100); const pl=1+.08*Math.sin(t*3); ctx.scale(pl,pl); ctx.fillStyle="#43f0a4"; glowOn(ctx,"#43f0a4",16); ctx.fillRect(-6,-18,12,36); ctx.fillRect(-18,-6,36,12); ctx.restore(); ctx.shadowBlur=0;
+    neonText("CLINIC",1865,150,13,"#2fbf80"); ctx.fillStyle="#2a3a36"; ctx.fillRect(1830,180,70,70); ctx.fillStyle="#9affd8"; ctx.globalAlpha=.25; ctx.fillRect(1834,184,62,62); ctx.globalAlpha=1; }
+  // Back alley + black market + hacker terminal
+  if(X1>2120){ ctx.fillStyle="#0c0a14"; ctx.fillRect(2120,60,W-2120,190); ctx.fillStyle="#16121e"; for(let k=0;k<6;k++) ctx.fillRect(2140+k*80,60,40,190);
+    ctx.save(); ctx.globalAlpha=.85; ctx.font="bold 22px monospace"; ctx.fillStyle="#ff3fa8"; ctx.rotate(-.08); ctx.fillText("NO GODS NO COPS",2240,180); ctx.restore(); ctx.font="bold 12px monospace"; ctx.fillStyle="#38e8ff"; ctx.fillText("RUST JAWS ⚙",2440,120);
+    ctx.fillStyle="#3a2a20"; ctx.fillRect(2290,212,80,38); ctx.strokeStyle="#5a4a3a"; ctx.strokeRect(2290.5,212.5,79,37); ctx.fillStyle="#c95cff"; glowOn(ctx,"#c95cff",8+4*Math.sin(t*3)); ctx.fillRect(2324,224,12,10); ctx.shadowBlur=0; ctx.fillStyle="#e9e2ff"; ctx.font="7px monospace"; ctx.fillText("BLACK MARKET",2330,206);
+    ctx.fillStyle="#141c18"; ctx.fillRect(2470,180,60,70); ctx.fillStyle="#0a2a14"; ctx.fillRect(2476,186,48,32); ctx.fillStyle="#43f0a4"; ctx.font="6px monospace"; ctx.textAlign="left"; for(let k=0;k<4;k++) ctx.fillText(Math.random()<.02?"ACCESS":["> scrub","> rec_del","> ok_","> grid"][(k+Math.floor(t))%4],2479,195+k*7); ctx.textAlign="center";
+    ctx.fillStyle="#2a3a2a"; ctx.fillRect(2180,224,60,26); ctx.fillStyle="#3a4a3a"; ctx.fillRect(2176,218,68,8); }
+}
+function drawCivicFront(t){}
+function drawATM(x,t){ if(offWorld(ctx,x,240,40)) return; ctx.fillStyle="#1a1e2a"; ctx.fillRect(x-14,196,28,54); ctx.fillStyle="#0a2a3a"; ctx.fillRect(x-10,202,20,14); ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.3*Math.sin(t*2+x); ctx.fillRect(x-9,203,18,12); ctx.globalAlpha=1; ctx.fillStyle="#38e8ff"; ctx.font="bold 6px monospace"; ctx.textAlign="center"; ctx.fillText("ATM",x,198+28); ctx.fillStyle="#2a2e3a"; ctx.fillRect(x-8,232,16,3);
+  const cd=rcd("atm_"+me.scene); if(roleIs("hacker")&&!cd){ ctx.strokeStyle="#43f0a4"; ctx.globalAlpha=.5+.5*Math.sin(t*5); ctx.strokeRect(x-15.5,195.5,31,55); ctx.globalAlpha=1; } }
+function drawCityProps(t){ const ax=ATM_SPOTS[me.scene]; if(ax!=null) drawATM(ax,t);
+  // ritual circles
+  for(const [by,r] of Object.entries(ritualFx)){ const age=T-r.t; if(age>9){ delete ritualFx[by]; continue; } if(r.s!==me.scene) continue; const pos=by===myId?{x:me.x,y:me.y}:(()=>{ const q=[...peers.values()].find(p=>p.by===by); return q?{x:q.dx,y:q.dy}:{x:r.x,y:r.y}; })();
+    ctx.save(); ctx.translate(pos.x,pos.y); ctx.scale(1,.32); ctx.rotate(age*.8); ctx.strokeStyle=r.col; glowOn(ctx,r.col,12); ctx.globalAlpha=Math.min(1,age)*Math.min(1,(9-age)/2); ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,70,0,7); ctx.stroke(); ctx.beginPath(); for(let k=0;k<=5;k++){ const a=k*Math.PI*.8; ctx.lineTo(Math.cos(a)*66,Math.sin(a)*66); } ctx.stroke(); ctx.restore(); ctx.shadowBlur=0;
+    for(let k=0;k<8;k++){ const u=((age*.5)+k/8)%1; ctx.globalAlpha=(1-u)*.8; ctx.fillStyle=r.col; ctx.fillRect(pos.x+Math.cos(k*.785+age)*60,pos.y-u*80,2,2); } ctx.globalAlpha=1; } }
+
+/* ---------- city NPCs: civilians, police, robot gangs ---------- */
+const CITY_CFG={street:{civ:[[400,1500],[1500,2600],[2200,3400],[600,3800]],cop:[[500,2900]],gang:[3050,3900,3]},byte:{civ:[[300,1600],[1500,3000],[2600,4200]],cop:[[600,3000]],gang:[3500,4300,2]},
+  neonrow:{civ:[[300,1300],[1100,2300],[500,2000]],cop:[[400,2200]]},grid:{civ:[[400,2000],[1800,3600]],gang:[2900,4200,2]},civic:{civ:[[300,1000],[1600,2100]],cop:[[950,1650],[300,2100]]},smacked:{civ:[[300,1400]]}};
+const cityNpcs={}; let gangCd=0;
+function rndLook(seed){ const r=seeded(seed); const pick=k=>Math.floor(r()*Math.min(WARD[k].opts.length,WARD_BASE_LEN[k]||WARD[k].opts.length)); const col=()=>Math.floor(r()*COLORS.length); return {skin:pick("skin"),style:pick("style"),jacket:col(),pants:col(),visor:pick("visor"),hat:pick("hat"),hair:pick("hair"),hairCol:col(),feet:pick("feet"),accent:col(),nameCol:col(),neck:0,back:0}; }
+function cityGen(sc){ if(cityNpcs[sc]) return cityNpcs[sc]; const C=CITY_CFG[sc]; const L=[]; if(!C){ cityNpcs[sc]=L; return L; } let s=hashNum(sc);
+  (C.civ||[]).forEach(([a,b],i)=>{ const r=seeded(s+i*7); L.push({k:"civ",x:a+r()*(b-a),y:LANE.top+r()*(LANE.bot-LANE.top),vx:(r()<.5?-1:1)*(12+r()*16),min:a,max:b,dir:1,phase:0,look:rndLook(s+i*31),name:CIV_NAMES[(s+i*3)%CIV_NAMES.length],purse:20+Math.floor(r()*60),robT:0,hurt:r()<.25,buyer:r()<.35,pause:0}); });
+  (C.cop||[]).forEach(([a,b],i)=>L.push({k:"cop",x:(a+b)/2,y:300,vx:24,min:a,max:b,dir:1,phase:0,look:{jacket:5,pants:5,visor:1,hat:0,skin:(i*2)%5,style:1},name:["Officer Vance","Officer Reyes","Sgt. Okoro","Officer Pike"][(s+i)%4],state:"patrol"}));
+  if(C.gang){ const [a,b,n]=C.gang; for(let i=0;i<n;i++) L.push({k:"bot",x:a+i*60,y:290+i*14,vx:(i%2?-1:1)*20,min:a,max:b,dir:1,phase:0,name:["Rust Jaw Rivet","Rust Jaw Socket","Rust Jaw Gasket","Rust Jaw Crank"][i%4],out:0}); }
+  cityNpcs[sc]=L; return L; }
+function hashNum(s){ let h=7; for(const ch of String(s)) h=(h*31+ch.charCodeAt(0))%100000; return h; }
+function npcSay(n,text){ n.say={text,t:T}; }
+function tickCity(dt){ const now=Date.now();
+  // heat decay, jail, pay timers
+  if(save.heat>0&&!jailed()){ const iv=(policy("amnesty")?2:4)*6e4; if(now-(+save.heatAt||0)>iv){ save.heat=Math.max(0,Math.ceil(save.heat)-1); save.heatAt=now; persist(); pushPresence(true); if(!save.heat) toast("You're no longer Wanted.","#43f0a4"); } }
+  if(save.jail&&!jailed()&&save.jail.until){ save.jail=null; persist(); pushPresence(true); toast("You're free. Stay out of trouble.","#43f0a4"); chatLine(null,"You were released from Precinct 9 holding.","sys"); }
+  if(jailed()&&me.scene!=="prison"){ go("prison"); me.x=PRISON.spawn; }
+  if(roleIs("worker")&&onShift()){ save.union=save.union||{ms:0,day:""}; save.union.ms+=dt*1000; if(save.union.ms>=6e5){ save.union.ms-=6e5; earn(120*(policy("overtime")?1.5:1),"Union bonus (10 min on shift)","#ffb84a"); rstat("union"); } }
+  if(roleIs("police")&&!jailed()){ if(me.moving) roleTick.lastMove=now; roleTick.patrol=(roleTick.patrol||0)+dt; if(roleTick.patrol>=300){ roleTick.patrol=0; if(now-(roleTick.lastMove||0)<9e4) earn(60*(policy("overtime")?1.5:1),"Patrol pay","#5aa0ff"); } }
+  if(roleIs("cult")&&save.acolytes>0){ roleTick.aco=(roleTick.aco||0)+dt; if(roleTick.aco>=120){ roleTick.aco=0; earn(10*save.acolytes*(policy("festival")?1.5:1),`Acolyte donations (${save.acolytes})`,"#ff3f5a"); } }
+  // npcs in my scene
+  const L=cityGen(me.scene); const stars=heatStars();
+  for(const n of L){ if(n.say&&T-n.say.t>4) n.say=null;
+    if(n.k==="bot"&&n.out){ if(now>n.out){ n.out=0; n.x=n.min+Math.random()*(n.max-n.min); } else continue; }
+    if(n.k==="cop"){ const chaseAt=policy("crackdown")?1:2; const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5);
+      if(n.state!=="chase"&&stars>=chaseAt&&!jailed()&&d<300&&$("#overlay").hidden){ n.state="chase"; npcSay(n,"STOP! Police!"); beep(1200,.08,"square"); setTimeout(()=>beep(900,.08,"square"),120); }
+      if(n.state==="chase"){ if(stars<chaseAt||jailed()||d>460){ n.state="patrol"; n.vx=24*(n.vx<0?-1:1); npcSay(n,stars?"Lost 'em.":"Carry on."); continue; }
+        const sp=165; n.x+=Math.sign(me.x-n.x)*Math.min(Math.abs(me.x-n.x),sp*dt); n.y+=Math.sign(me.y-n.y)*Math.min(Math.abs(me.y-n.y),sp*.6*dt); n.dir=me.x>=n.x?1:-1; n.phase+=dt*9;
+        if(d<22){ n.state="patrol"; npcSay(n,"You're under arrest."); goJail(stars,"Caught by "+n.name,null); } continue; } }
+    if(n.k==="bot"&&!jailed()&&!roleIs("police")&&now>gangCd&&$("#overlay").hidden){ const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5); if(d<70&&!n.mug){ n.mug=1; gangMug(n); } }
+    if(n.pause>0){ n.pause-=dt; continue; }
+    if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; n.x=clamp(n.x,n.min,n.max); } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; }
+    if(n.k==="civ"&&Math.random()<dt/40){ n.pause=2+Math.random()*3; if(Math.random()<.4) npcSay(n,n.hurt?"Ugh… I need a medic.":n.buyer&&roleIs("dealer")?"Psst… holding any Dust?":CIV_LINES[(Math.random()*CIV_LINES.length)|0]); }
+    if(n.k==="civ"&&!n.hurt&&Math.random()<dt/400) n.hurt=true;
+    if(n.k==="civ"&&n.purse<80&&Math.random()<dt/60) n.purse+=5; }
+  // acolytes follow me
+  roleTick.acoTrail=roleTick.acoTrail||[]; roleTick.acoTrail.unshift({x:me.x,y:me.y}); roleTick.acoTrail.length=Math.min(roleTick.acoTrail.length,120);
+  // jail clamp
+  if(jailed()&&me.scene==="prison"){ me.x=clamp(me.x,PRISON.x0,PRISON.x1); if(me.y<292) me.y=clamp(me.y,292,LANE.bot); }
+}
+const roleTick={};
+function drawGangBot(c,x,y,s,t,n){ c.save(); c.translate(x,y); c.scale(s,s); const dir=n.dir||1, st=Math.sin((n.phase||0))*3;
+  c.fillStyle="rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(0,0,14,4,0,0,7); c.fill();
+  c.fillStyle="#3a2a24"; c.fillRect(-6,-22,4,22+st*.4); c.fillRect(2,-22,4,22-st*.4); c.fillStyle="#5a3a2a"; c.fillRect(-11,-52,22,30); c.fillStyle="#7a4a30"; c.fillRect(-11,-52,22,5);
+  c.fillStyle="#8a5a3a"; c.beginPath(); c.moveTo(-14,-50); c.lineTo(-11,-58); c.lineTo(-8,-50); c.moveTo(14,-50); c.lineTo(11,-58); c.lineTo(8,-50); c.fill();
+  c.fillStyle="#4a3028"; c.fillRect(-13,-48,4,20+st*.3); c.fillRect(9,-48,4,20-st*.3); c.fillStyle="#2a1a16"; c.fillRect(-9,-70,18,16); c.fillStyle="#ff2a2a"; glowOn(c,"#ff2a2a",8); c.fillRect(dir>0?-2:-8,-65,10,3); c.shadowBlur=0;
+  c.fillStyle="#9a9aa8"; for(let k=0;k<4;k++) c.fillRect(-7+k*4,-56,2,3); c.strokeStyle="#6a6a74"; c.lineWidth=1; c.beginPath(); c.moveTo(4,-70); c.lineTo(7,-80); c.stroke(); c.fillStyle=Math.sin(t*6)>0?"#ff2a2a":"#401010"; c.beginPath(); c.arc(7,-81,1.6,0,7); c.fill();
+  c.fillStyle="#38e8ff"; c.font="bold 5px monospace"; c.textAlign="center"; c.fillText("⚙",0,-36); c.restore();
+  c.save(); c.textAlign="center"; c.font="9px monospace"; c.fillStyle="#ff7a5a"; c.fillText(n.name.toUpperCase(),x,y-92*s); c.restore();
+  if(n.say&&T-n.say.t<4){ c.save(); c.font="11px 'IBM Plex Mono',monospace"; const w=Math.min(220,c.measureText(n.say.text).width+14), by=y-108*s; c.fillStyle="rgba(22,7,7,.92)"; c.strokeStyle="#ff5a4a"; c.fillRect(x-w/2,by-14,w,20); c.strokeRect(x-w/2+.5,by-13.5,w-1,19); c.fillStyle="#ffd8d0"; c.textAlign="center"; c.fillText(n.say.text,x,by); c.restore(); } }
+function cityEnts(ents){ const L=cityGen(me.scene);
+  for(const n of L){ if(n.k==="bot"){ if(n.out) continue; ents.push({x:n.x,y:n.y,draw:(c,x,y,s,t)=>drawGangBot(c,x,y,s,t,n)}); continue; }
+    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!(n.pause>0),look:n.look,name:n.name+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null}}); }
+  // acolytes behind cult leaders (me and peers)
+  const acoLook=i=>({jacket:0,pants:0,skin:(i*3)%5,style:1,visor:0,hat:0});
+  if(roleIs("cult")&&save.acolytes&&me.scene!=="void"){ const tr=roleTick.acoTrail||[]; for(let i=0;i<save.acolytes;i++){ const p=tr[Math.min(tr.length-1,14+i*12)]||me; ents.push({x:p.x-(me.dir||1)*(22+i*16),y:clamp(p.y+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:me.dir,phase:me.phase+i,moving:me.moving,look:acoLook(i),name:"",rk:"cult",cu:save.myCult?{by:myId,...save.myCult}:null,aco:1}}); } }
+  for(const p of peers.values()) if(p.ac&&p.s===me.scene&&(p.home||null)===curHomeKey()) for(let i=0;i<p.ac;i++) ents.push({x:p.dx-(p.dir||1)*(26+i*16),y:clamp(p.dy+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:p.dir,phase:p.phase+i,moving:p.moving,look:acoLook(i),name:"",rk:"cult",cu:p.cu,aco:1}}); }
+
+/* ---------- jail ---------- */
+function goJail(stars,why,byCop){ if(jailed()) return 0; stars=Math.max(1,stars||1); let sec=40*stars*(policy("crackdown")?1.5:1)*(policy("amnesty")?.5:1); const fine=Math.min(400,Math.floor(save.credits*.1));
+  save.credits-=fine; save.jail={until:Date.now()+sec*1000,why:String(why||"").slice(0,60),stars}; save.heat=0; save.heatAt=Date.now(); rstat("jailed"); persist();
+  closePanel(); go("prison"); me.x=PRISON.spawn; me.y=308; pushPresence(true); beep(200,.3,"square");
+  card(`⛓ Arrested${why?": "+why:""}. ${Math.round(sec)}s in Rust Gate Prison${fine?`, fined ₵${fine}`:""}. Work jobs, lift, or risk a tunnel to get out — or pay bail.`,[["OK",null,true]],15e3);
+  chatLine(null,`You were arrested (${"★".repeat(stars)}). Jail: ${Math.round(sec)}s.`,"sys"); return fine; }
+function bailCost(){ return Math.ceil(jailLeft()/10)*25; }
+
+/* ---------- hotspots ---------- */
+function cityHot(sc){ const out=[]; const ax=ATM_SPOTS[sc];
+  if(ax!=null) out.push({x:ax,hw:22,label:roleIs("hacker")?(rcd("atm_"+sc)?`ATM (cracked · ${cdTxt(rcd("atm_"+sc))})`:"Hack this ATM 💻"):"ATM: check balance",act:()=>roleIs("hacker")?hackATM(sc):toast(`Balance: ₵${Math.floor(save.credits).toLocaleString()}`)});
+  if(sc==="prison") return prisonHot();
+  if(sc!=="civic") return out;
+  return [...out,{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:CIVIC.hall,hw:90,label:"City Hall: choose your role",act:()=>openRoleOffice()},{x:CIVIC.vote,hw:50,label:"Elections & Mayor's Office",act:()=>openElection()},
+    {x:CIVIC.precinct,hw:70,label:"Precinct 9: wanted board & police",act:()=>openPrecinct()},{x:1266,hw:40,label:"Read the Wanted board",act:()=>openPrecinct()},{x:CIVIC.clinic,hw:80,label:"Clinic: patch-ups & medic station",act:()=>openClinic()},
+    {x:CIVIC.crate,hw:50,label:"Black Market crate",act:()=>openBlackMarket()},{x:CIVIC.term,hw:40,label:"Hacker terminal: scrub records",act:()=>openTerminal()}]; }
+function platePress(){ if(!jailed()) return; save.jail.until-=8000; persist(); beep(300,.05,"square"); emote("use"); toast(`Clunk. ${jailLeft()}s left.`); }
+function payBail(){ const c=bailCost(); if(save.credits<c){ toast(`Bail is ₵${c}. You have ₵${Math.floor(save.credits)}.`); return; } save.credits-=c; save.jail.until=Date.now()-1; persist(); toast(`Bail paid: ₵${c}.`,"#43f0a4"); }
+
+/* ---------- role actions near you ---------- */
+function near(px,py,r){ return Math.abs(px-me.x)<r&&Math.abs(py-me.y)<55; }
+const NO_CRIME=["home","vip","ascend","story","line","void"];
+function roleActions(){ const A=[]; if(jailed()||me.dead) return A; const sc=me.scene, rk=pRole(), L=cityGen(sc);
+  const ps=[...peers.values()].filter(p=>p.by&&p.s===sc&&(p.home||null)===curHomeKey()&&near(p.dx,p.dy,70)&&!p.jl).sort((a,b)=>Math.abs(a.dx-me.x)-Math.abs(b.dx-me.x));
+  for(const p of ps){ const nm=nameOf(p.by);
+    if(rk==="police"&&p.hz>0) A.push({l:`Arrest ${nm} ${"★".repeat(p.hz)}`,f:()=>doArrest(p),hot:1});
+    if(rk==="thief"&&!NO_CRIME.includes(sc)) A.push({l:rcd("steal")?`Steal (${cdTxt(rcd("steal"))})`:`Pick ${nm}'s pocket`,f:()=>doSteal(p)});
+    if(rk==="medic") A.push({l:p.dead?`Revive ${nm}`:`Treat ${nm}`,f:()=>doTreat(p),hot:p.dead});
+    if(rk==="hacker"&&p.hz>0) A.push({l:`Offer to scrub ${nm}'s record (₵150)`,f:()=>doScrubOffer(p)});
+    if(rk==="cult"&&save.myCult&&!(p.cu&&p.cu.by===myId)) A.push({l:`Invite ${nm} to ${save.myCult.n}`,f:()=>doCultInvite(p)}); }
+  const ns=L.filter(n=>near(n.x,n.y,60)&&!(n.k==="bot"&&n.out)).sort((a,b)=>Math.abs(a.x-me.x)-Math.abs(b.x-me.x));
+  for(const n of ns){
+    if(n.k==="bot"){ A.push({l:rk==="police"?`Bust ${n.name} (+₵80)`:`Fight ${n.name}`,f:()=>fightBot(n,rk==="police"),hot:1}); continue; }
+    if(n.k==="cop"){ if(heatStars()) A.push({l:`Turn yourself in to ${n.name}`,f:()=>{ goJail(Math.max(1,Math.floor(heatStars()/2)),"Turned yourself in"); }}); else A.push({l:`Talk to ${n.name}`,f:()=>npcSay(n,["Move along, citizen.","Keep your nose clean.","Rust Jaws were spotted east of here.","Quiet night. Too quiet."][(Math.random()*4)|0])}); continue; }
+    if(rk==="thief") A.push({l:rcd("pp_"+n.name)?`${n.name}'s pockets are empty (${cdTxt(rcd("pp_"+n.name))})`:`Pickpocket ${n.name}`,f:()=>pickpocket(n)});
+    if(rk==="medic"&&n.hurt) A.push({l:`Treat ${n.name} 🩹 (+₵40)`,f:()=>treatNpc(n),hot:1});
+    if(rk==="dealer"&&n.buyer) A.push({l:save.dust?`Sell Neon Dust to ${n.name} 💊`:`${n.name} wants Dust (buy at the Black Market)`,f:()=>streetDeal(n)});
+    if(rk==="cult") A.push({l:save.acolytes>=4?"You have 4 acolytes (max)":`Recruit ${n.name} as an acolyte`,f:()=>recruit(n)});
+    if(rk==="politician") A.push({l:`Ask ${n.name} for their vote`,f:()=>{ npcSay(n,Math.random()<.6?"You've got my vote!":"Politicians. Ugh."); }});
+    A.push({l:`Talk to ${n.name}`,f:()=>npcSay(n,n.hurt?"I got jumped by the Rust Jaws… need a medic.":CIV_LINES[(Math.random()*CIV_LINES.length)|0])}); }
+  if(rk==="cult"&&save.myCult&&!NO_CRIME.includes(sc)) A.push({l:rcd("ritual")?`Ritual (${cdTxt(rcd("ritual"))})`:"Hold a ritual 🜏",f:()=>doRitual()});
+  if(rk==="politician"&&!["home","vip","story","line"].includes(sc)) A.push({l:rcd("rally")?`Rally (${cdTxt(rcd("rally"))})`:"Hold a campaign rally 🎙",f:()=>doRally()});
+  return A; }
+
+/* ---------- abilities ---------- */
+const pending={};
+function rEmit(d){ if(!ROOM){ toast("You need to be online with other players for that."); return false; } ROOM.emit("role",d).catch(()=>{}); return true; }
+function doArrest(p){ if(rcd("arrest")) return toast(`Radio is busy (${cdTxt(rcd("arrest"))}).`); setCd("arrest",8e3); pending["arrest:"+p.by]=Date.now(); if(rEmit({k:"arrest",to:p.by})){ me.emote={e:"atk",t:T}; toast(`Cuffing ${nameOf(p.by)}…`,"#5aa0ff"); } }
+function doSteal(p){ if(rcd("steal")) return toast(`Lay low for ${cdTxt(rcd("steal"))}.`); setCd("steal",12e4); persist(); pending["steal:"+p.by]=Date.now(); if(rEmit({k:"steal",to:p.by})){ me.emote={e:"use",t:T}; } }
+function doTreat(p){ if(rcd("treat_"+p.by)) return toast(`${nameOf(p.by)} was treated recently (${cdTxt(rcd("treat_"+p.by))}).`); setCd("treat_"+p.by,18e4); pending["treat:"+p.by]=Date.now(); if(rEmit({k:"treat",to:p.by})){ emote("use"); toast(`Treating ${nameOf(p.by)}…`,"#43f0a4"); } }
+function doScrubOffer(p){ if(rcd("scrub_"+p.by)) return toast("Offer already sent."); setCd("scrub_"+p.by,6e4); pending["scrub:"+p.by]=Date.now(); if(rEmit({k:"scrub_offer",to:p.by})) toast(`Offer sent to ${nameOf(p.by)}.`,"#38e8ff"); }
+function doCultInvite(p){ if(rcd("inv_"+p.by)) return toast("Invite already sent."); setCd("inv_"+p.by,9e4); pending["cult:"+p.by]=Date.now(); if(rEmit({k:"cult_invite",to:p.by,n:save.myCult.n,col:save.myCult.col})) toast(`Invited ${nameOf(p.by)} to ${save.myCult.n}.`,save.myCult.col); }
+function doRitual(){ if(rcd("ritual")) return toast(`The spirits need rest (${cdTxt(rcd("ritual"))}).`); setCd("ritual",20*6e4); persist(); const col=save.myCult.col; ritualFx[myId]={t:T,s:me.scene,col,x:me.x,y:me.y}; emote("pose"); beep(110,.6,"sine"); setTimeout(()=>beep(165,.6,"sine"),300);
+  rEmit({k:"ritual",s:me.scene,n:save.myCult.n,col}); const ac=save.acolytes; if(ac) earn(25*ac*(policy("festival")?1.5:1),`Ritual offerings from ${ac} acolyte${ac>1?"s":""}`,col); rstat("rituals"); broadcastSys(`is holding a ${save.myCult.n} ritual in ${sceneName(me.scene)}`); }
+function doRally(){ if(rcd("rally")) return toast(`Your voice needs rest (${cdTxt(rcd("rally"))}).`); setCd("rally",10*6e4); persist(); emote("cheer"); const L=cityGen(me.scene).filter(n=>n.k==="civ"&&Math.abs(n.x-me.x)<260); L.forEach((n,i)=>setTimeout(()=>npcSay(n,["WOO!","Four more years!","You've got my vote!","Fix the street lights!"][i%4]),200*i));
+  const g=Math.round((30*L.length+20)*(policy("festival")?1.5:1)); earn(g,`Rally donations (${L.length} in the crowd)`,"#ffd36a"); rstat("rallies"); broadcastSys(`is holding a campaign rally in ${sceneName(me.scene)}${save.slogan?`: "${save.slogan}"`:""}`); }
+function pickpocket(n){ const k="pp_"+n.name; if(rcd(k)) return toast(`${n.name}'s pockets are empty.`); if(rcd("pp")) return toast(`Easy… wait ${cdTxt(rcd("pp"))}.`); setCd("pp",8e3); setCd(k,5*6e4); emote("use");
+  const copNear=cityGen(me.scene).some(c=>c.k==="cop"&&Math.abs(c.x-me.x)<320); const ok=Math.random()<(copNear?.5:.72);
+  if(ok){ const amt=Math.max(10,Math.min(n.purse,15+Math.floor(Math.random()*46))); n.purse=Math.max(0,n.purse-amt); save.credits+=amt; rstat("pickpockets"); let extra=""; if(Math.random()<.15){ const pool=CAT.filter(i=>i.r==="common"&&i.t!=="build"&&i.t!=="food"&&i.t!=="drink"&&!i.bound); const it=pool[(Math.random()*pool.length)|0]; if(it){ addItem(it.id); extra=` and a ${it.n}`; } }
+    persist(); toast(`Lifted ₵${amt}${extra} from ${n.name}.`,"#a0a6bc"); beep(1200,.05); addHeat(1,"pickpocket"); }
+  else { npcSay(n,"THIEF! Somebody stop them!"); n.vx=(n.x>me.x?1:-1)*60; addHeat(2,"spotted pickpocketing"); beep(160,.2,"square"); } }
+function treatNpc(n){ if(!n.hurt) return; n.hurt=false; npcSay(n,"Thank you, doc!"); emote("use"); rstat("heals"); earn(40*(policy("healthcare")?2:1),`Treated ${n.name}`,"#43f0a4"); }
+function streetDeal(n){ if(!save.dust) return toast("You're out of Neon Dust. Restock at the Black Market crate in the Civic Center alley."); if(rcd("deal")) return toast(`Too hot right now (${cdTxt(rcd("deal"))}).`); setCd("deal",15e3);
+  save.dust--; n.buyer=false; setTimeout(()=>{ n.buyer=true; },6*6e4); const pay=Math.round((55+Math.random()*35)*(policy("freemarket")?1.2:1)); emote("use"); npcSay(n,"Pleasure doing business."); rstat("deals"); earn(pay,`Sold Neon Dust to ${n.name}`,"#c95cff");
+  const copNear=cityGen(me.scene).some(c=>c.k==="cop"&&Math.abs(c.x-me.x)<300); addHeat(copNear?2:1,copNear?"a cop saw the deal":"street deal"); }
+function recruit(n){ if(save.acolytes>=4) return toast("Four acolytes is all you can lead."); if(rcd("recruit")) return toast(`Wait ${cdTxt(rcd("recruit"))}.`); setCd("recruit",3e4);
+  if(Math.random()<.5){ save.acolytes++; const L=cityGen(me.scene); L.splice(L.indexOf(n),1); persist(); pushPresence(true); toast(`${n.name} joined ${save.myCult.n}. They follow you now.`,save.myCult.col); rstat("recruits"); beep(220,.3,"sine"); }
+  else npcSay(n,["Not interested.","Is this a pyramid scheme?","Maybe later…","Get away from me, weirdo."][(Math.random()*4)|0]); }
+function fightBot(n,police){ if(n.out) return; gangCd=Date.now()+15e3; emote("atk"); const wpn=String(save.look&&save.look.hand||"").startsWith("wpn_"); const win=police||Math.random()<(.45+(wpn?.3:0));
+  if(win){ n.out=Date.now()+3*6e4; n.mug=0; const pay=police?80:30+Math.floor(Math.random()*30), ch=police?5:3+Math.floor(Math.random()*5); save.chips+=ch; earn(pay,police?`Busted ${n.name} (+${ch} chips)`:`Scrapped ${n.name} (+${ch} chips)`,"#ff7a5a"); rstat(police?"busts":"botwins"); beep(1400,.06); }
+  else { const lose=Math.min(Math.floor(save.credits),20+Math.floor(Math.random()*40)); save.credits-=lose; persist(); npcSay(n,"Pathetic, meatbag."); toast(`${n.name} knocked you down and took ₵${lose}.`,"#ff5a4a"); me.slowUntil=T+4; beep(120,.25,"square"); } }
+function gangMug(n){ const amt=Math.max(10,Math.min(150,Math.floor(save.credits*.08))); npcSay(n,"Credits or circuits, meatbag!"); beep(140,.2,"square"); gangCd=Date.now()+9e4;
+  card(`⚙ ${n.name} of the Rust Jaws blocks your path: "Hand over ₵${amt}!"`,[["Pay ₵"+amt,()=>{ const a=Math.min(amt,Math.floor(save.credits)); save.credits-=a; persist(); toast(`You paid the Rust Jaws ₵${a}.`,"#ff7a5a"); n.mug=0; },false],["Fight back",()=>{ fightBot(n,false); },true],["Run!",()=>{ me.x=clamp(me.x+(me.x<n.x?-140:140),30,SCENES[me.scene].w-30); n.mug=0; toast("You slipped away."); },false]],2e4);
+  setTimeout(()=>{ n.mug=0; },2e4); }
+function hackATM(sc){ const k="atm_"+sc; if(rcd(k)) return toast(`This ATM's security reset. Try again in ${cdTxt(rcd(k))}.`);
+  const body=panel("ATM // breach",`Enter the 4 codes in order before the trace finishes.`); currentView=null; const codes=["0xA3","0x7F","0x1C","0xE9","0x5B","0xD2","0x88","0x3E"]; const seq=[...codes].sort(()=>Math.random()-.5).slice(0,4); let i=0, done=false;
+  const tgt=el("div",{class:"bigcode sm",text:seq.join("  ")}); const bar=el("div",{style:"height:6px;background:#2a1f44;border-radius:3px;overflow:hidden"},el("div",{style:"height:100%;width:100%;background:#38e8ff;transition:width 7s linear"})); const st=el("div",{class:"sub",text:"Trace: 7 s"});
+  const g=el("div",{class:"grid",style:"grid-template-columns:repeat(4,1fr);gap:6px"}); for(const c of [...codes].sort(()=>Math.random()-.5)) g.append(el("button",{class:"btn",type:"button",text:c,onclick:e=>{ if(done) return; if(c===seq[i]){ e.target.disabled=true; i++; beep(900+i*150,.05); if(i===4){ done=true; win(); } } else { done=true; fail("Wrong code: the bank flagged you."); } }}));
+  body.append(tgt,bar,st,g); requestAnimationFrame(()=>{ bar.firstChild.style.width="0%"; }); const to=setTimeout(()=>{ if(!done){ done=true; fail("Trace complete. Cameras got your face."); } },7000);
+  function win(){ clearTimeout(to); setCd(k,5*6e4); const amt=90+Math.floor(Math.random()*111); save.credits+=amt; rstat("hacks"); persist(); st.textContent=`ACCESS GRANTED · +₵${amt}`; toast(`ATM cracked: +₵${amt}`,"#38e8ff"); addHeat(2,"ATM breach"); setTimeout(closePanel,900); }
+  function fail(why){ clearTimeout(to); setCd(k,2*6e4); persist(); st.textContent=why; addHeat(1,"failed hack"); beep(150,.2,"square"); } }
+
+/* ---------- multiplayer role events ---------- */
+const ritualFx={}; let lastStolenAt=0;
+function peerOf(by){ for(const p of peers.values()) if(p.by===by) return p; return null; }
+function onRoleEv(m){ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; const from=peerOf(m.by), who=nameOf(m.by); resolveNames([m.by]);
+  if(d.k==="ritual"){ if(d.s===me.scene&&from){ ritualFx[m.by]={t:T,s:d.s,col:/^#[0-9a-f]{6}$/i.test(d.col)?d.col:"#ff3f5a",x:from.dx,y:from.dy};
+      if(save.cult&&save.cult.by===m.by&&!jailed()){ save.buffs=save.buffs||{}; const u=Date.now()+10*6e4; save.buffs.luck=Math.max(+save.buffs.luck||0,u); save.buffs.tips=Math.max(+save.buffs.tips||0,u); save.credits+=25; persist(); toast(`Blessed by ${String(d.n||"the cult").slice(0,24)}: Lucky salvage + tips for 10 min, +₵25`,save.cult.col); rEmit({k:"ritual_ok",to:m.by}); } } return; }
+  if(d.to!==myId) return;
+  const sameSc=from&&from.s===me.scene&&Math.abs(from.dx-me.x)<220;
+  switch(d.k){
+    case "arrest": if(!from||from.rl!=="police"||!sameSc||jailed()) return; if(heatStars()>0){ const st=heatStars(); const fine=goJail(st,`Arrested by Officer ${who}`); rEmit({k:"arrested",to:m.by,st,fine}); } else rEmit({k:"arrest_clean",to:m.by}); return;
+    case "arrested": if(!pending["arrest:"+m.by]||Date.now()-pending["arrest:"+m.by]>15e3) return; delete pending["arrest:"+m.by]; { const st=Math.max(1,Math.min(5,+d.st||1)); rstat("arrests"); earn(80*st*(policy("crackdown")?1.5:1),`Arrested ${who} (${"★".repeat(st)})`,"#5aa0ff"); broadcastSys(`arrested ${who} and sent them to Precinct 9 holding`); } return;
+    case "arrest_clean": if(pending["arrest:"+m.by]){ delete pending["arrest:"+m.by]; toast(`${who} is clean. No warrant.`,"#9a8cc0"); } return;
+    case "steal": if(!from||from.rl!=="thief"||!sameSc||NO_CRIME.includes(me.scene)) return;
+      if(pRole()==="police"){ rEmit({k:"steal_caught",to:m.by}); toast(`${who} tried to rob a cop. Big mistake.`,"#5aa0ff"); rstat("arrests"); earn(80*(policy("crackdown")?1.5:1),`Caught ${who} red-handed`,"#5aa0ff"); return; }
+      if((roleIs("worker")&&onShift())||Date.now()-lastStolenAt<10*6e4||save.credits<50||Math.random()<.4){ rEmit({k:"steal_fail",to:m.by}); toast(`${who} tried to pick your pocket!`,"#ff5a4a"); return; }
+      { const amt=Math.min(300,Math.floor(save.credits*.06)); save.credits-=amt; lastStolenAt=Date.now(); persist(); rEmit({k:"stolen",to:m.by,amt}); card(`🦝 ${who} picked your pocket: −₵${amt}. They're Wanted now. Find a cop!`,[["OK",null,true]],2e4); chatLine(null,`${who} stole ₵${amt} from you.`,"sys"); } return;
+    case "stolen": if(!pending["steal:"+m.by]||Date.now()-pending["steal:"+m.by]>15e3) return; delete pending["steal:"+m.by]; { const amt=Math.max(0,Math.min(300,Math.floor(+d.amt||0))); save.credits+=amt; rstat("stolen",amt); persist(); toast(`Lifted ₵${amt} from ${who}!`,"#a0a6bc"); beep(1300,.05); addHeat(2,"robbed a runner"); } return;
+    case "steal_fail": if(pending["steal:"+m.by]){ delete pending["steal:"+m.by]; toast(`${who} caught your hand. Busted.`,"#ff5a4a"); addHeat(2,"botched robbery"); } return;
+    case "steal_caught": if(pending["steal:"+m.by]){ delete pending["steal:"+m.by]; goJail(Math.max(2,heatStars()),`Tried to rob Officer ${who}`); } return;
+    case "treat": if(!from||from.rl!=="medic"||!sameSc) return; { save.buffs=save.buffs||{}; save.buffs.speed=Math.max(+save.buffs.speed||0,Date.now()+5*6e4); try{ if(me.scene==="void"){ myHP=100; if(me.dead){ me.dead=false; } } }catch(e){} persist(); hud(); toast(`${who} patched you up: Speed for 5 min${me.scene==="void"?" and full HP":""}.`,"#43f0a4"); rEmit({k:"treated",to:m.by}); pushPresence(true); } return;
+    case "treated": if(!pending["treat:"+m.by]) return; delete pending["treat:"+m.by]; rstat("heals"); earn(60*(policy("healthcare")?2:1),`Treated ${who}`,"#43f0a4"); return;
+    case "scrub_offer": if(!from||from.rl!=="hacker"||!heatStars()) return; card(`💻 ${who} offers to wipe your Wanted record for ₵150.`,[["Pay ₵150",()=>{ if(save.credits<150){ toast("Not enough credits."); return; } if(!heatStars()) return; save.credits-=150; save.heat=0; persist(); pushPresence(true); rEmit({k:"scrub_paid",to:m.by}); toast("Record wiped. You're clean.","#38e8ff"); },true],["No thanks",null]],3e4); return;
+    case "scrub_paid": if(!pending["scrub:"+m.by]||Date.now()-pending["scrub:"+m.by]>45e3) return; delete pending["scrub:"+m.by]; rstat("scrubs"); earn(150,`Scrubbed ${who}'s record`,"#38e8ff"); return;
+    case "cult_invite": { const n=String(d.n||"").slice(0,24), col=/^#[0-9a-f]{6}$/i.test(d.col)?d.col:"#ff3f5a"; if(!n||!from||from.rl!=="cult") return; card(`🜏 ${who} invites you to join the cult "${n}".`,[["Join",()=>{ save.cult={by:m.by,n,col}; persist(); pushPresence(true); rEmit({k:"cult_join",to:m.by}); toast(`You joined ${n}. Their rituals bless you.`,col); },true],["Decline",null]],45e3); } return;
+    case "cult_join": if(!pending["cult:"+m.by]) return; delete pending["cult:"+m.by]; save.followers=[...new Set([...(save.followers||[]),m.by])].slice(0,60); persist(); toast(`${who} joined ${save.myCult?save.myCult.n:"your cult"}!`,save.myCult?save.myCult.col:"#ff3f5a"); return;
+    case "ritual_ok": if(roleIs("cult")){ if(rcd("rok_"+m.by)) return; setCd("rok_"+m.by,15*6e4); earn(40*(policy("festival")?1.5:1),`${who} received your blessing`,save.myCult?save.myCult.col:"#ff3f5a"); } return;
+  } }
+
+/* ---------- elections (stored in the club collection: one vote doc per voter) ---------- */
+function termNow(){ return Math.floor(Date.now()/TERM_MS); }
+function termLeftTxt(){ const ms=(termNow()+1)*TERM_MS-Date.now(), h=Math.floor(ms/36e5); return h>=24?`${Math.floor(h/24)}d ${h%24}h`:`${h}h ${Math.floor(ms%36e5/6e4)}m`; }
+let elDocs={cur:{},prev:{}}, elWatched=0;
+function elWatch(){ if(elWatched||!DB) return; elWatched=1; const N=termNow();
+  const take=k=>s=>{ const o={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["vote","cand","city"].includes(v.kind)) o[d.id]=v; }); elDocs[k]=o; if(currentView==="election") openElection(); };
+  try{ DB.collection("club").where("term","==",N).onSnapshot(take("cur"),()=>{}); DB.collection("club").where("term","==",N-1).onSnapshot(take("prev"),()=>{}); }catch(e){}
+  setTimeout(()=>{ elWatched=0; },Math.max(6e4,(N+1)*TERM_MS-Date.now()+2000)); }
+function tally(docs){ const cands={}; for(const [id,v] of Object.entries(docs)) if(v.kind==="cand"&&id.startsWith("ec_")) cands[id.slice(3)]={uid:id.slice(3),name:String(v.name||"Runner").slice(0,24),slogan:String(v.slogan||"").slice(0,60),at:+v.at||0,votes:0};
+  for(const [id,v] of Object.entries(docs)) if(v.kind==="vote"&&id.startsWith("ev_")&&cands[v.cand]) cands[v.cand].votes++; return Object.values(cands).sort((a,b)=>b.votes-a.votes||a.at-b.at); }
+function candList(){ return tally(elDocs.cur); }
+function mayorId(){ const t=tally(elDocs.prev); return t.length&&t[0].votes>0?t[0].uid:null; }
+function cityPolicies(){ const m=mayorId(); if(!m) return []; const d=elDocs.cur["city_"+termNow()]; return d&&d.by===m&&Array.isArray(d.pol)?d.pol.filter(k=>POLICIES[k]).slice(0,2):[]; }
+function wantedList(){ const L=[]; if(heatStars()) L.push({name:myName||"You",hz:heatStars(),s:me.scene,me:1}); for(const p of onlinePeers()) if(p.hz>0) L.push({name:nameOf(p.by),hz:p.hz,s:p.s}); return L.sort((a,b)=>b.hz-a.hz); }
+
+/* ---------- panels ---------- */
+function roleCard(k){ const R=ROLES[k]; const mine=pRole()===k; const c=el("div",{class:"card",style:`text-align:left;padding:10px;border-color:${mine?R.col:"var(--line)"}`});
+  const lk={...fullLook(save.look)}; const cv=lookCanvas(lk,70); cv._roleK=k; cv.style.cssText="width:70px;height:70px;float:right;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 75%);border-radius:6px";
+  c.append(cv,el("div",{style:`font-family:var(--f-display);color:${R.col};font-size:14px`,text:`${R.ic} ${R.n}`}),el("div",{class:"sub",style:"margin:4px 0",text:R.d}),el("ul",{style:"margin:6px 0 8px 16px;padding:0;font-size:11px;line-height:1.45"},...R.perks.map(p=>el("li",{text:p}))));
+  const left=save.role&&!mine?Math.max(0,(save.roleAt||0)+ROLE_SWITCH_MS-Date.now()):0; const b=el("button",{class:"btn"+(mine?"":" hot"),type:"button",text:mine?"Your role":left?`Switch in ${cdTxt(left)}`:`Become a ${R.n}`,onclick:()=>chooseRole(k)}); if(mine||left||jailed()||heatStars()) b.disabled=true; c.append(b); return c; }
+function chooseRole(k){ if(jailed()) return toast("Not from a jail cell."); if(heatStars()) return toast("City Hall won't process Wanted runners. Lose the heat first.");
+  if(k==="cult"&&!save.myCult) return openFoundCult();
+  const was=pRole(); save.role=k; save.roleAt=Date.now(); if(was==="cult"&&k!=="cult"){ save.acolytes=0; } persist(); pushPresence(true); toast(`You're now a ${ROLES[k].n}.`,ROLES[k].col); beep(700,.08); setTimeout(()=>beep(1050,.12),90);
+  broadcastSys(`became a ${ROLES[k].n}${k==="cult"?` and founded "${save.myCult.n}"`:""}`); openRoleOffice(); }
+function openFoundCult(){ const body=panel("Found your cult","Every movement needs a name and a color."); currentView=null; const cols=["#ff3f5a","#c95cff","#38e8ff","#43f0a4","#ffd36a","#ff7a1a"]; let col=cols[0];
+  const inp=el("input",{type:"text",maxlength:"24",value:"Order of the Neon Eye",style:"width:100%;padding:8px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
+  const sw=el("div",{class:"row"}); for(const c of cols){ const b=el("button",{class:"btn",type:"button",style:`width:34px;height:34px;padding:0;background:${c}`,"aria-label":"Cult color "+c,onclick:()=>{ col=c; [...sw.children].forEach(x=>x.style.outline=""); b.style.outline="2px solid #fff"; }}); sw.append(b); } sw.firstChild.style.outline="2px solid #fff";
+  body.append(el("label",{class:"sub",text:"Cult name"}),inp,el("label",{class:"sub",text:"Cult color"}),sw,el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Found the cult",onclick:()=>{ const n=inp.value.trim().slice(0,24); if(!n) return toast("Give your cult a name."); save.myCult={n,col}; chooseRole("cult"); }}),el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openRoleOffice()}))); setTimeout(()=>inp.focus(),50); }
+function openRoleOffice(){ const body=panel("City Hall · Role Office","Pick the life you want in Sector 9. Your role changes what you can do everywhere in the city."); currentView="roles";
+  const R=ROLES[pRole()]; body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:R?`You're a ${R.n} ${R.ic}`:"You're a civilian"}),el("span",{class:"sub",text:R?"Press R (or tap your role chip) near people to use your abilities.":"Civilians can't use role abilities. Pick a role below."}),
+    heatStars()?el("span",{class:"r-epic",text:`Wanted ${"★".repeat(heatStars())}: it fades over time, or get scrubbed by a hacker.`}):null,save.cult?el("span",{style:`color:${save.cult.col}`,text:`Member of ${save.cult.n}`}):null)));
+  if(save.role) body.append(el("div",{class:"sub",text:`You can switch roles every 6 hours. Wanted runners can't switch.`}));
+  const g=el("div",{class:"grid",style:"grid-template-columns:repeat(auto-fill,minmax(250px,1fr))"}); for(const k of Object.keys(ROLES)) g.append(roleCard(k)); body.append(g);
+  const row=el("div",{class:"row"}); if(save.role) row.append(el("button",{class:"btn",type:"button",text:"Go back to civilian life",onclick:()=>{ if(heatStars()||jailed()) return toast("Not while Wanted."); save.role=""; save.roleAt=Date.now(); save.acolytes=0; persist(); pushPresence(true); openRoleOffice(); }}));
+  if(roleIs("worker")){ const d=ymd(Date.now()); const got=save.union&&save.union.day===d; const b=el("button",{class:"btn hot",type:"button",text:got?"Union stipend collected today":"Collect union stipend (₵250)",onclick:()=>{ save.union=save.union||{ms:0,day:""}; if(save.union.day===d) return; save.union.day=d; earn(250,"Union stipend","#ffb84a"); openRoleOffice(); }}); if(got) b.disabled=true; row.append(b); }
+  if(save.cult) row.append(el("button",{class:"btn",type:"button",text:`Leave ${save.cult.n}`,onclick:()=>{ save.cult=null; persist(); pushPresence(true); openRoleOffice(); }}));
+  body.append(row); const st=save.rstat||{}; const sl=Object.entries(st).filter(([k,v])=>v>0); if(sl.length) body.append(el("div",{class:"sub",text:"Your record: "+sl.map(([k,v])=>`${k} ${v.toLocaleString()}`).join(" · ")})); }
+function openRoleMenu(){ const R=ROLES[pRole()]; const body=panel(R?`${R.ic} ${R.n}`:"Roles",R?R.d:"Choose a role at City Hall in the Civic Center (Metro)."); currentView="rolemenu";
+  if(!R){ body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Go to City Hall",onclick:()=>fastTravel("civic",CIVIC.hall,"City Hall")}))); }
+  const info=[]; if(heatStars()) info.push(el("span",{class:"r-epic",text:`Wanted ${"★".repeat(heatStars())}. Police can jail you. It fades every ${policy("amnesty")?2:4} min without crimes.`})); if(jailed()) info.push(el("span",{style:"color:#ff9a3a",text:`In jail: ${jailLeft()}s left.`}));
+  if(roleIs("dealer")) info.push(el("span",{text:`Neon Dust: ${save.dust}/20`})); if(roleIs("cult")&&save.myCult) info.push(el("span",{style:`color:${save.myCult.col}`,text:`${save.myCult.n}: ${save.acolytes} acolytes, ${(save.followers||[]).length} followers`}));
+  const pol=cityPolicies(); if(pol.length) info.push(el("span",{class:"sub",text:"City laws: "+pol.map(k=>POLICIES[k].n).join(", ")}));
+  if(info.length) body.append(el("div",{class:"detail"},el("div",{class:"info"},...info)));
+  const A=roleActions(); body.append(el("strong",{text:A.length?"Nearby actions":"Nothing nearby"})); const l=el("div",{class:"list"}); for(const a of A) l.append(el("div",{class:"li"},el("div",{class:"grow",text:a.l}),el("button",{class:"btn"+(a.hot?" hot":""),type:"button",text:"Do it",onclick:()=>{ closePanel(); a.f(); }}))); body.append(l);
+  if(!A.length) body.append(el("div",{class:"sub",text:R?"Walk up to players, civilians (🩹 hurt, 💊 buyers), police or Rust Jaws gang bots to see what you can do.":""}));
+  if(roleIs("hacker")||roleIs("police")) body.append(el("strong",{text:"Police radio"}),radioList());
+  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Role Office",onclick:()=>openRoleOffice()}),el("button",{class:"btn",type:"button",text:"Elections",onclick:()=>openElection()}))); }
+function radioList(){ const l=el("div",{class:"list"}); const W=wantedList(); if(!W.length) l.append(el("div",{class:"empty",text:"No Wanted runners online."})); for(const w of W) l.append(el("div",{class:"li"},el("div",{class:"grow",text:`${w.name}${w.me?" (you)":""}`}),el("span",{class:"r-epic",text:"★".repeat(w.hz)}),el("span",{class:"sub",text:sceneName(w.s)})));
+  const cops=onlinePeers().filter(p=>p.rl==="police"); l.append(el("div",{class:"sub",text:cops.length?`Police on duty: ${cops.map(p=>`${nameOf(p.by)} (${sceneName(p.s)})`).join(", ")}`:"No police players on duty."})); return l; }
+function openPrecinct(){ const body=panel("Precinct 9","\"Serve. Protect. Fill out the forms.\""); currentView="precinct"; body.append(el("strong",{text:"Wanted board"}),radioList());
+  if(heatStars()) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Turn yourself in (half the time, no fine)",onclick:()=>{ const st=Math.max(1,Math.floor(heatStars()/2)); const c=save.credits; goJail(st,"Turned yourself in"); save.credits=c; persist(); }})));
+  if(roleIs("police")) body.append(el("div",{class:"sub",text:`Your record: ${(save.rstat||{}).arrests||0} arrests, ${(save.rstat||{}).busts||0} gang busts. Patrol pay comes every 5 minutes while you're moving around the city.`}));
+  else body.append(el("div",{class:"sub",text:"Want to wear the badge? Become Police at City Hall."})); }
+function openClinic(){ const body=panel("Clinic","Dr. Anand: \"Hold still. This will only sting a lot.\""); currentView=null; const free=policy("healthcare")||roleIs("medic"); const price=free?0:40;
+  body.append(el("div",{class:"sub",text:"A patch-up gives you Speed for 5 minutes and full HP in The Void."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:price?`Get patched up (₵${price})`:"Get patched up (free)",onclick:()=>{ if(rcd("clinic")) return toast(`Come back in ${cdTxt(rcd("clinic"))}.`); if(save.credits<price) return toast("Not enough credits."); save.credits-=price; setCd("clinic",10*6e4); save.buffs=save.buffs||{}; save.buffs.speed=Math.max(+save.buffs.speed||0,Date.now()+5*6e4); persist(); hud(); toast("Patched up: Speed for 5 min.","#43f0a4"); closePanel(); }})));
+  body.append(el("div",{class:"sub",text:roleIs("medic")?`Medic record: ${(save.rstat||{}).heals||0} treated. Find hurt civilians (🩹) across the city and treat other players up close.`:"Medics treat players and civilians for pay. Become one at City Hall."})); }
+function bmStock(){ const r=seeded(Math.floor(Date.now()/36e5)*13+99); const pool=PARTS.filter(p=>p.r==="rare"||p.r==="epic").sort(()=>r()-.5).slice(0,4); return pool.map(p=>({id:p.id,price:Math.round(p.v*.5*(policy("freemarket")?.75:1))})); }
+function openBlackMarket(){ if(!roleIs("dealer")){ const body=panel("Black Market crate","A padlocked crate with a purple glow. Someone knocks twice, waits, knocks once."); currentView=null; body.append(el("div",{class:"empty",text:"Only Dealers know the knock. Become a Dealer at City Hall."})); return; }
+  const body=panel("Black Market","Hot goods, no questions. Every hot buy raises your Wanted level."); currentView="bm"; const dp=Math.round(25*(policy("freemarket")?.75:1));
+  body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:`Neon Dust: ${save.dust}/20`}),el("span",{class:"sub",text:`₵${dp} each. Sell to street buyers (💊) for ₵55–90.`}),el("div",{class:"row"},...[1,5].map(n=>el("button",{class:"btn hot",type:"button",text:`Buy ${n} (₵${dp*n})`,onclick:()=>{ const q=Math.min(n,20-save.dust); if(q<=0) return toast("You can carry 20."); if(save.credits<dp*q) return toast("Not enough credits."); save.credits-=dp*q; save.dust+=q; persist(); toast(`+${q} Neon Dust`,"#c95cff"); openBlackMarket(); }}))))));
+  body.append(el("strong",{text:"Hot parts (half price, restocks hourly)"})); const g=el("div",{class:"grid"}); for(const s of bmStock()) g.append(itemCard(s.id,1,`₵${s.price} · hot`,()=>{ if(save.credits<s.price) return toast("Not enough credits."); save.credits-=s.price; addItem(s.id); save.hot=(save.hot||0)+1; persist(); toast(`Bought hot ${BY[s.id].n}`,"#c95cff"); addHeat(1,"hot goods"); })); body.append(g); }
+function openTerminal(){ const body=panel("Hacker terminal","> grid.access --records"); currentView=null; const st=heatStars();
+  if(roleIs("hacker")){ body.append(el("div",{class:"sub",text:st?`Your record shows ${"★".repeat(st)}.`:"Your record is clean."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:rcd("selfscrub")?`Scrub own record (${cdTxt(rcd("selfscrub"))})`:"Scrub own record (₵200)",onclick:()=>{ if(!st) return toast("Nothing to scrub."); if(rcd("selfscrub")) return; if(save.credits<200) return toast("Not enough credits."); save.credits-=200; save.heat=0; setCd("selfscrub",20*6e4); persist(); pushPresence(true); toast("Record deleted.","#38e8ff"); openTerminal(); }})),el("strong",{text:"Police radio"}),radioList()); return; }
+  body.append(el("div",{class:"sub",text:"The screen blinks: ACCESS DENIED. A note taped to it says: \"Clerk takes bribes. ₵600.\""}),el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Bribe the clerk (₵600)",onclick:()=>{ if(!st) return toast("Your record's already clean."); if(save.credits<600) return toast("Not enough credits."); save.credits-=600; save.heat=0; persist(); pushPresence(true); toast("Record mysteriously deleted.","#38e8ff"); closePanel(); }}))); }
+function openElection(){ const body=panel("Elections & Mayor's Office",`Every 3 days the city votes. Votes this term decide the next Mayor. Term ends in ${termLeftTxt()}.`); currentView="election";
+  if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to vote or run for office."})); return; } elWatch(); const N=termNow(), M=mayorId(), C=candList(), myVote=Object.entries(elDocs.cur).find(([id])=>id==="ev_"+myId);
+  body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{style:"color:#ffd36a",text:M?`Mayor: ${nameOf(M)}`:"No Mayor this term"}),el("span",{class:"sub",text:cityPolicies().length?"City laws: "+cityPolicies().map(k=>`${POLICIES[k].n} (${POLICIES[k].d})`).join(" · "):"No city laws in effect."}))));
+  if(M===myId){ const cur=cityPolicies(); body.append(el("strong",{text:"Mayor's desk: pick up to 2 laws"})); const l=el("div",{class:"list"}); const sel=new Set(cur);
+    for(const [k,P] of Object.entries(POLICIES)){ const cb=el("input",{type:"checkbox"}); cb.checked=sel.has(k); cb.onchange=()=>{ if(cb.checked){ if(sel.size>=2){ cb.checked=false; return toast("Two laws at most."); } sel.add(k); } else sel.delete(k); }; l.append(el("label",{class:"li",style:"cursor:pointer"},cb,el("div",{class:"grow"},el("strong",{text:P.n}),el("div",{class:"sub",text:P.d})))); }
+    const d=ymd(Date.now()); body.append(l,el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Sign the laws",onclick:async()=>{ try{ await DB.doc("club/city_"+N).set({kind:"city",term:N,by:myId,pol:[...sel],at:Date.now()}); toast("Laws signed.","#ffd36a"); broadcastSys(`signed new city laws: ${[...sel].map(k=>POLICIES[k].n).join(", ")||"none"}`); }catch(e){ toast("Couldn't sign the laws right now."); } }}),
+      el("button",{class:"btn",type:"button",text:save.mayorDay===d?"Salary collected today":"Collect Mayor salary (₵800)",onclick:()=>{ if(save.mayorDay===d) return; save.mayorDay=d; earn(800,"Mayor salary","#ffd36a"); openElection(); }}))); }
+  body.append(el("strong",{text:`Candidates for next term (${C.length})`})); const l=el("div",{class:"list"}); if(!C.length) l.append(el("div",{class:"empty",text:"Nobody is running yet. Politicians can register below."}));
+  for(const c of C){ const voted=myVote&&myVote[1].cand===c.uid; const b=el("button",{class:"btn"+(voted?"":" hot"),type:"button",text:voted?"Your vote":"Vote",onclick:async()=>{ if(c.uid===myId) return toast("You can't vote for yourself."); try{ await DB.doc("club/ev_"+myId).set({kind:"vote",term:N,cand:c.uid,at:Date.now()}); toast(`You voted for ${c.name}.`,"#ffd36a"); }catch(e){ toast("Your vote didn't go through. Try again."); } }}); if(voted) b.disabled=true;
+    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:c.name}),c.slogan?el("div",{class:"sub",text:`"${c.slogan}"`}):null),el("span",{class:"r-uncommon",text:`${c.votes} vote${c.votes===1?"":"s"}`}),b)); }
+  body.append(l);
+  if(roleIs("politician")){ const reg=C.some(c=>c.uid===myId); const slIn=el("input",{type:"text",maxlength:"60",value:save.slogan||"A light on every corner.","aria-label":"Campaign slogan",style:"flex:1;min-width:180px;padding:8px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"}); if(reg) slIn.disabled=true; body.append(el("div",{class:"row"},slIn,el("button",{class:"btn hot",type:"button",text:reg?"You're on the ballot":"Register as a candidate (₵500)",onclick:async()=>{ if(reg) return; if(save.credits<500) return toast("The filing fee is ₵500."); save.slogan=(slIn.value||"").trim().slice(0,60)||"A light on every corner.";
+      try{ await DB.doc("club/ec_"+myId).set({kind:"cand",term:N,name:(myName||"Runner").slice(0,24),slogan:save.slogan,at:Date.now()}); save.credits-=500; persist(); broadcastSys(`is running for Mayor: "${save.slogan}"`); toast("You're on the ballot!","#ffd36a"); }catch(e){ toast("Registration failed. Try again."); } }}))); }
+  else body.append(el("div",{class:"sub",text:"Want to run? Become a Politician at City Hall."})); }
+
+/* ---------- HUD chip ---------- */
+let rchipT=0, rchipA=[];
+function roleHud(){ const chip=$("#rolechip"); if(!chip) return; if(T-rchipT<.2) return; rchipT=T; const A=$("#overlay").hidden?roleActions():[]; rchipA=A;
+  const st=heatStars(); const R=ROLES[pRole()];
+  if(jailed()){ chip.hidden=false; chip.textContent=`⛓ Jail ${jailLeft()}s · plate press −8s · bail ₵${bailCost()}`; chip.style.borderColor="#ff9a3a"; return; }
+  if(!A.length&&!st){ chip.hidden=true; return; } chip.hidden=false; chip.style.borderColor=st?"#ff3f5a":R?R.col:"var(--cyan)";
+  chip.textContent=(A.length?`${MOBILE?"":"[R] "}${A[0].l}${A.length>1?`  (+${A.length-1})`:""}`:"")+(st?`${A.length?"  ":""}${"★".repeat(st)}`:""); }
+function roleKey(e){ if(e.shiftKey||!rchipA.length){ openRoleMenu(); return; } const a=rchipA[0]; a.f(); rchipT=0; }
+
+/* ============================================================ RUST GATE PRISON
+   Dedicated area. Jailed players spawn here, confined to the yard; interactive stations let them
+   cut their sentence, earn a little, lift for a Void buff, eat, pay bail, or risk a tunnel escape.
+   Free players and police can visit via the metro to see who's inside. */
+function prisonHot(){ const F=jailed();
+  if(!F) return [{x:120,hw:70,label:"Leave (metro)",act:()=>openMetro()},{x:PRISON.warden,hw:70,label:"Warden's desk: who's inside",act:()=>openWarden()},{x:PRISON.phone,hw:50,label:"Visitor phone",act:()=>toast("Only inmates can use the phone.")}];
+  return [
+    {x:PRISON.press,hw:60,label:`Press license plates (−8s) · ${jailLeft()}s left`,act:()=>platePress()},
+    {x:PRISON.laundry,hw:60,label:rcd("prLaundry")?`Laundry done (${cdTxt(rcd("prLaundry"))})`:"Work the laundry (−15s, +₵20)",act:()=>prisonJob()},
+    {x:PRISON.weight,hw:60,label:rcd("prLift")?`Rest after lifting (${cdTxt(rcd("prLift"))})`:"Lift weights (Void toughness)",act:()=>prisonLift()},
+    {x:PRISON.phone,hw:50,label:`Pay phone: post bail ₵${bailCost()}`,act:()=>payBail()},
+    {x:PRISON.tunnel,hw:60,label:rcd("prTunnel")?`Tunnel caved in (${cdTxt(rcd("prTunnel"))})`:"Dig the tunnel (risky escape)",act:()=>prisonTunnel()},
+    {x:PRISON.canteen,hw:60,label:"Canteen: grab a tray",act:()=>prisonEat()},
+    {x:PRISON.warden,hw:60,label:"Warden's desk",act:()=>openWarden()},
+  ]; }
+function prisonJob(){ if(!jailed()) return; if(rcd("prLaundry")) return toast(`Shift's over for now (${cdTxt(rcd("prLaundry"))}).`); setCd("prLaundry",45e3); save.jail.until-=15000; save.credits+=20; persist(); emote("use"); beep(500,.05); toast(`Folded the sheets. −15s, +₵20. ${jailLeft()}s left.`,"#43f0a4"); }
+function prisonLift(){ if(!jailed()) return; if(rcd("prLift")) return toast(`Catch your breath (${cdTxt(rcd("prLift"))}).`); setCd("prLift",6e4); save.buffs=save.buffs||{}; save.buffs.guard=Math.max(+save.buffs.guard||0,Date.now()+8*6e4); persist(); hud(); emote("pose"); beep(180,.12,"square"); toast("You feel tougher. Void armor for 8 min.","#ffb84a"); }
+function prisonEat(){ if(!jailed()) return; if(rcd("prEat")) return toast(`You're full (${cdTxt(rcd("prEat"))}).`); setCd("prEat",3e4); emote("use"); try{ if(typeof myHP!=="undefined") myHP=100; }catch(e){} toast(["Mystery meat loaf. It's… filling.","Gray stew again. Full HP though.","Neon gelatin cube. Weirdly good."][(Math.random()*3)|0],"#9affd8"); }
+function prisonTunnel(){ if(!jailed()) return; if(rcd("prTunnel")) return toast(`The tunnel caved in. Wait ${cdTxt(rcd("prTunnel"))}.`); setCd("prTunnel",9e4);
+  card("🕳 You claw at the loose block behind the canteen. A guard patrols every few seconds. Keep digging?",[["Dig for it",()=>{ emote("use"); const guardNear=cityGen("prison").some(c=>c.k==="cop"&&Math.abs(c.x-me.x)<260); const ok=Math.random()<(guardNear?.25:.5);
+    if(ok){ save.jail=null; save.heat=Math.min(5,(+save.heat||0)+2); save.heatAt=Date.now(); rstat("escapes"); persist(); pushPresence(true); beep(1200,.1); setTimeout(()=>beep(1600,.12),110); toast("You break through and slip into the storm drains! Still Wanted ★★.","#43f0a4"); go("street"); me.x=2600; broadcastSys("broke out of Rust Gate Prison"); }
+    else { save.jail.until+=20000; persist(); beep(150,.25,"square"); toast("A guard spots you! Tunnel collapsed, +20s added.","#ff5a4a"); } },true],["Forget it",null]],15e3); }
+function openWarden(){ const body=panel("Warden Kord's desk","\"Rust Gate: three hots and a cot, and all the plate-pressing you can stand.\""); currentView="warden";
+  if(jailed()) body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{style:"color:#ff9a3a",text:`You: ${jailLeft()}s left`}),el("span",{class:"sub",text:save.jail.why||"Doing time."}),el("span",{class:"sub",text:"Press plates, work the laundry, or post bail to shorten it. The tunnel's faster — if you don't get caught."}))));
+  const inmates=[]; if(jailed()) inmates.push({name:(myName||"You")+" (you)",t:jailLeft()}); for(const p of onlinePeers()) if(p.jl) inmates.push({name:nameOf(p.by),t:0});
+  body.append(el("strong",{text:`Inmates (${inmates.length})`})); const l=el("div",{class:"list"}); if(!inmates.length) l.append(el("div",{class:"empty",text:"Cells are empty. For now."})); for(const m of inmates) l.append(el("div",{class:"li"},el("div",{class:"grow",text:m.name}),el("span",{class:"sub",text:m.t?`${m.t}s left`:"serving time"}))); body.append(l);
+  if(jailed()) body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:`Post bail (₵${bailCost()})`,onclick:()=>{ payBail(); closePanel(); }})));
+  else body.append(el("div",{class:"sub",text:"Visiting hours are open. Commit a crime and you can enjoy the full hospitality."})); }
+function drawPrison(t){ const W=SCENES.prison.w, X0=camX, X1=camX+VW;
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#1a1410"); g.addColorStop(.55,"#241a14"); g.addColorStop(1,"#0e0a08"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
+  // perimeter wall + searchlights
+  ctx.fillStyle="#2a2420"; ctx.fillRect(camX,70,VW,120); ctx.fillStyle="#201b18"; for(let x=Math.floor(X0/48)*48;x<X1;x+=48){ ctx.fillRect(x,70,2,120); } ctx.fillStyle="#342c26"; ctx.fillRect(camX,66,VW,5);
+  for(let i=0;i<5;i++){ const bx=240+i*560; if(bx<X0-120||bx>X1+120) continue; ctx.save(); ctx.globalCompositeOperation="lighter"; ctx.globalAlpha=.08; ctx.fillStyle="#ffeeaa"; ctx.translate(bx,60); ctx.rotate(Math.sin(t*.6+i)*.5); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-30,220); ctx.lineTo(30,220); ctx.fill(); ctx.restore(); }
+  // razor-wire top
+  ctx.strokeStyle="#6a6258"; ctx.lineWidth=1; ctx.beginPath(); for(let x=Math.floor(X0/26)*26;x<X1;x+=26){ ctx.moveTo(x,64); ctx.lineTo(x+8,56); ctx.lineTo(x+16,64); } ctx.stroke();
+  // guard tower near entrance
+  if(X0<300){ ctx.fillStyle="#2e2620"; ctx.fillRect(150,120,70,130); ctx.fillStyle="#241d18"; ctx.fillRect(140,100,90,26); ctx.fillStyle="#120f0c"; ctx.fillRect(156,104,58,18); ctx.fillStyle=Math.sin(t*4)>0?"#ffd36a":"#5a4a2a"; ctx.fillRect(166,108,10,10); neonText("RUST GATE",185,250,12,"#ff9a3a"); }
+  // metro back to the city
+  if(X0<260){ ctx.fillStyle="#0e0c1e"; ctx.fillRect(60,170,120,80); ctx.fillStyle="#38e8ff"; ctx.fillRect(60,166,120,6); neonText("METRO",120,158,12,"#38e8ff"); }
+  // cell block behind the yard
+  ctx.fillStyle="#2a221c"; ctx.fillRect(Math.max(camX,360),110,Math.min(X1,W)-Math.max(camX,360),110); for(let cx=380;cx<W-200;cx+=150){ if(cx<X0-40||cx>X1) continue; ctx.fillStyle="#0c0a08"; ctx.fillRect(cx,130,90,70); ctx.strokeStyle="#4a4038"; ctx.lineWidth=2; for(let bx=cx+8;bx<cx+90;bx+=12){ ctx.beginPath(); ctx.moveTo(bx,130); ctx.lineTo(bx,200); ctx.stroke(); } ctx.fillStyle="#6a5a4a"; ctx.font="7px monospace"; ctx.textAlign="center"; ctx.fillText("CELL "+((cx-380)/150+1|0),cx+45,126); }
+  // ground
+  ctx.fillStyle="#17120e"; ctx.fillRect(camX,250,VW,H-250); ctx.fillStyle="#241c16"; ctx.fillRect(camX,250,VW,3); for(let x=Math.floor(X0/70)*70;x<X1;x+=70) ctx.fillRect(x,250,2,H-250);
+  // stations
+  const lbl=(x,s,c)=>{ if(x<X0-60||x>X1+60) return; ctx.fillStyle=c; ctx.font="7px monospace"; ctx.textAlign="center"; ctx.fillText(s,x,246); };
+  // plate press
+  if(X1>PRISON.press-80&&X0<PRISON.press+80){ const px=PRISON.press; ctx.fillStyle="#3a332c"; ctx.fillRect(px-26,210,52,40); ctx.fillStyle="#1a1510"; ctx.fillRect(px-20,216,40,10); const stamp=Math.abs(Math.sin(t*2))<.1; ctx.fillStyle=stamp?"#ffd36a":"#5a4a2a"; ctx.fillRect(px-16,208-(stamp?0:6),32,8); ctx.fillStyle="#9a8a5a"; ctx.fillRect(px-14,228,28,6); lbl(px,"PLATE PRESS","#ffd36a"); }
+  // laundry
+  if(X1>PRISON.laundry-80&&X0<PRISON.laundry+80){ const px=PRISON.laundry; ctx.fillStyle="#2c2a30"; ctx.fillRect(px-24,204,48,46); ctx.fillStyle="#0a1a2a"; ctx.beginPath(); ctx.arc(px,226,13,0,7); ctx.fill(); ctx.strokeStyle="#38a8ff"; ctx.save(); ctx.translate(px,226); ctx.rotate(t*3); ctx.beginPath(); ctx.moveTo(-9,0); ctx.lineTo(9,0); ctx.moveTo(0,-9); ctx.lineTo(0,9); ctx.stroke(); ctx.restore(); lbl(px,"LAUNDRY","#38c8ff"); }
+  // weights
+  if(X1>PRISON.weight-80&&X0<PRISON.weight+80){ const px=PRISON.weight; ctx.fillStyle="#2a2a2e"; ctx.fillRect(px-24,236,48,8); ctx.fillStyle="#3a3a40"; ctx.fillRect(px-26,222,5,18); ctx.fillRect(px+21,222,5,18); ctx.strokeStyle="#6a6a74"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(px-22,226); ctx.lineTo(px+22,226); ctx.stroke(); lbl(px,"WEIGHTS","#ffb84a"); }
+  // phone
+  if(X1>PRISON.phone-70&&X0<PRISON.phone+70){ const px=PRISON.phone; ctx.fillStyle="#1a1a22"; ctx.fillRect(px-9,200,18,50); ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.5+.3*Math.sin(t*3); ctx.fillRect(px-6,205,12,12); ctx.globalAlpha=1; ctx.fillStyle="#2a2a33"; ctx.fillRect(px-7,222,14,8); lbl(px,"PAY PHONE","#38c8ff"); }
+  // tunnel
+  if(X1>PRISON.tunnel-70&&X0<PRISON.tunnel+70){ const px=PRISON.tunnel; ctx.fillStyle="#0a0806"; ctx.beginPath(); ctx.ellipse(px,246,16,9,0,0,7); ctx.fill(); ctx.fillStyle="#2a2018"; ctx.fillRect(px+10,236,10,6); ctx.fillRect(px-20,238,8,5); lbl(px,"LOOSE BLOCK","#8a7a5a"); }
+  // canteen
+  if(X1>PRISON.canteen-80&&X0<PRISON.canteen+80){ const px=PRISON.canteen; ctx.fillStyle="#2c2824"; ctx.fillRect(px-30,210,60,40); ctx.fillStyle="#3a3630"; ctx.fillRect(px-30,206,60,6); ctx.fillStyle="#9affd8"; ctx.globalAlpha=.3; ctx.fillRect(px-26,214,52,10); ctx.globalAlpha=1; ctx.fillStyle="#6a5a4a"; for(let k=0;k<3;k++) ctx.fillRect(px-20+k*16,230,10,14); lbl(px,"CANTEEN","#9affd8"); }
+  // warden hut
+  if(X1>PRISON.warden-80&&X0<W){ const px=PRISON.warden; ctx.fillStyle="#30281f"; ctx.fillRect(px-30,196,70,54); ctx.fillStyle="#241d16"; ctx.fillRect(px-34,190,78,8); ctx.fillStyle="#120f0c"; ctx.fillRect(px-20,208,26,20); ctx.fillStyle="#ffd36a"; ctx.globalAlpha=.25; ctx.fillRect(px-18,210,22,16); ctx.globalAlpha=1; lbl(px,"WARDEN","#ffd36a"); }
+}
+function drawPrisonFront(t){ if(camX>PRISON.x1+40||camX+VW<PRISON.x0-40) return; // fence between yard and metro so inmates are visibly penned in
+  const fx=PRISON.x0-6; if(fx>camX-20&&fx<camX+VW+20){ ctx.fillStyle="#5a5248"; for(let y=250;y<H;y+=14) ctx.fillRect(fx,y,3,9); ctx.fillStyle="#6a6258"; for(let y=256;y<H;y+=28){ ctx.fillRect(fx-10,y,24,2); } ctx.fillStyle="#8a8278"; ctx.fillRect(fx-2,250,2,H-250); } }
+
 
 /* ============================================================ WORLD */
 const H=360;                  // logical height
@@ -1964,6 +2433,8 @@ const SCENES={
   linx:{w:3480, spawn:140},
   ascend:{w:640, spawn:320},
   clash:{w:2500, spawn:140},
+  civic:{w:2600, spawn:200},
+  prison:{w:2600, spawn:200},
 };
 // hotspots: x center, half-width, label, act
 function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
@@ -2296,7 +2767,7 @@ const keys={}; let dt=0, last=performance.now(), T=0, target=null, nearHot=null;
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySelector(".txc")){ document.querySelector(".txc").remove(); e.preventDefault(); e.stopImmediatePropagation(); return; } if(!$("#title").hidden){ if(e.key==="Enter"&&e.target.tagName!=="BUTTON"){ const b=$("#title .btn.hot"); if(b){ e.preventDefault(); b.click(); } } return; } if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"){ if(e.key==="Escape"&&!$("#overlay").hidden&&e.target.closest&&e.target.closest("#overlay")) closePanel(); return; } if(!$("#overlay").hidden){ if(e.key==="Escape") closePanel(); return; }
   keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();
   if(me.scene==="void"){ const kk=e.key.toLowerCase(); if(kk==="f"){ voidAttack(); e.preventDefault(); } if(kk==="g") setBlock(true); }
-  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="t"||e.key==="T") openFastTravel(); if(e.key==="p"||e.key==="P") openCompanion(); if(e.key==="q"||e.key==="Q") openQuestLog(); if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
+  if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="t"||e.key==="T") openFastTravel(); if(e.key==="p"||e.key==="P") openCompanion(); if(e.key==="q"||e.key==="Q") openQuestLog(); if(e.key==="r"||e.key==="R"){ try{ roleKey(e); }catch(err){} } if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
 addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; if(e.key.toLowerCase()==="g") setBlock(false); });
 const releaseKeys=()=>{ for(const k in keys) keys[k]=false; };
 addEventListener("blur",releaseKeys); document.addEventListener("visibilitychange",()=>{ if(document.hidden) releaseKeys(); });
@@ -2330,6 +2801,7 @@ function stepInner(now){
   try{ perfFrame(now); }catch(e){}
   dt=Math.min(.05,(now-last)/1000); last=now; T+=dt;
   const sc=SCENES[me.scene];
+  try{ tickCity(dt); roleHud(); }catch(e){}
   // input
   let ix=0,iy=0; if(keys.a||keys.arrowleft||keys.padleft) ix--; if(keys.d||keys.arrowright||keys.padright) ix++; if(keys.w||keys.arrowup||keys.padup) iy--; if(keys.s||keys.arrowdown||keys.paddown) iy++;
   if(me.dead){ ix=0; iy=0; target=null; }
@@ -2360,7 +2832,7 @@ function stepInner(now){
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else drawHome(T); if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
@@ -2368,17 +2840,18 @@ function render(){
   // entities sorted by depth
   const ents=[];
   for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:n.name,say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance?{e:"dance",t:T}:null}});
-  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
+  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  try{ cityEnts(ents); }catch(e){}
   ents.sort((a,b)=>a.y-b.y);
-    for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
+    for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
-  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx();
+  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); }catch(e){}
   // rain (street)
   if(me.scene==="street"){ ctx.strokeStyle="rgba(170,190,255,.25)"; ctx.beginPath(); for(const r of rain){ r.y+=r.v*dt; if(r.y>1) r.y-=1; const x=camX+((r.x*VW+T*30)%VW), y=r.y*H; ctx.moveTo(x,y); ctx.lineTo(x-2,y+9); } ctx.stroke(); }
   ctx.setTransform(1,0,0,1,0,0);
@@ -2407,7 +2880,7 @@ function tabEdge(t){ if(!t||t._edge) { if(t) t.classList.toggle("end",t.scrollLe
 function closePanel(){ currentView=null; tryOn=null; $("#overlay").hidden=true; $("#overlay").innerHTML=""; }
 $("#overlay").addEventListener("pointerdown",e=>{ if(e.target.id==="overlay") closePanel(); });
 $("#overlay").addEventListener("click",e=>{ if(e.target.closest&&e.target.closest(".panel .tabs")) panelFresh=1; setTimeout(()=>{ panelFresh=0; },0); },true);
-$("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrcpill").onclick=()=>openNRC(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
+$("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrcpill").onclick=()=>openNRC(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnRole").onclick=()=>openRoleMenu(); { const rc=$("#rolechip"); if(rc){ rc.onclick=()=>{ if(rchipA&&rchipA.length){ rchipA[0].f(); rchipT=0; } else openRoleMenu(); }; rc.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); rc.click(); } }); } } $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
 /* ============================================================ HOW TO PLAY */
 const GUIDE={
   start:{n:"Start here",secs:[
@@ -2487,7 +2960,7 @@ $("#btnHelp").onclick=()=>openGuide();
 $("#btnConPlay").onclick=()=>{ const h=save.look.hand; if(CON_BY[h]) conPlay(h); }; $("#btnConOpen").onclick=()=>{ const h=save.look.hand; if(CON_BY[h]) openConsole(h); };
 /* ---- mobile: quick-action row, status strip, and scrollable tab rows with arrows */
 document.querySelectorAll("#mquick .btn").forEach(b=>b.addEventListener("click",()=>{ const q=b.dataset.q; beep(880,.04);
-  if(q==="char"){ tryOn=null; openWardrobe("name"); } else if(q==="travel") openFastTravel(); else if(q==="quests") openQuestLog(); else if(q==="pet") openCompanion(); else if(q==="online") openOnline(); else openGuide(); }));
+  if(q==="char"){ tryOn=null; openWardrobe("name"); } else if(q==="travel") openFastTravel(); else if(q==="quests") openQuestLog(); else if(q==="pet") openCompanion(); else if(q==="online") openOnline(); else if(q==="role") openRoleMenu(); else openGuide(); }));
 function mobileDeck(){ const g=$("#game"); if(!g||!MOBILE) return; const ms=$("#mstatus"); for(const id of ["#jobpill","#trippill","#buffs"]){ const e=$(id); if(e&&e.parentElement!==ms) ms.appendChild(e); }
   const vis=[...ms.children].some(e=>!e.hidden&&e.textContent); const mh=vis?ms.offsetHeight+6:0; if(g.style.getPropertyValue("--mst")!==mh+"px") g.style.setProperty("--mst",mh+"px");
   let room=false; if(g.classList.contains("portrait")){ const cr=cv.getBoundingClientRect(), pad=$("#pad").getBoundingClientRect(); room=pad.top-cr.bottom>=64; } g.classList.toggle("mq",room); }
@@ -3509,7 +3982,7 @@ function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):me.s
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
+function sceneName(s){ return {civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -3521,7 +3994,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -7918,13 +8391,13 @@ function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") ret
   o.fusions=Array.isArray(s.fusions)?s.fusions.filter(x=>typeof x==="string"&&FUSE_BY[x]).slice(0,20):[];
   o.blocked=Array.isArray(s.blocked)?s.blocked.filter(x=>typeof x==="string").slice(0,200):[];
   o.upload={cleared:Math.max(0,Math.min(10,Math.floor(+(s.upload&&s.upload.cleared))||0)),best:Math.max(0,Math.floor(+(s.upload&&s.upload.best))||0)};
-  o.buffs=s.buffs&&typeof s.buffs==="object"?{speed:+s.buffs.speed||0,print:+s.buffs.print||0,luck:+s.buffs.luck||0,guard:+s.buffs.guard||0,tips:+s.buffs.tips||0}:{}; return o; }
+  o.buffs=s.buffs&&typeof s.buffs==="object"?{speed:+s.buffs.speed||0,print:+s.buffs.print||0,luck:+s.buffs.luck||0,guard:+s.buffs.guard||0,tips:+s.buffs.tips||0}:{}; try{ roleSanitize(o,s); }catch(e){} return o; }
 try{ const s=localStorage.getItem("nh_save"); if(s) save=sanitizeSave(JSON.parse(s)); }catch(e){}
 if(save.name) myName=save.name;
 
 /* ============================================================ PRESENCE */
 let lastPush=0, lastSig="";
-function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0};
+function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
@@ -7937,7 +8410,7 @@ function applyPeer(p){ if(isSelf(p)) return false; if(p.kind!=="viewer") return 
   if(q&&q.pid!==p.peer&&(q.updatedAt||0)>(p.updatedAt||0)) return false; // an older tab of the same player: ignore it
   const fresh=!q; if(!q){ q={by:p.by,dx:x,dy:y,phase:0}; peers.set(key,q); if(p.by) resolveNames([p.by]); }
   else if(q.pid&&q.pid!==p.peer){ q.dx=x; q.dy=y; } // same player came back in a new tab: move the one figure, don't add another
-  q.pid=p.peer;
+  q.pid=p.peer; try{ rolePeer(q,p.presence||{}); }catch(e){}
   q.sv=pr.sv===1||pr.sv===2?pr.sv:0; q.sp=clamp(Math.floor(+pr.sp||0),0,999); q.sc=clamp(Math.floor(+pr.sc||0),0,5000); q.rx=pr.rx&&SHOW_RX.some(r=>r[0]===pr.rx.k)&&Number.isFinite(+pr.rx.at)?{k:pr.rx.k,at:Math.min(Date.now(),+pr.rx.at)}:null;
   Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,dk:typeof pr.dk==="string"&&DRINK_FX[pr.dk]?pr.dk:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null,hs:pr.hs===1});
   if(pr.say&&typeof pr.say.text==="string") q.say={text:pr.say.text.slice(0,80),at:Math.min(Date.now(),+pr.say.at||0)};
@@ -8004,7 +8477,7 @@ setInterval(hud,1000);
   if(room){ ROOM=room;
     room.onPeers(ch=>{ const arrived=[]; for(const p of ch.joined.concat(ch.updated)) if(applyPeer(p)&&ch.joined.includes(p)) arrived.push(p); try{ syncPeers(room.peers()); }catch(e){ for(const p of ch.left){ const q=peers.get(peerKey(p)); if(q&&q.pid===p.peer) peers.delete(peerKey(p)); } } for(const p of arrived) setTimeout(()=>chatLine(null,`${nameOf(p.by)} arrived in ${sceneName((p.presence||{}).s)||"Sector 9"}`,"sys"),300); updOnline(); },()=>{});
     room.on("chat",m=>{ if(m.isMe&&m.sameTab) return; const d=m.data||{}; if(typeof d.text!=="string") return; chatLine(nameOf(m.by),d.text.slice(0,80),undefined,m.by); });
-    room.on("atk",onAtk); room.on("ko",onKo);
+    room.on("atk",onAtk); room.on("ko",onKo); room.on("role",m=>{ try{ onRoleEv(m); }catch(e){} });
     room.on("invite",m=>{ if(m.isMe||!m.by||m.by===myId) return; const d=m.data||{}; if(d.to!==myId) return; resolveNames([m.by]);
       if(typeof d.vip==="string"&&VIP_BY[d.vip]){ const R=VIP_BY[d.vip]; card(`${nameOf(m.by)} invited you to the ${R.n} backroom at ${sceneName(R.venue)}.`,[["Go there",()=>{ closePanel(); enterVip(R.id); },true],["Not now",null]],120e3); return; }
       card(`${nameOf(m.by)} invited you to their apartment.`,[["Go there",()=>{ closePanel(); if(me.scene==="bar"&&mySlot>=0) clockOut(); visitHome(m.by); },true],["Not now",null]],90e3); });
