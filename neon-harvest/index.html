@@ -46,6 +46,13 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .btn.hot{border-color:var(--mag);color:#fff;box-shadow:0 0 10px rgba(255,63,168,.35) inset}
 .btn:disabled{opacity:.4;cursor:not-allowed}
+.ftgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:6px;margin:4px 0 2px}
+.fttile{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 9px;height:auto;min-height:0;text-align:left;border:1px solid var(--line);border-left-width:3px;background:rgba(21,14,38,.5);border-radius:6px;cursor:pointer;line-height:1.2;transition:background .1s,border-color .1s}
+.fttile:hover:not(:disabled){background:rgba(40,22,64,.9);border-color:var(--cyan)}
+.fttile.here{opacity:.55;cursor:default;background:rgba(21,14,38,.3)}
+.fttile .ftname{font-family:var(--f-display);font-size:11.5px;color:var(--text);letter-spacing:.02em}
+.fttile .ftsub{font-size:10px;color:var(--dim)}
+.fttile.here .ftsub{color:var(--cyan)}
 #rolechip{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(94px + env(safe-area-inset-bottom,0px));font-family:var(--f-display);font-size:12px;background:rgba(11,7,22,.9);border:1px solid var(--cyan);color:#e9e2ff;padding:5px 12px;cursor:pointer;white-space:nowrap;z-index:6;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 #rolechip:hover{background:rgba(30,16,48,.95)}
 #game.mobile.portrait.mq #rolechip{bottom:auto;top:calc(var(--top) + var(--cvh) + 118px)}
@@ -4029,16 +4036,18 @@ function elyGlide(x,n){ closePanel(); me.homeSit=null; godFlash("✦ "+String(n)
 function openFastTravel(){ if(me.scene==="ascend"&&godActive()){ openShowProgram(); return; } const body=panel("Fast Travel","Jump anywhere in the city. Free and instant."+(MOBILE?"":" Press T anytime.")); currentView=null;
   const why=ftBlocked(); if(why) body.append(el("div",{class:"r-epic",text:why}));
   const where=(s,x)=>me.scene===s&&Math.abs(me.x-x)<160&&(s!=="home"||!me.visiting);
+  // compact metro-map grid: one small tile per stop (name + who's there), full description on hover
+  const grid=()=>el("div",{class:"ftgrid"});
+  const tile=(name,sub,accent,here,go,desc)=>{ const b=el("button",{class:"fttile"+(here?" here":""),type:"button",title:desc||"",onclick:here?null:go}); if(here) b.disabled=true;
+    b.style.borderLeftColor=accent; b.append(el("div",{class:"ftname",text:name}),el("div",{class:"ftsub",text:here?"You're here":sub})); return b; };
   body.append(el("strong",{text:"Metro lines"}));
-  const l=el("div",{class:"list"}); for(const [k,m] of Object.entries(METRO)){ const here=me.scene===k; const b=el("button",{class:"btn"+(here?"":" hot"),type:"button",text:here?"You're here":"Ride",onclick:()=>fastTravel(k,m.x,m.n)}); if(here) b.disabled=true;
-    const here2=onlinePeers().filter(p=>p.s===k||(k==="street"&&["bar","cyberbuys","club","home"].includes(p.s))).length;
-    l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:var(--cyan)",text:"◉"}),el("div",{class:"grow"},el("div",{text:m.n+(here2?` · ${here2} player${here2>1?"s":""}`:"")}),el("div",{class:"sub",text:m.d})),b)); }
-  body.append(l);
-  for(const g of ["Sector 9","Hot spots"]){ body.append(el("strong",{text:g})); const l2=el("div",{class:"list"});
-    for(const sp of FT_SPOTS.filter(q=>q.g===g&&(!q.need||q.need()))){ const x=typeof sp.x==="function"?sp.x():sp.x, here=where(sp.s,x);
-      const b=el("button",{class:"btn"+(here?"":" hot"),type:"button",text:here?"You're here":"Go",onclick:()=>fastTravel(sp.s,x,sp.n,sp.home)}); if(here) b.disabled=true;
-      l2.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:var(--mag)",text:"➤"}),el("div",{class:"grow"},el("div",{text:sp.n}),el("div",{class:"sub",text:sp.d})),b)); }
-    body.append(l2); } }
+  const g1=grid(); for(const [k,m] of Object.entries(METRO)){ const here=me.scene===k||(k==="street"&&["bar","cyberbuys","club","home"].includes(me.scene));
+    const n=onlinePeers().filter(p=>p.s===k||(k==="street"&&["bar","cyberbuys","club","home"].includes(p.s))).length;
+    g1.append(tile(m.n,n?`${n} online`:"Ride","var(--cyan)",here,()=>fastTravel(k,m.x,m.n),m.d)); }
+  body.append(g1);
+  for(const grp of ["Sector 9","Hot spots"]){ const spots=FT_SPOTS.filter(q=>q.g===grp&&(!q.need||q.need())); if(!spots.length) continue; body.append(el("strong",{text:grp})); const g2=grid();
+    for(const sp of spots){ const x=typeof sp.x==="function"?sp.x():sp.x, here=where(sp.s,x); g2.append(tile(sp.n,"Go","var(--mag)",here,()=>fastTravel(sp.s,x,sp.n,sp.home),sp.d)); }
+    body.append(g2); } }
 $("#btnTravel").onclick=()=>openFastTravel();
 
 /* ============================================================ THE GRID: GAME LOGIC */
