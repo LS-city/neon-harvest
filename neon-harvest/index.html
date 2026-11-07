@@ -2099,78 +2099,7 @@ function hotspotsBase(sc){
   return [];
 }
 let jukeHue=320;
-const NPC_TYPES={
-  civilian:{n:"Civilian",v:15,vx:20,look:{jacket:rnd(0,5),visor:rnd(0,3),hat:rnd(0,3)},say:["I heard the Mayor is stepping down...","Tired of these rain cycles.","Anyone seen a floating chip?","This city never sleeps, and neither do I."]},
-  police:{n:"Police Officer",v:40,vx:10,look:{jacket:1,visor:1,hat:1},say:["Move along, citizen.","Keep it clean on the streets.","I've got my eye on you.","Stop right there!"]},
-  gang:{n:"Robot Gang",v:60,vx:35,look:{jacket:5,visor:5,hat:5},say:["This is our turf.","Hand over the credits.","You're in the wrong alley, Runner.","Access denied. Pay up."]}
-};
-function spawnStreetNpcs(){
-  if(npcs.street.length>15) return;
-  const t=Object.keys(NPC_TYPES)[(Math.random()*3)|0], d=NPC_TYPES[t];
-  const x=Math.random()*4000, dir=Math.random()>.5?1:-1;
-  npcs.street.push({x,y:268+Math.random()*50,look:d.look,dir,vx:dir*d.vx,min:x-500,max:x+500,name:d.n,type:t});
-}
-const ROLE_DATA={
-  hardworker:{n:"Hard Worker",d:"Dedicated and reliable. Bonus credits from shifts and faster build times.",col:"#43f0a4"},
-  dealer:{n:"Underworld Dealer",d:"Specializes in illegal parts. Higher margins on black-market trade.",col:"#ffb84a"},
-  police:{n:"Police Force",d:"Protects the city. Can arrest criminals and maintain order.",col:"#38e8ff"},
-  medic:{n:"Street Medic",d:"Saves lives. Ability to heal others and clear prison status.",col:"#ffffff"},
-  thief:{n:"Shadow Thief",d:"Master of stealth. Can steal from players and NPCs.",col:"#9a8cc0"},
-  cultleader:{n:"Cult Leader",d:"Inspires devotion. Can recruit others for shared bonuses.",col:"#ff3fa8"},
-  mayor:{n:"Mayor",d:"Leader of the district. Special political powers. Elected by players.",col:"#ffd36a"}
-};
-const NPC_TYPES={
-  civilian:{n:"Civilian",v:15,vx:20,look:{jacket:0,visor:0,hat:0},say:["I heard the Mayor is stepping down...","Tired of these rain cycles.","Anyone seen a floating chip?","This city never sleeps, and neither do I."]},
-  police:{n:"Police Officer",v:40,vx:10,look:{jacket:1,visor:1,hat:1},say:["Move along, citizen.","Keep it clean on the streets.","I've got my eye on you.","Stop right there!"]},
-  gang:{n:"Robot Gang",v:60,vx:35,look:{jacket:5,visor:5,hat:5},say:["This is our turf.","Hand over the credits.","You're in the wrong alley, Runner.","Access denied. Pay up."]}
-};
-function spawnStreetNpcs(){
-  try {
-    if(!npcs||!npcs.street||npcs.street.length>15) return;
-    const t=Object.keys(NPC_TYPES)[(Math.random()*3)|0], d=NPC_TYPES[t];
-    const x=Math.random()*4000, dir=Math.random()>.5?1:-1;
-    npcs.street.push({x,y:268+Math.random()*50,look:d.look,dir,vx:dir*d.vx,min:x-500,max:x+500,name:d.n,type:t});
-  } catch(e){ console.error("NPC Spawn Error:", e); }
-}
-function openRoleSelect(){
-  const body=panel("CITIZEN REGISTRY","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
-  const g=el("div",{class:"grid"});
-  Object.entries(ROLE_DATA).forEach(([id,r])=>{
-    const c=el("button",{class:"card",type:"button",onclick:()=>{
-      save.role=id; persist(); toast(`Registered as ${r.n}!`,r.col); closePanel(); hud();
-    }});
-    c.append(el("div",{class:"nm",text:r.n}),el("div",{class:"sub",text:r.d}));
-    g.append(c);
-  });
-  body.append(g);
-}
 const npcs={
-  street:[],
-  bar:[{x:380,y:262,look:{jacket:0,visor:2,hat:2},dir:1,vx:0,name:"Vex"},{x:612,y:262,look:{jacket:3,visor:0,hat:1},dir:1,vx:0,name:"Kai"},{x:640,y:330,look:{jacket:5,visor:3,hat:0},dir:1,vx:0,dance:true,name:""},{x:1210,y:300,look:{jacket:1,visor:1,hat:3},dir:-1,vx:0,name:""}],
-  home:[],
-  void:[],
-  linx:[{x:236,y:270,look:{skin:4,style:10,jacket:16,pants:7,visor:8,hat:11,neck:5,nameCol:4},dir:1,vx:0,name:"Agent Linx"}],
-  club:[{x:1580,y:300,look:{skin:2,style:2,jacket:10,pants:7,visor:1,hat:4},dir:1,vx:0,dance:true,fx:"shroom",name:""},{x:1690,y:328,look:{skin:4,style:1,jacket:10,pants:3,visor:4,hat:5},dir:-1,vx:0,dance:true,fx:"acid",name:""},
-        {x:1885,y:296,look:{skin:0,style:2,jacket:1,pants:7,visor:6,hat:9,back:5},dir:-1,vx:0,dance:true,fx:"vape",name:""},{x:1990,y:322,look:{skin:3,style:4,jacket:8,pants:7,visor:5,hat:3},dir:-1,vx:0,dance:true,fx:"eye",name:""},
-        {x:540,y:300,look:{skin:1,style:3,jacket:4,pants:7,visor:1,hat:4},dir:-1,vx:0,fx:"joint",name:""}],
-  cyberbuys:[{x:600,y:300,look:{skin:5,style:1,jacket:4,pants:7,visor:1,hat:5},dir:1,vx:14,min:250,max:1150,name:""},{x:900,y:318,look:{skin:0,style:2,jacket:8,pants:3,visor:4,hat:0,pet:2},dir:-1,vx:-10,min:300,max:1150,name:""}],
-  neonrow:[{x:900,y:300,look:{skin:3,style:1,jacket:6,pants:7,visor:2,hat:1},dir:1,vx:18,min:300,max:2200,name:""},{x:1700,y:322,look:{skin:1,style:4,jacket:9,pants:3,visor:5,hat:0,pet:1},dir:-1,vx:-12,min:600,max:2300,name:""}],
-  smacked:[{x:1050,y:290,look:{skin:2,style:2,jacket:10,pants:7,visor:1,hat:4},dir:-1,vx:12,min:500,max:1400,name:""}],
-  grid:[{x:900,y:300,look:{skin:4,style:4,jacket:1,pants:7,visor:7,hat:0,aura:4},dir:1,vx:16,min:400,max:2000,name:""},{x:1500,y:328,look:{skin:3,style:2,jacket:6,pants:7,visor:5,hat:8},dir:-1,vx:0,dance:true,name:""}],
-  byte:[{x:700,y:300,look:{skin:1,style:3,jacket:8,pants:7,visor:4,hat:4},dir:1,vx:26,min:300,max:1500,name:""},{x:1500,y:322,look:{skin:5,style:5,jacket:10,pants:3,visor:6,hat:1,pet:2},dir:-1,vx:-20,min:1100,max:2500,name:""},
-        {x:2600,y:284,look:{skin:2,style:2,jacket:1,pants:7,visor:7,hat:5,back:1},dir:1,vx:18,min:2200,max:3300,name:""},{x:1640,y:270,look:{skin:0,style:1,jacket:0,pants:7,visor:1,hat:0},dir:-1,vx:0,dance:false,name:""}],
-  }
-  civilian:{n:"Civilian",v:15,vx:20,look:{jacket:rnd(0,5),visor:rnd(0,3),hat:rnd(0,3)},say:["I heard the Mayor is stepping down...","Tired of these rain cycles.","Anyone seen a floating chip?","This city never sleeps, and neither do I."]},
-  police:{n:"Police Officer",v:40,vx:10,look:{jacket:1,visor:1,hat:1},say:["Move along, citizen.","Keep it clean on the streets.","I've got my eye on you.","Stop right there!"]},
-  gang:{n:"Robot Gang",v:60,vx:35,look:{jacket:5,visor:5,hat:5},say:["This is our turf.","Hand over the credits.","You're in the wrong alley, Runner.","Access denied. Pay up."]}
-};
-function spawnStreetNpcs(){
-  if(npcs.street.length>15) return;
-  const t=Object.keys(NPC_TYPES)[(Math.random()*3)|0], d=NPC_TYPES[t];
-  const x=Math.random()*4000, dir=Math.random()>.5?1:-1;
-  npcs.street.push({x,y:268+Math.random()*50,look:d.look,dir,vx:dir*d.vx,min:x-500,max:x+500,name:d.n,type:t});
-}
-
   street:[{x:700,y:286,look:{jacket:3,visor:2,hat:1},dir:1,vx:22,min:620,max:1500,name:""},{x:2100,y:320,look:{jacket:4,visor:3,hat:4},dir:-1,vx:-18,min:1900,max:2800,name:""},{x:960,y:268,look:{jacket:2,visor:1,hat:0},dir:1,vx:0,name:"Depot clerk"}],
   bar:[{x:380,y:262,look:{jacket:0,visor:2,hat:2},dir:1,vx:0,name:"Vex"},{x:612,y:262,look:{jacket:3,visor:0,hat:1},dir:1,vx:0,name:"Kai"},{x:640,y:330,look:{jacket:5,visor:3,hat:0},dir:1,vx:0,dance:true,name:""},{x:1210,y:300,look:{jacket:1,visor:1,hat:3},dir:-1,vx:0,name:""}],
   home:[],
@@ -2392,13 +2321,7 @@ function safeAct(h){ try{ stTrack("act",h.label); }catch(e){} try{ h.act(); }cat
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
   setTimeout(()=>{ go(scene,x); if(scene==="assembly") chatLine(null,"Harvest Assembly: clock in at the shift board or walk into any open bay. ₵400 every 30 min while you keep building, plus speed tips. Up to 60 min per shift, 2 shifts a day. Leaving clocks you out.","sys"); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="neonrow") chatLine(null,"Neon Row: real local businesses rent these storefronts. Walk up to a store, see its rewards, and redeem with RP. Show your NR- code at the store in person.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards for Data Collectors Club members. Redeem with Reward Points (RP) and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
-function go(scene,x){
-  if(save.status==="imprisoned" && scene!=="prison"){
-    toast("You are locked in prison!");
-    go("prison", 300);
-    return;
-  }
-  if(scene==="ascend"&&!godActive()){ toast("Elysium can only be reached with the God Particle."); return; } if(me.scene==="ascend"&&scene!=="ascend"&&godActive()&&!(godState&&godState.leaving)){ toast("The God Particle holds you in Elysium until it fades."); return; } if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } questEvent("visit:"+scene); me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
+function go(scene,x){ if(scene==="ascend"&&!godActive()){ toast("Elysium can only be reached with the God Particle."); return; } if(me.scene==="ascend"&&scene!=="ascend"&&godActive()&&!(godState&&godState.leaving)){ toast("The God Particle holds you in Elysium until it fades."); return; } if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } questEvent("visit:"+scene); me.scene=scene; me.x=x; me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
 let loopErr=0;
@@ -2739,42 +2662,7 @@ async function claimName(n){
   }
   save.name=n; save.handleKey=key; myName=n; if(myId) names[myId]=n; lastHomeSig=""; persist(); pushPresence(true); return true;
 }
-/* --- roles & npcs --- */
-const ROLE_DATA={
-  hardworker:{n:"Hard Worker",d:"Dedicated and reliable. Bonus credits from shifts and faster build times.",col:"#43f0a4"},
-  dealer:{n:"Underworld Dealer",d:"Specializes in illegal parts. Higher margins on black-market trade.",col:"#ffb84a"},
-  police:{n:"Police Force",d:"Protects the city. Can arrest criminals and maintain order.",col:"#38e8ff"},
-  medic:{n:"Street Medic",d:"Saves lives. Ability to heal others and clear prison status.",col:"#ffffff"},
-  thief:{n:"Shadow Thief",d:"Master of stealth. Can steal from players and NPCs.",col:"#9a8cc0"},
-  cultleader:{n:"Cult Leader",d:"Inspires devotion. Can recruit others for shared bonuses.",col:"#ff3fa8"},
-  mayor:{n:"Mayor",d:"Leader of the district. Special political powers. Elected by players.",col:"#ffd36a"}
-};
-const NPC_TYPES={
-  civilian:{n:"Civilian",v:15,vx:20,look:{jacket:0,visor:0,hat:0},say:["I heard the Mayor is stepping down...","Tired of these rain cycles.","Anyone seen a floating chip?","This city never sleeps, and neither do I."]},
-  police:{n:"Police Officer",v:40,vx:10,look:{jacket:1,visor:1,hat:1},say:["Move along, citizen.","Keep it clean on the streets.","I've got my eye on you.","Stop right there!"]},
-  gang:{n:"Robot Gang",v:60,vx:35,look:{jacket:5,visor:5,hat:5},say:["This is our turf.","Hand over the credits.","You're in the wrong alley, Runner.","Access denied. Pay up."]}
-};
-function spawnStreetNpcs(){
-  try {
-    if(!npcs||!npcs.street||npcs.street.length>15) return;
-    const t=Object.keys(NPC_TYPES)[(Math.random()*3)|0], d=NPC_TYPES[t];
-    const x=Math.random()*4000, dir=Math.random()>.5?1:-1;
-    npcs.street.push({x,y:268+Math.random()*50,look:d.look,dir,vx:dir*d.vx,min:x-500,max:x+500,name:d.n,type:t});
-  } catch(e){ console.error("NPC Spawn Error:", e); }
-}
-function openRoleSelect(){
-  const body=panel("CITIZEN REGISTRY","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
-  const g=el("div",{class:"grid"});
-  Object.entries(ROLE_DATA).forEach(([id,r])=>{
-    const c=el("button",{class:"card",type:"button",onclick:()=>{
-      save.role=id; persist(); toast(`Registered as ${r.n}!`,r.col); closePanel(); hud();
-    }});
-    c.append(el("div",{class:"nm",text:r.n}),el("div",{class:"sub",text:r.d}));
-    g.append(c);
-  });
-  body.append(g);
-}
-
+/* --- roles --- */
 const ROLE_DATA={
   hardworker:{n:"Hard Worker",d:"Dedicated and reliable. Bonus credits from shifts and faster build times.",col:"#43f0a4"},
   dealer:{n:"Underworld Dealer",d:"Specializes in illegal parts. Higher margins on black-market trade.",col:"#ffb84a"},
@@ -2785,7 +2673,7 @@ const ROLE_DATA={
   mayor:{n:"Mayor",d:"Leader of the district. Special political powers. Elected by players.",col:"#ffd36a"}
 };
 function openRoleSelect(){
-  const body=panel("CITIZEN REGISTRY","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
+  const body=panel("CITIZEN REGISTRATION","Welcome to the district. Before you start, you must register your role. This defines your abilities and how others interact with you.");
   const g=el("div",{class:"grid"});
   Object.entries(ROLE_DATA).forEach(([id,r])=>{
     const c=el("button",{class:"card",type:"button",onclick:()=>{
@@ -8177,4 +8065,3 @@ setInterval(hud,1000);
 </script>
 </body>
 </html>
-<!-- redeploy trigger Fri Nov  6 04:25:54 EST 2026 -->
