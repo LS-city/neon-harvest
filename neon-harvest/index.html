@@ -2031,6 +2031,8 @@ function addHeat(n,why){ if(roleIs("worker")||roleIs("police")) return; const be
 function roleSanitize(o,s){ o.admImm=!!s.admImm; o.admMayor=!!s.admMayor; o.role=ROLES[s.role]?s.role:""; o.roleAt=+s.roleAt||0; o.heat=Math.max(0,Math.min(5,+s.heat||0)); o.heatAt=+s.heatAt||0;
   o.jail=s.jail&&+s.jail.until>0?{until:+s.jail.until,why:String(s.jail.why||"").slice(0,60),stars:Math.max(0,Math.min(5,+s.jail.stars||0))}:null;
   o.rcd=s.rcd&&typeof s.rcd==="object"?Object.fromEntries(Object.entries(s.rcd).filter(([k,v])=>isFinite(+v)&&+v>Date.now()).slice(0,80).map(([k,v])=>[String(k).slice(0,40),+v])):{};
+  o.rel=s.rel&&typeof s.rel==="object"?Object.fromEntries(Object.entries(s.rel).filter(([k,v])=>isFinite(+v)).slice(-60).map(([k,v])=>[String(k).slice(0,30),Math.max(-10,Math.min(10,+v))])):{};
+  o.relc=s.relc&&typeof s.relc==="object"?Object.fromEntries(Object.entries(s.relc).filter(([k,v])=>isFinite(+v)).slice(-60).map(([k,v])=>[String(k).slice(0,30),+v])):{};
   o.rstat=s.rstat&&typeof s.rstat==="object"?Object.fromEntries(Object.entries(s.rstat).filter(([k,v])=>isFinite(+v)).slice(0,30).map(([k,v])=>[String(k).slice(0,20),Math.floor(+v)])):{};
   o.cult=s.cult&&typeof s.cult.by==="string"?{by:s.cult.by.slice(0,80),n:String(s.cult.n||"").slice(0,24),col:/^#[0-9a-f]{6}$/i.test(s.cult.col)?s.cult.col:"#ff3f5a"}:null;
   o.myCult=s.myCult&&typeof s.myCult.n==="string"?{n:s.myCult.n.slice(0,24),col:/^#[0-9a-f]{6}$/i.test(s.myCult.col)?s.myCult.col:"#ff3f5a"}:null;
@@ -2125,7 +2127,8 @@ const CITY_CFG={street:{civ:[[400,1500],[1500,2600],[2200,3400],[600,3800]],cop:
   neonrow:{civ:[[300,1300],[1100,2300],[500,2000]],cop:[[400,2200]]},grid:{civ:[[400,2000],[1800,3600]],gang:[2900,4200,2]},civic:{civ:[[300,1000],[1600,2100]],cop:[[950,1650],[300,2100]]},smacked:{civ:[[300,1400]]},prison:{civ:[[430,1200],[1100,2000],[1500,2340]]}};
 const cityNpcs={}; let gangCd=0;
 function rndLook(seed){ const r=seeded(seed); const pick=k=>Math.floor(r()*Math.min(WARD[k].opts.length,WARD_BASE_LEN[k]||WARD[k].opts.length)); const col=()=>Math.floor(r()*COLORS.length); return {skin:pick("skin"),style:pick("style"),jacket:col(),pants:col(),visor:pick("visor"),hat:pick("hat"),hair:pick("hair"),hairCol:col(),feet:pick("feet"),accent:col(),nameCol:col(),neck:0,back:0}; }
-function cityGen(sc){ if(cityNpcs[sc]) return cityNpcs[sc]; const C=CITY_CFG[sc]; const L=[]; if(!C){ cityNpcs[sc]=L; return L; } let s=hashNum(sc);
+function cityGen(sc){ const b=cityGenBase(sc), r=lifeHere(sc); return r.length?b.concat(r):b; }
+function cityGenBase(sc){ if(cityNpcs[sc]) return cityNpcs[sc]; const C=CITY_CFG[sc]; const L=[]; if(!C){ cityNpcs[sc]=L; return L; } let s=hashNum(sc);
   (C.civ||[]).forEach(([a,b],i)=>{ const r=seeded(s+i*7); L.push({k:"civ",x:a+r()*(b-a),y:LANE.top+r()*(LANE.bot-LANE.top),vx:(r()<.5?-1:1)*(12+r()*16),min:a,max:b,dir:1,phase:0,look:rndLook(s+i*31),name:CIV_NAMES[(s+i*3)%CIV_NAMES.length],purse:20+Math.floor(r()*60),robT:0,hurt:r()<.25,buyer:r()<.35,pause:0}); });
   (C.cop||[]).forEach(([a,b],i)=>L.push({k:"cop",x:(a+b)/2,y:300,vx:24,min:a,max:b,dir:1,phase:0,look:{jacket:5,pants:5,visor:1,hat:0,skin:(i*2)%5,style:1},name:["Officer Vance","Officer Reyes","Sgt. Okoro","Officer Pike"][(s+i)%4],state:"patrol"}));
   if(C.gang){ const [a,b,n]=C.gang; for(let i=0;i<n;i++) L.push({k:"bot",x:a+i*60,y:290+i*14,vx:(i%2?-1:1)*20,min:a,max:b,dir:1,phase:0,name:["Rust Jaw Rivet","Rust Jaw Socket","Rust Jaw Gasket","Rust Jaw Crank"][i%4],out:0}); }
@@ -2152,9 +2155,10 @@ function tickCity(dt){ const now=Date.now();
     if(n.k==="bot"&&!jailed()&&!roleIs("police")&&!(IS_ADMIN&&save.admImm)&&now>gangCd&&$("#overlay").hidden){ const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5); if(d<70&&!n.mug){ n.mug=1; gangMug(n); } }
     if(n.pause>0){ n.pause-=dt; continue; }
     if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; n.x=clamp(n.x,n.min,n.max); } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; }
-    if(n.k==="civ"&&Math.random()<dt/40){ n.pause=2+Math.random()*3; const pool=me.scene==="prison"?PRISON_LINES:CIV_LINES; if(Math.random()<.4) npcSay(n,me.scene!=="prison"&&n.hurt?"Ugh… I need a medic.":me.scene!=="prison"&&n.buyer&&roleIs("dealer")?"Psst… holding any Dust?":pool[(Math.random()*pool.length)|0]); }
+    if(n.k==="civ"&&!n.life&&Math.random()<dt/40){ n.pause=2+Math.random()*3; const pool=me.scene==="prison"?PRISON_LINES:CIV_LINES; if(Math.random()<.4) npcSay(n,me.scene!=="prison"&&n.hurt?"Ugh… I need a medic.":me.scene!=="prison"&&n.buyer&&roleIs("dealer")?"Psst… holding any Dust?":pool[(Math.random()*pool.length)|0]); }
     if(n.k==="civ"&&!n.hurt&&Math.random()<dt/400) n.hurt=true;
     if(n.k==="civ"&&n.purse<80&&Math.random()<dt/60) n.purse+=5; }
+  try{ lifeTick(dt); }catch(e){}
   // acolytes follow me
   roleTick.acoTrail=roleTick.acoTrail||[]; roleTick.acoTrail.unshift({x:me.x,y:me.y}); roleTick.acoTrail.length=Math.min(roleTick.acoTrail.length,120);
   // jail clamp
@@ -2168,15 +2172,235 @@ function drawGangBot(c,x,y,s,t,n){ c.save(); c.translate(x,y); c.scale(s,s); con
   c.fillStyle="#4a3028"; c.fillRect(-13,-48,4,20+st*.3); c.fillRect(9,-48,4,20-st*.3); c.fillStyle="#2a1a16"; c.fillRect(-9,-70,18,16); c.fillStyle="#ff2a2a"; glowOn(c,"#ff2a2a",8); c.fillRect(dir>0?-2:-8,-65,10,3); c.shadowBlur=0;
   c.fillStyle="#9a9aa8"; for(let k=0;k<4;k++) c.fillRect(-7+k*4,-56,2,3); c.strokeStyle="#6a6a74"; c.lineWidth=1; c.beginPath(); c.moveTo(4,-70); c.lineTo(7,-80); c.stroke(); c.fillStyle=Math.sin(t*6)>0?"#ff2a2a":"#401010"; c.beginPath(); c.arc(7,-81,1.6,0,7); c.fill();
   c.fillStyle="#38e8ff"; c.font="bold 5px monospace"; c.textAlign="center"; c.fillText("⚙",0,-36); c.restore();
-  c.save(); c.textAlign="center"; c.font="9px monospace"; c.fillStyle="#ff7a5a"; c.fillText(n.name.toUpperCase(),x,y-92*s); c.restore();
+  c.save(); c.textAlign="center"; c.font="9px monospace"; c.fillStyle="#ff7a5a"; c.fillText(n.name.toUpperCase()+" "+moodEmoji(n),x,y-92*s); c.restore();
   if(n.say&&T-n.say.t<4) drawBubble(c,x,y-96*s,n.say.text,"#ff5a4a","#ffd8d0"); }
 function cityEnts(ents){ const L=cityGen(me.scene);
   for(const n of L){ if(n.k==="bot"){ if(n.out) continue; ents.push({x:n.x,y:n.y,draw:(c,x,y,s,t)=>drawGangBot(c,x,y,s,t,n)}); continue; }
-    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!(n.pause>0),look:n.look,name:n.name+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null}}); }
+    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.life?!!(n.walking||n.vx):!!n.vx&&!(n.pause>0),look:n.look,name:lifeName(n)+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null,sit:!!n.sit,emote:(n.danceUntil>T||(n.life&&n.act&&n.act.mode==="dance"&&!n.goal&&!n.leaving))?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}}); }
   // acolytes behind cult leaders (me and peers)
   const acoLook=i=>({jacket:0,pants:0,skin:(i*3)%5,style:1,visor:0,hat:0});
   if(roleIs("cult")&&save.acolytes&&me.scene!=="void"){ const tr=roleTick.acoTrail||[]; for(let i=0;i<save.acolytes;i++){ const p=tr[Math.min(tr.length-1,14+i*12)]||me; ents.push({x:p.x-(me.dir||1)*(22+i*16),y:clamp(p.y+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:me.dir,phase:me.phase+i,moving:me.moving,look:acoLook(i),name:"",rk:"cult",cu:save.myCult?{by:myId,...save.myCult}:null,aco:1}}); } }
   for(const p of peers.values()) if(p.ac&&p.s===me.scene&&(p.home||null)===curHomeKey()) for(let i=0;i<p.ac;i++) ents.push({x:p.dx-(p.dir||1)*(26+i*16),y:clamp(p.dy+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:p.dir,phase:p.phase+i,moving:p.moving,look:acoLook(i),name:"",rk:"cult",cu:p.cu,aco:1}}); }
+
+/* ============================================================ CITIZEN LIFE
+   24 residents with names, jobs, friends, birthdays and opinions. They live on a shared "Neon day" (2 real hours,
+   twelve 10-minute parts): sleep, coffee, work, lunch, free time and a night out, so they move between places,
+   watch movies, dance, play chess, shop, visit the prison and vote. Their schedules and ballots come from the clock
+   and the election records, so every player sees the same people in the same places and the same election result.
+   Every NPC also has moods (emoji over their head) and notices you: greetings, reacting to your emotes, fear of
+   Wanted runners and Rust Jaws, remembering how you treat them. */
+const LIFE_SLOT=6e5, LIFE_PLAN=["sleep","coffee","work","work","work","lunch","work","work","L1","L2","NIGHT","sleep"];
+const LIFE_RES=[
+ ["Mara Quint","barista",["movies","fountain","shopping"],.3,0,["festival"],["crackdown"],["light","fair","festival","coffee"],"Makes the best Civic Roast in Sector 9. Dreams of opening her own café."],
+ ["Dex Holloway","courier",["club","bar","walk"],.1,1,["freemarket"],["crackdown"],["free","fast","cheap"],"Knows every shortcut in the city. Hasn't slept properly since 2079."],
+ ["Old Ruiz","guard",["chess","bar"],-.1,0,["crackdown","overtime"],["amnesty"],["safe","order","police","law"],"Thirty years at Rust Gate. Has seen everything twice."],
+ ["Ivy Sato","nurse",["movies","fountain"],.25,0,["healthcare"],["freemarket"],["health","care","help","clinic"],"Clinic nurse. Patches up whoever walks in, no questions asked."],
+ ["Kip Navarro","vendor",["shopping","chess"],.05,0,["freemarket"],["overtime"],["cheap","trade","free","market"],"Runs a parts stall at Byte Market. Will haggle you to tears."],
+ ["Nova Reyes","dj",["club","movies"],.4,1,["festival"],["crackdown"],["party","music","festival","night"],"Spins at the Third Eye. Lives for the drop."],
+ ["Bram Ostrow","mechanic",["bar","chess"],-.05,0,["overtime"],["freemarket"],["jobs","work","pay","union"],"Assembly line lifer. Union through and through."],
+ ["Sol Adeyemi","clerk",["fountain","movies","chess"],.1,0,["amnesty","healthcare"],["crackdown"],["fair","help","light","clean"],"City Hall clerk. Knows exactly which form you need."],
+ ["Rhea Lindqvist","coder",["chess","club"],0,1,["freemarket"],["crackdown"],["free","code","data","tech"],"Writes bots at The Grid. Undefeated at blitz chess."],
+ ["Otis Bell","bartender",["movies","walk"],.2,1,["festival"],["crackdown"],["party","fair","night"],"Pours drinks at the Glitch. Hears every secret in Sector 9."],
+ ["Quill Marlowe","shopkeeper",["movies","shopping"],.15,0,["freemarket","festival"],["crackdown"],["trade","light","cheap","art"],"Runs a little shop on Neon Row. Writes poems on the receipts."],
+ ["Vega Torres","usher",["movies","club"],.3,1,["festival"],["overtime"],["movie","party","light","fun"],"Ushers at the Stream Dome. Has strong opinions about every movie."],
+ ["Moss Kimura","vendor",["walk","fountain","visit"],-.15,0,["healthcare"],["festival"],["quiet","health","safe","rain"],"Noodle cook at Byte Bowl. Hates noise, loves rain. Visits a brother at Rust Gate."],
+ ["Lark Abara","courier",["club","movies","walk"],.35,0,["festival","amnesty"],["crackdown"],["free","fast","party"],"Fastest courier in the sector. Always humming something."],
+ ["Ziggy Pratt","coder",["club","bar"],.2,1,["freemarket"],["overtime"],["code","free","tech","data"],"Hacks for fun, codes for rent. Mostly legal."],
+ ["Fen Castell","mechanic",["bar","walk","visit"],-.2,0,["overtime","amnesty"],["freemarket"],["jobs","union","fair","pay"],"Grumpy, reliable, secretly kind. Can fix anything with a wrench."],
+ ["Halo Mbeki","nurse",["fountain","movies"],.2,0,["healthcare"],["crackdown"],["health","help","care","kind"],"Night-shift nurse who still finds time to feed the street cats."],
+ ["Pell Duarte","clerk",["chess","walk"],-.1,0,["crackdown"],["amnesty","festival"],["order","law","safe","clean"],"By-the-book City Hall clerk. Believes in rules. All of them."],
+ ["Taz Ferreira","dj",["club","bar"],.3,1,["festival"],["crackdown"],["music","party","night","loud"],"Second DJ at the Third Eye. Wants Nova's slot. Won't admit it."],
+ ["Juno-2","usher",["movies","chess"],.1,0,["healthcare","amnesty"],["crackdown"],["kind","fair","light","help"],"An android usher trying to understand humans, one movie at a time."],
+ ["Wren Halvorsen","shopkeeper",["shopping","fountain"],.1,0,["freemarket"],["crackdown"],["trade","cheap","market","light"],"Sells vintage tech on Neon Row. Swears every piece has a story."],
+ ["Ash Okafor","guard",["bar","chess","visit"],-.05,1,["crackdown","overtime"],["amnesty"],["safe","police","order","law"],"Rust Gate guard on the night shift. Tougher than he looks; softer than he lets on."],
+ ["Bea Lomax","barista",["movies","shopping","fountain"],.25,0,["festival"],["crackdown"],["coffee","light","fun","kind"],"Morning barista. Knows everyone's order and half their problems."],
+ ["Cyrus Vale","bartender",["club","movies"],0,1,["freemarket"],["healthcare"],["free","trade","night","cheap"],"Mixologist with a past nobody asks about."]];
+const LIFE_BESTIE=[[0,22],[1,13],[2,21],[3,16],[4,12],[5,18],[6,15],[7,17],[8,14],[9,23],[10,20],[11,19]];
+const LIFE_JOB={barista:{sc:"civic",x:()=>[CIVIC.coffee-40,CIVIC.coffee+40],ic:"☕",n:"Barista",l:"working the coffee cart"},courier:{sc:"street",mode:"walk",x:()=>[300,4100],ic:"📦",n:"Courier",l:"making deliveries"},
+  guard:{sc:"prison",x:()=>[700,2200],ic:"🛡",n:"Prison guard",l:"on guard duty at Rust Gate"},nurse:{sc:"civic",x:()=>[CIVIC.clinic-60,CIVIC.clinic+60],ic:"🩺",n:"Nurse",l:"on shift at the Clinic"},
+  vendor:{sc:"byte",x:()=>[800,3800],ic:"🛒",n:"Market vendor",l:"running a stall at Byte Market"},dj:{sc:"club",x:()=>[1250,1450],ic:"🎧",n:"DJ",l:"spinning at the Third Eye"},
+  mechanic:{sc:"assembly",mode:"walk",x:()=>[400,2600],ic:"🔧",n:"Assembly mechanic",l:"working the assembly line"},clerk:{sc:"civic",x:()=>[CIVIC.hall-60,CIVIC.hall+60],ic:"🗂",n:"City Hall clerk",l:"filing forms at City Hall"},
+  coder:{sc:"grid",x:()=>[2000,3000],ic:"💻",n:"Coder",l:"writing code at the Grid"},bartender:{sc:"bar",x:()=>[450,800],ic:"🍹",n:"Bartender",l:"tending bar at the Glitch"},
+  shopkeeper:{sc:"neonrow",x:()=>[400,2200],ic:"🏪",n:"Shopkeeper",l:"minding the shop on Neon Row"},usher:{sc:"streamdome",x:()=>[560,620],ic:"🎟",n:"Theater usher",l:"ushering at the Stream Dome"}};
+const LIFE_ACT={sleep:{sc:null,ic:"😴",l:"asleep at home"},movies:{sc:"streamdome",mode:"seat",ic:"🎬",l:"watching the big screen at the Stream Dome"},club:{sc:"club",mode:"dance",x:()=>[1500,2050],ic:"💃",l:"dancing at the Third Eye"},
+  bar:{sc:"bar",x:()=>[300,1300],ic:"🍸",l:"having a drink at the Glitch"},chess:{sc:"grid",x:()=>[700,1900],ic:"♟",l:"playing chess at the Grid"},shopping:{sc:["byte","neonrow","cyberbuys"],mode:"walk",ic:"🛍",l:"shopping"},
+  fountain:{sc:"civic",x:()=>[CIVIC.fountain-70,CIVIC.fountain+70],ic:"🪙",l:"making wishes at the Civic fountain"},coffee:{sc:"civic",x:()=>[CIVIC.coffee-70,CIVIC.coffee+70],ic:"☕",l:"grabbing a coffee at the Civic Center"},
+  walk:{sc:"street",mode:"walk",x:()=>[400,4000],ic:"🚶",l:"out for a walk in Sector 9"},visit:{sc:"prison",mode:"walk",x:()=>[430,1200],ic:"🤝",l:"visiting a friend at Rust Gate"},
+  lunch:{sc:"byte",x:()=>[1500,2500],ic:"🍜",l:"eating noodles at Byte Market"},vote:{sc:"civic",x:()=>[CIVIC.vote-40,CIVIC.vote+40],ic:"🗳",l:"voting at City Hall"}};
+const MOODS={excited:["🤩","Excited"],happy:["😊","Happy"],content:["🙂","Content"],bored:["😐","Bored"],tired:["😴","Tired"],stressed:["😣","Stressed"],sad:["😢","Sad"],angry:["😠","Angry"],scared:["😨","Scared"],grateful:["🥰","Grateful"],focused:["🧐","Focused"],menacing:["😈","Menacing"],alert:["🚨","Alert"],nervous:["😬","Nervous"],party:["🎂","Birthday!"],asleep:["💤","Asleep"]};
+const LIFE_LINES={movies_on:["Shh — the movie's on!","This part's so good.","Pass the popcorn.","I did NOT see that coming.","Best seat in the house."],movies_off:["Anyone gonna put a movie on?","The screen's free… someone play something!","I'd watch anything right now."],
+  club:["This track is unreal!","Can't stop, won't stop.","The DJ's on fire tonight!"],bar:["One more round.","Long day. Good drink.","The Glitch never changes. I love that."],chess:["Check… wait, no.","Your move.","Stuck on this endgame for an hour."],
+  shopping:["Look at these prices!","I came in for one thing…","This would look great on me."],fountain:["Make a wish!","One coin, one wish.","I wished for sunshine. Again."],coffee:["Coffee first. Talk later.","Civic Roast hits different.","*sips*"],
+  walk:["Nice night for a walk.","Rain again. Classic Sector 9.","I love this city. Mostly."],visit:["Hang in there. I'll be back next week.","They're not a bad person, you know."],lunch:["These noodles are life.","Lunch break. Finally."],
+  vote:["Just voted. Civic duty!","Every vote counts.","Did you vote yet?"],work:["Busy busy.","Can't talk long, I'm on shift.","Almost done for the day."],tired:["*yawn*","I need a nap.","So tired…"],sad:["Rough day…","Not my week.","I'll be okay. Probably."],
+  angry:["Don't push me.","What a day.","I'm SO done with this city."],scared:["Stay back!","I don't want any trouble!","Somebody call the cops!"],excited:["Best. Night. Ever.","Let's GO!","I love this!"],grateful:["Thank you, really.","I owe you one."],party:["It's my birthday today!","Birthday plans: everything!"]};
+const LIFE_JOBLINES={barista:["Want your usual?","I can draw a cat in latte foam."],courier:["Forty drops today. My legs!","I know every alley in this city."],guard:["Quiet in the yard today.","Seen a lot of folks walk out those gates."],
+  nurse:["Remember to hydrate.","Busy day at the Clinic."],vendor:["Best prices in Byte Market!","Need a capacitor? I've got a guy."],dj:["New mix dropping tonight.","Bass is good for the soul."],mechanic:["The line jammed twice today.","Union meeting Friday."],
+  clerk:["Form 27-B? Second window.","You'd be surprised what people file."],coder:["My bot beat me at chess. Again.","Debugging is my cardio."],bartender:["What'll it be?","I hear everything in this job."],shopkeeper:["Come by the shop sometime!","Business is slow but steady."],usher:["Phones on silent, please.","I've seen every movie twice."]};
+const LIFE_R=LIFE_RES.map((d,i)=>({id:"r"+i,ix:i,k:"civ",life:true,name:d[0],job:d[1],likes:d[2],cheer:d[3],owl:!!d[4],likePol:d[5],hatePol:d[6],words:d[7],bio:d[8],
+  look:rndLook(hashNum("res"+i)*3+7),purse:30+((i*37)%50),hurt:false,buyer:i%5===2,bday:(hashNum("bd"+i)%365),x:0,y:300,dir:1,phase:0,vx:0,min:60,max:4000,ev:[],chatT:0,greetT:-99}));
+LIFE_BESTIE.forEach(([a,b])=>{ LIFE_R[a].bestie=b; LIFE_R[b].bestie=a; });
+
+/* ---- schedule ---- */
+function lifeSlotI(R,slot){ return ((slot+(R.owl?2:0))%12+12)%12; }
+function lifePick(R,slot){ const day=Math.floor(slot/12), i=lifeSlotI(R,slot), r=seeded(hashNum(R.id)+day*131+i*17+1); let a=LIFE_PLAN[i]; r();
+  if(a==="coffee") a=r()<.55?"coffee":"walk"; else if(a==="lunch") a=r()<.6?"lunch":"coffee";
+  else if(a==="L1"||a==="L2") a=R.likes[Math.floor(r()*R.likes.length)];
+  else if(a==="NIGHT"){ const B=R.bestie!=null?LIFE_R[R.bestie]:null, pool=[...new Set(R.likes.concat(B?B.likes:[]))].filter(k=>["movies","club","bar"].includes(k)), rr=seeded(hashNum("n"+Math.min(R.ix,B?B.ix:R.ix))+day*53)();
+    a=pool.length?pool.sort()[Math.floor(rr*pool.length)]:R.likes[0]; }
+  if(a==="work"&&seeded(hashNum(R.id)+day*7+3)()<.14) a=R.likes[Math.floor(r()*R.likes.length)]; // day off
+  return a; }
+function lifeAct(R,now){ if(R.actT>now-2000&&R.act) return R.act; const slot=Math.floor(now/LIFE_SLOT); let a=lifePick(R,slot), start=slot*LIFE_SLOT, end=start+LIFE_SLOT;
+  const b=lifeBallot(R,termNow(),elCands(elDocs.cur),now); if(b&&b.cand&&!b.abstain&&now>=b.at&&now<b.at+8*6e4&&a!=="sleep"){ a="vote"; start=b.at; end=b.at+8*6e4; }
+  let D=a==="work"?LIFE_JOB[R.job]:LIFE_ACT[a], sc=D.sc; if(Array.isArray(sc)) sc=sc[Math.floor(seeded(hashNum(R.id)+slot*11)()*sc.length)];
+  R.act={key:a+"|"+start+"|"+sc,a,sc,mode:D.mode||"stand",x:D.x?D.x():null,ic:D.ic,l:a==="shopping"?`shopping at ${sceneName(sc).replace(/^the /,"the ")}`:D.l,start,end}; R.actT=now; return R.act; }
+function lifeBday(R){ const d=new Date(), doy=Math.floor((Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-Date.UTC(d.getUTCFullYear(),0,0))/864e5); return doy%365===R.bday; }
+
+/* ---- where they are ---- */
+let lifeC={t:-1,sc:"",L:[]};
+function lifeHere(sc){ if(lifeC.t===T&&lifeC.sc===sc) return lifeC.L; const now=Date.now(), L=[];
+  for(const R of LIFE_R){ const a=lifeAct(R,now); if(a.sc!==sc||(R.goneUntil||0)>now||(R.leftKey===a.key)){ R.here=false; continue; } if(!R.here||R.akey!==a.key) lifePlace(R,a,now); R.here=true; L.push(R); }
+  lifeC={t:T,sc,L}; return L; }
+function lifeEntryX(sc){ try{ return METRO[sc]&&sc!=="street"?Math.max(120,METRO[sc].x):140; }catch(e){ return 140; } }
+function lifeSpot(R,a){ const W=(SCENES[a.sc]||{w:2000}).w, r=seeded(hashNum(R.id+a.key)); const rng=a.x||[300,W-300];
+  if(a.mode==="seat"){ const taken=new Set(LIFE_R.filter(o=>o!==R&&o.here&&o.spot&&o.spot.seat).map(o=>o.spot.seat)); if(me.homeSit) taken.add(me.homeSit.key); const free=TH_SEATS.filter(s=>!taken.has(s.id)); const s=free.length?free[Math.floor(r()*free.length)]:TH_SEATS[0]; return {x:s.x,y:s.y,seat:s.id}; }
+  return {x:rng[0]+r()*(rng[1]-rng[0]),y:LANE.top+6+r()*(LANE.bot-LANE.top-12)}; }
+function lifePlace(R,a,now){ R.akey=a.key; R.sit=false; R.walking=false; R.leaving=false; R.vx=0; R.pause=0; R.min=60; R.max=(SCENES[a.sc]||{w:2000}).w-60; R.spot=lifeSpot(R,a);
+  if(now-a.start<40e3&&a.a!=="sleep"){ R.x=lifeEntryX(a.sc); R.y=clamp(R.spot.y,LANE.top,LANE.bot); R.goal={x:R.spot.x,y:R.spot.y}; } else { R.x=R.spot.x; R.y=R.spot.y; R.goal=null; lifeArrive(R); } R.chatT=T+4+Math.random()*12; }
+function lifeArrive(R){ const a=R.act; if(!a) return; if(R.leaving){ R.leftKey=a.key; R.here=false; return; } if(a.mode==="seat") R.sit=true; if(a.mode==="walk") R.pause=2+Math.random()*5; }
+function lifeTick(dt){ const now=Date.now(); if(DB&&!elWatched) try{ elWatch(); }catch(e){}
+  for(const R of lifeHere(me.scene)){ const a=R.act;
+    if(R.vx){ R.vxT=R.vxT||now; if(now-R.vxT>2500){ R.vx=0; R.vxT=0; } else continue; }
+    if(!R.leaving&&a.end-now<20e3&&a.a!=="vote"||(!R.leaving&&a.a==="vote"&&a.end-now<15e3)){ R.leaving=true; R.sit=false; R.goal={x:lifeEntryX(a.sc),y:R.y}; }
+    if((R.fleeUntil||0)>T){ R.sit=false; R.walking=true; const sp=95*dt; R.x=clamp(R.x+R.fleeDir*sp,R.min,R.max); R.dir=R.fleeDir; R.phase+=dt*10; continue; }
+    if(R.goal){ const m=moodOf(R).k, sp=(m==="sad"||m==="tired"?30:m==="excited"||m==="happy"?50:42)*dt, dx=R.goal.x-R.x, dy=R.goal.y-R.y, d=Math.hypot(dx,dy);
+      if(d<=sp+1){ R.x=R.goal.x; R.y=R.goal.y; R.goal=null; R.walking=false; lifeArrive(R); } else { R.x+=dx/d*sp; R.y+=dy/d*sp*.7; R.dir=dx>=0?1:-1; R.walking=true; R.phase+=dt*6; } continue; }
+    R.walking=false;
+    if(a.mode==="walk"){ if(R.pause>0) R.pause-=dt; else { const rng=a.x||[300,R.max-240]; R.goal={x:rng[0]+Math.random()*(rng[1]-rng[0]),y:LANE.top+6+Math.random()*(LANE.bot-LANE.top-12)}; } }
+    if(a.mode==="seat"&&R.spot&&R.spot.seat&&me.homeSit&&me.homeSit.key===R.spot.seat){ R.sit=false; R.spot=lifeSpot(R,a); R.goal={x:R.spot.x,y:R.spot.y}; } // you took their seat
+    if(a.mode!=="walk"&&a.mode!=="seat"&&!R.sit) R.dir=Math.abs(me.x-R.x)<160?(me.x>=R.x?1:-1):R.dir; }
+  lifeAware(dt); }
+
+/* ---- feelings ---- */
+function relOf(id){ return +((save.rel||{})[id]||0); }
+function relAdd(id,d){ save.rel=save.rel||{}; save.rel[id]=Math.max(-10,Math.min(10,relOf(id)+d)); const k=Object.keys(save.rel); if(k.length>60) delete save.rel[k[0]]; persist(); }
+function relLabel(v){ return v<=-5?"Enemy":v<=-2?"Wary of you":v<2?"Stranger":v<5?"Acquaintance":v<8?"Friend":"Close friend"; }
+function relHearts(v){ return v<0?"🖤".repeat(Math.min(5,Math.ceil(-v/2))):"❤".repeat(Math.round(v/2)); }
+function npcKey(n){ return n.life?n.id:"c_"+String(n.name||"npc").slice(0,24); }
+function lifeFeel(n,k,ms,dv,df,why){ n.ev=(n.ev||[]).filter(e=>e.until>Date.now()); n.ev.push({k,until:Date.now()+ms,dv,df:df||0,why}); n.moodT=0; }
+function moodOf(n){ const now=Date.now(); if(n.moodT>now-1000&&n.mood) return n.mood;
+  let v=n.cheer!=null?n.cheer:((hashNum(n.name||"x")%60)/100-.15), e=.6, f=0, k=null; const why=[]; const here=n.here||!n.life;
+  if(n.k==="bot"){ k=roleIs("police")&&Math.abs(me.x-n.x)<260?"nervous":"menacing"; n.mood={k,why:k==="nervous"?"A cop is close":"Looking for someone to shake down"}; n.moodT=now; return n.mood; }
+  if(n.k==="cop"){ k=n.state==="chase"?"alert":heatStars()&&Math.abs(me.x-n.x)<300?"alert":(hashNum(n.name)%3?"content":"bored"); n.mood={k,why:k==="alert"?"Chasing a suspect":"On patrol"}; n.moodT=now; return n.mood; }
+  const a=n.life?lifeAct(n,now):null, act=a?a.a:(n.dance?"club":"walk");
+  if(act==="sleep"){ n.mood={k:"asleep",why:"Fast asleep at home"}; n.moodT=now; return n.mood; }
+  if(act==="movies"){ if(thLive()){ v+=.45; e+=.2; why.push(`Loving “${thLive().title}”`); } else { v-=.12; why.push("Waiting for someone to play a movie"); } }
+  else if(act==="club"){ v+=.35; e+=.35; why.push("Dancing the night away"); } else if(act==="bar"){ v+=.2; why.push("Unwinding with a drink"); } else if(act==="chess"){ v+=.15; k="focused"; why.push("Deep in a chess game"); }
+  else if(act==="shopping"){ v+=.15; why.push("Shopping"); } else if(act==="fountain"||act==="coffee"||act==="lunch"){ v+=.12; why.push(act==="lunch"?"Lunch break":act==="coffee"?"Coffee time":"Making a wish"); }
+  else if(act==="visit"){ v-=.12; why.push("Visiting someone inside Rust Gate"); } else if(act==="vote"){ v+=.2; why.push("Just did their civic duty"); }
+  else if(act==="work"){ v-=.1; e-=.1; why.push(LIFE_JOB[n.job].l[0].toUpperCase()+LIFE_JOB[n.job].l.slice(1)); if(n.job==="coder") k="focused"; }
+  if(n.life){ const i=lifeSlotI(n,Math.floor(now/LIFE_SLOT)); if(i>=10||i===0){ e-=.35; why.push("It's late"); } else if(i===1){ e-=.15; }
+    let pol=[]; try{ pol=cityPolicies(); }catch(_){} for(const p of pol){ if(n.likePol.includes(p)){ v+=.2; why.push(`Likes the ${POLICIES[p].n}`); } if(n.hatePol.includes(p)){ v-=.25; why.push(`Upset about the ${POLICIES[p].n}`); } }
+    if(lifeBday(n)){ v+=.5; e+=.3; k="party"; why.unshift("It's their birthday"); } }
+  if(n.hurt){ v-=.4; why.unshift("Hurt — needs a medic"); }
+  for(const ev of (n.ev||[])) if(ev.until>now){ v+=ev.dv; f+=ev.df; if(ev.why) why.unshift(ev.why); if(ev.k==="grateful") k="grateful"; if(ev.k==="angry"&&!k) k="angry"; }
+  if(here&&n.x!=null){ const L=cityGen(me.scene); if(L.some(b=>b.k==="bot"&&!b.out&&Math.abs(b.x-n.x)<180)){ f+=.7; why.unshift("Rust Jaws are nearby"); }
+    if(heatStars()&&Math.abs(me.x-n.x)<200){ f+=.5; why.unshift("A Wanted runner is close"); }
+    const rl=relOf(npcKey(n)); if(Math.abs(me.x-n.x)<140){ if(rl>=4){ v+=.2; why.push("Happy to see you"); } else if(rl<=-3){ v-=.35; k=k||"angry"; why.unshift("Doesn't trust you"); } } }
+  if(n.dance) { v+=.3; e+=.3; }
+  if(f>.55) k="scared"; else if(k==="party"||k==="grateful"){} else if(k==="angry"&&v<0){} else if(v<-.35&&(n.ev||[]).some(x=>x.k==="angry"&&x.until>now)) k="angry"; else if(v<-.25) k="sad"; else if(e<.3) k="tired";
+  else if(k==="focused"&&v>-.1&&v<.55){} else if(act==="work"&&v<.05) k="stressed"; else if(v>.55&&e>.6) k="excited"; else if(v>.3) k="happy"; else if(v>.05) k="content"; else k="bored";
+  n.mood={k,why:why[0]||"Just living their life"}; n.moodT=now; return n.mood; }
+function moodEmoji(n){ return (MOODS[moodOf(n).k]||MOODS.content)[0]; }
+function lifeName(n){ return (n.name?n.name+" ":"")+moodEmoji(n); }
+
+/* ---- awareness ---- */
+let lifeG=0, lifeEmT=-9, lifeGossipT=0; const lifePairs={};
+function lifeLine(n){ const m=moodOf(n).k; if(["tired","sad","angry","scared","excited","grateful","party"].includes(m)&&Math.random()<.5) return LIFE_LINES[m][(Math.random()*LIFE_LINES[m].length)|0];
+  const a=n.life?n.act&&n.act.a:"walk"; let pool=a==="movies"?(thLive()?LIFE_LINES.movies_on:LIFE_LINES.movies_off):a==="work"&&n.job?LIFE_LINES.work.concat(LIFE_JOBLINES[n.job]):LIFE_LINES[a]||LIFE_LINES.walk; return pool[(Math.random()*pool.length)|0]; }
+function lifeGreet(n){ const r=relOf(npcKey(n)), me1=myName||"runner", m=moodOf(n).k;
+  if(n.k==="cop") return roleIs("police")?"Evening, officer.":heatStars()?null:["Evening, citizen.","Stay safe out there.","Keep your nose clean."][(Math.random()*3)|0];
+  if(m==="scared") return null;
+  if(r<=-3) return ["Ugh. You again.","Keep your hands where I can see them.","Stay away from my pockets."][(Math.random()*3)|0];
+  try{ if(mayorId()===myId) return `Mayor ${me1}! ${lifeApproves(n)?"Love what you're doing.":"We need to talk about this city."}`; }catch(e){}
+  if(roleIs("medic")&&n.hurt) return "Doc! Over here — I'm hurt!";
+  if(r>=5&&n.life&&!rcd("gift_"+n.id)&&Math.random()<.5){ setCd("gift_"+n.id,20*36e5); const g=15+Math.floor(Math.random()*26); save.credits+=g; persist(); hud(); toast(`${n.name} slipped you ₵${g}: "Found this, thought of you."`,"#ff9ad5"); return `${me1}! Here, this is for you.`; }
+  if(r>=3) return [`Hey ${me1}! Good to see you.`,`${me1}! How've you been?`,`Look who it is — ${me1}!`][(Math.random()*3)|0];
+  if(roleIs("police")) return "Evening, officer.";
+  if(save.look&&save.look.pet&&Math.random()<.3) return "Aww, your companion is adorable!";
+  if(n.life&&Math.random()<.5) return lifeLine(n);
+  return ["Hey there.","Evening.","Oh — hi!","New in town?","Nice night, huh?"][(Math.random()*5)|0]; }
+function lifeReact(n,e){ if(n.k==="bot"){ npcSay(n,"Don't wave at me, meatbag."); return; } const r=relOf(npcKey(n)), m=moodOf(n).k; if(m==="scared"||r<=-3){ npcSay(n,r<=-3?"Don't even.":"Not now!"); return; }
+  if(e==="wave"){ n.emote={e:"wave",t:T}; npcSay(n,n.k==="cop"?"Evening.":`Hey${r>=3?" "+(myName||""):""}!`); }
+  else if(e==="dance"){ n.danceUntil=T+5; npcSay(n,["Ayy, let's dance!","Show me your moves!","Okay okay, I see you!"][(Math.random()*3)|0]); }
+  else if(e==="cheer"){ n.emote={e:"cheer",t:T}; npcSay(n,"Woo!"); } else if(e==="pose"){ n.emote={e:"pose",t:T}; npcSay(n,["Looking sharp!","Nice fit!","Strike a pose!"][(Math.random()*3)|0]); } }
+function lifeFlee(n,fromX){ if(n.life){ n.fleeUntil=T+2.5; n.fleeDir=n.x>=fromX?1:-1; n.sit=false; n.goal=null; } else if(n.k==="civ"){ n.v0=n.v0||Math.abs(n.vx)||14; n.vx=(n.x>=fromX?1:-1)*60; setTimeout(()=>{ if(n.vx) n.vx=Math.sign(n.vx)*n.v0; },2500); } }
+function lifeAware(dt){ const L=cityGen(me.scene), W=(npcs[me.scene]||[]), all=L.filter(n=>!(n.k==="bot"&&n.out)).concat(W), people=all.filter(n=>n.k!=="bot");
+  if(me.emote&&me.emote.t!==lifeEmT&&T-me.emote.t<.5&&["wave","dance","cheer","pose"].includes(me.emote.e)){ lifeEmT=me.emote.t; const e=me.emote.e;
+    all.filter(n=>Math.abs(n.x-me.x)<200&&Math.abs(n.y-me.y)<80).sort((a,b)=>Math.abs(a.x-me.x)-Math.abs(b.x-me.x)).slice(0,3).forEach((n,i)=>setTimeout(()=>lifeReact(n,e),300+i*400)); lifeG=T+4; }
+  const stars=heatStars();
+  for(const n of people){ if(n.k!=="civ") continue; const d=Math.abs(n.x-me.x);
+    if(stars&&d<150&&Math.abs(n.y-me.y)<80&&!(n.fleeUntil>T)&&!jailed()){ lifeFlee(n,me.x); if(T-(n.scareT||-99)>8){ n.scareT=T; npcSay(n,LIFE_LINES.scared[(Math.random()*3)|0]); } }
+    const bot=L.find(b=>b.k==="bot"&&!b.out&&Math.abs(b.x-n.x)<150); if(bot&&!(n.fleeUntil>T)&&T-(n.scareT||-99)>10){ n.scareT=T; lifeFlee(n,bot.x); npcSay(n,"Rust Jaws! Run!"); }
+    if(n.life&&n.here&&(n.ev||[]).length===0&&relOf(n.id)>=3&&stars&&L.some(c=>c.k==="cop"&&Math.abs(c.x-me.x)<500)&&T-(n.warnT||-99)>60&&d<260){ n.warnT=T; npcSay(n,`Psst, ${myName||"hey"} — cops nearby!`); } }
+  if(T>lifeG){ // notice you as you walk up
+    for(const n of people){ const close=Math.abs(n.x-me.x)<85&&Math.abs(n.y-me.y)<60; if(close&&!n.nearMe&&T-(n.greetT||-99)>40&&(n.name||n.life)){ n.nearMe=true; const line=lifeGreet(n); if(line){ n.greetT=T; lifeG=T+3; npcSay(n,line); n.dir=me.x>=n.x?1:-1; break; } } if(!close) n.nearMe=false; } }
+  if(T>lifeG){ // residents chat on their own, greet friends and other players
+    const res=L.filter(n=>n.life);
+    for(const n of res){ if(T<n.chatT) continue; n.chatT=T+18+Math.random()*28; if(Math.abs(n.x-me.x)>VW) continue;
+      const pal=res.find(o=>o!==n&&Math.abs(o.x-n.x)<70&&Math.abs(o.y-n.y)<60), pk=pal?[n.id,pal.id].sort().join():"";
+      if(pal&&T-(lifePairs[pk]||-99)>90){ lifePairs[pk]=T; const best=n.bestie===pal.ix; npcSay(n,best?`${pal.name.split(" ")[0]}! My favorite person!`:`Hey ${pal.name.split(" ")[0]}.`); setTimeout(()=>npcSay(pal,best?`${n.name.split(" ")[0]}!! Tonight's gonna be fun.`:["Hey yourself.","How's work?","Long time!"][(Math.random()*3)|0]),1300); lifeG=T+4; break; }
+      const p=[...peers.values()].find(q=>q.s===me.scene&&q.by&&Math.abs(q.dx-n.x)<70); if(p&&Math.random()<.4){ npcSay(n,`Hey ${nameOf(p.by)}!`); lifeG=T+4; break; }
+      const s=thLive(); if(s&&me.scene!=="streamdome"&&Date.now()-lifeGossipT>9e4){ lifeGossipT=Date.now(); npcSay(n,`Did you hear? “${s.title.slice(0,24)}” is playing at the Stream Dome!`); lifeG=T+4; break; }
+      npcSay(n,lifeLine(n)); lifeG=T+3; break; } } }
+
+/* ---- elections: residents vote too ---- */
+function elCands(docs){ return Object.entries(docs||{}).filter(([id,v])=>v&&v.kind==="cand"&&id.startsWith("ec_")).map(([id,v])=>({uid:id.slice(3),slogan:String(v.slogan||"").toLowerCase(),name:String(v.name||"Runner").slice(0,24),at:+v.at||0})); }
+function lifeBallot(R,term,cands,now){ const r=seeded(hashNum(R.id)*7+term*389+11); r(); const abstain=r()<.12, at=term*TERM_MS+(.04+.9*r())*TERM_MS;
+  const elig=now>=at?cands.filter(c=>c.at<at):cands; if(!elig.length) return {at,abstain,cand:null,done:false};
+  let best=null, bs=-1, bw=""; for(const c of elig){ const hit=R.words.filter(w=>c.slogan.includes(w)); const s=seeded(hashNum(R.id+c.uid)+term)()+hit.length*.8; if(s>bs){ bs=s; best=c; bw=hit[0]||""; } }
+  return {at,abstain,cand:best.uid,cname:best.name,slogan:best.slogan,why:bw,done:!abstain&&now>=at}; }
+function lifeBallots(docs,term){ const cands=elCands(docs), now=Date.now(); return LIFE_R.map(R=>({R,b:lifeBallot(R,term,cands,now)})); }
+function lifeApproves(R){ if(!R.life) return true; let m=null; try{ m=mayorId(); }catch(e){} if(!m) return true; const b=lifeBallot(R,termNow()-1,elCands(elDocs.prev),Date.now()); let s=R.cheer+.2+(b&&b.done&&b.cand?(b.cand===m?.8:-.35):0);
+  let pol=[]; try{ pol=cityPolicies(); }catch(e){} for(const p of pol){ if(R.likePol.includes(p)) s+=.5; if(R.hatePol.includes(p)) s-=.6; } return s>.15; }
+function lifeApproval(){ let m=null; try{ m=mayorId(); }catch(e){} if(!m) return null; const y=LIFE_R.filter(lifeApproves).length; return Math.round(100*y/LIFE_R.length); }
+
+/* ---- talking to people ---- */
+function openCitizen(n){ const R=n, res=!!R.life, mood=moodOf(R), M=MOODS[mood.k]||MOODS.content, key=npcKey(R), rel=relOf(key), a=res?lifeAct(R,Date.now()):null;
+  const body=panel(res?`${R.name} — ${LIFE_JOB[R.job].n}`:(R.name||"Citizen"),res?R.bio:"A local out and about in Neon Harvest."); currentView="citizen";
+  const inPerson=res?R.here&&a.sc===me.scene:true;
+  body.append(el("div",{class:"detail",style:"border-color:#ff9ad5"},el("div",{style:"font-size:42px;line-height:1"},el("span",{text:M[0]})),el("div",{class:"info"},el("strong",{text:`Feeling ${M[1].toLowerCase()}`}),el("span",{class:"sub",text:mood.why}),
+    res?el("span",{class:"sub",text:`${a.ic} Right now: ${a.l}${lifeBday(R)?" · 🎂 birthday today!":""}`}):null,
+    el("span",{class:"sub",text:`You & them: ${relHearts(rel)?relHearts(rel)+" ":""}${relLabel(rel)} (${rel>0?"+":""}${Math.round(rel)})`}))));
+  const say=el("div",{class:"detail",style:"min-height:38px"},el("div",{class:"info"},el("span",{text:`“${(R.say&&T-R.say.t<6&&R.say.text)||lifeLine(R)}”`})));
+  const talk=t=>{ say.firstChild.firstChild.textContent=`“${t}”`; npcSay(R,t); };
+  body.append(say);
+  const btns=el("div",{class:"row"}); const need=()=>{ if(!inPerson){ toast(`${R.name} isn't here. They're ${a.l}.`); return false; } return true; };
+  btns.append(el("button",{class:"btn hot",type:"button",text:"💬 Chat",onclick:()=>{ if(!need()) return; const ck="c_"+key; const last=(save.relc||{})[ck]||0; if(Date.now()-last>3*6e4){ save.relc=save.relc||{}; save.relc[ck]=Date.now(); const ks=Object.keys(save.relc); if(ks.length>60) delete save.relc[ks[0]]; relAdd(key,1); lifeFeel(R,"chat",5*6e4,.15,0,"Enjoyed talking with you"); }
+      const extra=res?[...(LIFE_JOBLINES[R.job]||[]),(()=>{ const nx=lifePick(R,Math.floor(Date.now()/LIFE_SLOT)+1); return nx==="sleep"?"Heading home to sleep after this.":nx==="work"?"Back to work after this.":`After this I'm ${LIFE_ACT[nx].l}.`; })(),`Honestly? ${mood.why}.`]:[mood.why+"."]; talk([lifeLine(R),...extra][(Math.random()*(extra.length+1))|0]); openCitizen(R); }}),
+    el("button",{class:"btn",type:"button",text:"🎁 Treat them (₵25)",onclick:()=>{ if(!need()) return; if(rcd("treat_"+key)) return toast(`You just treated ${R.name} (${cdTxt(rcd("treat_"+key))}).`); if(save.credits<25) return toast("You need ₵25.");
+      save.credits-=25; setCd("treat_"+key,20*6e4); relAdd(key,res&&lifeBday(R)?4:2); hud(); lifeFeel(R,"grateful",8*6e4,.5,0,"You treated them"); R.emote={e:"cheer",t:T}; talk(res&&lifeBday(R)?"A birthday treat?! You're the best!":["Aw, you didn't have to!","That's so sweet. Thank you!","You just made my day."][(Math.random()*3)|0]); openCitizen(R); }}),
+    el("button",{class:"btn",type:"button",text:"👋 Wave",onclick:()=>{ emote("wave"); if(inPerson) setTimeout(()=>lifeReact(R,"wave"),300); }}));
+  if(res) btns.append(el("button",{class:"btn",type:"button",text:"🗳 Who are you voting for?",onclick:()=>{ const b=lifeBallot(R,termNow(),elCands(elDocs.cur),Date.now());
+      talk(!b.cand?"Nobody's even running yet! Somebody should.":b.abstain?"I don't vote. Politicians are all the same.":b.done?`I voted for ${b.cname}.${b.why?` I liked that they talked about ${b.why}.`:" Gut feeling."}`:`Haven't voted yet — I'll head to City Hall later. Leaning toward ${b.cname}.`); }}),
+    el("button",{class:"btn",type:"button",text:"🏙 What's new in the city?",onclick:()=>{ const L=[]; let m=null; try{ m=mayorId(); }catch(e){} const ap=lifeApprove(R);
+      L.push(m?`${nameOf(m)} is Mayor. ${ap?"I think they're doing alright.":"Not a fan, honestly."}`:"No Mayor right now. Somebody should run.");
+      let pol=[]; try{ pol=cityPolicies(); }catch(e){} if(pol.length) L.push(`The ${POLICIES[pol[0]].n} is in effect. ${R.likePol&&R.likePol.includes(pol[0])?"Love it.":R.hatePol&&R.hatePol.includes(pol[0])?"I hate it.":"We'll see."}`);
+      const s=thLive(); if(s) L.push(`“${s.title}” is playing at the Stream Dome right now!`);
+      const o=LIFE_R.filter(x=>x!==R&&["sad","angry","excited","party","scared"].includes(moodOf(x).k)); if(o.length){ const x=o[(Math.random()*o.length)|0]; L.push(`${x.name.split(" ")[0]}? ${MOODS[moodOf(x).k][1]}. ${moodOf(x).why}.`); }
+      if(heatStars()) L.push("And you… you've got the cops looking for you."); talk(L[(Math.random()*L.length)|0]); }}));
+  body.append(btns);
+  if(!inPerson) body.append(el("p",{class:"sub",text:`To chat or treat them, find them in person — they're ${a.l}.`}));
+  if(res) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"📋 All residents",onclick:()=>openCensus()}))); }
+function lifeApprove(R){ return lifeApproves(R); }
+function openCensus(){ const body=panel("Neon Harvest census","Everyone who lives here — what they're doing and how they feel right now."); currentView="census";
+  const now=Date.now(), bl=lifeBallots(elDocs.cur,termNow()), voted=bl.filter(x=>x.b.done).length, ap=lifeApproval();
+  body.append(el("div",{class:"sub",text:`🗳 ${voted} of ${LIFE_R.length} residents have voted this term.${ap!=null?` Mayor approval: ${ap}%.`:""} A Neon day lasts 2 real hours: they sleep, work, eat, go out and come home.`}));
+  const l=el("div",{class:"list"});
+  for(const R of [...LIFE_R].sort((x,y)=>(lifeAct(x,now).a==="sleep")-(lifeAct(y,now).a==="sleep"))){ const a=lifeAct(R,now), m=MOODS[moodOf(R).k]||MOODS.content, rel=relOf(R.id);
+    l.append(el("div",{class:"li"},el("span",{style:"font-size:22px",text:m[0]}),el("div",{class:"grow"},el("strong",{text:R.name+(lifeBday(R)?" 🎂":"")}),el("div",{class:"sub",text:`${LIFE_JOB[R.job].n} · ${a.ic} ${a.l}`}),el("div",{class:"sub",text:`${m[1]}: ${moodOf(R).why}${rel?` · ${relHearts(rel)} ${relLabel(rel)}`:""}`})),
+      el("button",{class:"btn",type:"button",text:"Profile",onclick:()=>openCitizen(R)}))); }
+  body.append(l); }
 
 /* ---------- jail ---------- */
 function goJail(stars,why,byCop){ if(jailed()) return 0; if(IS_ADMIN&&save.admImm){ toast("Owner: immune to arrest. Turn it off in Admin \u2192 City & Roles to test jail."); if(save.heat){ save.heat=0; persist(); pushPresence(true); } return 0; } stars=Math.max(1,stars||1); let sec=40*stars*(policy("crackdown")?1.5:1)*(policy("amnesty")?.5:1); const fine=Math.min(400,Math.floor(save.credits*.1));
@@ -2191,7 +2415,7 @@ function cityHot(sc){ const out=[]; const ax=ATM_SPOTS[sc];
   if(ax!=null) out.push({x:ax,hw:22,label:roleIs("hacker")?(rcd("atm_"+sc)?`ATM (cracked · ${cdTxt(rcd("atm_"+sc))})`:"Hack this ATM 💻"):"ATM: check balance",act:()=>roleIs("hacker")?hackATM(sc):toast(`Balance: ₵${Math.floor(save.credits).toLocaleString()}`)});
   if(sc==="prison") return prisonHot();
   if(sc!=="civic") return out;
-  return [...out,{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:CIVIC.hall,hw:90,label:"City Hall: choose your role",act:()=>openRoleOffice()},{x:CIVIC.vote,hw:50,label:"Elections & Mayor's Office",act:()=>openElection()},
+  return [...out,{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:CIVIC.hall,hw:90,label:"City Hall: choose your role",act:()=>openRoleOffice()},{x:CIVIC.vote,hw:50,label:"Elections & Mayor's Office",act:()=>openElection()},{x:650,hw:28,label:"Census: everyone who lives here",act:()=>openCensus()},
     {x:CIVIC.precinct,hw:70,label:"Precinct 9: wanted board & police",act:()=>openPrecinct()},{x:1266,hw:40,label:"Read the Wanted board",act:()=>openPrecinct()},{x:CIVIC.clinic,hw:80,label:"Clinic: patch-ups & medic station",act:()=>openClinic()},
     {x:CIVIC.crate,hw:50,label:"Black Market crate",act:()=>openBlackMarket()},{x:CIVIC.term,hw:40,label:"Hacker terminal: scrub records",act:()=>openTerminal()},{x:CIVIC.coffee,hw:40,label:rcd("coffee")?`Coffee cart (${cdTxt(rcd("coffee"))})`:"Coffee cart: Civic Roast \u20b530 (Speed)",act:()=>coffeeCart()},{x:CIVIC.services,hw:50,label:heatStars()?`City Services: pay citations (\u20b5${heatStars()*80})`:"City Services kiosk",act:()=>openCityServices()},{x:CIVIC.fountain,hw:40,label:rcd("wish")?`Wishing fountain (${cdTxt(rcd("wish"))})`:"Wishing fountain: toss \u20b510",act:()=>wishFountain()},{x:CIVIC.notice,hw:40,label:"Read the civic notice board",act:()=>openNotice()}]; }
 // ---- Civic Center: extra things anyone can do ----
@@ -2208,7 +2432,7 @@ function openNotice(){ const body=panel("Civic notice board","Sector 9 city bull
     el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:"City laws"}),el("div",{class:"sub",text:pol.length?pol.map(k=>POLICIES[k].n).join(", "):"None in effect."}))),
     el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:"Wanted now"}),el("div",{class:"sub",text:wl.length?`${wl.length} runner${wl.length>1?"s":""} with a record`:"Nobody's Wanted. Quiet day."}))),
     el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:"Next election"}),el("div",{class:"sub",text:"Ends in "+termLeftTxt()})))));
-  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"City Hall",onclick:()=>openRoleOffice()}),el("button",{class:"btn",type:"button",text:"Elections",onclick:()=>openElection()}),el("button",{class:"btn",type:"button",text:"Precinct",onclick:()=>openPrecinct()}))); }
+  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"City Hall",onclick:()=>openRoleOffice()}),el("button",{class:"btn",type:"button",text:"Elections",onclick:()=>openElection()}),el("button",{class:"btn",type:"button",text:"Precinct",onclick:()=>openPrecinct()}),el("button",{class:"btn",type:"button",text:"Census",onclick:()=>openCensus()}))); }
 // ---- Prison: more to do in the yard ----
 function prisonHoop(){ if(rcd("prHoop")) return toast(`Catch your breath (${cdTxt(rcd("prHoop"))}).`); setCd("prHoop",15e3); emote("use"); beep(600,.05);
   if(Math.random()<.6){ if(jailed()){ save.jail.until-=6000; persist(); } toast(jailed()?`Swish! Time flies — ${jailLeft()}s left.`:"Swish! Nothing but net.","#ffb84a"); } else toast("Clang — off the rim.","#9a8cc0"); }
@@ -2243,7 +2467,7 @@ function roleActions(){ const A=[]; if(jailed()||me.dead) return A; const sc=me.
     if(rk==="dealer"&&n.buyer) A.push({l:save.dust?`Sell Neon Dust to ${n.name} 💊`:`${n.name} wants Dust (buy at the Black Market)`,f:()=>streetDeal(n)});
     if(rk==="cult") A.push({l:save.acolytes>=4?"You have 4 acolytes (max)":`Recruit ${n.name} as an acolyte`,f:()=>recruit(n)});
     if(rk==="politician") A.push({l:`Ask ${n.name} for their vote`,f:()=>{ npcSay(n,Math.random()<.6?"You've got my vote!":"Politicians. Ugh."); }});
-    A.push({l:`Talk to ${n.name}`,f:()=>npcSay(n,n.hurt?"I got jumped by the Rust Jaws… need a medic.":CIV_LINES[(Math.random()*CIV_LINES.length)|0])}); }
+    A.push({l:`Talk to ${n.name} ${moodEmoji(n)}`,f:()=>openCitizen(n)}); }
   if(rk==="cult"&&save.myCult&&!NO_CRIME.includes(sc)) A.push({l:rcd("ritual")?`Ritual (${cdTxt(rcd("ritual"))})`:"Hold a ritual 🜏",f:()=>doRitual()});
   if(rk==="politician"&&!["home","vip","story","line"].includes(sc)) A.push({l:rcd("rally")?`Rally (${cdTxt(rcd("rally"))})`:"Hold a campaign rally 🎙",f:()=>doRally()});
   return A; }
@@ -2262,18 +2486,18 @@ function doRally(){ if(rcd("rally")) return toast(`Your voice needs rest (${cdTx
   const g=Math.round((30*L.length+20)*(policy("festival")?1.5:1)); earn(g,`Rally donations (${L.length} in the crowd)`,"#ffd36a"); rstat("rallies"); broadcastSys(`is holding a campaign rally in ${sceneName(me.scene)}${save.slogan?`: "${save.slogan}"`:""}`); }
 function pickpocket(n){ const k="pp_"+n.name; if(rcd(k)) return toast(`${n.name}'s pockets are empty.`); if(rcd("pp")) return toast(`Easy… wait ${cdTxt(rcd("pp"))}.`); setCd("pp",8e3); setCd(k,5*6e4); emote("use");
   const copNear=cityGen(me.scene).some(c=>c.k==="cop"&&Math.abs(c.x-me.x)<320); const ok=Math.random()<(copNear?.5:.72);
-  if(ok){ const amt=Math.max(10,Math.min(n.purse,15+Math.floor(Math.random()*46))); n.purse=Math.max(0,n.purse-amt); save.credits+=amt; rstat("pickpockets"); let extra=""; if(Math.random()<.15){ const pool=CAT.filter(i=>i.r==="common"&&i.t!=="build"&&i.t!=="food"&&i.t!=="drink"&&!i.bound); const it=pool[(Math.random()*pool.length)|0]; if(it){ addItem(it.id); extra=` and a ${it.n}`; } }
+  if(ok){ const amt=Math.max(10,Math.min(n.purse,15+Math.floor(Math.random()*46))); n.purse=Math.max(0,n.purse-amt); save.credits+=amt; rstat("pickpockets"); lifeFeel(n,"sad",6e5,-.3,0,"Someone picked their pocket"); let extra=""; if(Math.random()<.15){ const pool=CAT.filter(i=>i.r==="common"&&i.t!=="build"&&i.t!=="food"&&i.t!=="drink"&&!i.bound); const it=pool[(Math.random()*pool.length)|0]; if(it){ addItem(it.id); extra=` and a ${it.n}`; } }
     persist(); toast(`Lifted ₵${amt}${extra} from ${n.name}.`,"#a0a6bc"); beep(1200,.05); addHeat(1,"pickpocket"); }
-  else { npcSay(n,"THIEF! Somebody stop them!"); n.vx=(n.x>me.x?1:-1)*60; addHeat(2,"spotted pickpocketing"); beep(160,.2,"square"); } }
-function treatNpc(n){ if(!n.hurt) return; n.hurt=false; npcSay(n,"Thank you, doc!"); emote("use"); rstat("heals"); earn(40*(policy("healthcare")?2:1),`Treated ${n.name}`,"#43f0a4"); }
+  else { npcSay(n,"THIEF! Somebody stop them!"); relAdd(npcKey(n),-3); lifeFeel(n,"angry",15*6e4,-.6,.3,"You tried to rob them"); n.vx=(n.x>me.x?1:-1)*60; addHeat(2,"spotted pickpocketing"); beep(160,.2,"square"); } }
+function treatNpc(n){ if(!n.hurt) return; n.hurt=false; npcSay(n,"Thank you, doc!"); relAdd(npcKey(n),3); lifeFeel(n,"grateful",10*6e4,.5,0,"You patched them up"); emote("use"); rstat("heals"); earn(40*(policy("healthcare")?2:1),`Treated ${n.name}`,"#43f0a4"); }
 function streetDeal(n){ if(!save.dust) return toast("You're out of Neon Dust. Restock at the Black Market crate in the Civic Center alley."); if(rcd("deal")) return toast(`Too hot right now (${cdTxt(rcd("deal"))}).`); setCd("deal",15e3);
-  save.dust--; n.buyer=false; setTimeout(()=>{ n.buyer=true; },6*6e4); const pay=Math.round((55+Math.random()*35)*(policy("freemarket")?1.2:1)); emote("use"); npcSay(n,"Pleasure doing business."); rstat("deals"); earn(pay,`Sold Neon Dust to ${n.name}`,"#c95cff");
+  save.dust--; n.buyer=false; setTimeout(()=>{ n.buyer=true; },6*6e4); const pay=Math.round((55+Math.random()*35)*(policy("freemarket")?1.2:1)); emote("use"); npcSay(n,"Pleasure doing business."); relAdd(npcKey(n),1); rstat("deals"); earn(pay,`Sold Neon Dust to ${n.name}`,"#c95cff");
   const copNear=cityGen(me.scene).some(c=>c.k==="cop"&&Math.abs(c.x-me.x)<300); addHeat(copNear?2:1,copNear?"a cop saw the deal":"street deal"); }
 function recruit(n){ if(save.acolytes>=4) return toast("Four acolytes is all you can lead."); if(rcd("recruit")) return toast(`Wait ${cdTxt(rcd("recruit"))}.`); setCd("recruit",3e4);
-  if(Math.random()<.5){ save.acolytes++; const L=cityGen(me.scene); L.splice(L.indexOf(n),1); persist(); pushPresence(true); toast(`${n.name} joined ${save.myCult.n}. They follow you now.`,save.myCult.col); rstat("recruits"); beep(220,.3,"sine"); }
+  if(Math.random()<.5){ save.acolytes++; const B=cityNpcs[me.scene]||[], ix=B.indexOf(n); if(ix>=0) B.splice(ix,1); if(n.life){ n.goneUntil=Date.now()+30*6e4; n.here=false; } persist(); pushPresence(true); toast(`${n.name} joined ${save.myCult.n}. They follow you now.`,save.myCult.col); rstat("recruits"); beep(220,.3,"sine"); }
   else npcSay(n,["Not interested.","Is this a pyramid scheme?","Maybe later…","Get away from me, weirdo."][(Math.random()*4)|0]); }
 function fightBot(n,police){ if(n.out) return; gangCd=Date.now()+15e3; emote("atk"); const wpn=String(save.look&&save.look.hand||"").startsWith("wpn_"); const win=police||Math.random()<(.45+(wpn?.3:0));
-  if(win){ n.out=Date.now()+3*6e4; n.mug=0; const pay=police?80:30+Math.floor(Math.random()*30), ch=police?5:3+Math.floor(Math.random()*5); save.chips+=ch; earn(pay,police?`Busted ${n.name} (+${ch} chips)`:`Scrapped ${n.name} (+${ch} chips)`,"#ff7a5a"); rstat(police?"busts":"botwins"); beep(1400,.06); }
+  if(win){ n.out=Date.now()+3*6e4; n.mug=0; cityGen(me.scene).filter(c=>c.k==="civ"&&Math.abs(c.x-me.x)<260).slice(0,4).forEach((c,i)=>{ relAdd(npcKey(c),1); lifeFeel(c,"grateful",4*6e4,.35,0,"You ran off the Rust Jaws"); setTimeout(()=>{ c.emote={e:"cheer",t:T}; npcSay(c,["Thank you!","Get outta here, Rust Jaws!","My hero!","Nice one!"][i%4]); },300+i*300); }); const pay=police?80:30+Math.floor(Math.random()*30), ch=police?5:3+Math.floor(Math.random()*5); save.chips+=ch; earn(pay,police?`Busted ${n.name} (+${ch} chips)`:`Scrapped ${n.name} (+${ch} chips)`,"#ff7a5a"); rstat(police?"busts":"botwins"); beep(1400,.06); }
   else { const lose=Math.min(Math.floor(save.credits),20+Math.floor(Math.random()*40)); save.credits-=lose; persist(); npcSay(n,"Pathetic, meatbag."); toast(`${n.name} knocked you down and took ₵${lose}.`,"#ff5a4a"); me.slowUntil=T+4; beep(120,.25,"square"); } }
 function gangMug(n){ const amt=Math.max(10,Math.min(150,Math.floor(save.credits*.08))); npcSay(n,"Credits or circuits, meatbag!"); beep(140,.2,"square"); gangCd=Date.now()+9e4;
   card(`⚙ ${n.name} of the Rust Jaws blocks your path: "Hand over ₵${amt}!"`,[["Pay ₵"+amt,()=>{ const a=Math.min(amt,Math.floor(save.credits)); save.credits-=a; persist(); toast(`You paid the Rust Jaws ₵${a}.`,"#ff7a5a"); n.mug=0; },false],["Fight back",()=>{ fightBot(n,false); },true],["Run!",()=>{ me.x=clamp(me.x+(me.x<n.x?-140:140),30,SCENES[me.scene].w-30); n.mug=0; toast("You slipped away."); },false]],2e4);
@@ -2322,10 +2546,13 @@ function elWatch(){ if(elWatched||!DB) return; elWatched=1; const N=termNow();
   const take=k=>s=>{ const o={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(["vote","cand","city"].includes(v.kind)) o[d.id]=v; }); elDocs[k]=o; if(currentView==="election") openElection(); };
   try{ DB.collection("club").where("term","==",N).onSnapshot(take("cur"),()=>{}); DB.collection("club").where("term","==",N-1).onSnapshot(take("prev"),()=>{}); }catch(e){}
   setTimeout(()=>{ elWatched=0; },Math.max(6e4,(N+1)*TERM_MS-Date.now()+2000)); }
-function tally(docs){ const cands={}; for(const [id,v] of Object.entries(docs)) if(v.kind==="cand"&&id.startsWith("ec_")) cands[id.slice(3)]={uid:id.slice(3),name:String(v.name||"Runner").slice(0,24),slogan:String(v.slogan||"").slice(0,60),at:+v.at||0,votes:0};
-  for(const [id,v] of Object.entries(docs)) if(v.kind==="vote"&&id.startsWith("ev_")&&cands[v.cand]) cands[v.cand].votes++; return Object.values(cands).sort((a,b)=>b.votes-a.votes||a.at-b.at); }
-function candList(){ return tally(elDocs.cur); }
-function mayorId(){ const t=tally(elDocs.prev); return t.length&&t[0].votes>0?t[0].uid:null; }
+const _tallyMemo=new WeakMap();
+function tally(docs,term){ const mk=term+"|"+Math.floor(Date.now()/5000), mm=docs&&_tallyMemo.get(docs); if(mm&&mm.k===mk) return mm.r; const cands={}; for(const [id,v] of Object.entries(docs)) if(v.kind==="cand"&&id.startsWith("ec_")) cands[id.slice(3)]={uid:id.slice(3),name:String(v.name||"Runner").slice(0,24),slogan:String(v.slogan||"").slice(0,60),at:+v.at||0,votes:0};
+  for(const [id,v] of Object.entries(docs)) if(v.kind==="vote"&&id.startsWith("ev_")&&cands[v.cand]) cands[v.cand].votes++;
+  if(term!=null) for(const {b} of lifeBallots(docs,term)) if(b.done&&b.cand&&cands[b.cand]){ cands[b.cand].votes++; cands[b.cand].npc=(cands[b.cand].npc||0)+1; }
+  const r=Object.values(cands).sort((a,b)=>b.votes-a.votes||a.at-b.at); if(docs) _tallyMemo.set(docs,{k:mk,r}); return r; }
+function candList(){ return tally(elDocs.cur,termNow()); }
+function mayorId(){ const t=tally(elDocs.prev,termNow()-1); return t.length&&t[0].votes>0?t[0].uid:null; }
 function cityPolicies(){ if(cityLawAdmin!==null) return cityLawAdmin; const m=mayorId(); if(!m) return []; const d=elDocs.cur["city_"+termNow()]; return d&&d.by===m&&Array.isArray(d.pol)?d.pol.filter(k=>POLICIES[k]).slice(0,2):[]; }
 function wantedList(){ const L=[]; if(heatStars()) L.push({name:myName||"You",hz:heatStars(),s:me.scene,me:1}); for(const p of onlinePeers()) if(p.hz>0) L.push({name:nameOf(p.by),hz:p.hz,s:p.s}); return L.sort((a,b)=>b.hz-a.hz); }
 
@@ -2387,8 +2614,9 @@ function openElection(){ const body=panel("Elections & Mayor's Office",`Every 3 
       el("button",{class:"btn",type:"button",text:save.mayorDay===d?"Salary collected today":"Collect Mayor salary (₵800)",onclick:()=>{ if(save.mayorDay===d) return; save.mayorDay=d; earn(800,"Mayor salary","#ffd36a"); openElection(); }}))); }
   body.append(el("strong",{text:`Candidates for next term (${C.length})`})); const l=el("div",{class:"list"}); if(!C.length) l.append(el("div",{class:"empty",text:"Nobody is running yet. Politicians can register below."}));
   for(const c of C){ const voted=myVote&&myVote[1].cand===c.uid; const b=el("button",{class:"btn"+(voted?"":" hot"),type:"button",text:voted?"Your vote":"Vote",onclick:async()=>{ if(c.uid===myId) return toast("You can't vote for yourself."); try{ await DB.doc("club/ev_"+myId).set({kind:"vote",term:N,cand:c.uid,at:Date.now()}); toast(`You voted for ${c.name}.`,"#ffd36a"); }catch(e){ toast("Your vote didn't go through. Try again."); } }}); if(voted) b.disabled=true;
-    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:c.name}),c.slogan?el("div",{class:"sub",text:`"${c.slogan}"`}):null),el("span",{class:"r-uncommon",text:`${c.votes} vote${c.votes===1?"":"s"}`}),b)); }
+    l.append(el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:c.name}),c.slogan?el("div",{class:"sub",text:`"${c.slogan}"`}):null),el("span",{class:"r-uncommon",text:`${c.votes} vote${c.votes===1?"":"s"}${c.npc?` (${c.npc} citizen${c.npc>1?"s":""})`:""}`}),b)); }
   body.append(l);
+  { const bl=lifeBallots(elDocs.cur,N), dn=bl.filter(x=>x.b.done).length, ap=lifeApproval(); body.append(el("div",{class:"detail",style:"border-color:#ff9ad5"},el("div",{class:"info"},el("strong",{text:`🗳 Citizens vote too: ${dn} of ${LIFE_R.length} residents have voted this term`}),el("span",{class:"sub",text:"Residents walk to City Hall to vote at different times during the term and pick the candidate whose slogan matches what they care about (jobs, safety, health, parties, cheap prices…). Talk to them to find out who they back."+(ap!=null?` Mayor approval among residents: ${ap}%.`:"")}),el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"📋 See the census",onclick:()=>openCensus()}))))); }
   if(roleIs("politician")){ const reg=C.some(c=>c.uid===myId); const slIn=el("input",{type:"text",maxlength:"60",value:save.slogan||"A light on every corner.","aria-label":"Campaign slogan",style:"flex:1;min-width:180px;padding:8px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"}); if(reg) slIn.disabled=true; body.append(el("div",{class:"row"},slIn,el("button",{class:"btn hot",type:"button",text:reg?"You're on the ballot":"Register as a candidate (₵500)",onclick:async()=>{ if(reg) return; if(save.credits<500) return toast("The filing fee is ₵500."); save.slogan=(slIn.value||"").trim().slice(0,60)||"A light on every corner.";
       try{ await DB.doc("club/ec_"+myId).set({kind:"cand",term:N,name:(myName||"Runner").slice(0,24),slogan:save.slogan,at:Date.now()}); save.credits-=500; persist(); broadcastSys(`is running for Mayor: "${save.slogan}"`); toast("You're on the ballot!","#ffd36a"); }catch(e){ toast("Registration failed. Try again."); } }}))); }
   else body.append(el("div",{class:"sub",text:"Want to run? Become a Politician at City Hall."})); }
@@ -2669,7 +2897,7 @@ function drawStreamDome(t){ const W=TH_W, X0=camX, X1=camX+VW, s=thLive(), src=t
       if(s){ ctx.fillStyle="#ffb13f"; ctx.font="bold 12px monospace"; ctx.fillText("NOW SHOWING",cx,TH_SY+78); ctx.fillStyle="#fff2dc"; ctx.font="bold 18px 'IBM Plex Mono',monospace"; ctx.fillText(s.title.slice(0,30),cx,TH_SY+104);
         ctx.fillStyle="#9a8cc0"; ctx.font="11px 'IBM Plex Mono',monospace"; ctx.fillText("from "+String(nameOf(s.by)).slice(0,20)+"'s device",cx,TH_SY+124); ctx.fillStyle="#ff7a7a"; ctx.fillText(thStatus().slice(0,52),cx,TH_SY+150); }
       else { for(let k=0;k<40;k++){ ctx.fillStyle=`rgba(255,255,255,${.02+Math.random()*.05})`; ctx.fillRect(TH_SX+Math.random()*TH_SW,TH_SY+Math.random()*TH_SH,2,2); }
-        ctx.fillStyle="#b06bff"; ctx.font="bold 20px monospace"; ctx.fillText("STREAM DOME THEATER",cx,TH_SY+96); ctx.fillStyle="#43f0a4"; ctx.font="11px monospace"; ctx.fillText(`Screen's free · play your MP4 at the projection booth (${TH_FEE} chips)`,cx,TH_SY+126); }
+        ctx.fillStyle="#b06bff"; ctx.font="bold 20px monospace"; ctx.fillText("STREAM DOME THEATER",cx,TH_SY+96); ctx.fillStyle="#43f0a4"; ctx.font="11px monospace"; ctx.fillText("Screen's free",cx,TH_SY+124); ctx.fillText(`Play your MP4 at the projection booth · ${TH_FEE} chips`,cx,TH_SY+140); }
       ctx.restore(); }
     if(src&&thNeedTap){ ctx.fillStyle="rgba(0,0,0,.6)"; ctx.fillRect(TH_SX+TH_SW/2-90,TH_SY+TH_SH-26,180,18); ctx.fillStyle="#ffb13f"; ctx.font="10px monospace"; ctx.textAlign="center"; ctx.fillText("🔇 tap or press any key for sound",TH_SX+TH_SW/2,TH_SY+TH_SH-13); }
     ctx.fillStyle="#2a1220"; ctx.fillRect(cl,TH_SY+TH_SH+4,cr+80-cl,250-(TH_SY+TH_SH+4)); }
@@ -3066,6 +3294,7 @@ cv.addEventListener("pointerdown",e=>{ const r=cv.getBoundingClientRect(); const
   // tap a player?
   if(me.scene==="void"){ for(const b of bots) if(!b.dead&&Math.abs(b.x-wx)<20&&wy>b.y-80&&wy<b.y+6){ me.dir=b.x>=me.x?1:-1; voidAttack(); return; } }
   for(const [pid,p] of peers){ if(p.s!==me.scene||(p.home||null)!==curHomeKey()) continue; if(Math.abs(p.dx-wx)<18&&wy>p.dy-80&&wy<p.dy+6){ if(me.scene==="void"){ me.dir=p.dx>=me.x?1:-1; voidAttack(); return; } openPlayer(pid); return; } }
+  for(const n of cityGen(me.scene)){ if(n.k==="civ"&&Math.abs(n.x-wx)<16&&wy>n.y-90&&wy<n.y+6){ target={x:clamp(n.x-(me.x<n.x?30:-30),30,SCENES[me.scene].w-30),y:clamp(n.y,LANE.top,LANE.bot),use:{act:()=>openCitizen(n)}}; return; } }
   for(const n of (npcs[me.scene]||[])){ if(n.name&&Math.abs(n.x-wx)<16&&wy>n.y-90&&wy<n.y+6){ target={x:clamp(n.x-(me.x<n.x?30:-30),30,SCENES[me.scene].w-30),y:clamp(n.y,LANE.top,LANE.bot),use:{act:()=>openNpc(n)}}; return; } }
   // tap a hotspot (walk then use)
   const h=hotspots(me.scene).find(h=>Math.abs(h.x-wx)<h.hw&&wy<262); if(h){ target={x:clamp(h.x,30,SCENES[me.scene].w-30),y:clamp(me.y,LANE.top,LANE.bot),use:h}; return; }
@@ -3126,7 +3355,7 @@ function render(){
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
   // entities sorted by depth
   const ents=[];
-  for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:n.name,say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance?{e:"dance",t:T}:null}});
+  for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:lifeName(n),say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance||n.danceUntil>T?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}});
   for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
@@ -3226,6 +3455,7 @@ const GUIDE={
     ["The 8 roles",["\ud83d\udd27 Hard Worker \u2014 honest money: a union bonus of \u20b5120 for every 10 minutes on any shift, a daily \u20b5250 stipend at City Hall, can\u2019t be pickpocketed while working, and never Wanted.","\ud83d\udc6e Police \u2014 arrest Wanted players (they go to prison, you earn \u20b580 per star), bust Rust Jaws gang bots for \u20b580, patrol pay every 5 minutes, and thieves who try to rob you are caught on the spot.","\u2716 Medic \u2014 treat players (they get Speed and full Void HP, you earn \u20b560), revive deleted players in The Void, treat hurt civilians (\ud83e\ude79) for \u20b540, and patch yourself at the Clinic.","\ud83e\udd9d Thief \u2014 pickpocket civilians for \u20b515\u201360 and steal 6% of another player\u2019s credits, with +15% speed to outrun the law. Crimes make you Wanted.","\ud83d\udc8a Dealer \u2014 buy Neon Dust and hot parts at the Black Market crate in the Civic Center alley, then sell Dust to street buyers (\ud83d\udc8a) for \u20b555\u201390. Deals make you Wanted.","\ud83d\udcbb Hacker \u2014 crack ATMs for \u20b590\u2013200, scrub Wanted records (your own, or another player\u2019s for \u20b5150), and see every Wanted runner and cop on the police radio.","\ud83d\udf0f Cult Leader \u2014 name your cult and pick its color, recruit civilians as robed acolytes who follow you and tithe, invite players to join, and hold rituals that bless your followers.","\ud83c\udf99 Politician \u2014 register as a candidate at City Hall (\u20b5500), hold campaign rallies, and if you win the vote you become Mayor."]],
     ["Crime, Wanted & jail",["Crimes \u2014 pickpocketing, stealing, dealing, hacking \u2014 raise your Wanted level (\u2605, up to 5). It fades on its own after a few minutes, or a Hacker can scrub it.","Police players and police NPCs chase and arrest Wanted runners. You pay a small fine and serve time in Rust Gate Prison.","In prison: press license plates or work the laundry to cut your sentence, lift weights for a Void buff, grab a canteen tray to heal, pay bail at the pay phone, or risk digging the tunnel to escape (if a guard doesn\u2019t catch you). Hard Workers and Police can never be Wanted."]],
     ["Elections & the Mayor",["Every 3 days the city holds an election. Anyone can vote at City Hall; Politicians can run.","The winner is Mayor for the next term and signs up to 2 city laws that change the game for everyone \u2014 faster Wanted decay, a cheaper Black Market, double medic pay, higher union and patrol pay, and more \u2014 plus a daily salary.","Open Role \u2192 Elections (or the board at City Hall) to vote and see who\u2019s running."]],
+    ["Citizens of Neon Harvest",["24 residents live here, each with a name, a job, a best friend, a birthday and their own opinions. A Neon day lasts 2 real hours: they sleep, grab coffee, go to work, take lunch, then spend their free time at the movies, the club, the bar, chess at the Grid, shopping, the Civic fountain or visiting someone at Rust Gate — and you'll see them walk in and out.","The emoji over every NPC's head is how they feel right now (happy, bored, tired, stressed, scared, angry, excited, grateful…). Tap a resident or press R next to them to see why, what they're doing, and your relationship.","They notice you: they greet you, wave/dance/cheer back at your emotes, flee from Wanted runners and Rust Jaws, and remember how you treat them. Chat and treat them to become friends — friends sometimes slip you credits and warn you when cops are near. Rob them and they won't forget.","Residents vote! During each term they walk to City Hall and vote for the candidate whose slogan matches what they care about, so their votes help pick the Mayor. Mayor laws change their mood. See everyone in the Census at the Civic Center."]],
     ["Using your role & the new NPCs",["Walk up to players, civilians, police or Rust Jaws gang bots and your Role chip at the bottom of the screen shows the nearest action. Press R to do it, or Shift+R (tap \ud83c\udfad Role) for the full list.","The city is full of life now: civilians wander and chat (\ud83e\ude79 hurt ones want a medic, \ud83d\udc8a ones want to buy Dust), police patrol, and the Rust Jaws robot gang roams \u2014 they\u2019ll mug you, so pay, fight, or run.","Your role, cult and record are saved to your account."]]]},
   rewards:{n:"Rewards",secs:[
     ["Data Collectors Club",[()=>`A members-only club. Donate what you want to help the creator: join from your Character screen or Smacked Shop, send any amount to the owner's Cash App or PayPal with the note "Neon Harvest: your username", pick your symbol, and send your request. The owner turns it on after the payment arrives.`,"Members pick their own symbol (change it anytime in Character), get a name glow, claim one free Neo Anime Drop item every month, and earn double NRC.","Members get an animated high-tech symbol (one of 20) next to their name: over their head, in chat and in Who's online, plus a member card on their Character screen.","Only members earn Reward Points and redeem Smacked Shop rewards. Anyone can browse the shop."]],
