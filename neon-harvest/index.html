@@ -1701,6 +1701,22 @@ function itemCanvas(id,px=96){ const cv=document.createElement("canvas"); cv.wid
 function tickItemCans(t){ for(const cv of liveCans){ if(!cv.isConnected){liveCans.delete(cv);continue;} if(!canVis(cv)) continue; const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height); drawItem(c,cv.dataset.item,cv.width/2,cv.height/2,cv.width*.8,t); } }
 
 /* ============================================================ STICK FIGURES */
+// A speech bubble that word-wraps and grows to fit the whole message, so nothing a player says is cut off.
+// cx = center x, baseY = where the bubble's bottom tail points (just above the head). Draws upward.
+function drawBubble(c,cx,baseY,text,border,textCol){ text=String(text==null?"":text).replace(/\s+/g," ").trim().slice(0,160); if(!text) return;
+  c.save(); c.font="11px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.textBaseline="alphabetic";
+  const maxW=176, pad=7, lh=14, lines=[]; let cur="";
+  for(let word of text.split(" ")){
+    while(c.measureText(word).width>maxW){ let i=word.length; while(i>1&&c.measureText(word.slice(0,i)).width>maxW) i--; if(cur){ lines.push(cur); cur=""; } lines.push(word.slice(0,i)); word=word.slice(i); }
+    const test=cur?cur+" "+word:word; if(c.measureText(test).width<=maxW) cur=test; else { if(cur) lines.push(cur); cur=word; } }
+  if(cur) lines.push(cur); if(!lines.length) lines.push(text);
+  if(lines.length>6){ lines.length=6; lines[5]=lines[5].replace(/.{1}$/,"…"); }
+  const tw=Math.max(...lines.map(l=>c.measureText(l).width)), boxW=Math.ceil(tw)+pad*2, boxH=lines.length*lh+6, left=cx-boxW/2, top=baseY-boxH-5;
+  c.fillStyle="rgba(11,7,22,.94)"; c.strokeStyle=border||"#ff3fa8"; c.lineWidth=1;
+  c.beginPath(); if(c.roundRect) c.roundRect(left,top,boxW,boxH,5); else c.rect(left,top,boxW,boxH); c.fill();
+  c.beginPath(); c.moveTo(cx-5,top+boxH-1); c.lineTo(cx+5,top+boxH-1); c.lineTo(cx,top+boxH+6); c.closePath(); c.fill();
+  c.strokeStyle=border||"#ff3fa8"; c.beginPath(); if(c.roundRect) c.roundRect(left+.5,top+.5,boxW-1,boxH-1,5); else c.rect(left+.5,top+.5,boxW-1,boxH-1); c.stroke();
+  c.fillStyle=textCol||"#fff"; for(let i=0;i<lines.length;i++) c.fillText(lines[i],cx,top+pad+i*lh+4); c.restore(); }
 function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   // o: {dir, phase, moving, look, emote, say, name, me}
   const L=fullLook(o.look); const SK=(o.fx==="chrome"||o.fx==="mercury")?`hsl(215,25%,${78+Math.sin(t*4+x*.02)*12}%)`:o.fx==="void"||o.fx==="horizon"?"#e9e2ff":WARD.skin.opts[L.skin][2]==="holo"?`hsl(${(t*60+x*.3)%360},90%,78%)`:WARD.skin.opts[L.skin][2], JC=(o.fx==="shroom"||o.fx==="kaleido"||o.fx==="rave")?`hsl(${(t*120+x*.5)%360},100%,62%)`:COLORS[L.jacket], PC=COLORS[L.pants];
@@ -1946,9 +1962,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
     if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }
     if(o.role||o.rk){ try{ drawRoleTag(c,x,y-(top+bob)*s,o.role||{rk:o.rk,cu:o.cu||null},t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }catch(e){} } }
   if(o.hp!=null&&!o.dead){ const bw=36, bx=x-bw/2, by2=y-(top+bob)*s+4, r=clamp(o.hp,0,100)/100; c.fillStyle="rgba(0,0,0,.75)"; c.fillRect(bx-1,by2-1,bw+2,6); c.fillStyle=r>.5?"#43f0a4":r>.25?"#ffb84a":"#ff5a4a"; c.fillRect(bx,by2,bw*r,4); }
-  if(o.say&&t-o.say.t<6){ const txt=String(o.say.text).slice(0,80); c.font="11px 'IBM Plex Mono',monospace"; const w=Math.min(200,c.measureText(txt).width+14);
-    const by=y-(top+18+bob)*s; c.fillStyle="rgba(11,7,22,.92)"; c.strokeStyle="#ff3fa8"; c.lineWidth=1; c.fillRect(x-w/2,by-14,w,20); c.strokeRect(x-w/2+.5,by-13.5,w-1,19);
-    c.fillStyle="#fff"; c.save(); c.beginPath(); c.rect(x-w/2+4,by-14,w-8,20); c.clip(); c.fillText(txt,x,by); c.restore(); }
+  if(o.say&&t-o.say.t<6) drawBubble(c,x,y-(top+8+bob)*s,o.say.text,"#ff3fa8","#fff");
   c.restore();
 }
 /* live character previews in panels */
@@ -2148,7 +2162,7 @@ function drawGangBot(c,x,y,s,t,n){ c.save(); c.translate(x,y); c.scale(s,s); con
   c.fillStyle="#9a9aa8"; for(let k=0;k<4;k++) c.fillRect(-7+k*4,-56,2,3); c.strokeStyle="#6a6a74"; c.lineWidth=1; c.beginPath(); c.moveTo(4,-70); c.lineTo(7,-80); c.stroke(); c.fillStyle=Math.sin(t*6)>0?"#ff2a2a":"#401010"; c.beginPath(); c.arc(7,-81,1.6,0,7); c.fill();
   c.fillStyle="#38e8ff"; c.font="bold 5px monospace"; c.textAlign="center"; c.fillText("⚙",0,-36); c.restore();
   c.save(); c.textAlign="center"; c.font="9px monospace"; c.fillStyle="#ff7a5a"; c.fillText(n.name.toUpperCase(),x,y-92*s); c.restore();
-  if(n.say&&T-n.say.t<4){ c.save(); c.font="11px 'IBM Plex Mono',monospace"; const w=Math.min(220,c.measureText(n.say.text).width+14), by=y-108*s; c.fillStyle="rgba(22,7,7,.92)"; c.strokeStyle="#ff5a4a"; c.fillRect(x-w/2,by-14,w,20); c.strokeRect(x-w/2+.5,by-13.5,w-1,19); c.fillStyle="#ffd8d0"; c.textAlign="center"; c.fillText(n.say.text,x,by); c.restore(); } }
+  if(n.say&&T-n.say.t<4) drawBubble(c,x,y-96*s,n.say.text,"#ff5a4a","#ffd8d0"); }
 function cityEnts(ents){ const L=cityGen(me.scene);
   for(const n of L){ if(n.k==="bot"){ if(n.out) continue; ents.push({x:n.x,y:n.y,draw:(c,x,y,s,t)=>drawGangBot(c,x,y,s,t,n)}); continue; }
     ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!(n.pause>0),look:n.look,name:n.name+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null}}); }
