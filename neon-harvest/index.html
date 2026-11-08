@@ -2033,6 +2033,9 @@ function addHeat(n,why){ if(roleIs("worker")||roleIs("police")) return; const be
 function roleSanitize(o,s){ o.admImm=!!s.admImm; o.admMayor=!!s.admMayor; o.role=ROLES[s.role]?s.role:""; o.roleAt=+s.roleAt||0; o.heat=Math.max(0,Math.min(5,+s.heat||0)); o.heatAt=+s.heatAt||0;
   o.jail=s.jail&&+s.jail.until>0?{until:+s.jail.until,why:String(s.jail.why||"").slice(0,60),stars:Math.max(0,Math.min(5,+s.jail.stars||0))}:null;
   o.rcd=s.rcd&&typeof s.rcd==="object"?Object.fromEntries(Object.entries(s.rcd).filter(([k,v])=>isFinite(+v)&&+v>Date.now()).slice(0,80).map(([k,v])=>[String(k).slice(0,40),+v])):{};
+  o.fn=s.fn&&typeof s.fn==="object"?{done:Array.isArray(s.fn.done)?s.fn.done.filter(x=>typeof x==="string").slice(0,12):[],fin:!!s.fn.fin}:undefined;
+  o.streak=s.streak&&typeof s.streak==="object"?{n:Math.max(0,Math.min(9999,Math.floor(+s.streak.n||0))),last:String(s.streak.last||"").slice(0,12)}:undefined;
+  o.daily=s.daily&&typeof s.daily==="object"&&Array.isArray(s.daily.g)?{day:String(s.daily.day||"").slice(0,12),g:s.daily.g.filter(x=>typeof x==="string").slice(0,3),base:Object.fromEntries(Object.entries(s.daily.base||{}).slice(0,3).map(([k,v])=>[String(k).slice(0,30),+v||0])),done:Array.isArray(s.daily.done)?s.daily.done.filter(x=>typeof x==="string").slice(0,3):[],all:!!s.daily.all}:undefined;
   o.rel=s.rel&&typeof s.rel==="object"?Object.fromEntries(Object.entries(s.rel).filter(([k,v])=>isFinite(+v)).slice(-60).map(([k,v])=>[String(k).slice(0,30),Math.max(-10,Math.min(10,+v))])):{};
   o.relc=s.relc&&typeof s.relc==="object"?Object.fromEntries(Object.entries(s.relc).filter(([k,v])=>isFinite(+v)).slice(-60).map(([k,v])=>[String(k).slice(0,30),+v])):{};
   o.rstat=s.rstat&&typeof s.rstat==="object"?Object.fromEntries(Object.entries(s.rstat).filter(([k,v])=>isFinite(+v)).slice(0,30).map(([k,v])=>[String(k).slice(0,20),Math.floor(+v)])):{};
@@ -2183,6 +2186,66 @@ function cityEnts(ents){ const L=cityGen(me.scene);
   const acoLook=i=>({jacket:0,pants:0,skin:(i*3)%5,style:1,visor:0,hat:0});
   if(roleIs("cult")&&save.acolytes&&me.scene!=="void"){ const tr=roleTick.acoTrail||[]; for(let i=0;i<save.acolytes;i++){ const p=tr[Math.min(tr.length-1,14+i*12)]||me; ents.push({x:p.x-(me.dir||1)*(22+i*16),y:clamp(p.y+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:me.dir,phase:me.phase+i,moving:me.moving,look:acoLook(i),name:"",rk:"cult",cu:save.myCult?{by:myId,...save.myCult}:null,aco:1}}); } }
   for(const p of peers.values()) if(p.ac&&p.s===me.scene&&(p.home||null)===curHomeKey()) for(let i=0;i<p.ac;i++) ents.push({x:p.dx-(p.dir||1)*(26+i*16),y:clamp(p.dy+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:p.dir,phase:p.phase+i,moving:p.moving,look:acoLook(i),name:"",rk:"cult",cu:p.cu,aco:1}}); }
+
+/* ============================================================ FIRST NIGHT + DAILY GOALS
+   First Night: a 6-step starter path for new players (any order), with small rewards and a finish bonus.
+   Daily goals: 3 goals a day picked from things the game already counts, plus a login streak. Progress comes from
+   the quest counters (save.qstat), so every existing activity just works. */
+const FN_STEPS=[
+  {k:"dig",t:"Dig a scrap pile",d:"Scrap Alley is at the east end of Sector 9. Walk up to a pile and press E (or tap USE).",ok:()=>(save.qstat.dig||0)>=1},
+  {k:"sell",t:"Sell a part at Parts Depot",d:"Parts Depot on Sector 9 buys any part you dug up for its full worth.",ok:()=>(save.qstat.sell||0)>=1},
+  {k:"drink",t:"Grab a drink at The Glitch",d:"The Glitch bar is on Sector 9. Order at the counter.",ok:()=>(save.qstat.drink||0)>=1},
+  {k:"role",t:"Choose a role",d:"Take the Metro to the Civic Center and pick a job at City Hall: worker, medic, police, dealer, politician and more.",ok:()=>!!save.role},
+  {k:"chat",t:"Make a friend in the city",d:"Tap any resident with a name over their head and Chat. They remember you.",ok:()=>(save.qstat.chat_res||0)>=1},
+  {k:"dome",t:"Visit the Stream Dome theater",d:"Take the Metro to the Stream Dome. Grab a seat, or play your own movie on the big screen.",ok:()=>(save.qstat["visit:streamdome"]||0)>=1}];
+const FN_STEP_PAY=60, FN_DONE_PAY=400, FN_DONE_CHIPS=25;
+const DG_POOL=[{k:"dig",n:3,t:"Dig 3 scrap piles"},{k:"sell",n:3,t:"Sell 3 parts"},{k:"drink",n:2,t:"Order 2 drinks at The Glitch"},{k:"chat_res",n:2,t:"Chat with 2 residents"},
+  {k:"treat",n:1,t:"Treat a resident to something"},{k:"asm",n:10,t:"Build 10 units at Harvest Assembly"},{k:"botkill",n:1,t:"Run off a Rust Jaws bot"},
+  {k:"visit:civic",n:1,t:"Visit the Civic Center"},{k:"visit:club",n:1,t:"Go out to The Third Eye"},{k:"visit:grid",n:1,t:"Visit The Grid"},{k:"visit:streamdome",n:1,t:"Stop by the Stream Dome"},
+  {k:"vote",n:1,t:"Vote in the election",need:()=>{ try{ return candList().some(c=>c.uid!==myId); }catch(e){ return false; } }}];
+const DG_PAY=150, DG_CHIPS=3, DG_ALL_PAY=250, DG_ALL_CHIPS=10;
+function gDay(t){ const d=new Date(t||Date.now()); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+function goalsInit(){ if(!save) return; qs(); const today=gDay();
+  // login streak
+  save.streak=save.streak&&typeof save.streak==="object"?save.streak:{n:0,last:""};
+  if(save.streak.last!==today){ const y=gDay(Date.now()-864e5); save.streak.n=save.streak.last===y?(save.streak.n||0)+1:1; save.streak.last=today;
+    const n=save.streak.n, pay=40*Math.min(n,7), chips=n%7===0?25:0; save.credits+=pay; save.chips+=chips; persist(); hud();
+    setTimeout(()=>toast(`🔥 Day ${n} streak! +₵${pay}${chips?` +${chips} chips`:""}${n<7?` · Day 7 pays ₵280 + 25 chips`:""}`,"#ffb13f"),2500); }
+  // today's goals
+  if(!save.daily||save.daily.day!==today){ const r=seeded(hashNum(String(myId||"solo")+today)), pool=DG_POOL.filter(g=>!g.need||g.need()), pick=[];
+    while(pick.length<3&&pool.length) pick.push(pool.splice(Math.floor(r()*pool.length),1)[0].k);
+    save.daily={day:today,g:pick,base:Object.fromEntries(pick.map(k=>[k,save.qstat[k]||0])),done:[],all:false}; persist(); }
+  // First Night: veterans who already did everything skip it quietly
+  if(!save.fn||typeof save.fn!=="object"){ save.fn={done:[],fin:false}; if(FN_STEPS.every(s=>{ try{ return s.ok(); }catch(e){ return false; } })){ save.fn.done=FN_STEPS.map(s=>s.k); save.fn.fin=true; } persist(); } }
+function dgProg(k){ const g=DG_POOL.find(x=>x.k===k)||{n:1}; const have=Math.max(0,(save.qstat[k]||0)-((save.daily.base||{})[k]||0)); return {cur:Math.min(g.n,have),n:g.n,t:g.t||k}; }
+function goalsTick(){ if(!save||!save.qstat) return; goalsInit();
+  if(!save.fn.fin){ for(const s of FN_STEPS){ if(save.fn.done.includes(s.k)) continue; let ok=false; try{ ok=s.ok(); }catch(e){}
+      if(ok){ save.fn.done.push(s.k); save.credits+=FN_STEP_PAY; persist(); hud(); toast(`🧭 First Night ${save.fn.done.length}/${FN_STEPS.length}: ${s.t} ✓ +₵${FN_STEP_PAY}`,"#43f0a4"); beep(880,.08,"triangle"); } }
+    if(save.fn.done.length>=FN_STEPS.length){ save.fn.fin=true; save.credits+=FN_DONE_PAY; save.chips+=FN_DONE_CHIPS; persist(); hud(); toast(`🌃 First Night complete! +₵${FN_DONE_PAY} +${FN_DONE_CHIPS} chips. Daily goals unlocked on the tracker.`,"#ff9ad5"); try{ broadcastSys("finished their First Night in Neon Harvest. Welcome to the city!"); }catch(e){} } }
+  const D=save.daily; for(const k of D.g){ if(D.done.includes(k)) continue; const p=dgProg(k); if(p.cur>=p.n){ D.done.push(k); save.credits+=DG_PAY; save.chips+=DG_CHIPS; persist(); hud(); toast(`📅 Daily goal done: ${p.t} +₵${DG_PAY} +${DG_CHIPS} chips`,"#38e8ff"); beep(990,.08,"triangle"); } }
+  if(!D.all&&D.g.length&&D.done.length>=D.g.length){ D.all=true; save.credits+=DG_ALL_PAY; save.chips+=DG_ALL_CHIPS; persist(); hud(); toast(`🏁 All daily goals done! Bonus +₵${DG_ALL_PAY} +${DG_ALL_CHIPS} chips. New goals tomorrow.`,"#ffb13f"); }
+  goalsTracker(); if(currentView==="goals"&&!$("#overlay").hidden&&Date.now()-(goalsPainted||0)>4000) openGoals(); }
+let goalsEl=null, goalsPainted=0;
+function goalsTracker(){ const titleUp=$("#title")&&!$("#title").hidden, show=!!save&&!titleUp&&$("#overlay").hidden&&!jailed();
+  if(!goalsEl){ goalsEl=el("button",{type:"button",class:"goalpill",onclick:()=>openGoals(),"aria-label":"Goals"}); goalsEl.style.cssText="position:fixed;z-index:30;max-width:min(360px,66vw);padding:6px 10px;background:rgba(10,6,22,.82);color:#e9e2ff;border:1px solid #43f0a4;border-radius:6px;font:12px 'IBM Plex Mono',monospace;text-align:left;cursor:pointer;line-height:1.35;white-space:normal"; document.body.append(goalsEl); }
+  goalsEl.hidden=!show; if(!show) return;
+  const cv=$("#world").getBoundingClientRect(), hb=($(".hud.top")||{getBoundingClientRect:()=>({bottom:0})}).getBoundingClientRect().bottom; goalsEl.style.left=(cv.left+8)+"px"; goalsEl.style.top=(Math.max(cv.top,hb)+8)+"px";
+  let txt; if(!save.fn.fin){ const nx=FN_STEPS.find(s=>!save.fn.done.includes(s.k)); txt=`🧭 First Night ${save.fn.done.length}/${FN_STEPS.length}\n▸ ${nx.t}`; goalsEl.style.borderColor="#43f0a4"; }
+  else { const D=save.daily, nx=D.g.find(k=>!D.done.includes(k)); txt=`📅 Daily ${D.done.length}/${D.g.length} · 🔥 ${save.streak.n}`+(nx?`\n▸ ${dgProg(nx).t} (${dgProg(nx).cur}/${dgProg(nx).n})`:"\n✓ All done — new goals tomorrow"); goalsEl.style.borderColor="#38e8ff"; }
+  if(goalsEl.textContent!==txt){ goalsEl.textContent=txt; goalsEl.style.whiteSpace="pre-line"; } }
+function openGoals(){ goalsInit(); const body=panel("Goals","Your First Night checklist, today's goals and your streak."); currentView="goals"; goalsPainted=Date.now();
+  if(!save.fn.fin){ const box=el("div",{class:"detail",style:"border-color:#43f0a4"},el("div",{class:"info"},el("strong",{text:`🧭 First Night — ${save.fn.done.length}/${FN_STEPS.length}`}),el("span",{class:"sub",text:`Do these in any order. ₵${FN_STEP_PAY} each, then ₵${FN_DONE_PAY} + ${FN_DONE_CHIPS} chips when you finish.`})));
+    const l=el("div",{class:"list"}); for(const s of FN_STEPS){ const d=save.fn.done.includes(s.k); l.append(el("div",{class:"li"},el("span",{style:`font-size:18px;color:${d?"#43f0a4":"#6a5a9a"}`,text:d?"✓":"○"}),el("div",{class:"grow"},el("strong",{text:s.t,style:d?"text-decoration:line-through;opacity:.6":""}),d?null:el("div",{class:"sub",text:s.d})))); }
+    body.append(box,l); }
+  const D=save.daily, ms=new Date(); ms.setHours(24,0,0,0); const hrs=Math.max(0,Math.ceil((ms-Date.now())/36e5));
+  body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:`📅 Today's goals — ${D.done.length}/${D.g.length}`}),el("span",{class:"sub",text:`₵${DG_PAY} + ${DG_CHIPS} chips each, and a ₵${DG_ALL_PAY} + ${DG_ALL_CHIPS} chip bonus for all three. New goals in about ${hrs}h.`}))));
+  const l2=el("div",{class:"list"}); for(const k of D.g){ const p=dgProg(k), d=D.done.includes(k);
+    const bar=el("div",{style:"height:6px;background:#1a1530;border-radius:3px;overflow:hidden;margin-top:4px"},el("div",{style:`height:100%;width:${Math.round(100*p.cur/p.n)}%;background:${d?"#43f0a4":"#38e8ff"}`}));
+    l2.append(el("div",{class:"li"},el("span",{style:`font-size:18px;color:${d?"#43f0a4":"#38e8ff"}`,text:d?"✓":"•"}),el("div",{class:"grow"},el("strong",{text:p.t}),el("div",{class:"sub",text:`${p.cur} / ${p.n}`}),bar))); }
+  body.append(l2);
+  const n=save.streak.n||1; const days=el("div",{class:"row",style:"gap:4px"}); for(let i=1;i<=7;i++){ const hit=((n-1)%7)+1>=i; days.append(el("span",{class:"tag",style:`min-width:34px;text-align:center;${hit?"color:#ffb13f;border-color:#ffb13f":"opacity:.5"}`,text:i===7?"🎁":"D"+i})); }
+  body.append(el("div",{class:"detail",style:"border-color:#ffb13f"},el("div",{class:"info"},el("strong",{text:`🔥 ${n}-day streak`}),el("span",{class:"sub",text:`Come back every day: ₵40 × your streak day (up to ₵280), plus 25 chips every 7th day. Miss a day and it starts over.`}),days))); }
+setTimeout(()=>setInterval(()=>{ try{ goalsTick(); }catch(e){} },1000),6000);
 
 /* ============================================================ CITIZEN LIFE
    24 residents with names, jobs, friends, birthdays and opinions. They live on a shared "Neon day" (2 real hours,
@@ -2382,10 +2445,10 @@ function openCitizen(n){ const R=n, res=!!R.life, mood=moodOf(R), M=MOODS[mood.k
   const talk=t=>{ say.firstChild.firstChild.textContent=`“${t}”`; npcSay(R,t); };
   body.append(say);
   const btns=el("div",{class:"row"}); const need=()=>{ if(!inPerson){ toast(`${R.name} isn't here. They're ${a.l}.`); return false; } return true; };
-  btns.append(el("button",{class:"btn hot",type:"button",text:"💬 Chat",onclick:()=>{ if(!need()) return; const ck="c_"+key; const last=(save.relc||{})[ck]||0; if(Date.now()-last>3*6e4){ save.relc=save.relc||{}; save.relc[ck]=Date.now(); const ks=Object.keys(save.relc); if(ks.length>60) delete save.relc[ks[0]]; relAdd(key,1); lifeFeel(R,"chat",5*6e4,.15,0,"Enjoyed talking with you"); }
+  btns.append(el("button",{class:"btn hot",type:"button",text:"💬 Chat",onclick:()=>{ if(!need()) return; const ck="c_"+key; const last=(save.relc||{})[ck]||0; if(Date.now()-last>3*6e4){ save.relc=save.relc||{}; save.relc[ck]=Date.now(); const ks=Object.keys(save.relc); if(ks.length>60) delete save.relc[ks[0]]; relAdd(key,1); lifeFeel(R,"chat",5*6e4,.15,0,"Enjoyed talking with you"); questEvent("chat_res"); }
       const extra=res?[...(LIFE_JOBLINES[R.job]||[]),(()=>{ const nx=lifePick(R,Math.floor(Date.now()/LIFE_SLOT)+1); return nx==="sleep"?"Heading home to sleep after this.":nx==="work"?"Back to work after this.":`After this I'm ${LIFE_ACT[nx].l}.`; })(),`Honestly? ${mood.why}.`]:[mood.why+"."]; talk([lifeLine(R),...extra][(Math.random()*(extra.length+1))|0]); openCitizen(R); }}),
     el("button",{class:"btn",type:"button",text:"🎁 Treat them (₵25)",onclick:()=>{ if(!need()) return; if(rcd("treat_"+key)) return toast(`You just treated ${R.name} (${cdTxt(rcd("treat_"+key))}).`); if(save.credits<25) return toast("You need ₵25.");
-      save.credits-=25; setCd("treat_"+key,20*6e4); relAdd(key,res&&lifeBday(R)?4:2); hud(); lifeFeel(R,"grateful",8*6e4,.5,0,"You treated them"); R.emote={e:"cheer",t:T}; talk(res&&lifeBday(R)?"A birthday treat?! You're the best!":["Aw, you didn't have to!","That's so sweet. Thank you!","You just made my day."][(Math.random()*3)|0]); openCitizen(R); }}),
+      save.credits-=25; setCd("treat_"+key,20*6e4); questEvent("treat"); relAdd(key,res&&lifeBday(R)?4:2); hud(); lifeFeel(R,"grateful",8*6e4,.5,0,"You treated them"); R.emote={e:"cheer",t:T}; talk(res&&lifeBday(R)?"A birthday treat?! You're the best!":["Aw, you didn't have to!","That's so sweet. Thank you!","You just made my day."][(Math.random()*3)|0]); openCitizen(R); }}),
     el("button",{class:"btn",type:"button",text:"👋 Wave",onclick:()=>{ emote("wave"); if(inPerson) setTimeout(()=>lifeReact(R,"wave"),300); }}));
   if(res&&amCandidate()){ const lv=(campMine()[R.id]&&+campMine()[R.id].l)||0, od=campOdds(R); btns.append(el("button",{class:"btn hot",type:"button",text:lv>=3?"🗣 ★★★ Their vote is yours":`🗣 Ask for their vote ${"★".repeat(lv)}${"☆".repeat(3-lv)} (${Math.round(od.p*100)}% chance)`,onclick:async()=>{ if(!need()) return; await campAsk(R,talk); setTimeout(()=>{ if(currentView==="citizen") openCitizen(R); },1600); }})); }
   if(res) btns.append(el("button",{class:"btn",type:"button",text:"🗳 Who are you voting for?",onclick:()=>{ const b=lifeBallot(R,termNow(),elCands(elDocs.cur),Date.now());
@@ -2422,7 +2485,7 @@ async function campRally(L){ if(!amCandidate()||!DB) return; let won=0; for(cons
 function campSummary(){ const C=elCands(elDocs.cur), me1=C.find(c=>c.uid===myId); if(!me1) return null; const bl=lifeBallots(elDocs.cur,termNow());
   return {lean:bl.filter(x=>!x.b.done&&!x.b.abstain&&x.b.cand===myId).length,got:bl.filter(x=>x.b.done&&x.b.cand===myId).length,won:Object.values(me1.sup).filter(l=>l>0).length,open:bl.filter(x=>!x.b.done&&!x.b.abstain).length}; }
 async function castVote(uid,name){ const N=termNow(); if(uid===myId) return toast("You can't vote for yourself."); if(!DB||!myId) return toast("Sign in to vote.");
-  try{ await DB.doc(`club/ev_${N}_${myId}`).set({kind:"vote",term:N,cand:uid,by:myId,at:Date.now()}); toast(`You voted for ${name}.`,"#ffd36a"); return true; }catch(e){ toast("Your vote didn't go through. Try again."); return false; } }
+  try{ await DB.doc(`club/ev_${N}_${myId}`).set({kind:"vote",term:N,cand:uid,by:myId,at:Date.now()}); toast(`You voted for ${name}.`,"#ffd36a"); questEvent("vote"); return true; }catch(e){ toast("Your vote didn't go through. Try again."); return false; } }
 function campAskPlayer(pid){ const p=peers.get(pid); if(!p||!p.by) return; if(!amCandidate()) return toast("Register as a candidate at City Hall first.");
   if(rcd("askv_"+p.by)) return toast(`You already asked ${nameOf(p.by)} (${cdTxt(rcd("askv_"+p.by))}).`); const me1=candList().find(c=>c.uid===myId);
   if(rEmit({k:"askvote",to:p.by,n:(myName||"Runner").slice(0,24),sl:String(me1&&me1.slogan||"").slice(0,60)})){ setCd("askv_"+p.by,5*6e4); persist(); emote("wave"); sayText(`${nameOf(p.by)}, can I count on your vote?`); toast(`Asked ${nameOf(p.by)} for their vote.`); closePanel(); } }
@@ -2611,7 +2674,7 @@ function roleCard(k){ const R=ROLES[k]; const mine=pRole()===k; const c=el("div"
   const left=save.role&&!mine?Math.max(0,(save.roleAt||0)+ROLE_SWITCH_MS-Date.now()):0; const b=el("button",{class:"btn"+(mine?"":" hot"),type:"button",text:mine?"Your role":left?`Switch in ${cdTxt(left)}`:`Become a ${R.n}`,onclick:()=>chooseRole(k)}); if(mine||(!IS_ADMIN&&(left||jailed()||heatStars()))) b.disabled=true; c.append(b); return c; }
 function chooseRole(k){ if(!IS_ADMIN){ if(jailed()) return toast("Not from a jail cell."); if(heatStars()) return toast("City Hall won't process Wanted runners. Lose the heat first."); }
   if(k==="cult"&&!save.myCult) return openFoundCult();
-  const was=pRole(); save.role=k; save.roleAt=Date.now(); if(was==="cult"&&k!=="cult"){ save.acolytes=0; } persist(); pushPresence(true); toast(`You're now a ${ROLES[k].n}.`,ROLES[k].col); beep(700,.08); setTimeout(()=>beep(1050,.12),90);
+  const was=pRole(); save.role=k; save.roleAt=Date.now(); questEvent("role"); if(was==="cult"&&k!=="cult"){ save.acolytes=0; } persist(); pushPresence(true); toast(`You're now a ${ROLES[k].n}.`,ROLES[k].col); beep(700,.08); setTimeout(()=>beep(1050,.12),90);
   broadcastSys(`became a ${ROLES[k].n}${k==="cult"?` and founded "${save.myCult.n}"`:""}`); openRoleOffice(); }
 function openFoundCult(){ const body=panel("Found your cult","Every movement needs a name and a color."); currentView=null; const cols=["#ff3f5a","#c95cff","#38e8ff","#43f0a4","#ffd36a","#ff7a1a"]; let col=cols[0];
   const inp=el("input",{type:"text",maxlength:"24",value:"Order of the Neon Eye",style:"width:100%;padding:8px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
@@ -3461,7 +3524,7 @@ function emote(e){ me.emote={e,t:T}; pushPresence(true,{emote:{e,at:Date.now()}}
 
 /* ============================================================ PANELS */
 let panelFresh=0; const freshTab=f=>()=>{ panelFresh=1; f(); };
-function panel(title,sub,refresh){ currentView=null; if(!refresh&&($("#overlay").hidden||stLastPanel!==title)){ stLastPanel=title; try{ stTrack("panel",String(title).split("·")[0]); }catch(e){} } const ov=$("#overlay");
+function panel(title,sub,refresh){ try{ if(goalsEl) goalsEl.hidden=true; }catch(e){} currentView=null; if(!refresh&&($("#overlay").hidden||stLastPanel!==title)){ stLastPanel=title; try{ stTrack("panel",String(title).split("·")[0]); }catch(e){} } const ov=$("#overlay");
   { const ob=ov.hidden?null:ov.querySelector(".panel .body"), ot=ov.hidden?null:ov.querySelector(".panel .tabs"); const same=ob&&ov.querySelector(".panel")?.getAttribute("aria-label")===title;
     const fresh=panelFresh; panelFresh=0;
     if(same){ const top=ob.scrollTop, tl=ot?ot.scrollLeft:0; setTimeout(()=>{ const nb=ov.querySelector(".panel .body"), nt=ov.querySelector(".panel .tabs"); if(nb&&!refresh&&!fresh) nb.scrollTop=top; if(nt){ nt.scrollLeft=tl; tabEdge(nt); } },0); }
@@ -3480,7 +3543,7 @@ const GUIDE={
     ["Adults only",["NEON HARVEST is for players 21 and older. New accounts confirm their date of birth once before playing, and Smacked Shop pickups require a photo ID."]],
     ["Controls",["PC: move with WASD or the arrow keys, or click the ground to walk there. Press E or Space beside a glowing spot to use it (doors, counters, piles, furniture, terminals).","Hotkeys: C Character, I Stash, M Messages, T Fast Travel, Q Quests, R Role, H this guide, Enter chat, Esc closes any window. In The Void: F attack, hold G to block.","Role (R, or the 🎭 Role button on phones): shows what your role lets you do near whoever you're standing by, and opens City Hall if you haven't picked one yet.","Phones: use the on-screen pad and the big USE button, or tap the glowing prompt at the bottom of the screen. Bag, Messages and the ☰ menu (Character, Fast travel, Who's online, Chat log, How to Play, emotes and more) are at the top.","Wave, Dance, Cheer and Pose are under the chat bar."]],
     ["Your currencies",["₵ Credits: everyday money for parts, food and drinks, decor, room styles, outfits, weapons and Linx Land plots.","Chips: the rarer currency for epic parts, CHIP PRINT runs and backroom rentals.","RP Reward Points: for Data Collectors Club members only. Earned by working and spent on real-life rewards at Smacked Shop (see the Rewards tab). Points can't be bought, traded or gifted.","You start with ₵250, 40 chips and a few spare parts."]],
-    ["Your first 10 minutes",["1. Press C to pick a name and style your runner (basics are free).","2. Walk east on the Sector 9 street to Scrap Alley and dig the piles for free chips and parts.","3. Take a shift: The Glitch Job Board, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar, or the Harvest Assembly line.","4. Sell spare parts at Parts Depot, build your first rig at the Workbench at home, and install miners so you earn while you're away.","5. Press T to fast travel anywhere, and check Who's online to find other players.","6. Ride the Metro to the Civic Center and pick a role at City Hall \u2014 worker, police, medic, thief, dealer, hacker, cult leader or politician. See the Roles tab."]],
+    ["Your first 10 minutes",["New here? Follow the 🧭 First Night tracker in the top-left corner: six quick steps (dig, sell, drink, pick a role, make a friend, see the theater), paid as you go, with a bonus at the end. After that the tracker shows 📅 3 daily goals and your 🔥 login streak — tap it any time.","1. Press C to pick a name and style your runner (basics are free).","2. Walk east on the Sector 9 street to Scrap Alley and dig the piles for free chips and parts.","3. Take a shift: The Glitch Job Board, Byte Bowl Noodles, Cyber Buys & More, The Third Eye bar, or the Harvest Assembly line.","4. Sell spare parts at Parts Depot, build your first rig at the Workbench at home, and install miners so you earn while you're away.","5. Press T to fast travel anywhere, and check Who's online to find other players.","6. Ride the Metro to the Civic Center and pick a role at City Hall \u2014 worker, police, medic, thief, dealer, hacker, cult leader or politician. See the Roles tab."]],
     ["Getting around",["Sector 9 is the main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley and The Third Eye club.","The Metro (free) runs to Byte Market, The Grid, Smacked Shop, The Void, Harvest Assembly, Linx Land and the Civic Center (City Hall, roles, Precinct 9, the Clinic and elections). Rust Gate Prison is where you end up if you're arrested.","Fast Travel (T, the top-bar button, or ☰ → Fast travel on phones) jumps you to any Metro line or straight to key spots: your apartment, The Glitch, Parts Depot, Cyber Buys, the Trade Board, Scrap Alley, The Third Eye, Byte Bowl Noodles, the Courier Hub, Volt Armory, the UPLOAD arcade and your Linx Land plot. You can't fast travel mid-fight in The Void.","Tap ONLINE at the top to see who's playing and where, and jump to them."]],
     ["Your progress saves",["Your stash, credits, chips, Reward Points, outfits, apartment, plots, rentals and pickup codes are saved to your account and follow you to any device you sign in on."]]]},
   money:{n:"Earn ₵ credits",secs:[
@@ -3743,7 +3806,7 @@ function openShop(tab="buy"){
   const tabs=el("div",{class:"tabs"}); ["buy","sell"].forEach(k=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:k==="buy"?"Buy parts":"Sell parts",onclick:()=>openShop(k)}))); body.append(tabs);
   const g=el("div",{class:"grid"});
   if(tab==="buy"){ for(const s of getStock()) g.append(itemCard(s.id,1,s.cur==="chips"?`${s.price} chips`:`₵${s.price}`,()=>askTx({id:s.id,mode:"buy",price:s.price,cur:s.cur,max:10},()=>{ const bal=s.cur==="chips"?save.chips:save.credits; if(bal<s.price){ toast(`Not enough ${s.cur}. You need ${s.price-Math.floor(bal)} more.`); beep(150,.15); return;} if(s.cur==="chips") save.chips-=s.price; else save.credits-=s.price; addItem(s.id); persist(); toast(`Bought ${BY[s.id].n}`,RAR[BY[s.id].r].c); beep(1200,.08); openShop("buy"); }))); }
-  else { const inv=invList().filter(([id])=>!BY[id].bound); if(!inv.length) g.append(el("div",{class:"empty",text:"Nothing to sell yet."})); for(const [id,n] of inv) g.append(itemCard(id,n,`₵${BY[id].v} ×${n}`,()=>askTx({id,mode:"sell",price:BY[id].v,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=BY[id].v; persist(); toast(`Sold ${BY[id].n} for ₵${BY[id].v}`); beep(700,.06); openShop("sell"); }))); }
+  else { const inv=invList().filter(([id])=>!BY[id].bound); if(!inv.length) g.append(el("div",{class:"empty",text:"Nothing to sell yet."})); for(const [id,n] of inv) g.append(itemCard(id,n,`₵${BY[id].v} ×${n}`,()=>askTx({id,mode:"sell",price:BY[id].v,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=BY[id].v; persist(); questEvent("sell"); toast(`Sold ${BY[id].n} for ₵${BY[id].v}`); beep(700,.06); openShop("sell"); }))); }
   body.append(g);
 }
 /* --- scrap */
@@ -4470,7 +4533,7 @@ function openStall(i,tab){
   if(tab==="sell"){ const inv=invList().filter(([id])=>sellPrice(i,id)>0);
     body.append(el("p",{class:"sub",text:st.wanted?"Wanted types pay 1.6×.":`${st.vendor} pays ${Math.round((st.buyMult-1)*100)}% over Parts Depot for these.`}));
     if(!inv.length){ body.append(el("div",{class:"empty",text:"Nothing in your stash this stall will buy."})); return; }
-    const g=el("div",{class:"grid"}); for(const [id,n] of inv){ const pr=sellPrice(i,id); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>askTx({id,mode:"sell",price:pr,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); toast(`Sold ${BY[id].n} for ₵${pr}`); beep(700,.06); openStall(i,"sell"); }))); }
+    const g=el("div",{class:"grid"}); for(const [id,n] of inv){ const pr=sellPrice(i,id); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>askTx({id,mode:"sell",price:pr,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); questEvent("sell"); toast(`Sold ${BY[id].n} for ₵${pr}`); beep(700,.06); openStall(i,"sell"); }))); }
     body.append(g); return; }
   if(st.drinks&&tab==="shift") return bbShiftTab(i);
   if(st.drinks&&tab==="buy"){ const buy=d=>{ if(save.credits<d.v){ toast(`Not enough credits. You need ${d.v-Math.floor(save.credits)} more.`); beep(150,.15); return; } save.credits-=d.v; addItem(d.id); persist(); toast(`${st.vendor} hands you ${d.n}. It's in your stash.`,d.col); beep(1200,.08); openStall(i,"buy"); };
@@ -6024,7 +6087,7 @@ function openCbCounter(){
   const sell=invList().filter(([id])=>CB_ITEMS.some(i=>i.id===id));
   body.append(el("strong",{text:"Sell back used gear (70% of worth)"}));
   if(!sell.length) body.append(el("div",{class:"empty",text:"Nothing from this store in your stash."}));
-  else { const g=el("div",{class:"grid"}); for(const [id,n] of sell){ const pr=Math.round(BY[id].v*.7); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>askTx({id,mode:"sell",price:pr,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); toast(`Sold ${BY[id].n} for ₵${pr}`); openCbCounter(); }))); } body.append(g); }
+  else { const g=el("div",{class:"grid"}); for(const [id,n] of sell){ const pr=Math.round(BY[id].v*.7); g.append(itemCard(id,n,`₵${pr} ×${n}`,()=>askTx({id,mode:"sell",price:pr,max:n},()=>{ if(!hasItem(id)) return; addItem(id,-1); save.credits+=pr; persist(); questEvent("sell"); toast(`Sold ${BY[id].n} for ₵${pr}`); openCbCounter(); }))); } body.append(g); }
 }
 
 /* --- shifts */
