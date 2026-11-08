@@ -93,39 +93,45 @@ const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.k
 const SMOKE_SHOPS = 'tobacco|e-cigarette|cannabis|head_shop|smoke_shop';
 async function places(topic, cat, area) {
   if (area.lat == null) return [];
-  const R = 16000; // about 10 miles
   const word = topic.replace(/^@/, '').replace(/["\\]/g, '').trim();
-  const esc = word.replace(/[.*+?^${}()|[\]]/g, '.');
-  const near = `(around:${R},${area.lat},${area.lon})`;
-  const words = esc.split(/\s+/).filter(w => w.length > 2).join('|') || esc;
-  const parts = [`nwr["name"~"${esc}",i]${near};`, `nwr["cuisine"~"${words}",i]${near};`, `nwr["brand"~"${esc}",i]${near};`];
-  if (cat === 'smoke') parts.push(`nwr["shop"~"${SMOKE_SHOPS}"]${near};`);
-  if (cat === 'foodshops') parts.push(`nwr["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"${words}",i]${near};`);
-  const q = `[out:json][timeout:20];(${parts.join('')});out center 60;`;
-  let j, lastErr;
+  const words = word.toLowerCase().split(/\s+/).filter(w => w.length > 2).map(w => w.replace(/s$/, ''));
+  // Ask for one indexed kind of place near the ZIP, then match the topic here (fast for the map servers).
+  const kind = cat === 'smoke' ? { tag: 'shop', re: '^(tobacco|e-cigarette|cannabis|head_shop|smoke_shop|vape)$', r: 16000, n: 150, label: 'smoke & vape shops' }
+    : (cat === 'food' || cat === 'foodshops') ? { tag: 'amenity', re: '^(restaurant|fast_food|cafe|food_court|ice_cream)$', r: 8000, n: 600, label: 'restaurants & cafes' }
+    : { tag: 'shop', re: '.', r: 6000, n: 600, label: 'stores' };
+  const q = `[out:json][timeout:18];nwr["${kind.tag}"~"${kind.re}"](around:${kind.r},${area.lat},${area.lon});out center ${kind.n};`;
+  let j; const fails = [];
   for (const ep of OVERPASS) {
-    try { j = await getJSON(ep, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, timeout: 25000 }); break; }
-    catch (e) { lastErr = e; }
+    try { j = await getJSON(ep, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, timeout: 20000 }); break; }
+    catch (e) { fails.push(new URL(ep).host + ': ' + e.message); }
   }
-  if (!j) throw lastErr;
-  const seen = new Set(), rows = [];
+  if (!j) throw new Error(fails.join(' | '));
+  const miles = Math.round(kind.r / 1609);
+  const seen = new Set(), all = [];
   for (const e of j.elements || []) {
     const t = e.tags || {}; if (!t.name) continue;
     const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon; if (lat == null) continue;
     const key = t.name + '|' + lat.toFixed(3); if (seen.has(key)) continue; seen.add(key);
-    const mi = Math.round(haversineMi(area.lat, area.lon, lat, lon) * 10) / 10;
-    const kind = t.shop || t.amenity || t.craft || 'place';
-    const addr = [t['addr:housenumber'], t['addr:street'], t['addr:city']].filter(Boolean).join(' ');
-    rows.push({
-      source: 'OpenStreetMap places', item: t.name, metric: 'Miles from ZIP ' + area.zip, value: mi, growth: null, region: area.label,
-      note: [kind.replace(/_/g, ' '), t.cuisine ? 'cuisine: ' + t.cuisine.replace(/_/g, ' ') : '', addr, t.opening_hours ? 'hours: ' + t.opening_hours : ''].filter(Boolean).join(' · '),
-      url: `https://www.openstreetmap.org/${e.type}/${e.id}`
-    });
+    const hay = [t.name, t.cuisine, t.brand, t.shop, t.description].filter(Boolean).join(' ').toLowerCase().replace(/_/g, ' ');
+    const match = words.length ? words.some(w => hay.includes(w)) : false;
+    all.push({ t, e, lat, lon, match, mi: Math.round(haversineMi(area.lat, area.lon, lat, lon) * 10) / 10 });
   }
-  rows.sort((a, b) => a.value - b.value);
-  const top = rows.slice(0, 8);
-  if (rows.length) top.unshift({ source: 'OpenStreetMap places', item: `Places matching "${word}" near ${area.label}`, metric: 'Places within 10 miles', value: rows.length, growth: null, region: area.label, note: `Closest: ${rows[0].item} (${rows[0].value} mi). Map data © OpenStreetMap contributors.`, url: `https://www.openstreetmap.org/search?query=${encodeURIComponent(word + ' ' + area.label)}` });
-  return top;
+  const matched = all.filter(x => x.match).sort((a, b) => a.mi - b.mi);
+  const pool = cat === 'smoke' ? [...matched, ...all.filter(x => !x.match).sort((a, b) => a.mi - b.mi)] : matched;
+  const rows = pool.slice(0, 8).map(({ t, e, mi, match }) => {
+    const addr = [t['addr:housenumber'], t['addr:street'], t['addr:city']].filter(Boolean).join(' ');
+    return {
+      source: 'OpenStreetMap places', item: t.name, metric: 'Miles from ZIP ' + area.zip, value: mi, growth: null, region: area.label,
+      note: [(t.shop || t.amenity || 'place').replace(/_/g, ' '), t.cuisine ? 'cuisine: ' + t.cuisine.replace(/_/g, ' ').replace(/;/g, ', ') : '', addr, t.opening_hours ? 'hours: ' + t.opening_hours : '', !match && cat === 'smoke' ? 'nearby shop that may carry it' : ''].filter(Boolean).join(' · '),
+      url: `https://www.openstreetmap.org/${e.type}/${e.id}`
+    };
+  });
+  rows.unshift({
+    source: 'OpenStreetMap places', item: `Places matching "${word}" near ${area.label}`, metric: `Matches among ${all.length} ${kind.label} within ${miles} mi`, value: matched.length, growth: null, region: area.label,
+    note: (matched.length ? `Closest: ${matched[0].t.name} (${matched[0].mi} mi). ` : `No ${kind.label} nearby mention it by name. `) + 'Map data © OpenStreetMap contributors.',
+    url: `https://www.openstreetmap.org/search?query=${encodeURIComponent(word + ' near ' + area.label)}`
+  });
+  return rows;
 }
 function haversineMi(a, b, c, d) { const r = x => x * Math.PI / 180, R = 3958.8; const h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
 
