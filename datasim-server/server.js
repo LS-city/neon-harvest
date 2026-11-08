@@ -91,7 +91,7 @@ async function resolveArea(st, zip) {
 // ---------- source: OpenStreetMap places near a ZIP ----------
 const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
 const SMOKE_SHOPS = 'tobacco|e-cigarette|cannabis|head_shop|smoke_shop';
-async function places(topic, cat, area) {
+async function placesOverpass(topic, cat, area) {
   if (area.lat == null) return [];
   const word = topic.replace(/^@/, '').replace(/["\\]/g, '').trim();
   const words = word.toLowerCase().split(/\s+/).filter(w => w.length > 2).map(w => w.replace(/s$/, ''));
@@ -133,13 +133,61 @@ async function places(topic, cat, area) {
   });
   return rows;
 }
+// Nominatim (OpenStreetMap's place search): searches names near the ZIP. Fair use: max 1 request a second.
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let nomQueue = Promise.resolve();
+function nomSearch(q, area) {
+  const d = 0.15, vb = [area.lon - d, area.lat + d, area.lon + d, area.lat - d].map(n => n.toFixed(4)).join(',');
+  const run = nomQueue.then(() => getJSON('https://nominatim.openstreetmap.org/search?' + new URLSearchParams({ format: 'jsonv2', limit: '20', bounded: '1', extratags: '1', addressdetails: '1', viewbox: vb, q }), { timeout: 10000 }));
+  nomQueue = run.catch(() => {}).then(() => sleep(1100));
+  return run;
+}
+async function placesNominatim(topic, cat, area) {
+  const word = topic.replace(/^@/, '').trim();
+  const words = [...new Set(word.toLowerCase().split(/\s+/).filter(w => w.length > 3))];
+  const qs = [word, ...words.filter(w => w !== word.toLowerCase())];
+  if (cat === 'smoke') qs.push('smoke shop', 'vape shop', 'tobacco shop', 'hookah');
+  const seen = new Map(); let anyOk = false, lastErr;
+  for (const q of qs.slice(0, 7)) {
+    try { const res = await nomSearch(q, area); anyOk = true;
+      for (const x of res || []) { const key = x.osm_type + x.osm_id; if (!x.name || seen.has(key)) continue; seen.set(key, x); } }
+    catch (e) { lastErr = e; }
+  }
+  if (!anyOk) throw lastErr || new Error('no answer');
+  const stems = words.map(w => w.replace(/s$/, ''));
+  const all = [...seen.values()].map(x => {
+    const t = x.extratags || {}, hay = [x.name, t.cuisine, t.brand, x.type].filter(Boolean).join(' ').toLowerCase().replace(/_/g, ' ');
+    return { x, t, match: stems.some(w => hay.includes(w)), mi: Math.round(haversineMi(area.lat, area.lon, +x.lat, +x.lon) * 10) / 10 };
+  });
+  const matched = all.filter(a => a.match).sort((a, b) => a.mi - b.mi);
+  const pool = cat === 'smoke' ? [...matched, ...all.filter(a => !a.match).sort((a, b) => a.mi - b.mi)] : matched;
+  const rows = pool.slice(0, 8).map(({ x, t, mi, match }) => {
+    const ad = x.address || {}, addr = [ad.house_number, ad.road, ad.city || ad.town || ad.suburb].filter(Boolean).join(' ');
+    return { source: 'OpenStreetMap places', item: x.name, metric: 'Miles from ZIP ' + area.zip, value: mi, growth: null, region: area.label,
+      note: [String(x.type || x.category || 'place').replace(/_/g, ' '), t.cuisine ? 'cuisine: ' + t.cuisine.replace(/_/g, ' ').replace(/;/g, ', ') : '', addr, t.opening_hours ? 'hours: ' + t.opening_hours : '', !match && cat === 'smoke' ? 'nearby shop that may carry it' : ''].filter(Boolean).join(' · '),
+      url: `https://www.openstreetmap.org/${x.osm_type}/${x.osm_id}` };
+  });
+  rows.unshift({ source: 'OpenStreetMap places', item: `Places matching "${word}" near ${area.label}`, metric: 'Places within about 10 mi whose name mentions it', value: matched.length, growth: null, region: area.label,
+    note: (matched.length ? `Closest: ${matched[0].x.name} (${matched[0].mi} mi). ` : 'No nearby places mention it by name. ') + 'Map data © OpenStreetMap contributors.',
+    url: `https://www.openstreetmap.org/search?query=${encodeURIComponent(word + ' near ' + area.label)}` });
+  return rows;
+}
+async function places(topic, cat, area) {
+  if (area.lat == null) return [];
+  try { return await placesNominatim(topic, cat, area); }
+  catch (e1) {
+    try { return await placesOverpass(topic, cat, area); }
+    catch (e2) { throw new Error(`place search: ${e1.message} | map servers: ${e2.message}`); }
+  }
+}
+
 function haversineMi(a, b, c, d) { const r = x => x * Math.PI / 180, R = 3958.8; const h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
 
 // ---------- source: Wikipedia page views ----------
 async function wikipedia(topic) {
   const q = topic.replace(/^@/, '');
-  const os = await getJSON('https://en.wikipedia.org/w/api.php?action=opensearch&format=json&limit=1&namespace=0&search=' + encodeURIComponent(q));
-  let title = os?.[1]?.[0];
+  const sr = await getJSON('https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srnamespace=0&srlimit=1&srsearch=' + encodeURIComponent(q));
+  let title = sr?.query?.search?.[0]?.title;
   if (!title) return [];
   // follow redirects ("Birria tacos" -> "Birria") so the page views are the real article's
   try {
