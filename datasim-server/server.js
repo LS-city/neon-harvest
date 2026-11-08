@@ -46,7 +46,7 @@ const day = 86400000;
 const ymd = d => d.toISOString().slice(0, 10).replace(/-/g, '');
 async function getJSON(url, opts = {}) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 12000);
+  const t = setTimeout(() => ctrl.abort(), opts.timeout || 12000);
   try {
     const r = await fetch(url, { ...opts, signal: ctrl.signal, headers: { 'User-Agent': UA, ...(opts.headers || {}) } });
     if (!r.ok) {
@@ -55,6 +55,10 @@ async function getJSON(url, opts = {}) {
       throw new Error(`HTTP ${r.status}${detail ? ': ' + detail : ''}`);
     }
     return await r.json();
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error(`timed out after ${(opts.timeout || 12000) / 1000}s`);
+    const c = e.cause && (e.cause.code || e.cause.message);
+    throw c ? new Error(`${e.message} (${c})`) : e;
   } finally { clearTimeout(t); }
 }
 function isoMinutes(iso) {
@@ -85,6 +89,7 @@ async function resolveArea(st, zip) {
 }
 
 // ---------- source: OpenStreetMap places near a ZIP ----------
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
 const SMOKE_SHOPS = 'tobacco|e-cigarette|cannabis|head_shop|smoke_shop';
 async function places(topic, cat, area) {
   if (area.lat == null) return [];
@@ -97,7 +102,12 @@ async function places(topic, cat, area) {
   if (cat === 'smoke') parts.push(`nwr["shop"~"${SMOKE_SHOPS}"]${near};`);
   if (cat === 'foodshops') parts.push(`nwr["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"${words}",i]${near};`);
   const q = `[out:json][timeout:20];(${parts.join('')});out center 60;`;
-  const j = await getJSON('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+  let j, lastErr;
+  for (const ep of OVERPASS) {
+    try { j = await getJSON(ep, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, timeout: 25000 }); break; }
+    catch (e) { lastErr = e; }
+  }
+  if (!j) throw lastErr;
   const seen = new Set(), rows = [];
   for (const e of j.elements || []) {
     const t = e.tags || {}; if (!t.name) continue;
@@ -123,8 +133,14 @@ function haversineMi(a, b, c, d) { const r = x => x * Math.PI / 180, R = 3958.8;
 async function wikipedia(topic) {
   const q = topic.replace(/^@/, '');
   const os = await getJSON('https://en.wikipedia.org/w/api.php?action=opensearch&format=json&limit=1&namespace=0&search=' + encodeURIComponent(q));
-  const title = os?.[1]?.[0];
+  let title = os?.[1]?.[0];
   if (!title) return [];
+  // follow redirects ("Birria tacos" -> "Birria") so the page views are the real article's
+  try {
+    const rq = await getJSON('https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=' + encodeURIComponent(title));
+    const pg = Object.values(rq?.query?.pages || {})[0];
+    if (pg && pg.title && !('missing' in pg)) title = pg.title;
+  } catch { /* keep the search title */ }
   const end = new Date(Date.now() - day);            // yesterday (today is incomplete)
   const start = new Date(end.getTime() - 13 * day);  // 14 days total
   const art = encodeURIComponent(title.replace(/ /g, '_'));
