@@ -378,7 +378,8 @@ function footNote(items){
   return s;
 }
 const isLive=()=>!!LIVE&&state.dataMode==='live';
-function apiBase(){let s=String(state.server||'').trim().replace(/\/+$/,'');if(s&&!/^https?:\/\//i.test(s))s='https://'+s;return s;}
+const DEFAULT_SERVER=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'':'https://datasim-server.onrender.com';
+function apiBase(){let s=String(state.server||DEFAULT_SERVER).trim().replace(/\/+$/,'');if(s&&!/^https?:\/\//i.test(s))s='https://'+s;return s;}
 function renderMode(){
   document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.mode==='live')===isLive()));
   const lb=document.querySelector('#modeSeg [data-mode="live"]');if(lb)lb.textContent=LIVE&&LIVE.mock?'LIVE (test)':'LIVE data';
@@ -387,8 +388,9 @@ function renderMode(){
 async function checkLive(manual){
   if(location.protocol==='file:'&&!apiBase())return false;
   try{
-    const ctrl=new AbortController();const tm=setTimeout(()=>ctrl.abort(),5000);
-    const r=await fetch(apiBase()+'/api/health',{signal:ctrl.signal});clearTimeout(tm);
+    const ctrl=new AbortController();const tm=setTimeout(()=>ctrl.abort(),70000);
+    const slow=setTimeout(()=>{if(state.dataMode!=='sim'||manual)pushFeed('sys','Waking up the live data server. This can take up to a minute.');const st=document.getElementById('srvStatus');if(st)st.textContent='Waking up the server. This can take up to a minute…';},5000);
+    let r;try{r=await fetch(apiBase()+'/api/health',{signal:ctrl.signal});}finally{clearTimeout(tm);clearTimeout(slow);}
     if(!r.ok)return false;const j=await r.json();if(!j||!j.ok)return false;
     const was=!!LIVE;LIVE=j;
     if(state.dataMode===undefined||manual)state.dataMode='live';
@@ -411,8 +413,8 @@ function openLiveModal(){
       <div><b>SIM DATA</b><div class="hint">Game-made numbers. Works everywhere, no setup. Good for practice and fun.</div></div>
       <div><b>LIVE DATA</b><div class="hint">Real numbers for your watchlist topics: Wikipedia interest, YouTube videos about your area, and real places near your ZIP from OpenStreetMap. Needs a Data Sim server.</div></div>
     </div>
-    <div class="field"><label for="srvUrl">Data Sim server address</label><input type="text" id="srvUrl" value="${esc(state.server||'')}" placeholder="e.g. my-datasim.onrender.com (blank = this website)" autocomplete="off"></div>
-    <div class="status" id="srvStatus">${inClaude?'Heads up: this Claude preview blocks connections to other websites, so LIVE data works in your own server copy or inside NEON HARVEST.':'Leave the address blank if this page came from your Data Sim server.'}</div>
+    <div class="field"><label for="srvUrl">Data Sim server address</label><input type="text" id="srvUrl" value="${esc(state.server||'')}" placeholder="blank = the official Data Sim server" autocomplete="off"></div>
+    <div class="status" id="srvStatus">${inClaude?'Heads up: this Claude preview blocks connections to other websites, so LIVE data works in your own server copy or inside NEON HARVEST.':'Leave the address blank to use the official Data Sim server. The free server sleeps when nobody uses it, so the first connection can take up to a minute.'}</div>
     <div class="actions"><button class="btn" data-close>Keep SIM data</button><button class="btn primary" id="srvConnect">Connect and use LIVE data</button></div>`,false,'live');
 }
 async function refreshPool(w){
