@@ -307,6 +307,14 @@ service cloud.firestore {
         || (mdOk() && nd().by == me() && mdDef(nd().def) && nd().owner == me() && (mdSelfKind(id) || mdCustomOk(id)))
         || (mdOk() && nd().by == me() && mdDef(nd().def) && nd().kind == 'venue' && mdStaff(nd().venue));
       allow update: if isOwner()
+        // The owner restyles a forged badge. The item art, rarity and category can't change.
+        || (mdOk() && od().owner == me() && od().kind in ['item', 'pet']
+            && nd().diff(od()).affectedKeys().hasOnly(['def', 'styled'])
+            && mdDef(nd().def) && nd().def.name.size() >= 2 && nd().styled is int
+            && od().def.get('art', null) != null
+            && nd().def.get('art', null) == od().def.get('art', null)
+            && nd().def.get('r', 0) == od().def.get('r', 0)
+            && nd().def.get('cat', '') == od().def.get('cat', ''))
         // The owner hands it over, and only as part of a real request.
         || (mdOk() && od().owner == me() && mdTransferKeys() && nd().owner != me()
             && (mdReq(nd().via).from == me() || mdReq(nd().via).to == me()))

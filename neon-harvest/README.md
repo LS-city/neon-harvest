@@ -28,7 +28,7 @@ After signing in, each new account confirms its date of birth once. Only "confir
 
 ## MyDex
 
-MyDex Hub is a Metro stop. Players get a card, 100 animated badges, encounters, the Badge Vault and the Badge Forge. Everything lives in the `md*` collections in Firestore, and the rules that protect it are in `firestore.rules`. **After updating the game, publish `firestore.rules` again** or MyDex will show a setup notice.
+MyDex Hub is a Metro stop. Players get a card, 100 animated badges, encounters, the Badge Vault and the Badge Forge. Everything lives in the `md*` collections in Firestore, and the rules that protect it are in `firestore.rules`. **After updating the game, publish `firestore.rules` again** or MyDex will show a setup notice. Players can customize forged badges from their Vault (name, color, frame, trim, animations); the rules keep each badge's item art, rarity and category locked. The customize fee is set in MyDex admin → Forge.
 
 The owner account gets an Admin tab inside MyDex (also on the board at MyDex Hub and in Admin Panel). It controls players, suspensions, pictures, official badges, Forge prices, venues, spots, reports and the notice banner.
 
