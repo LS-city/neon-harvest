@@ -6125,13 +6125,13 @@ function dexForgeList(){ const out={items:[],weapons:[],parts:[],pcs:[],drugs:[]
   for(const [id,qty] of invList()){ const it=BY[id], cat=it.t==="weapon"?"weapons":it.t==="trip"?"drugs":(it.t==="build"||it.t==="miner")?"pcs":PET_PART.has(it.t)?"parts":"items", e={kind:"item",id,name:it.n,r:DEX_RAR[it.r]||0,qty,fx:cat}; out[cat].push(e); }
   WARD.pet.opts.forEach((o,i)=>{ const n=o[0]; if(n!=="None"&&PETS[n]&&isOwned("pet",i)) out.pets.push({kind:"pet",id:n,name:n,r:o[1]>=400?3:o[1]>=200?2:o[1]>0?1:0,qty:1,fx:"pets"}); });
   return out; }
-window.NHMYDEX={ db:()=>DB, uid:()=>myId, name:()=>myName||"Runner", isAdmin:()=>!!IS_ADMIN, close:closeMyDex, toast:(t,c)=>toast(t,c), art:dexArt, forgeList:dexForgeList,
+window.NHMYDEX={ nameIssue:n=>{ const c=cleanName(n); if(c!==String(n).trim()) return "Remove the unusual characters from that name."; if(c.toLowerCase()==="rassir"&&!IS_ADMIN) return "That name is reserved."; return nameProblem(c); }, db:()=>DB, uid:()=>myId, name:()=>myName||"Runner", isAdmin:()=>!!IS_ADMIN, close:closeMyDex, toast:(t,c)=>toast(t,c), art:dexArt, forgeList:dexForgeList,
   online:()=>onlinePlayers().map(p=>({by:p.by,name:nameOf(p.by)})),
   forgeCan:(e,fee)=>save.credits>=fee&&(e.kind==="pet"||hasItem(e.id)),
   forgePay:(e,fee,consume)=>{ save.credits-=fee; if(e.kind==="item"&&consume) addItem(e.id,-1); persist(); hud(); } };
 let dexFrame=null;
 function openMyDex(view){ if($("#gmydex")) return; if(!DB||!myId){ toast("Sign in to use MyDex."); return; } closePanel(); const wrap=el("div",{id:"gmydex",role:"dialog","aria-label":"MyDex"});
-  const fr=document.createElement("iframe"); fr.title="MyDex"; fr.setAttribute("allow","geolocation"); fr.src="mydex.html?v=7"+(view?"#"+view:""); dexFrame=fr; wrap.append(fr); $("#game").appendChild(wrap); releaseKeys&&releaseKeys(); try{ stTrack("act","Open MyDex"); }catch(e){} }
+  const fr=document.createElement("iframe"); fr.title="MyDex"; fr.setAttribute("allow","geolocation"); fr.src="mydex.html?v=8"+(view?"#"+view:""); dexFrame=fr; wrap.append(fr); $("#game").appendChild(wrap); releaseKeys&&releaseKeys(); try{ stTrack("act","Open MyDex"); }catch(e){} }
 function closeMyDex(){ const w=$("#gmydex"); if(w) w.remove(); dexFrame=null; }
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#gmydex")){ closeMyDex(); e.preventDefault(); e.stopImmediatePropagation(); } },true);
 function dexHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:DEX_X.term,hw:100,label:"Open MyDex",act:()=>openMyDex()},{x:DEX_X.forge,hw:100,label:"Badge Forge: turn items into badges",act:()=>openMyDex("forge")},...(IS_ADMIN?[{x:DEX_X.board,hw:90,label:"MyDex admin controls",act:()=>openMyDex("admin")}]:[])]; }
