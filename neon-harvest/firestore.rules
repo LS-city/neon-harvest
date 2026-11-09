@@ -236,6 +236,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Car Display: one plot per player (the document id is the player's id). Everyone can see every plot.
+    match /carplots/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && me() == uid && nd().plot is int && nd().plot >= 0 && nd().plot < 1000
+        && nd().cars is list && nd().cars.size() <= 3;
+      allow delete: if isOwner() || (signedIn() && me() == uid);
+    }
+
     // ---------- MyDex ----------
     function mdOk() { return signedIn() && !exists(/databases/$(database)/documents/mdBans/$(me())); }
     function mdDef(d) { return d is map && d.name is string && d.name.size() <= 40; }
