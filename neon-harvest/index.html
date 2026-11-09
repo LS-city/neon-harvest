@@ -277,7 +277,9 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile .brand{display:none}
 #game.mobile .stats{flex-wrap:nowrap;width:100%;align-items:center;gap:5px;min-width:0}
 #game.mobile .stats .pill{font-size:12px;padding:0 8px;height:40px;display:inline-flex;align-items:center;gap:4px;flex:none}
-#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd{display:none!important}
+#game.mobile .stats{overflow-x:auto;scrollbar-width:none}#game.mobile .stats::-webkit-scrollbar{display:none}
+#game.mobile #btnMenu{position:sticky;right:0;margin-left:auto;flex:none;z-index:1;background:#0b0716;box-shadow:-8px 0 8px 2px rgba(7,4,15,.9)}
+#game.mobile #btnRole,#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd{display:none!important}
 #mstatus,#mquick{display:none}
 #game.mobile #mstatus{display:flex;position:absolute;top:calc(var(--top) + 6px);left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));flex-wrap:wrap;gap:4px;z-index:5;pointer-events:none}
 #game.mobile #mstatus .pill{font-size:11px;height:auto;min-height:24px;padding:3px 8px;background:rgba(11,7,22,.86);display:inline-flex;align-items:center;max-width:100%;white-space:normal;line-height:1.25}
@@ -9690,7 +9692,7 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
     mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
     mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
     mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }),
-    mk("🚇","Fast travel",()=>openFastTravel()), mk("🐾","Companion",()=>openCompanion()), mk("📇","MyDex",()=>openMyDex()), mk("📜","Quests",()=>openQuestLog()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
+    mk("🚇","Fast travel",()=>openFastTravel()), mk("🐾","Companion",()=>openCompanion()), mk("📇","MyDex",()=>openMyDex()), mk("🎭","Role",()=>openRoleMenu()), mk("📜","Quests",()=>openQuestLog()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
   body.append(el("strong",{text:"Emotes"}),el("div",{class:"memotes"},...["wave","dance","cheer","pose"].map(e2=>el("button",{class:"btn",type:"button",text:e2[0].toUpperCase()+e2.slice(1),onclick:()=>{ closePanel(); emote(e2); }}))));
   const st=[]; const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) st.push("Boosts: "+bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "));
   if(typeof myFx==="function"&&myFx()&&myTrip) st.push(`High: ${myTrip.name||"active"}${TRIP_LVL[myTrip.lvl||1]?" "+TRIP_LVL[myTrip.lvl||1]:""}`);
