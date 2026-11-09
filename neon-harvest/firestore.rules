@@ -236,6 +236,129 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------- MyDex ----------
+    function mdOk() { return signedIn() && !exists(/databases/$(database)/documents/mdBans/$(me())); }
+    function mdDef(d) { return d is map && d.name is string && d.name.size() <= 40; }
+    function mdReq(id) { return get(/databases/$(database)/documents/mdReq/$(id)).data; }
+
+    match /mdConfig/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /mdBans/{uid} { allow get: if signedIn() && (me() == uid || isOwner()); allow list, write: if isOwner(); }
+    match /mdOfficial/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /mdVenues/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /mdBlocks/{uid} { allow read, write: if signedIn() && me() == uid; }
+
+    // Public player cards. Only 21+ ages, and picture sizes are capped.
+    match /mdCards/{uid} {
+      allow read: if signedIn();
+      allow update: if isOwner();
+      allow create, update: if mdOk() && me() == uid
+        && nd().name is string && nd().name.size() > 0 && nd().name.size() <= 18
+        && nd().age is int && nd().age >= 21 && nd().age <= 99
+        && nd().bio is string && nd().bio.size() <= 120
+        && nd().mood in ['g', 'y', 'r']
+        && nd().photo is string && nd().photo.size() <= 70000
+        && nd().img is string && nd().img.size() <= 150000;
+      allow delete: if isOwner() || (signedIn() && me() == uid);
+    }
+
+    // Radar: opt-in, coarse area only (about 1 km). Never exact coordinates.
+    match /mdPres/{uid} {
+      allow read: if signedIn();
+      allow create, update: if mdOk() && me() == uid && nd().keys().hasOnly(['name', 'cell', 'mood', 'at'])
+        && nd().cell is string && nd().cell.size() <= 20;
+      allow delete: if isOwner() || (signedIn() && me() == uid);
+    }
+
+    // Each player's own badge design: 200 copies, one more at a time, and the design can't be edited.
+    match /mdDesigns/{uid} {
+      allow read: if signedIn();
+      allow create: if mdOk() && me() == uid && nd().minted == 0 && nd().off == false && mdDef(nd().def);
+      allow update: if isOwner()
+        || (mdOk() && me() == uid && od().off == false && nd().diff(od()).affectedKeys().hasOnly(['minted'])
+            && nd().minted == od().minted + 1 && nd().minted <= 200);
+      allow delete: if isOwner();
+    }
+
+    // Every badge is one document with one owner.
+    function mdDesignAfter() { return getAfter(/databases/$(database)/documents/mdDesigns/$(me())).data; }
+    function mdCustomOk(id) {
+      return nd().kind == 'custom' && nd().serial is int && nd().serial >= 1 && nd().serial <= 200
+        && id == me() + '_c_' + string(nd().serial)
+        && mdDesignAfter().minted == nd().serial && mdDesignAfter().off == false;
+    }
+    function mdSelfKind(id) {
+      return nd().kind in ['goal', 'starter', 'item', 'pet'] && id.matches('^' + me() + '_.+');
+    }
+    function mdStaff(venue) {
+      return me() in get(/databases/$(database)/documents/mdVenues/$(venue)).data.get('staff', []);
+    }
+    function mdTransferKeys() { return nd().diff(od()).affectedKeys().hasOnly(['owner', 'from', 'at', 'via']); }
+    match /mdBadges/{id} {
+      allow read: if signedIn();
+      allow create: if isOwner()
+        || (mdOk() && nd().by == me() && mdDef(nd().def) && nd().owner == me() && (mdSelfKind(id) || mdCustomOk(id)))
+        || (mdOk() && nd().by == me() && mdDef(nd().def) && nd().kind == 'venue' && mdStaff(nd().venue));
+      allow update: if isOwner()
+        // The owner hands it over, and only as part of a real request.
+        || (mdOk() && od().owner == me() && mdTransferKeys() && nd().owner != me()
+            && (mdReq(nd().via).from == me() || mdReq(nd().via).to == me()))
+        // The receiver accepts something the owner offered and that is still pending.
+        || (mdOk() && mdTransferKeys() && nd().owner == me()
+            && mdReq(nd().via).to == me() && mdReq(nd().via).from == od().owner
+            && mdReq(nd().via).give == id && mdReq(nd().via).status == 'pending');
+      allow delete: if isOwner();
+    }
+
+    // Requests: the sender must own what they offer, and red status or a block stops them.
+    function mdTargetOpen() {
+      return exists(/databases/$(database)/documents/mdCards/$(nd().to))
+        && get(/databases/$(database)/documents/mdCards/$(nd().to)).data.mood != 'r'
+        && (!exists(/databases/$(database)/documents/mdBlocks/$(nd().to))
+            || !(me() in get(/databases/$(database)/documents/mdBlocks/$(nd().to)).data.list));
+    }
+    match /mdReq/{id} {
+      allow read: if signedIn() && (resource.data.from == me() || resource.data.to == me() || isOwner());
+      allow create: if mdOk() && nd().from == me() && nd().to != me() && nd().status == 'pending'
+        && nd().type in ['ex', 'send', 'gift', 'swap'] && mdTargetOpen()
+        && getAfter(/databases/$(database)/documents/mdBadges/$(nd().give)).data.owner == me();
+      allow update: if signedIn() && od().status == 'pending' && nd().diff(od()).affectedKeys().hasOnly(['status', 'done'])
+        && ((od().to == me() && nd().status in ['ok', 'no']) || (od().from == me() && nd().status == 'no'));
+      allow delete: if signedIn() && (od().from == me() || od().to == me() || isOwner());
+    }
+
+    // Encounters: written by the person who approved a real in-person badge exchange.
+    match /mdEnc/{pair} {
+      allow read: if isOwner() || (signedIn() && me() in resource.data.members);
+      allow create, update: if mdOk() && nd().members is list && nd().members.size() == 2
+        && me() in nd().members && nd().members[0] < nd().members[1]
+        && pair == nd().members[0] + '_' + nd().members[1]
+        && mdReq(nd().req).to == me() && mdReq(nd().req).from in nd().members
+        && mdReq(nd().req).near == true && mdReq(nd().req).type in ['ex', 'send']
+        && mdReq(nd().req).status == 'pending';
+      allow delete: if isOwner();
+    }
+
+    match /mdSpots/{id} {
+      allow read: if signedIn();
+      allow create: if mdOk() && nd().by == me() && nd().name is string && nd().name.size() <= 30
+        && nd().info is string && nd().info.size() <= 200 && nd().lat is number && nd().lng is number;
+      allow update: if isOwner() || (signedIn() && od().by == me())
+        || (mdOk() && nd().diff(od()).affectedKeys().hasOnly(['views']) && nd().views == od().views + 1);
+      allow delete: if isOwner() || (signedIn() && od().by == me());
+    }
+
+    match /mdVisits/{id} {
+      allow read: if signedIn();
+      allow create: if mdOk() && nd().uid == me() && nd().status == 'pending' && id == me() + '_' + nd().venue + '_' + nd().day;
+      allow update: if isOwner() || (mdOk() && mdStaff(od().venue) && nd().diff(od()).affectedKeys().hasOnly(['status', 'by']));
+      allow delete: if isOwner();
+    }
+
+    match /mdReports/{id} {
+      allow create: if mdOk() && nd().by == me() && nd().text is string && nd().text.size() <= 300;
+      allow read, delete: if isOwner();
+    }
+
     match /redeem/{uid} {
       allow read: if signedIn() && (me() == uid || isOwner());
       allow write: if signedIn() && me() == uid

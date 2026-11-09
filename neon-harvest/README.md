@@ -26,11 +26,18 @@ After signing in, each new account confirms its date of birth once. Only "confir
 
 `NH_OWNER_EMAIL` in `firebase-config.js` is the only account that can stock Smacked Shop, verify pickup codes, and claim the name **Rassir**. Sign in with **Continue with Google** using that address. Email/password accounts don't count until their email is verified, so nobody can register your address and take over the shop.
 
+## MyDex
+
+MyDex Hub is a Metro stop. Players get a card, 100 animated badges, encounters, the Badge Vault and the Badge Forge. Everything lives in the `md*` collections in Firestore, and the rules that protect it are in `firestore.rules`. **After updating the game, publish `firestore.rules` again** or MyDex will show a setup notice.
+
+The owner account gets an Admin tab inside MyDex (also on the board at MyDex Hub and in Admin Panel). It controls players, suspensions, pictures, official badges, Forge prices, venues, spots, reports and the notice banner.
+
 ## Files
 
 | File | What it is |
 |---|---|
 | `index.html` | The game |
+| `mydex.html` | MyDex, opened inside the game |
 | `nh-firebase.js` | Connects the game to Firebase: sign-in screen, saves, live multiplayer, shop photo uploads |
 | `firebase-config.js` | Your Firebase project settings and owner email |
 | `firestore.rules` | Who can read and write saves, shops, trades and duels |

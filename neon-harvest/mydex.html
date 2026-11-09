@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+</head><body>
+<title>MyDex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: one phone-height field unit that opens like a book; every tab is a page turned from the spine. */
+:root{
+  color-scheme:dark;
+  --th:230; --ink:hsl(var(--th) 56% 7%); --shell:hsl(var(--th) 57% 14%); --panel:hsl(var(--th) 55% 19%); --line:hsl(var(--th) 43% 35%);
+  --ice:#7ceaff; --flux:#ff4fb0; --text:#eef2ff; --dim:hsl(var(--th) 42% 78%);
+  --go:#3dff9a; --warn:#ffd83d; --stop:#ff4d5e;
+  --display:"Chakra Petch","Trebuchet MS",sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",sans-serif;
+  --mono:"Share Tech Mono",ui-monospace,Menlo,monospace;
+  --cut:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+#view>*,#sheet>*{flex:none}
+html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+#stage{height:100%;max-width:460px;margin:0 auto;position:relative;overflow:hidden;background:var(--shell)}
+#app{position:absolute;inset:0;display:grid;grid-template-rows:auto 1fr auto;perspective:1400px}
+
+.top{display:flex;align-items:center;gap:8px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--dim)}
+.top b{font:700 17px var(--display);letter-spacing:.14em;color:var(--ice);margin-right:auto}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border:1px solid var(--line);white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--ice)}
+.chip.off i{background:var(--dim)}
+.lockbtn{width:34px;height:30px;display:grid;place-items:center;border:1px solid var(--line);color:var(--ice)}
+.lockbtn svg{width:20px;height:20px}
+
+#view{overflow-y:auto;overflow-x:hidden;padding-block:14px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px;transform-origin:left center;-webkit-overflow-scrolling:touch}
+#view.turn{animation:turn .42s cubic-bezier(.2,.8,.25,1)}
+@keyframes turn{from{transform:rotateY(62deg);opacity:.15;box-shadow:inset 90px 0 70px rgba(0,0,0,.7)}to{transform:none;opacity:1}}
+
+nav{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--ink);padding-bottom:max(6px,env(safe-area-inset-bottom,0px))}
+nav button{padding:9px 2px 6px;display:grid;justify-items:center;gap:2px;font:12px var(--mono);color:var(--dim);position:relative;min-height:54px}
+nav svg{width:25px;height:25px}
+nav button[aria-current=page]{color:var(--ice)}
+nav button[aria-current=page]::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:2px;background:var(--ice);box-shadow:0 0 10px var(--ice)}
+svg.ic{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+
+.panel{background:var(--panel);border:1px solid var(--line);clip-path:var(--cut);padding:14px}
+.lab{font:12px var(--mono);letter-spacing:.09em;color:var(--dim);text-transform:uppercase}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:10px}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:6px;min-height:44px;padding:9px 14px;font:700 14px var(--display);letter-spacing:.04em;background:var(--ice);color:var(--ink);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);text-align:center}
+.btn.alt{background:var(--line);color:var(--text)}
+.btn.hot{background:var(--flux);color:var(--ink)}
+.btn.bad{background:none;color:var(--stop);box-shadow:inset 0 0 0 1px var(--stop)}
+.btn[disabled]{background:var(--shell);color:var(--dim);cursor:not-allowed}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btns>.w{grid-column:1/-1}
+.mt{font-family:var(--mono);color:var(--dim);font-size:13px}
+
+/* Info card */
+.card{position:relative;background:var(--panel);border:1px solid var(--ice);clip-path:polygon(22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%,0 22px);padding:14px}
+.card::after{content:"";position:absolute;left:0;right:0;height:40px;top:-40px;background:linear-gradient(transparent,color-mix(in srgb,var(--ice) 14%,transparent),transparent);animation:cardscan 5s linear infinite;pointer-events:none}
+@keyframes cardscan{to{top:110%}}
+.id{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:start}
+.sig{width:96px;height:96px;background:var(--ink);border:1px solid var(--line);padding:8px}
+.sig svg{display:block;width:100%;height:100%}
+.sig{display:block;overflow:hidden}
+.sig.ph{padding:0}
+.sig img{width:100%;height:100%;object-fit:cover;display:block}
+.card .name,.card .bio,.card .facts{text-shadow:0 1px 5px var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tile{display:grid;gap:4px;font:12px var(--mono);color:var(--dim);text-align:center;cursor:pointer;min-width:0}
+.tile>span:first-of-type{display:grid;place-items:center;aspect-ratio:1;border:1px solid var(--line);background-size:cover;background-position:center;font-size:24px;color:var(--ice)}
+.tile[aria-pressed=true]{color:var(--text)}
+.tile[aria-pressed=true]>span:first-of-type{border:2px solid var(--ice);box-shadow:0 0 10px var(--ice)}
+.swatch{border-radius:50%;width:70%;height:70%;display:block}
+.vh{position:absolute;opacity:0;width:1px;height:1px}
+label:focus-within{outline:2px solid var(--ice);outline-offset:2px}
+label.btn{cursor:pointer}
+#sheet.still{animation:none}
+.name{font:700 24px/1.1 var(--display);overflow-wrap:anywhere}
+.namerow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.moodb{display:inline-flex;align-items:center;min-height:32px}
+.bubble{width:20px;height:20px;border-radius:50%;background:var(--m);box-shadow:0 0 6px var(--m),0 0 18px var(--m);animation:bub 2s ease-in-out infinite;display:block}
+.bubble.s{width:13px;height:13px;flex:none}
+@keyframes bub{50%{transform:scale(.8);box-shadow:0 0 3px var(--m),0 0 26px var(--m)}}
+.moodt{color:var(--m);font:13px var(--mono);margin-top:3px}
+.bio{margin-top:12px}
+.facts{margin-top:12px;display:grid;gap:6px;padding:0;list-style:none}
+.facts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:baseline}
+.facts li::before{content:"";width:7px;height:7px;background:var(--flux);transform:rotate(45deg) translateY(-1px)}
+.meter{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
+.big{font:700 54px/1 var(--display);color:var(--ice);font-variant-numeric:tabular-nums;text-shadow:0 0 18px color-mix(in srgb,var(--ice) 60%,transparent)}
+.seg{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;margin-top:6px}
+.seg i{height:14px;background:var(--shell);transform:skewX(-14deg)}
+.seg i.on{background:var(--ice);box-shadow:0 0 8px var(--ice)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.slot{aspect-ratio:1;background:var(--shell);border:1px dashed var(--line);display:grid;place-items:center;color:var(--dim);font:12px var(--mono);padding:4px;max-width:100%}
+.slot.fill{border-style:solid}
+
+/* Badge art */
+.bd{display:block;width:100%;height:100%;overflow:visible}
+.bd .fr{stroke-linejoin:round}
+.bd .bev{fill:none;stroke:hsl(var(--h) 100% 75% / .4);stroke-width:.7}
+.bd .tr{fill:none;stroke:hsl(var(--a) 100% 72% / .6);stroke-width:.7}
+.bd .nd{fill:hsl(var(--a) 100% 78%)}
+.bd .riv{fill:hsl(var(--h) 60% 80%);stroke:hsl(var(--h) 80% 22%);stroke-width:.4}
+.bd .tk{fill:none;stroke:hsl(var(--h) 100% 75% / .6);stroke-dasharray:.6 2.1;stroke-width:2.2}
+.bd .mic{font-family:var(--mono);font-size:3.3px;letter-spacing:.2px;fill:hsl(var(--h) 100% 82%)}
+.bd .gha{fill:none;stroke:#fff;stroke-opacity:.4;stroke-width:1.1;stroke-linecap:round}
+.bd .glow{stroke-width:7.5;opacity:.24}
+.bd .sheen{fill:#fff;opacity:.16}
+.bd .fx{fill:none;stroke:hsl(var(--h) 100% 72%);stroke-width:1.8;transform-origin:50px 50px}
+.bd .gl{fill:none;stroke:hsl(var(--h) 100% 84%);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;transform-origin:50px 50px}
+.bd .dot{fill:hsl(var(--h) 100% 80%);stroke:none}
+.bd .wed{fill:hsl(var(--h) 100% 70% / .3);stroke:none;transform-origin:50px 50px}
+.bd .ch{stroke:#ff4fb0;opacity:.6}
+.bd *{animation-play-state:paused}
+.live .bd *,.bd.live *{animation-play-state:running}
+.bd.lock{filter:grayscale(1) brightness(.55)}
+.a-flow{animation:flow 1.6s linear infinite}
+.sheen{animation:sheen 4.8s ease-in-out infinite}
+@keyframes flow{to{stroke-dashoffset:-16}}
+@keyframes sheen{0%,35%{transform:translateX(-50px)}75%,100%{transform:translateX(150px)}}
+.a-spin{animation:spin 7s linear infinite}.a-rev{animation:spin 5s linear infinite reverse}.a-fast{animation:spin 2.6s linear infinite}
+.a-step{animation:spin 6s steps(12) infinite}
+.a-trace{animation:trace 2.8s linear infinite}
+.a-rip{animation:rip 2.6s ease-out infinite}.a-rip2{animation:rip 2.6s 1.3s ease-out infinite}
+.a-rock{animation:rock 2.2s ease-in-out infinite alternate}
+.a-cor{animation:cor 1.5s ease-in-out infinite alternate}
+.g-float{animation:gfloat 2.4s ease-in-out infinite alternate}
+.g-breathe{animation:gbr 1.9s ease-in-out infinite alternate}
+.g-flick{animation:gfl 3s steps(1) infinite}
+.g-glitch{animation:ggl 2.2s steps(1) infinite}
+.g-tilt{animation:gti 2.6s ease-in-out infinite alternate}
+.g-scan{animation:gsc 2s linear infinite}
+.g-blink{animation:gbl 1.2s steps(2) infinite}.g-blink.d2{animation-delay:.3s}.g-blink.d3{animation-delay:.6s}
+.g-chroma{animation:gch 1.3s ease-in-out infinite alternate}
+.g-spark{animation:gsp 2s ease-out infinite}.g-spark.d2{animation-delay:.7s}.g-spark.d3{animation-delay:1.3s}
+.g-hue{animation:ghue 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes trace{to{stroke-dashoffset:-100}}
+@keyframes rip{from{transform:scale(.55);opacity:.95}to{transform:scale(1.05);opacity:0}}
+@keyframes rock{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
+@keyframes cor{from{transform:scale(.88);opacity:.45}to{transform:scale(1);opacity:1}}
+@keyframes gfloat{from{transform:translateY(-3px)}to{transform:translateY(3px)}}
+@keyframes gbr{from{transform:scale(.88)}to{transform:scale(1.08)}}
+@keyframes gfl{0%,40%,44%,70%,100%{opacity:1}42%,72%{opacity:.25}}
+@keyframes ggl{0%,86%,100%{transform:none}88%{transform:translate(-3px,1px)}92%{transform:translate(3px,-1px)}96%{transform:translate(-1px,0)}}
+@keyframes gti{from{transform:rotate(-11deg)}to{transform:rotate(11deg)}}
+@keyframes gsc{from{transform:translateY(-22px);opacity:0}15%,85%{opacity:1}to{transform:translateY(22px);opacity:0}}
+@keyframes gbl{50%{opacity:.15}}
+@keyframes gch{from{transform:translate(-2px,0)}to{transform:translate(2px,0)}}
+@keyframes gsp{from{transform:translateY(0);opacity:1}to{transform:translateY(-34px);opacity:0}}
+@keyframes ghue{to{filter:hue-rotate(360deg)}}
+
+/* Radar */
+.radar{position:relative;width:min(100%,290px);aspect-ratio:1;margin:0 auto;border-radius:50%;border:1px solid var(--ice);background:repeating-radial-gradient(circle,transparent 0 16%,color-mix(in srgb,var(--ice) 20%,transparent) 16% 16.5%),var(--ink);overflow:hidden}
+.radar::before{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,color-mix(in srgb,var(--ice) 45%,transparent),transparent 26%);animation:spin 3.2s linear infinite}
+.blip{position:absolute;width:32px;height:32px;margin:-16px;display:grid;place-items:center}
+.you{position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;background:var(--ice);transform:rotate(45deg)}
+.pl{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px;background:var(--panel);border:1px solid var(--line);min-height:54px}
+.pl strong{font:700 16px var(--display)}
+details summary{cursor:pointer;font:13px var(--mono);color:var(--dim);padding:8px 0;min-height:36px}
+
+/* Vault */
+.car{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;padding-block:6px;scrollbar-width:none}
+.car::-webkit-scrollbar{display:none}
+.car>button{flex:0 0 46%;scroll-snap-align:center;padding:12px;opacity:.45;transition:opacity .2s,transform .2s;transform:scale(.8)}
+.car>button.cur{opacity:1;transform:scale(1)}
+.car>.sp{flex:0 0 27%}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.grid button{aspect-ratio:1;background:var(--panel);border:1px solid var(--line);padding:6px;max-width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{padding:6px 11px;border:1px solid var(--line);font:13px var(--mono);color:var(--dim);min-height:36px}
+.chips button[aria-pressed=true]{background:var(--ice);border-color:var(--ice);color:var(--ink)}
+.rar{font:12px var(--mono);padding:2px 7px;border:1px solid currentColor;white-space:nowrap}
+
+/* Goals */
+.goal{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.goal:last-child{border-bottom:0}
+.goal .ico{width:44px;height:44px}
+.bar{height:5px;background:var(--shell);margin-top:5px}
+.bar i{display:block;height:100%;background:var(--ice)}
+.tick{font:13px var(--mono);color:var(--dim);font-variant-numeric:tabular-nums}
+
+/* Spots */
+#map{display:block;width:100%;aspect-ratio:1;max-width:100%;background:var(--ink);border:1px solid var(--line);touch-action:manipulation}
+#map.drop{cursor:crosshair;border-color:var(--flux)}
+.pin{cursor:pointer}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font:12px var(--mono);color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;display:block}
+
+/* Sheets and moments */
+#scrim{position:absolute;inset:0;background:rgba(4,6,18,.72);z-index:30}
+#sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;overflow-y:auto;z-index:31;background:var(--shell);border-top:2px solid var(--ice);padding-block:16px max(20px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));animation:rise .24s ease-out;display:flex;flex-direction:column;gap:12px}
+@keyframes rise{from{transform:translateY(40%)}}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sh h2{font:700 20px var(--display);overflow-wrap:anywhere;min-width:0}
+.x{width:40px;height:40px;font:20px var(--mono);color:var(--dim);flex:none}
+label.f{display:grid;gap:4px}
+input[type=text],input[type=number],textarea{width:100%;background:var(--ink);border:1px solid var(--line);padding:10px;font-size:16px}
+textarea{resize:vertical;min-height:68px}
+.err{color:var(--stop);font-size:14px}
+.opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:12px;background:var(--panel);border:1px solid var(--line);text-align:left;width:100%;min-height:56px}
+.opt[aria-pressed=true]{border-color:var(--ice)}
+.preview{width:150px;height:150px;margin:0 auto}
+.pick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.pick button{aspect-ratio:1;border:1px solid var(--line);display:grid;place-items:center;max-width:100%;color:var(--text)}
+.pick button svg{width:80%;height:80%}
+.pick button[aria-pressed=true]{border-color:var(--ice);background:var(--panel)}
+.wait{display:grid;justify-items:center;gap:12px;padding:26px 0;text-align:center}
+.spin{width:54px;height:54px;border:3px solid var(--line);border-top-color:var(--ice);border-radius:50%;animation:spin .8s linear infinite}
+
+#moment{position:absolute;inset:0;z-index:50;display:grid;place-items:center;align-content:center;gap:12px;background:rgba(5,7,22,.93);padding:24px;text-align:center;width:100%}
+#moment .art{display:flex;justify-content:center;gap:22px}
+#moment .one{width:min(52vw,190px);height:min(52vw,190px);animation:forge .7s cubic-bezier(.2,1.5,.4,1)}
+#moment .two .one{width:min(32vw,130px);height:min(32vw,130px)}
+#moment .two .one:first-child{animation:crossL .9s ease-out}
+#moment .two .one:last-child{animation:crossR .9s ease-out}
+@keyframes forge{from{transform:scale(.1) rotate(-160deg);opacity:0}}
+@keyframes crossL{from{transform:translateX(170px) scale(.6)}}
+@keyframes crossR{from{transform:translateX(-170px) scale(.6)}}
+#moment h2{font:700 26px var(--display);color:var(--ice);text-wrap:balance}
+#toast{pointer-events:none;position:absolute;left:16px;right:16px;bottom:76px;z-index:60;background:var(--ink);border:1px solid var(--ice);padding:10px 12px;font-size:14px;text-align:center}
+
+#offline{position:absolute;inset:0;z-index:90;background:var(--ink);display:grid;place-content:center;gap:8px;padding:30px;text-align:center}
+
+/* Lock and book */
+#boot{position:absolute;inset:0;z-index:70;perspective:1500px;overflow:hidden;background:var(--ink)}
+#boot.open{background:transparent;pointer-events:none}
+.leaf,.cover{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;backface-visibility:hidden}
+.leaf{background:linear-gradient(90deg,hsl(var(--th) 55% 28%),var(--panel) 30%,var(--shell));border-right:1px solid var(--ice)}
+.leaf::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,color-mix(in srgb,var(--ice) 9%,transparent) 22px 23px)}
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:12px;padding-block:44px 34px;padding-left:max(34px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));background:radial-gradient(circle at 50% 42%,hsl(var(--th) 55% 28%),var(--shell) 62%,var(--ink))}
+.cover::before{content:"";position:absolute;left:0;top:0;bottom:0;width:18px;background:linear-gradient(90deg,var(--ink),hsl(var(--th) 55% 28%));border-right:1px solid var(--ice)}
+.cover::after{content:"";position:absolute;left:17px;width:2px;height:90px;top:-90px;background:var(--ice);box-shadow:0 0 14px var(--ice);animation:seam 2.8s linear infinite}
+@keyframes seam{to{top:100%}}
+#boot.open .cover{transition:transform 1.15s cubic-bezier(.55,.05,.3,1);transform:rotateY(-118deg)}
+#boot.open .leaf{transition:transform .95s cubic-bezier(.5,.05,.3,1);transform:rotateY(-118deg)}
+#boot.open .l1{transition-delay:.3s}#boot.open .l2{transition-delay:.42s}#boot.open .l3{transition-delay:.54s}
+.cover,.leaf{transition:transform .8s cubic-bezier(.5,.05,.3,1)}
+.wm{font:700 clamp(46px,15vw,66px)/1 var(--display);letter-spacing:.1em;color:var(--ice);text-shadow:0 0 22px color-mix(in srgb,var(--ice) 70%,transparent);position:relative}
+.wmsub{font:13px var(--mono);letter-spacing:.14em;color:var(--dim);text-align:center}
+#lockart{width:min(66vw,250px);height:min(66vw,250px);overflow:visible}
+#lockart .r{fill:none;transform-origin:100px 112px}
+.r1{stroke:var(--ice);stroke-width:5;stroke-dasharray:62 18;animation:spin 14s linear infinite}
+.r2{stroke:var(--flux);stroke-width:3;stroke-dasharray:24 12;animation:spin 8s linear infinite reverse}
+.r3{stroke:var(--ice);stroke-width:7;stroke-dasharray:4 9;animation:spin 20s steps(40) infinite}
+#shackle{fill:none;stroke:var(--ice);stroke-width:9;stroke-linecap:square;transition:transform .45s .2s cubic-bezier(.3,1.7,.5,1)}
+#core{transition:fill .3s;fill:#0b0f2a;stroke:var(--ice);stroke-width:3}
+#key{fill:var(--ice);transform-origin:100px 112px;transition:transform .5s}
+#bolts rect{fill:var(--flux);transition:transform .35s}
+.unlocking .r1{animation-duration:.8s}.unlocking .r2{animation-duration:.5s}.unlocking .r3{animation-duration:1s}
+.unlocked #shackle{transform:translateY(-22px)}
+.unlocked #core{fill:var(--ice)}
+.unlocked #key{transform:rotate(90deg);fill:var(--ink)}
+.unlocked #bolts rect:first-child{transform:translateX(-26px)}
+.unlocked #bolts rect:last-child{transform:translateX(26px)}
+.signin{display:grid;gap:8px;width:min(100%,290px);justify-items:stretch;text-align:center;position:relative}
+.signin .btn{min-height:52px;font-size:17px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+</style>
+
+<div id="stage">
+  <div id="app">
+    <header class="top"><b>MYDEX</b><button class="chip" id="inbox" data-a="inbox" hidden style="color:var(--ink);background:var(--flux);border-color:var(--flux)">0 REQ</button><span class="chip" id="netchip"><i></i>ONLINE</span><span class="chip off" id="locchip"><i></i>LOC OFF</span>
+      <button class="lockbtn" data-a="lock" aria-label="Lock MyDex"><svg class="ic" viewBox="20 20 60 60"><path d="M40 48v-6a10 10 0 0 1 20 0v6M36 48h28v20H36Z"/></svg></button><button class="lockbtn" data-a="closeDex" aria-label="Back to NEON HARVEST" style="font:18px var(--mono)">×</button></header>
+    <div style="overflow:hidden;display:flex;flex-direction:column;min-height:0"><div id="mdbanner" hidden role="status" style="padding:7px 16px;background:var(--flux);color:var(--ink);font-size:14px;font-weight:600"></div><main id="view" style="flex:1;min-height:0"></main></div>
+    <nav id="nav"></nav>
+  </div>
+  <div id="boot">
+    <div class="leaf l3"></div><div class="leaf l2"></div><div class="leaf l1"></div>
+    <div class="cover">
+      <div style="text-align:center;position:relative"><div class="wm">MYDEX</div><div class="wmsub">PLAYER FIELD UNIT</div></div>
+      <svg id="lockart" viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="r r1" cx="100" cy="112" r="84"/><circle class="r r2" cx="100" cy="112" r="71"/><circle class="r r3" cx="100" cy="112" r="59"/>
+        <path id="shackle" d="M78 86V62a22 22 0 0 1 44 0v24"/>
+        <rect id="core" x="66" y="82" width="68" height="60"/>
+        <path id="key" d="M100 96a9 9 0 0 1 5 16.500V128h-10v-15.500A9 9 0 0 1 100 96Z"/>
+        <g id="bolts"><rect x="52" y="108" width="16" height="8"/><rect x="132" y="108" width="16" height="8"/></g>
+      </svg>
+      <div class="signin">
+        <button class="btn" id="signin" data-a="signin">Sign in to unlock</button>
+        <div class="mt" id="who" role="status">Sign in opens your card, vault and radar.</div>
+      </div>
+    </div>
+  </div>
+  <div id="ov"></div>
+  <div id="offline" hidden><div class="wm" style="font-size:34px">NO SIGNAL</div><p>MyDex needs a connection to work. It will come back when you are online.</p></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const NH=(()=>{try{return parent!==window?parent.NHMYDEX:null}catch(e){return null}})();
+if(!NH||!NH.db()||!NH.uid()){document.querySelector("#who").textContent="Open MyDex from inside NEON HARVEST, signed in.";document.querySelector("#signin").hidden=true;return}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const MOOD={g:{c:"var(--go)",t:"Approachable",d:"Happy to meet and swap badges."},y:{c:"var(--warn)",t:"Cautious",d:"Maybe. Keep it short and read the room."},r:{c:"var(--stop)",t:"Not approachable",d:"Please leave me be. Requests are off."}};
+const CAP=200, DISPLAY_MAX=6, MIN_AGE=21;
+
+/* ---------- Badge art ---------- */
+const G={bolt:"M53 30 40 53H50L47 70 60 46H50Z",eye:"M30 50Q50 32 70 50 50 68 30 50ZM44 50a6 6 0 1 0 12 0a6 6 0 1 0-12 0",node:"M50 42v10M44 62l4-8M56 62l-4-8M44 36a6 6 0 1 0 12 0a6 6 0 1 0-12 0M30 66a6 6 0 1 0 12 0a6 6 0 1 0-12 0M58 66a6 6 0 1 0 12 0a6 6 0 1 0-12 0",pin:"M50 70C38 56 34 50 34 44a16 16 0 0 1 32 0c0 6-4 12-16 26ZM44 44a6 6 0 1 0 12 0a6 6 0 1 0-12 0",swap:"M32 42H66L58 34M68 58H34L42 66",star:"M50 30l6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2Z",chip:"M38 38h24v24H38ZM45 45h10v10H45ZM44 38v-7M56 38v-7M44 62v7M56 62v7M38 44h-7M38 56h-7M62 44h7M62 56h7",signal:"M32 68v-6M44 68V54M56 68V42M68 68V30",key:"M32 44a10 10 0 1 0 20 0a10 10 0 1 0-20 0M49 51 67 69M60 62l-5 5M67 69l-4 4",flame:"M50 30c4 10 16 16 16 28a16 14 0 0 1-32 0c0-8 6-10 8-18 3 4 5 6 6 8 2-6 3-12 2-18Z",shield:"M50 30l18 6v14c0 10-8 17-18 20-10-3-18-10-18-20V36ZM42 50l6 6 11-12",wave:"M30 44q5-8 10 0t10 0 10 0 10 0M30 58q5-8 10 0t10 0 10 0 10 0",cube:"M50 30l17 10v20L50 70 33 60V40ZM33 40l17 10 17-10M50 50v20",heart:"M50 68C36 58 31 50 31 43a10 10 0 0 1 19-4 10 10 0 0 1 19 4c0 7-5 15-19 25Z",moon:"M60 32a20 20 0 1 0 8 28 16 16 0 0 1-8-28Z",orbit:"M30 50a20 8 0 1 0 40 0a20 8 0 1 0-40 0M44 50a6 6 0 1 0 12 0a6 6 0 1 0-12 0",crown:"M32 64V40l10 10 8-16 8 16 10-10v24Z",stamp:"M32 32h18l18 18-18 18-18-18Z",clock:"M30 50a20 20 0 1 0 40 0a20 20 0 1 0-40 0M50 38v12l8 6",lock:"M40 48v-6a10 10 0 0 1 20 0v6M36 48h28v20H36Z"};
+const poly=(n,rot=-90,r=45)=>Array.from({length:n},(_,i)=>{const a=(rot+i*360/n)*Math.PI/180;return (50+r*Math.cos(a)).toFixed(1)+","+(50+r*Math.sin(a)).toFixed(1)}).join(" ");
+const gear=(n)=>Array.from({length:n*2},(_,i)=>{const a=(-90+i*180/n)*Math.PI/180,r=i%2?39:46;return (50+r*Math.cos(a)).toFixed(1)+","+(50+r*Math.sin(a)).toFixed(1)}).join(" ");
+const SHAPES=[poly(6),poly(8,-67.5),poly(4),"50,4 92,20 92,56 50,96 8,56 8,20",poly(32),"20,6 80,6 94,20 94,80 80,94 20,94 6,80 6,20",gear(8),poly(6,0)];
+const SHAPE_NAMES=["Hex","Octo","Diamond","Shield","Disc","Plate","Gear","Flat hex"];
+const MOTION_A=["Spin ring","Twin arcs","Clock ticks","Edge trace","Ripple","Orbit","Double orbit","Radar","Rocking gates","Corner pulse"];
+const MOTION_B=["Float","Breathe","Flicker","Glitch","Scanline","Tilt","Blink dots","Chroma","Sparks","Hue shift"];
+const arc=(a,b,r)=>{const p=d=>[50+r*Math.cos(d*Math.PI/180),50+r*Math.sin(d*Math.PI/180)].map(v=>v.toFixed(1)).join(" ");return `M${p(a)}A${r} ${r} 0 0 1 ${p(b)}`};
+function primary(p,pts){switch(p){
+ case 0:return `<circle class="fx a-spin" cx="50" cy="50" r="38" stroke-dasharray="4 6"/>`;
+ case 1:return `<g class="a-rev"><path class="fx" d="${arc(0,70,38)}"/><path class="fx" d="${arc(180,250,38)}"/></g>`.replace('class="a-rev"','class="fx a-rev"');
+ case 2:return `<g class="fx a-step">${Array.from({length:12},(_,i)=>`<path d="M50 11v6" transform="rotate(${i*30} 50 50)"/>`).join("")}</g>`;
+ case 3:return `<polygon class="fx a-trace" points="${pts}" pathLength="100" stroke-dasharray="18 82" stroke-width="3.5"/>`;
+ case 4:return `<circle class="fx a-rip" cx="50" cy="50" r="40"/><circle class="fx a-rip2" cx="50" cy="50" r="40"/>`;
+ case 5:return `<g class="fx a-spin"><circle class="dot" cx="50" cy="12" r="3.600"/></g>`;
+ case 6:return `<g class="fx a-fast"><circle class="dot" cx="50" cy="12" r="3"/></g><g class="fx a-rev"><circle class="dot" cx="50" cy="20" r="2.400"/></g>`;
+ case 7:return `<path class="wed a-fast" d="M50 50L50 10A40 40 0 0 1 84 30Z"/>`;
+ case 8:return `<g class="fx a-rock"><path d="${arc(-40,40,38)}"/><path d="${arc(140,220,38)}"/></g>`;
+ default:return `<g class="fx a-cor"><path d="M20 28v-8h8M72 20h8v8M80 72v8h-8M28 80h-8v-8"/></g>`;
+}}
+let bdN=0;
+function badgeSVG(d,lock,lite){
+ const pts=SHAPES[d.sh%SHAPES.length], g=G[d.g]||G.star, sm=d.s, cls=["g-float","g-breathe","g-flick","g-glitch","","g-tilt","","","","g-hue"][sm]||"";
+ const k="x"+(++bdN), acc=(d.h+150)%360, h=d.h;
+ let x=hash(d.id||d.name)|1; const rnd=()=>{x=Math.imul(x^(x>>>15),2246822519)+1831565813|0;return (x>>>0)/4294967296};
+ const pol=(r,a)=>(50+r*Math.cos(a)).toFixed(1)+" "+(50+r*Math.sin(a)).toFixed(1);
+ let extra="";
+ if(sm===4) extra=`<path class="fx g-scan" d="M30 50h40" stroke-width="2.500"/>`;
+ if(sm===6) extra=`<circle class="dot g-blink" cx="42" cy="68" r="1.700"/><circle class="dot g-blink d2" cx="50" cy="70" r="1.700"/><circle class="dot g-blink d3" cx="58" cy="68" r="1.700"/>`;
+ if(sm===8) extra=`<circle class="dot g-spark" cx="38" cy="68" r="1.800"/><circle class="dot g-spark d2" cx="52" cy="70" r="1.800"/><circle class="dot g-spark d3" cx="63" cy="67" r="1.800"/>`;
+ const ch=sm===7?`<path class="gl ch g-chroma" d="${g}"/>`:"";
+ const defs=`<defs><linearGradient id="${k}m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h} 100% 88%)"/><stop offset=".4" stop-color="hsl(${h} 85% 42%)"/><stop offset=".7" stop-color="hsl(${h} 100% 74%)"/><stop offset="1" stop-color="hsl(${acc} 100% 62%)"/></linearGradient><radialGradient id="${k}p" cx=".5" cy=".36" r=".78"><stop offset="0" stop-color="hsl(${h} 78% 25%)"/><stop offset="1" stop-color="hsl(${h} 72% 8%)"/></radialGradient><radialGradient id="${k}l" cx=".5" cy=".42" r=".62"><stop offset="0" stop-color="hsl(${h} 88% 22%)"/><stop offset="1" stop-color="hsl(${h} 80% 5%)"/></radialGradient>${lite?"":`<clipPath id="${k}c"><polygon points="${pts}"/></clipPath><pattern id="${k}h" width="7" height="12" patternUnits="userSpaceOnUse"><path d="M3.500 0 7 2v4L3.500 8 0 6V2ZM3.500 8v4" fill="none" stroke="hsl(${h} 100% 72%)" stroke-width=".35"/></pattern><path id="${k}t" d="M19 50a31 31 0 0 0 62 0"/>`}</defs>`;
+ const plate=`<polygon class="fr" points="${pts}" style="fill:url(#${k}p);stroke:url(#${k}m);stroke-width:${d.r>=3?3.2:2.5}"/>`;
+ const bevel=`<polygon class="bev" points="${pts}" transform="translate(50 50) scale(.88) translate(-50 -50)"/>`;
+ const lens=`<circle cx="50" cy="50" r="27" style="fill:url(#${k}l);stroke:url(#${k}m);stroke-width:1.300"/>`;
+ const artURL=d.art?NH.art(d.art):"";const glyph=artURL?`<g class="${cls}" style="transform-origin:50px 50px"><image href="${artURL}" x="27" y="27" width="46" height="46" preserveAspectRatio="xMidYMid meet"/></g>`:`<g class="gl ${cls}"><path class="glow" d="${g}"/><path d="${g}"/></g>`;
+ let detail="",top="";
+ if(!lite){
+  let tr="";const n=6+d.r*2;
+  for(let i=0;i<n;i++){const a=(i+rnd()*.7)/n*Math.PI*2,b=a+(rnd()<.5?-1:1)*(.12+rnd()*.2),r=38+rnd()*5,e=pol(r,b),flow=i%3===0;
+   tr+=`<path class="tr${flow?" a-flow":""}" d="M${pol(28,a)}L${pol(r-4,a)}L${e}"${flow?' stroke-dasharray="2 6"':""}/><circle class="nd" r="1.050" cx="${e.split(" ")[0]}" cy="${e.split(" ")[1]}"/>`}
+  const v=pts.split(" ");const st=v.length>10?(v.length>16?4:2):1;
+  const riv=v.filter((_,i)=>i%st===0).map(q=>{const [a,b]=q.split(",").map(Number);return `<circle class="riv" r="1.250" cx="${(50+(a-50)*.94).toFixed(1)}" cy="${(50+(b-50)*.94).toFixed(1)}"/>`}).join("");
+  const code=String(hash(d.id||d.name)%1000).padStart(3,"0");
+  detail=`<g clip-path="url(#${k}c)"><rect width="100" height="100" fill="url(#${k}h)" opacity=".5"/>${tr}</g>${riv}<circle class="tk" cx="50" cy="50" r="34.500"/><text class="mic" text-anchor="middle"><textPath href="#${k}t" startOffset="50%">${esc(String(d.name).toUpperCase())} · MX-${code}</textPath></text>`;
+  const pipC=d.r>=4?"#ffb347":`hsl(${acc} 100% 72%)`;
+  const pips=Array.from({length:(d.r||0)+1},(_,i)=>`<rect x="${(50-((d.r||0)+1)*1.75+i*3.5).toFixed(2)}" y="14" width="2.300" height="3.200" fill="${pipC}"/>`).join("");
+  const crown=d.r>=4?`<g class="a-spin" style="transform-origin:50px 50px">${[0,120,240].map(a=>`<path d="M50 1l2.500 4.500h-5Z" fill="#ffb347" transform="rotate(${a} 50 50)"/>`).join("")}</g>`:"";
+  top=`<path class="gha" d="M33 40A20 20 0 0 1 58 30"/>${pips}${crown}<g clip-path="url(#${k}c)"><g transform="rotate(24 50 50)"><rect class="sheen" x="-10" y="-30" width="16" height="160"/></g></g>`;
+ }else top=`<path class="gha" d="M33 40A20 20 0 0 1 58 30"/>`;
+ return `<svg class="bd${lock?" lock":""}" viewBox="0 0 100 100" style="--h:${h};--a:${acc}" aria-hidden="true">${defs}${plate}${bevel}${detail}${primary(d.p,pts)}${lens}${ch}${glyph}${extra}${top}</svg>`;
+}
+
+/* ---------- 100 badge catalog: every badge has its own frame-motion and core-motion pair ---------- */
+const RAR=["Common","Uncommon","Rare","Epic","Legendary"], RARC=["#a4aed6","#7ceaff","#b693ff","#ff4fb0","#ffb347"];
+const CATS=[
+["Encounters","enc","Meet {n} different people",186,["node","swap","signal","wave"],[1,3,5,10,15,25,40,60,80,100],["First Contact","Handshake Protocol","Signal Boost","Street Node","Mesh Walker","Crowd Link","Human Router","Social Mainframe","Citywide Uplink","Encounter Prime"]],
+["Trades","trades","Complete {n} vault swaps",265,["swap","cube"],[1,3,5,10,20],["Fair Swap","Barter Bit","Swap Daemon","Market Maker","Exchange Core"]],
+["Gifts sent","gifts","Send {n} badges as gifts",325,["heart","star"],[1,3,5,10,25],["Free Packet","Care Package","Open Port","Generous Node","Patron Protocol"]],
+["Gifts received","recv","Receive {n} badges",300,["heart","orbit"],[1,3,5,10,25],["Incoming Signal","Warm Welcome","Popular Port","Fan Mail Array","Magnet Core"]],
+["Chill spots","spots","Create {n} chill spots",200,["pin","moon"],[1,2,3,4,5,7,10,12,15,20],["Pin Drop","Second Coordinate","Trailhead","Local Guide","Block Mapper","District Scout","Cartographer","Terrain Engine","Atlas Keeper","World Builder"]],
+["Spot traffic","spotv","Get {n} taps on your spots",216,["eye","pin"],[1,10,25,50,100],["First Visitor","Foot Traffic","Hot Coordinate","Scene Setter","Landmark Status"]],
+["Visits","visits","Get {n} visits approved",28,["stamp","key","crown"],[1,2,3,5,8,12,20,30,50,75],["First Stamp","Return Trip","Regular Ping","House Favorite","Familiar Face","Door Opener","Back Room Pass","VIP Trace","Neighborhood Legend","Key to the City"]],
+["Streaks","streak","Sign in {n} days in a row",14,["flame","clock"],[2,3,5,7,10,14,21,30,60,90],["Two Bit","Triple Boot","Five Alive","Week Online","Ten Cycle","Fortnight Loop","Three Week Run","Thirty Day Core","Sixty Day Drive","Ninety Day Flame"]],
+["Daily goals","daily","Finish {n} daily goals",170,["chip","bolt"],[1,3,5,10,15,25,40,60,80,100],["Daily Driver","Daily Triple","Task Runner","Routine Patch","Steady Clock","Quarter Stack","Forty Ops","Sixty Ops","Eighty Ops","Hundred Ops"]],
+["Weekly goals","weekly","Finish {n} weekly goals",240,["shield","clock"],[1,2,3,4,6,8,12,16,26,52],["Week One Clear","Double Week","Triple Week","Month Clear","Six Cycle","Eight Cycle","Twelve Cycle","Sixteen Cycle","Half Year Run","Full Year Run"]],
+["Status","moods","Update your status {n} times",130,["wave","eye"],[1,5,10,25,50],["Status Check","Color Coded","Honest Signal","Mood Engine","Aura Master"]],
+["Card setup","card","",55,["chip","crown","star"],[1,1,1,1,1],["Name Plate","Bio Online","Three Facts","Show Off","Full Display"]],
+["Collection","vault","Hold {n} badges in your vault",280,["cube","lock"],[5,10,25,50,75],["Small Stash","Growing Vault","Collector Grid","Vault Keeper","Archive Prime"]],
+["Your drop","mint","",350,["bolt","star"],[1,1,10,50,200],["Self Made","First Drop","Ten Out","Fifty Out","Supply Zero"]],
+];
+const CARD_GOALS=["Set your username","Write a bio","Fill in all 3 facts","Add a badge to your display","Fill all 6 display slots"];
+const MINT_GOALS=["Create your own badge","Give out your first copy","Give out 10 copies","Give out 50 copies","Give out all 200 copies"];
+const BADGES=[]; const BY={};
+CATS.forEach(([cat,key,tpl,h,gl,targets,names],ci)=>names.forEach((name,j)=>{
+ const i=BADGES.length;
+ const one=t=>t.replace("different people","person").replace(/badges/,"badge").replace(/swaps/,"swap").replace(/spots/g,"spot").replace(/taps/,"tap").replace(/visits/,"visit").replace(/goals/,"goal").replace(/times/,"time");
+ const goal=key==="card"?CARD_GOALS[j]:key==="mint"?MINT_GOALS[j]:(targets[j]===1?one(tpl):tpl).replace("{n}",targets[j]);
+ const b={id:"b"+i,name,cat,key,sub:j,target:targets[j],goal,sh:(i*3+ci)%8,g:gl[j%gl.length],h:h+(j*4),p:Math.floor(i/10),s:i%10,r:Math.min(4,Math.floor(j/names.length*5))};
+ BADGES.push(b);BY[b.id]=b;
+}));
+const STARTER=[{id:"st0",name:"Boot Spark",cat:"Starter",sh:4,g:"bolt",h:190,p:0,s:1,r:0},{id:"st1",name:"Grid Runner",cat:"Starter",sh:5,g:"signal",h:265,p:5,s:0,r:0},{id:"st2",name:"Neon Pass",cat:"Starter",sh:0,g:"key",h:325,p:9,s:5,r:0}];
+STARTER.forEach(b=>BY[b.id]=b);
+/* ---------- Live game connection ---------- */
+const DB=NH.db(), myId=NH.uid(), IS_ADMIN=NH.isAdmin();
+const d=p=>DB.doc(p), c=p=>DB.collection(p), myName=()=>S.profile.name||NH.name();
+function hash(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+const STARTER_IDS=STARTER.map(b=>b.id);
+const fresh=()=>({v:2,profile:{name:"",age:21,bio:"",facts:["","",""],photo:""},look:{bg:"grid",img:"",color:"cyan"},mood:"g",display:[],earned:{},m:{trades:0,gifts:0,recv:0,moods:0,sentOwn:0,daily:0,weekly:0},blocked:[],visible:false,locOn:false,streak:0,last:"",day:{k:"",c:{},done:{}},week:{k:"",c:{},done:{}},seen:[],starter:false});
+const DEF_CFG={forge:{on:{items:true,parts:true,pcs:true,drugs:true,pets:true},fee:[25,50,100,250],consume:true,limit:10},off:[],msg:""};
+let S=fresh(), V=[], design=null, met={}, incoming=[], outgoing=[], cfg=DEF_CFG, spots=[], venues=[], myVisits=[], ban=null, pos=null, near=[], rulesBad=false;
+let tab="card", vaultFilter="all", vaultIdx=0, ready=false, saveT=0, reqId=0, dropping=false, adminTab="players", pendingXY=null;
+const pad=n=>String(n).padStart(2,"0");
+const dk=x=>x.getFullYear()+"-"+pad(x.getMonth()+1)+"-"+pad(x.getDate());
+const today=()=>dk(new Date());
+const yesterday=()=>{const x=new Date();x.setDate(x.getDate()-1);return dk(x)};
+const weekKey=()=>{const x=new Date();x.setDate(x.getDate()-((x.getDay()+6)%7));return dk(x)};
+const dayNum=()=>Math.floor(Date.now()/864e5-new Date().getTimezoneOffset()/1440);
+const bad=e=>{if(e&&e.code==="permission-denied"&&!rulesBad){rulesBad=true;banner()}};
+function banner(){const b=$("#mdbanner");if(!b)return;const msg=rulesBad?(IS_ADMIN?"MyDex can't save yet. Publish the updated firestore.rules in the Firebase console.":"MyDex is being set up. Check back soon."):(cfg.msg||"");b.textContent=msg;b.hidden=!msg}
+function save(){clearTimeout(saveT);saveT=setTimeout(persist,700)}
+let lastCard="";
+async function persist(){
+ try{await d(`data/users/${myId}/mydex`).set(JSON.parse(JSON.stringify(S)))}catch(e){bad(e)}
+ const P=S.profile, card={name:(P.name||NH.name()).slice(0,18),age:Math.max(MIN_AGE,+P.age||MIN_AGE),bio:P.bio.slice(0,120),facts:P.facts.map(f=>f.slice(0,40)),photo:P.photo||"",bg:S.look.bg,img:S.look.bg==="img"?S.look.img:"",mood:S.mood,met:Object.keys(met).length,display:S.display.slice(0,DISPLAY_MAX).map(k=>{const it=k==="own"?"own":V.find(x=>x.u===k);return it&&defOf(it)?defOf(it):null}).filter(Boolean),at:Date.now()};
+ const sig=JSON.stringify({...card,at:0});
+ if(sig!==lastCard){try{await d("mdCards/"+myId).set(card);lastCard=sig}catch(e){bad(e)}}
+ if(S.visible&&pos) pushPres();
+}
+async function load(){try{const s=await d(`data/users/${myId}/mydex`).get();if(s.exists)S=Object.assign(fresh(),s.data())}catch(e){bad(e)}}
+let refreshT=0;
+function refresh(){clearTimeout(refreshT);refreshT=setTimeout(()=>{if(!ready)return;checkAwards();if(tab!=="admin")render();updInbox()},120)}
+function subscribe(){
+ c("mdBadges").where("owner","==",myId).onSnapshot(s=>{V=s.docs.map(x=>({u:x.id,...x.data()})).sort((a,b)=>(b.at||0)-(a.at||0));S.display=S.display.filter(k=>k==="own"||V.some(x=>x.u===k));refresh();save()},bad);
+ d("mdDesigns/"+myId).onSnapshot(s=>{design=s.exists?s.data():null;refresh()},bad);
+ c("mdEnc").where("members","array-contains",myId).onSnapshot(s=>{const m={};s.docs.forEach(x=>{const a=x.data().members.find(v=>v!==myId);m[a]=x.data().at});const was=Object.keys(met).length,n=Object.keys(m).length;met=m;if(ready&&n>was)bump("enc",n-was);refresh();save()},bad);
+ c("mdReq").where("to","==",myId).onSnapshot(s=>{const nw=s.docs.map(x=>({id:x.id,...x.data()})).filter(x=>x.status==="pending");if(ready&&nw.length>incoming.length){const r=nw[nw.length-1];toast(`${r.fromName} sent you a badge request.`);NH.toast("MyDex: "+r.fromName+" sent you a badge request.")}incoming=nw;updInbox()},bad);
+ c("mdReq").where("from","==",myId).onSnapshot(s=>{outgoing=s.docs.map(x=>({id:x.id,...x.data()}));outgoing.forEach(onOutgoing);refresh()},bad);
+ d("mdConfig/main").onSnapshot(s=>{const v=s.exists?s.data():{};cfg={...DEF_CFG,...v,forge:{...DEF_CFG.forge,...(v.forge||{}),on:{...DEF_CFG.forge.on,...((v.forge||{}).on||{})}}};banner()},bad);
+ d("mdBans/"+myId).onSnapshot(s=>{ban=s.exists?s.data():null;showBan()},()=>{});
+ c("mdSpots").limit(300).onSnapshot(s=>{spots=s.docs.map(x=>({id:x.id,...x.data()}));refresh()},bad);
+ c("mdVenues").onSnapshot(s=>{venues=s.docs.map(x=>({id:x.id,...x.data()}));refresh()},bad);
+ c("mdVisits").where("uid","==",myId).onSnapshot(s=>{const was=myVisits.filter(v=>v.status==="ok").length;myVisits=s.docs.map(x=>({id:x.id,...x.data()}));const n=myVisits.filter(v=>v.status==="ok").length;if(ready&&n>was)bump("vis",n-was);refresh()},bad);
+}
+function showBan(){const o=$("#offline");if(ban){o.hidden=false;o.innerHTML=`<div class="wm" style="font-size:30px">SUSPENDED</div><p>Your MyDex has been suspended.</p><p class="mt">${esc(ban.reason||"")}</p><button class="btn alt" data-a="closeDex">Back to the game</button>`}else net()}
+const ownCopies=()=>V.filter(x=>x.kind==="custom"&&x.by===myId);
+const reserved=()=>new Set(outgoing.filter(r=>r.status==="pending").map(r=>r.give));
+const heldCopy=()=>ownCopies().find(x=>!reserved().has(x.u));
+const left=()=>design?CAP-design.minted+ownCopies().filter(x=>!reserved().has(x.u)).length:0;
+const allBadges=()=>V.filter(x=>!(x.kind==="custom"&&x.by===myId));
+const defOf=it=>it==="own"?(design&&design.def):it.def;
+const metCount=()=>Object.keys(met).length;
+const mySpots=()=>spots.filter(s=>s.by===myId);
+function metric(b){const P=S.profile;switch(b.key){
+ case "enc":return metCount();
+ case "spots":return mySpots().length;
+ case "spotv":return mySpots().reduce((a,s)=>a+(+s.views||0),0);
+ case "streak":return S.streak;
+ case "vault":return allBadges().length;
+ case "visits":return myVisits.filter(v=>v.status==="ok").length;
+ case "card":return [P.name?1:0,P.bio?1:0,P.facts.every(Boolean)?1:0,S.display.length?1:0,S.display.length>=DISPLAY_MAX?1:0][b.sub];
+ case "mint":return b.sub===0?(design?1:0):b.sub===1?(S.m.sentOwn?1:0):S.m.sentOwn;
+ default:return S.m[b.key]||0;
+}}
+const badgeDoc=(kind,def,from,extra)=>({owner:myId,by:myId,byName:myName(),kind,def:JSON.parse(JSON.stringify(def)),from,at:Date.now(),...(extra||{})});
+function checkAwards(){if(rulesBad)return;for(const b of BADGES){if(S.earned[b.id]||(cfg.off||[]).includes(b.id)||metric(b)<b.target)continue;S.earned[b.id]=Date.now();
+ d(`mdBadges/${myId}_${b.id}`).set(badgeDoc("goal",b,"Earned")).then(()=>{queue({title:"Badge earned",name:b.name,sub:b.goal,badges:[b]});save()}).catch(e=>{delete S.earned[b.id];bad(e)})}}
+const DAILY=[{k:"mood",n:1,t:"Update your status"},{k:"scan",n:1,t:"Scan the radar"},{k:"spotOpen",n:1,t:"Open a chill spot"},{k:"cycle",n:5,t:"Cycle through 5 vault badges"},{k:"exch",n:1,t:"Send or swap a badge"}];
+const WEEKLY=[{k:"enc",n:3,t:"Encounter 3 people"},{k:"vis",n:2,t:"Get 2 visits approved"},{k:"spot",n:1,t:"Create a chill spot"},{k:"exch",n:4,t:"Send or swap 4 badges"},{k:"login",n:5,t:"Sign in on 5 days"}];
+const pick3=(a,n)=>[0,1,2].map(i=>a[(n+i)%a.length]);
+const todays=()=>pick3(DAILY,dayNum()), weeks=()=>pick3(WEEKLY,Math.floor(dayNum()/7));
+function bump(k,n=1){S.day.c[k]=(S.day.c[k]||0)+n;S.week.c[k]=(S.week.c[k]||0)+n;
+ todays().forEach(g=>{if((S.day.c[g.k]||0)>=g.n&&!S.day.done[g.k]){S.day.done[g.k]=1;S.m.daily++;toast("Daily goal done: "+g.t)}});
+ weeks().forEach(g=>{if((S.week.c[g.k]||0)>=g.n&&!S.week.done[g.k]){S.week.done[g.k]=1;S.m.weekly++;toast("Weekly goal done: "+g.t)}});
+ checkAwards();save()}
+function login(){const t=today();if(S.day.k!==t){S.streak=S.last===yesterday()?S.streak+1:1;S.last=t;S.day={k:t,c:{},done:{}};const w=weekKey();if(S.week.k!==w)S.week={k:w,c:{},done:{}};bump("login")}}
+async function starter(){if(S.starter||rulesBad)return;try{const b=DB.batch();STARTER.forEach(x=>b.set(d(`mdBadges/${myId}_${x.id}`),badgeDoc("starter",x,"Starter pack")));await b.commit();S.starter=true;save()}catch(e){if(e&&e.code==="permission-denied"){try{S.starter=(await d(`mdBadges/${myId}_st0`).get()).exists}catch(_){}if(!S.starter)bad(e)}}}
+/* ---------- Moments, toasts, sheets ---------- */
+const momentQ=[];let momentOn=false;
+function queue(m){momentQ.push(m);nextMoment()}
+function nextMoment(){ if(momentOn||!momentQ.length||!ready)return; momentOn=true; const m=momentQ.shift(); const old=$("#moment");if(old)old.remove();
+ const el=document.createElement("button");el.id="moment";el.className="live";el.innerHTML=`<div class="lab">${esc(m.title)}</div><div class="art ${m.badges.length>1?"two":""}">${m.badges.map(b=>`<div class="one">${badgeSVG(b)}</div>`).join("")}</div><h2>${esc(m.name)}</h2><p>${esc(m.sub||"")}</p><div class="mt">Tap to continue</div>`;
+ el.onclick=()=>{el.remove();momentOn=false;nextMoment()};$("#stage").appendChild(el);el.focus({preventScroll:true});
+}
+let toastT=0;function toast(t){let e=$("#toast");if(!e){e=document.createElement("div");e.id="toast";e.setAttribute("role","status");$("#stage").appendChild(e)}e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,2600)}
+function sheet(html,keep){reqId++;const st=keep&&$("#sheet")?$("#sheet").scrollTop:0,had=keep&&$("#sheet");$("#ov").innerHTML=`<div id="scrim" data-a="close"></div><section id="sheet" class="live${had?" still":""}" role="dialog" aria-modal="true">${html}</section>`;if(st)$("#sheet").scrollTop=st;watch()}
+function closeSheet(){reqId++;$("#ov").innerHTML=""}
+const sh=t=>`<div class="sh"><h2>${esc(t)}</h2><button class="x" data-a="close" aria-label="Close">×</button></div>`;
+
+/* animate only badges on screen, so 100 live badges do not drain a phone */
+const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle("live",e.isIntersecting)),{rootMargin:"40px"}):null;
+function watch(){document.querySelectorAll(".bd").forEach(b=>{if(io)io.observe(b);else b.classList.add("live")})}
+
+/* ---------- Card look and neon colors ---------- */
+const NEON={cyan:["Cyan","#7ceaff","#ff4fb0",230],blue:["Electric","#5da2ff","#7cf5ff",222],violet:["Ultraviolet","#b98cff","#ff5fd2",262],magenta:["Magenta","#ff5fe0","#7ceaff",298],pink:["Hot pink","#ff5c9f","#ffc06b",334],orange:["Solar","#ff9a3d","#ff5c9f",18],lime:["Acid lime","#c6ff3d","#5de0ff",215],aqua:["Aqua","#3dffd8","#b98cff",196]};
+function applyTheme(){const n=NEON[S.look.color]||NEON.cyan,r=document.documentElement.style;r.setProperty("--ice",n[1]);r.setProperty("--flux",n[2]);r.setProperty("--th",n[3]);try{localStorage.setItem("mydex_color",S.look.color)}catch(e){}}
+try{const c=localStorage.getItem("mydex_color");if(NEON[c]){S.look.color=c;applyTheme()}}catch(e){}
+const svgURL=b=>`url('data:image/svg+xml,${encodeURIComponent(b)}')`;
+const safeImg=u=>/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(u||"")?u:"";
+const BGS=[["grid","Grid"],["circuit","Circuit"],["hex","Hex mesh"],["aurora","Aurora"],["sunset","Sunset"],["rain","Data rain"],["carbon","Carbon"],["holo","Holo"]];
+function bgCSS(k){const n=NEON[S.look.color]||NEON.cyan,c=n[1],f=n[2],t=n[3],base=`linear-gradient(155deg,hsl(${t} 58% 24%),hsl(${t} 58% 12%) 60%,hsl(${t+25} 60% 18%))`,a=(col,p)=>`color-mix(in srgb,${col} ${p}%,transparent)`;
+ switch(k){
+ case "circuit":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" fill="none" stroke="${c}" stroke-opacity=".3"><path d="M0 30h40l20 20h30l30-30M30 120V80l20-20M90 0v30l-20 20M0 90h20l14 14h50l36-36"/><g fill="${c}" fill-opacity=".5" stroke="none"><circle cx="40" cy="30" r="2.500"/><circle cx="50" cy="60" r="2.500"/><circle cx="90" cy="30" r="2.500"/><circle cx="84" cy="104" r="2.500"/></g></svg>`)},${base}`;
+ case "hex":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="42" height="72" fill="none" stroke="${c}" stroke-opacity=".28"><path d="M21 0 42 12v24L21 48 0 36V12ZM21 48v24"/></svg>`)},${base}`;
+ case "aurora":return `radial-gradient(90% 55% at 15% 8%,${a(c,50)},transparent),radial-gradient(90% 60% at 95% 45%,${a(f,45)},transparent),radial-gradient(80% 50% at 25% 100%,${a(c,30)},transparent),hsl(${t} 58% 11%)`;
+ case "sunset":return `repeating-linear-gradient(0deg,hsl(${t} 58% 10%) 0 3px,transparent 3px 12px) 0 45%/100% 30% no-repeat,radial-gradient(circle at 50% 42%,${f} 0 20%,${a(f,35)} 21% 38%,transparent 56%),linear-gradient(180deg,hsl(${t+30} 62% 17%),hsl(${t} 58% 10%))`;
+ case "rain":return `repeating-linear-gradient(90deg,${a(c,14)} 0 2px,transparent 2px 19px),repeating-linear-gradient(180deg,${a(c,22)} 0 14px,transparent 14px 37px) 8px 0/19px 100%,hsl(${t} 58% 9%)`;
+ case "carbon":return `repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 4px,transparent 4px 8px),repeating-linear-gradient(-45deg,rgba(0,0,0,.3) 0 4px,transparent 4px 8px),hsl(${t} 25% 13%)`;
+ case "holo":return `conic-gradient(from 210deg at 30% 20%,${a(c,45)},${a(f,45)},${a("#ffb347",30)},${a(c,45)}),hsl(${t} 58% 11%)`;
+ default:return `linear-gradient(${a(c,16)} 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,${a(c,16)} 1px,transparent 1px) 0 0/24px 24px,${base}`;
+ }}
+function myCardBg(){const u=safeImg(S.look.img);if(S.look.bg==="img"&&u)return `linear-gradient(rgba(6,8,22,.55),rgba(6,8,22,.78)),url('${u}') center/cover`;return bgCSS(S.look.bg==="img"?"grid":S.look.bg)}
+function avatar(){const u=safeImg(S.profile.photo);return u?`<img src="${u}" alt="">`:sigil(S.profile.name||myId||"player")}
+function shrink(file,w,h,maxLen){return new Promise((ok,no)=>{if(!file||file.size>25e6)return no(0);const url=URL.createObjectURL(file),im=new Image();im.onerror=()=>{URL.revokeObjectURL(url);no(0)};im.onload=()=>{try{const c=document.createElement("canvas");c.width=w;c.height=h;const iw=im.naturalWidth||w,ih=im.naturalHeight||h,sc=Math.max(w/iw,h/ih),sw=w/sc,sh2=h/sc,x=c.getContext("2d");x.fillStyle="#000";x.fillRect(0,0,w,h);x.drawImage(im,(iw-sw)/2,(ih-sh2)/2,sw,sh2,0,0,w,h);URL.revokeObjectURL(url);let q=.85,d=c.toDataURL("image/jpeg",q);while(d.length>maxLen&&q>.3){q-=.1;d=c.toDataURL("image/jpeg",q)}d.length>maxLen?no(0):ok(d)}catch(e){no(0)}};im.src=url})}
+function drawStyle(){const P=S.profile,L=S.look,img=safeImg(L.img);
+ sheet(`${sh("Style my MyDex")}
+ <article class="card" style="background:${myCardBg()}"><div class="id"><div class="sig ${safeImg(P.photo)?"ph":""}">${avatar()}</div><div style="min-width:0"><h3 class="name">${esc(P.name||"Your name")}</h3><div class="mt">Card preview</div></div></div></article>
+ <div class="lab">Profile picture</div>
+ <div class="btns"><label class="btn"><input class="vh" type="file" id="up_photo" accept="image/*">${P.photo?"Change picture":"Upload picture"}</label><button class="btn alt" data-a="rmPhoto" ${P.photo?"":"disabled"}>Remove</button></div>
+ <div class="lab">Card background</div>
+ <div class="tiles">${BGS.map(([k,l])=>`<button class="tile" data-a="setBg" data-v="${k}" aria-pressed="${L.bg===k}"><span style="background:${bgCSS(k)}"></span><span>${l}</span></button>`).join("")}
+ ${img?`<button class="tile" data-a="setBg" data-v="img" aria-pressed="${L.bg==="img"}"><span style="background:url('${img}') center/cover"></span><span>My image</span></button>`:""}
+ <label class="tile"><input class="vh" type="file" id="up_bg" accept="image/*"><span>+</span><span>${img?"Replace":"Upload"}</span></label></div>
+ <div class="lab">MyDex neon color</div>
+ <div class="tiles">${Object.entries(NEON).map(([k,n])=>`<button class="tile" data-a="setColor" data-v="${k}" aria-pressed="${L.color===k}"><span><span class="swatch" style="background:${n[1]};box-shadow:0 0 12px ${n[1]}"></span></span><span>${n[0]}</span></button>`).join("")}</div>
+ <div class="err" id="st_err" role="alert"></div>`,true)}
+async function upload(input){const f=input.files&&input.files[0];if(!f)return;const isP=input.id==="up_photo";
+ try{const d=isP?await shrink(f,320,320,60000):await shrink(f,720,960,130000);if(isP)S.profile.photo=d;else{S.look.img=d;S.look.bg="img"}save();render();drawStyle();toast(isP?"Picture updated.":"Background updated.")}
+ catch(e){const m=$("#st_err");if(m)m.textContent="That file couldn't be used. Try a JPG or PNG under 25 MB."}}
+document.addEventListener("change",e=>{if(e.target.id==="up_photo"||e.target.id==="up_bg")upload(e.target)});
+
+/* ---------- Location ---------- */
+const cellOf=(la,ln)=>Math.floor(la*100)+"_"+Math.floor(ln*100);
+const cellsAround=cell=>{const [a,b]=cell.split("_").map(Number),o=[];for(let i=-1;i<2;i++)for(let j=-1;j<2;j++)o.push((a+i)+"_"+(b+j));return o};
+const distM=(a,b,x,y)=>{const R=6371e3,r=Math.PI/180,p=(x-a)*r,q=(y-b)*r,s=Math.sin(p/2)**2+Math.cos(a*r)*Math.cos(x*r)*Math.sin(q/2)**2;return 2*R*Math.asin(Math.sqrt(s))};
+const distTxt=m=>m<305?Math.round(m*3.281)+" ft":(m/1609).toFixed(1)+" mi";
+function getPos(){return new Promise((ok,no)=>{if(!navigator.geolocation)return no(0);navigator.geolocation.getCurrentPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,cell:cellOf(p.coords.latitude,p.coords.longitude)};updChips();ok(pos)},no,{enableHighAccuracy:true,timeout:9000,maximumAge:30000})})}
+async function pushPres(){if(!pos||!S.visible)return;try{await d("mdPres/"+myId).set({name:myName().slice(0,18),cell:pos.cell,mood:S.mood,at:Date.now()})}catch(e){bad(e)}}
+async function dropPres(){try{await d("mdPres/"+myId).delete()}catch(e){}}
+async function scanNear(){if(!pos)return;try{const s=await c("mdPres").where("cell","in",cellsAround(pos.cell)).get();const cut=Date.now()-10*60e3;near=s.docs.map(x=>({id:x.id,...x.data()})).filter(p=>p.id!==myId&&p.at>cut&&!S.blocked.includes(p.id)).map(p=>({...p,range:p.cell===pos.cell?"Very close":"Nearby"}));if(tab==="radar")render()}catch(e){bad(e)}}
+setInterval(()=>{if(ready&&S.locOn&&tab==="radar")getPos().then(()=>{pushPres();scanNear()}).catch(()=>{})},45000);
+addEventListener("pagehide",()=>{if(S.visible)dropPres()});
+
+/* ---------- Views ---------- */
+const NAV=[["card","Card","chip"],["radar","Radar","signal"],["vault","Vault","cube"],["goals","Goals","star"],["spots","Spots","pin"]];
+function renderNav(){const list=IS_ADMIN?[...NAV,["admin","Admin","shield"]]:NAV;const n=$("#nav");n.style.gridTemplateColumns=`repeat(${list.length},1fr)`;n.innerHTML=list.map(([k,l,g])=>`<button data-a="tab" data-v="${k}" ${tab===k?'aria-current="page"':""}><svg class="ic" viewBox="24 24 52 52"><path d="${G[g]}"/></svg>${l}</button>`).join("")}
+function sigil(name,hue){let h=hash(name||"player"),r="";for(let y=0;y<7;y++)for(let x=0;x<4;x++){h=Math.imul(h^(x*31+y),2654435761)>>>0;if(h%100<52){r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`;if(x<3)r+=`<rect x="${6-x}" y="${y}" width="1" height="1"/>`}}return `<svg viewBox="0 0 7 7" fill="hsl(${hue??(hash(name)%360)} 100% 72%)" aria-hidden="true">${r}</svg>`}
+const dexNo=()=>String(hash(myId)%9000+1000);
+function meterNext(n){const a=CATS[0][5],names=CATS[0][6];for(let i=0;i<a.length;i++)if(n<a[i])return{need:a[i],name:names[i],prev:i?a[i-1]:0};return null}
+function vCard(){const P=S.profile,M=MOOD[S.mood],n=metCount(),nx=meterNext(n),pct=nx?(n-nx.prev)/(nx.need-nx.prev):1,on=Math.round(pct*20);
+ const slots=Array.from({length:DISPLAY_MAX},(_,i)=>{const u=S.display[i],it=u&&(u==="own"?"own":V.find(x=>x.u===u)),df=it&&defOf(it);return df?`<button class="slot fill" data-a="tab" data-v="vault" aria-label="${esc(df.name)}">${badgeSVG(df)}</button>`:`<button class="slot" data-a="tab" data-v="vault">Empty</button>`}).join("");
+ return `<article class="card" style="background:${myCardBg()}"><div class="id"><button class="sig ${safeImg(P.photo)?"ph":""}" data-a="styleSheet" aria-label="Change picture">${avatar()}</button>
+ <div style="min-width:0"><div class="lab">Dex No. ${dexNo()}</div><div class="namerow"><h1 class="name">${esc(myName())}</h1><button class="moodb" data-a="moodSheet" aria-label="Change status" style="--m:${M.c}"><span class="bubble"></span></button></div><div class="moodt" style="--m:${M.c}">${M.t}</div><div class="mt">Age ${esc(P.age)}</div></div></div>
+ <p class="bio">${esc(P.bio)||'<span class="mt">Add a quick bio so people know who they are meeting.</span>'}</p><div class="lab" style="margin-top:12px">3 facts about me</div><ul class="facts">${P.facts.map(f=>`<li><span>${esc(f)||'<span class="mt">Not filled in yet</span>'}</span></li>`).join("")}</ul>
+ <div class="row between" style="margin-top:14px"><div class="lab">Badge display</div><div class="mt">${S.display.length}/${DISPLAY_MAX}</div></div><div class="slots">${slots}</div></article>
+ <section class="panel"><div class="lab">Encounter meter</div><div class="meter" style="margin-top:6px"><div class="big">${n}</div><div style="min-width:0"><div>${n===1?"person":"people"} encountered</div><div class="seg">${Array.from({length:20},(_,i)=>`<i class="${i<on?"on":""}"></i>`).join("")}</div><div class="mt" style="margin-top:5px">${nx?`${nx.need-n} more to ${esc(nx.name)}`:"Meter maxed"}</div></div></div></section>
+ <div class="btns"><button class="btn" data-a="editCard">Edit my card</button><button class="btn alt" data-a="styleSheet">Style my MyDex</button><button class="btn hot w" data-a="mintSheet">${design?`My badge ${left()}/${CAP}`:"Create my badge"}</button></div>`}
+function playerRow(p,act){const M=MOOD[p.mood]||MOOD.g;return `<button class="pl" data-a="${act||"player"}" data-v="${esc(p.id)}" style="--m:${M.c}"><span class="bubble s"></span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${M.t}</span></span><span class="mt">${esc(p.range||"")}${met[p.id]?"<br>Met":""}</span></button>`}
+const onlineGame=()=>NH.online().filter(p=>p.by!==myId&&!S.blocked.includes(p.by)&&!near.some(n=>n.id===p.by)).map(p=>({id:p.by,name:p.name,mood:"g",range:"In game"}));
+function vRadar(){
+ if(!pos)return `<section class="panel stack"><div class="radar"><span class="you"></span></div><h2 style="font:700 20px var(--display)">Turn on location</h2><p>MyDex uses your location to find people near you and confirm venue visits. Players only ever see a rough range, never your exact position.</p><button class="btn" data-a="askLoc">Allow location</button><div id="locmsg" class="mt" role="status"></div></section>${onlineSection()}`;
+ return `<div class="radar">${near.map(p=>{const h=hash(p.id),a=h%628/100,r=p.range==="Very close"?18:36;return `<button class="blip" data-a="player" data-v="${esc(p.id)}" style="left:${50+r*Math.cos(a)}%;top:${50+r*Math.sin(a)}%;--m:${(MOOD[p.mood]||MOOD.g).c}" aria-label="${esc(p.name)}"><span class="bubble s"></span></button>`}).join("")}<span class="you"></span></div>
+ <div class="btns"><button class="btn" data-a="scan">Scan for players</button><button class="btn ${S.visible?"hot":"alt"}" data-a="toggleVis">${S.visible?"Visible on radar":"Hidden from radar"}</button></div>
+ <div class="row between"><div class="lab">Near you in real life</div><div class="mt">Rough range only</div></div>
+ <div class="stack">${near.map(p=>playerRow(p)).join("")||`<section class="panel"><p class="mt">Nobody nearby is visible right now. Scan again in a bit, and make sure you're visible too.</p></section>`}</div>${onlineSection()}`}
+function onlineSection(){const l=onlineGame();return l.length?`<div class="lab">In NEON HARVEST now</div><p class="mt">Swap or send badges with them. Encounters only count in real life.</p><div class="stack">${l.map(p=>playerRow(p)).join("")}</div>`:""}
+function vaultList(){let a=design?["own",...allBadges()]:[...allBadges()];
+ const f={earned:i=>i!=="own"&&i.kind==="goal",got:i=>i!=="own"&&i.from!=="Earned"&&i.kind!=="starter"&&i.kind!=="item"&&i.kind!=="pet",made:i=>i==="own"||i.kind==="custom",forged:i=>i!=="own"&&(i.kind==="item"||i.kind==="pet")}[vaultFilter];
+ return f?a.filter(f):a}
+function vVault(){const a=vaultList();vaultIdx=Math.min(vaultIdx,Math.max(0,a.length-1));const f=[["all","All"],["earned","Earned"],["forged","Forged"],["got","Received"],["made","Player made"]];
+ return `<div class="row between"><h2 style="font:700 22px var(--display)">Badge Vault</h2><button class="btn hot" data-a="forge" data-v="items">Badge Forge</button></div>
+ <div class="chips">${f.map(([k,l])=>`<button data-a="vf" data-v="${k}" aria-pressed="${vaultFilter===k}">${l}</button>`).join("")}</div>
+ ${a.length?`<div class="car" id="car"><div class="sp"></div>${a.map((it,i)=>`<button data-a="vjump" data-v="${i}" class="${i===vaultIdx?"cur":""}">${badgeSVG(defOf(it))}</button>`).join("")}<div class="sp"></div></div>
+ <div class="btns"><button class="btn alt" data-a="vstep" data-v="-1">Previous</button><button class="btn alt" data-a="vstep" data-v="1">Next</button></div><section class="panel" id="vinfo"></section>
+ <div class="lab">Skim all · ${allBadges().length} held</div><div class="grid">${a.map((it,i)=>`<button data-a="vjump" data-v="${i}" aria-label="${esc(defOf(it).name)}">${badgeSVG(defOf(it))}</button>`).join("")}</div>`:`<section class="panel"><p>Nothing here yet. Try another filter, earn badges from Goals, or forge one from your stash.</p></section>`}`}
+function renderVinfo(){const a=vaultList(),it=a[vaultIdx],box=$("#vinfo");if(!box||!it)return;const df=defOf(it),own=it==="own",key=own?"own":it.u,on=S.display.includes(key),madeBy=own||it.kind==="custom";
+ const rt=madeBy?`<span class="rar" style="color:var(--flux)">Player made</span>`:`<span class="rar" style="color:${RARC[df.r||0]}">${RAR[df.r||0]}</span>`;
+ box.innerHTML=`<div class="row between"><h3 style="font:700 19px var(--display);min-width:0;overflow-wrap:anywhere">${esc(df.name)}</h3>${rt}</div><p class="mt" style="margin-block:4px 10px">${own?`Your badge · ${left()} of ${CAP} left to give`:`${esc(df.cat||"Player made")} · From ${esc(it.from)}`}</p>
+ <div class="btns"><button class="btn w ${on?"alt":""}" data-a="toggleDisp" data-v="${key}">${on?"Remove from display":"Add to display"}</button><button class="btn alt" data-a="sendPick" data-v="${key}">Send</button><button class="btn hot" data-a="swapPick" data-v="${key}" ${own?"disabled":""}>Swap</button></div>`}
+function goalRow(g,v0,done){const v=Math.min(v0,g.n);return `<div class="goal"><div class="ico" style="color:${done?"var(--ice)":"var(--dim)"}"><svg class="ic" viewBox="24 24 52 52"><path d="${done?G.shield:G.clock}"/></svg></div><div style="min-width:0">${g.t}<div class="bar"><i style="width:${v/g.n*100}%"></i></div></div><div class="tick">${v}/${g.n}</div></div>`}
+function vGoals(){const n=Object.keys(S.earned).length;return `<section class="panel"><div class="row between"><div class="lab">Daily goals</div><div class="mt">Resets tonight</div></div>${todays().map(g=>goalRow(g,S.day.c[g.k]||0,S.day.done[g.k])).join("")}</section><section class="panel"><div class="row between"><div class="lab">Weekly goals</div><div class="mt">Resets Monday</div></div>${weeks().map(g=>goalRow(g,S.week.c[g.k]||0,S.week.done[g.k])).join("")}</section><div class="row between"><h2 style="font:700 22px var(--display)">All badges</h2><div class="mt">${n}/100</div></div>
+ ${CATS.map(([cat])=>`<section class="panel"><div class="lab">${cat}</div>${BADGES.filter(b=>b.cat===cat).map(b=>{const e=!!S.earned[b.id],v=Math.min(metric(b),b.target);return `<button class="goal" style="width:100%;text-align:left" data-a="badgeInfo" data-v="${b.id}"><div class="ico">${badgeSVG(b,!e,true)}</div><div style="min-width:0"><strong style="font-family:var(--display)">${esc(b.name)}</strong><br><span class="mt">${esc(b.goal)}</span></div><div class="tick">${e?"Got":(cfg.off||[]).includes(b.id)?"Off":v+"/"+b.target}</div></button>`}).join("")}</section>`).join("")}`}
+const MAP_M=3000;
+const toMap=(la,ln)=>pos?[50+((ln-pos.lng)*Math.cos(pos.lat*Math.PI/180)*111320)/MAP_M*50,50-((la-pos.lat)*110540)/MAP_M*50]:null;
+const fromMap=(x,y)=>[pos.lat-((y-50)/50*MAP_M)/110540,pos.lng+((x-50)/50*MAP_M)/(111320*Math.cos(pos.lat*Math.PI/180))];
+function mapSVG(){let st="";for(let i=1;i<6;i++){const p=i*100/6+(i%2?2:-2);st+=`<path d="M${p} 0L${p+6} 100M0 ${p}L100 ${p-5}"/>`}
+ const pin=(xy,inner,a,v)=>xy&&xy[0]>=0&&xy[0]<=100&&xy[1]>=0&&xy[1]<=100?`<g class="pin" data-a="${a}" data-v="${esc(v)}" transform="translate(${xy[0].toFixed(1)} ${xy[1].toFixed(1)})"><circle r="6" fill="transparent"/>${inner}</g>`:"";
+ const sp=spots.map(s=>{const m=s.by===myId?"var(--flux)":"var(--ice)";return pin(toMap(s.lat,s.lng),`<circle r="2.400" fill="${m}"/><circle r="4" fill="none" stroke="${m}" stroke-width=".5"/>`,"spot",s.id)}).join("");
+ const vn=venues.map(p=>pin(toMap(p.lat,p.lng),`<rect x="-2.500" y="-2.500" width="5" height="5" transform="rotate(45)" fill="#ffb347"/>`,"place",p.id)).join("");
+ return `<svg id="map" class="${dropping?"drop":""}" viewBox="0 0 100 100" role="img" aria-label="Map of chill spots and venues around you"><g fill="none" stroke="var(--line)" stroke-width=".7">${st}</g>${pos?'<rect x="48.500" y="48.500" width="3" height="3" transform="rotate(45 50 50)" fill="var(--text)"/>':""}${sp}${vn}</svg>`}
+const visitState=p=>{const v=myVisits.find(x=>x.venue===p.id&&x.day===today());return v?v.status:null};
+const venueDef=p=>({name:p.name+" Stamp",cat:"Venue",sh:hash(p.id)%8,g:p.g||"stamp",h:p.h||28,p:hash(p.id)%10,s:hash(p.id+"x")%10,r:2});
+function sortedBy(a){return pos?[...a].sort((x,y)=>distM(pos.lat,pos.lng,x.lat,x.lng)-distM(pos.lat,pos.lng,y.lat,y.lng)):a}
+function vSpots(){const away=s=>pos&&Number.isFinite(s.lat)?distTxt(distM(pos.lat,pos.lng,s.lat,s.lng)):"";
+ return `<div class="row between"><h2 style="font:700 22px var(--display)">Chill Spots</h2><button class="btn hot" data-a="startDrop">${dropping?"Tap the map":"Add a spot"}</button></div>${mapSVG()}
+ ${pos?"":`<div class="row between"><p class="mt" style="min-width:0">Turn on location to see what's around you.</p><button class="btn alt" data-a="tab" data-v="radar">Radar</button></div>`}
+ <div class="legend"><span><i style="background:var(--ice);border-radius:50%"></i>Player spot</span><span><i style="background:var(--flux);border-radius:50%"></i>Your spot</span><span><i style="background:#ffb347;transform:rotate(45deg)"></i>Venue</span></div>
+ <div class="stack">${sortedBy(venues).map(p=>{const st=visitState(p);return `<button class="pl" data-a="place" data-v="${esc(p.id)}"><span style="width:38px;height:38px;display:block">${badgeSVG(venueDef(p),false,true)}</span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">Venue · ${away(p)}</span></span><span class="mt">${st==="ok"?"Approved":st==="pending"?"Pending":""}</span></button>`}).join("")}
+ ${sortedBy(spots).map(s=>`<button class="pl" data-a="spot" data-v="${esc(s.id)}"><span style="width:38px;height:38px;display:block;color:var(--ice)"><svg class="ic" viewBox="24 24 52 52"><path d="${G.pin}"/></svg></span><span style="min-width:0"><strong>${esc(s.name)}</strong><br><span class="mt">${esc(s.vibe)} · by ${esc(s.byName)}</span></span><span class="mt">${away(s)}</span></button>`).join("")||(venues.length?"":`<section class="panel"><p>No spots yet. Be the first to add one.</p></section>`)}</div>
+ ${staffVenues().length?`<button class="btn alt" data-a="staffQueue">Venue approvals</button>`:""}`}
+const staffVenues=()=>venues.filter(v=>(v.staff||[]).includes(myId));
+const V_={card:vCard,radar:vRadar,vault:vVault,goals:vGoals,spots:vSpots,admin:()=>`<div id="admin"></div>`};
+function render(turn){const v=$("#view"),st=v.scrollTop;v.innerHTML=V_[tab]();renderNav();if(tab==="vault"){renderVinfo();centerCar(false)}if(tab==="admin")drawAdmin();watch();if(turn){v.scrollTop=0;v.classList.remove("turn");void v.offsetWidth;v.classList.add("turn")}else v.scrollTop=st;updChips()}
+function updChips(){const x=$("#locchip");if(!x)return;x.classList.toggle("off",!pos);x.lastChild.textContent=pos?"GPS LIVE":"LOC OFF"}
+function updInbox(){const b=$("#inbox");if(!b)return;b.hidden=!incoming.length;b.textContent=`${incoming.length} REQ`}
+function centerCar(smooth){const car=$("#car");if(!car)return;const e=car.querySelectorAll("button")[vaultIdx];if(!e)return;car._lock=performance.now();car.scrollTo({left:e.offsetLeft-car.offsetLeft-(car.clientWidth-e.offsetWidth)/2,behavior:smooth?"smooth":"auto"});car.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("cur",i===vaultIdx))}
+document.addEventListener("scroll",e=>{const car=e.target;if(car.id!=="car"||performance.now()-(car._lock||0)<500)return;clearTimeout(car._t);car._t=setTimeout(()=>{const mid=car.scrollLeft+car.clientWidth/2;let best=0,bd=1e9;car.querySelectorAll("button").forEach((b,i)=>{const x=Math.abs(b.offsetLeft-car.offsetLeft+b.offsetWidth/2-mid);if(x<bd){bd=x;best=i}});if(best!==vaultIdx){vaultIdx=best;car.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("cur",i===best));renderVinfo();bump("cycle")}},110)},true);
+
+/* ---------- Players, requests, trades ---------- */
+function bgFor(card){const u=safeImg(card.img);return card.bg==="img"&&u?`linear-gradient(rgba(6,8,22,.55),rgba(6,8,22,.78)),url('${u}') center/cover`:bgCSS(card.bg==="img"?"grid":(card.bg||"grid"))}
+function miniCard(p){const M=MOOD[p.mood]||MOOD.g,u=safeImg(p.photo);return `<article class="card" style="background:${bgFor(p)}"><div class="id"><div class="sig ${u?"ph":""}">${u?`<img src="${u}" alt="">`:sigil(p.name)}</div><div style="min-width:0"><div class="namerow"><h2 class="name">${esc(p.name)}</h2><span class="moodb" style="--m:${M.c}"><span class="bubble"></span></span></div><div class="moodt" style="--m:${M.c}">${M.t}</div><div class="mt">Age ${esc(p.age)}${p.range?" · "+esc(p.range):""} · ${+p.met||0} met</div></div></div><p class="bio">${esc(p.bio)}</p><ul class="facts">${(p.facts||[]).filter(Boolean).map(f=>`<li><span>${esc(f)}</span></li>`).join("")}</ul><div class="slots">${(p.display||[]).map(x=>`<div class="slot fill">${badgeSVG(x)}</div>`).join("")}</div></article>`}
+async function getCard(id){const s=await d("mdCards/"+id).get();return s.exists?{id,...s.data()}:null}
+async function playerSheet(id){const live=near.find(p=>p.id===id),isNear=!!live;sheet(`<div class="wait"><div class="spin"></div></div>`);const r=++reqId;let p;try{p=await getCard(id)}catch(e){p=null}if(r!==reqId)return;
+ if(!p){sheet(`${sh("No MyDex yet")}<p>This player hasn't set up their MyDex card.</p>`);return}
+ p.range=live?live.range:"In game";const red=p.mood==="r";
+ sheet(`${sh(p.name)}${miniCard(p)}${red?`<p class="err">${esc(p.name)} is set to Not approachable. Requests are off until they change it.</p>`:p.mood==="y"?`<p class="mt" style="color:var(--warn)">Cautious: ask in person first and take no for an answer.</p>`:""}${met[id]?`<p class="mt">Already counted on your encounter meter.</p>`:""}
+ <div class="btns">${isNear?`<button class="btn w" data-a="enc" data-v="${id}:ex" ${red?"disabled":""}>Exchange badges</button><button class="btn alt" data-a="enc" data-v="${id}:send" ${red?"disabled":""}>Send my badge</button>`:""}<button class="btn hot ${isNear?"":"w"}" data-a="swapWith" data-v="${id}" ${red?"disabled":""}>Swap from vault</button><button class="btn alt" data-a="report" data-v="${id}">Report</button><button class="btn bad" data-a="block" data-v="${id}">Block</button></div>`);NAMES[id]=p.name}
+const NAMES={};
+const nameFor=id=>NAMES[id]||(near.find(p=>p.id===id)||{}).name||(onlineGame().find(p=>p.id===id)||{}).name||"Player";
+function needDesign(){sheet(`${sh("Create your badge first")}<p>An encounter happens when you give someone your own badge. Design yours, then come back.</p><button class="btn" data-a="mintSheet">Create my badge</button>`)}
+function mintOps(b){const held=heldCopy();if(held)return held.u;if(!design)throw "nodesign";const n=design.minted+1;if(n>CAP)throw "empty";const id=`${myId}_c_${n}`;b.update(d("mdDesigns/"+myId),{minted:n});b.set(d("mdBadges/"+id),badgeDoc("custom",design.def,myName(),{serial:n}));design={...design,minted:n};return id}
+async function sendReq(to,type,give,want,extra){const ref=c("mdReq").doc(),b=DB.batch();try{let g=give;if(give==="own")g=mintOps(b);const near_=extra&&extra.near;const gd=g&&(give==="own"?design.def:defOf(V.find(x=>x.u===g)));
+  b.set(ref,{from:myId,fromName:myName(),to,toName:nameFor(to),type,give:g,want:want||null,near:!!near_,cell:pos?pos.cell:"",giveDef:gd||null,wantDef:(extra&&extra.wantDef)||null,own:give==="own",status:"pending",at:Date.now()});await b.commit();closeSheet();toast(`Sent to ${nameFor(to)}. They need to approve it.`)}
+ catch(e){bad(e);closeSheet();toast(e==="empty"?`All ${CAP} of your badges have been given out.`:e==="nodesign"?"Create your badge first.":"That didn't go through. Their status may be red, or they haven't set up MyDex.")}}
+function onOutgoing(r){if(r.status==="pending"||S.seen.includes(r.id)||!ready)return;S.seen=[...S.seen,r.id].slice(-120);
+ if(r.status==="ok"){if(r.type==="swap")S.m.trades++;else{if(r.own)S.m.sentOwn++;else S.m.gifts++}if(r.type==="ex")S.m.recv++;bump("exch");queue({title:r.near&&(r.type==="ex"||r.type==="send")?"Encounter logged":"Approved",name:r.toName,sub:r.type==="swap"?"Swap complete":"Badge delivered",badges:[r.giveDef,r.wantDef].filter(Boolean)})}
+ else toast(r.toName+" declined. Nothing changed hands.");
+ save();d("mdReq/"+r.id).delete().catch(()=>{})}
+function reqCard(r){const lines={ex:"wants to exchange badges with you",send:"is giving you their badge",gift:"is giving you a badge",swap:"wants to swap with you"}[r.type];const a=r.giveDef,w=r.wantDef;
+ return `<section class="panel stack"><p><strong>${esc(r.fromName)}</strong> ${lines}.</p><div class="row" style="justify-content:center;gap:18px">${a?`<div style="width:92px;height:92px">${badgeSVG(a)}</div>`:""}${w?`<div class="mt">for</div><div style="width:92px;height:92px">${badgeSVG(w)}</div>`:r.type==="ex"?`<div class="mt">for your badge</div>`:""}</div><p class="mt" style="text-align:center">You get ${esc(a&&a.name)}.${w?` You give ${esc(w.name)}.`:""}${r.near?" Counts as an encounter.":""}</p><div class="btns"><button class="btn alt" data-a="reqNo" data-v="${r.id}">Decline</button><button class="btn" data-a="reqOk" data-v="${r.id}">Approve</button></div></section>`}
+async function approve(id){const r=incoming.find(x=>x.id===id);if(!r)return;if(r.type==="ex"&&!design){needDesign();return}const at=Date.now();let b;
+ try{let myCopy=null;if(r.type==="ex"){const pre=DB.batch();myCopy=mintOps(pre);if(!heldCopy()||heldCopy().u!==myCopy)await pre.commit()}b=DB.batch();b.update(d("mdBadges/"+r.give),{owner:myId,from:r.fromName,at,via:r.id});let mine=null;
+  if(r.type==="swap"){b.update(d("mdBadges/"+r.want),{owner:r.from,from:myName(),at,via:r.id});mine=V.find(x=>x.u===r.want);if(!mine){throw "gone"}}
+  if(r.type==="ex"){b.update(d("mdBadges/"+myCopy),{owner:r.from,from:myName(),at,via:r.id})}
+  const counts=r.near&&(r.type==="ex"||r.type==="send")&&pos&&cellsAround(pos.cell).includes(r.cell);
+  if(counts){const members=[myId,r.from].sort();b.set(d("mdEnc/"+members.join("_")),{members,req:r.id,at})}
+  b.update(d("mdReq/"+r.id),{status:"ok",done:at});await b.commit();
+  if(r.type==="swap")S.m.trades++;else S.m.recv++;if(r.type==="ex")S.m.sentOwn++;bump("exch");closeSheet();queue({title:counts?"Encounter logged":"Approved",name:r.fromName,sub:(r.giveDef&&r.giveDef.name)+" is yours now",badges:[r.giveDef,mine&&mine.def].filter(Boolean)})}
+ catch(e){bad(e);closeSheet();toast("That badge is no longer available.");d("mdReq/"+r.id).update({status:"no",done:at}).catch(()=>{})}}
+const reachable=()=>[...near,...onlineGame()];
+const ownOrItem=key=>key==="own"?design&&design.def:defOf(V.find(x=>x.u===key));
+/* ---------- Badge Forge ---------- */
+const FORGE_TABS=[["items","Items"],["parts","Parts"],["pcs","PCs"],["drugs","Drugs"],["pets","Companions"]];
+const forgeDef=e=>({name:e.name.slice(0,36),cat:{item:"Forged item",pet:"Forged companion"}[e.kind],sh:hash(e.id)%8,g:"cube",h:[190,150,215,285][e.r||0],p:hash(e.id+"a")%10,s:[0,1,2,3,5,6,7,8,9][hash(e.id+"b")%9],r:e.r||0,art:{t:e.kind,id:e.id}});
+const petDocId=e=>`${myId}_pet_${e.id.replace(/[^A-Za-z0-9]/g,"-")}`;
+const forged=e=>e.kind==="pet"&&V.some(x=>x.u===petDocId(e));
+function drawForge(cat){const F=cfg.forge,list=NH.forgeList()[cat]||[],on=F.on[cat];
+ sheet(`${sh("Badge Forge")}<p class="mt">Turn what you own into a badge you can display, trade or gift on MyDex.</p><div class="chips">${FORGE_TABS.map(([k,l])=>`<button data-a="forge" data-v="${k}" aria-pressed="${cat===k}">${l}</button>`).join("")}</div>
+ ${!on?`<section class="panel"><p>The Forge is closed for this category right now.</p></section>`:list.length?`<div class="grid">${list.map((e,i)=>`<button data-a="forgePick" data-v="${cat}:${i}" aria-label="${esc(e.name)}" style="position:relative">${badgeSVG(forgeDef(e),forged(e))}${e.qty>1?`<span class="mt" style="position:absolute;right:4px;bottom:0">x${e.qty}</span>`:""}</button>`).join("")}</div>`:`<section class="panel"><p>${cat==="pets"?"You don't have any companions yet.":"Nothing of this type in your stash yet."}</p></section>`}`,true)}
+const forgeLeft=()=>Math.max(0,cfg.forge.limit-(S.day.c.forge||0));
+function forgePick(cat,i){const e=NH.forgeList()[cat][i];if(!e)return;const F=cfg.forge,fee=F.fee[e.r||0]||0,keeps=e.kind==="pet"||!F.consume,dup=forged(e),cant=!NH.forgeCan(e,fee);
+ sheet(`${sh(e.name)}<div class="preview">${badgeSVG(forgeDef(e))}</div><div class="row between"><span class="rar" style="color:${RARC[e.r||0]}">${RAR[e.r||0]}</span><span class="mt">₵${fee} · ${forgeLeft()} left today</span></div>
+ <p>${keeps?(e.kind==="pet"?"Your companion stays with you. Each companion can be forged once.":"You keep this item."):"Forging uses up 1 of this item. You can't get it back."}</p>${cant?`<p class="err">You need ₵${fee} to forge this.</p>`:""}${dup?`<p class="err">You already forged this companion.</p>`:""}
+ <div class="btns"><button class="btn alt" data-a="forge" data-v="${cat}">Back</button><button class="btn hot" data-a="forgeNow" data-v="${cat}:${i}" ${cant||dup||!forgeLeft()?"disabled":""}>Forge badge</button></div>`)}
+async function forgeNow(cat,i){const e=NH.forgeList()[cat][i],F=cfg.forge;if(!e||!F.on[cat]||!forgeLeft()||forged(e))return;const fee=F.fee[e.r||0]||0;if(!NH.forgeCan(e,fee)){toast("You don't have what that needs.");return}
+ const df=forgeDef(e),id=e.kind==="pet"?petDocId(e):`${myId}_f_${uid()}`;
+ sheet(`<div class="wait"><div class="spin"></div><h2 style="font:700 19px var(--display)">Forging</h2></div>`);
+ try{await d("mdBadges/"+id).set(badgeDoc(e.kind,df,"Badge Forge"));NH.forgePay(e,fee,F.consume);bump("forge");closeSheet();queue({title:"Badge forged",name:df.name,sub:"It's in your vault now.",badges:[df]})}
+ catch(err){bad(err);closeSheet();toast("The Forge couldn't make that. Nothing was used up.")}}
+
+/* ---------- Admin ---------- */
+const adminData={};
+const ADMIN_TABS=[["players","Players"],["badges","Badges"],["designs","Player badges"],["forge","Forge"],["venues","Venues"],["spots","Spots"],["reports","Reports"],["notice","Notice"]];
+async function drawAdmin(){const box=$("#admin");if(!box||!IS_ADMIN)return;const head=`<div class="chips">${ADMIN_TABS.map(([k,l])=>`<button data-a="adminTab" data-v="${k}" aria-pressed="${adminTab===k}">${l}</button>`).join("")}</div>`;box.className="stack";box.innerHTML=`${head}<div class="wait"><div class="spin"></div></div>`;const r=++adminSeq;
+ let html="";try{html=await ADMIN[adminTab]()}catch(e){bad(e);html=`<section class="panel"><p class="err">Couldn't load this. Check that the updated rules are published.</p></section>`}if(r!==adminSeq||tab!=="admin")return;box.innerHTML=head+html;watch()}
+let adminSeq=0;
+const list=async(p,n)=>(await c(p).limit(n||300).get()).docs.map(x=>({id:x.id,...x.data()}));
+const stat=(n,l)=>`<div style="min-width:0"><div class="big" style="font-size:30px">${n}</div><div class="mt">${l}</div></div>`;
+const ADMIN={
+ async players(){const [cards,bans]=await Promise.all([list("mdCards"),list("mdBans")]);adminData.cards=cards;adminData.bans=Object.fromEntries(bans.map(b=>[b.id,b]));const q=(adminData.q||"").toLowerCase(),rows=cards.filter(p=>!q||p.name.toLowerCase().includes(q)).sort((a,b)=>(b.at||0)-(a.at||0));
+  return `<section class="panel"><div class="row between">${stat(cards.length,"cards")}${stat(cards.filter(p=>p.photo).length,"pictures")}${stat(bans.length,"suspended")}</div></section><label class="f"><span class="lab">Find a player</span><input type="text" id="ad_q" value="${esc(adminData.q||"")}" autocomplete="off"></label><div class="stack">${rows.map(p=>`<button class="pl" data-a="adminPlayer" data-v="${p.id}" style="--m:${(MOOD[p.mood]||MOOD.g).c}"><span class="sig ${safeImg(p.photo)?"ph":""}" style="width:42px;height:42px;padding:3px">${safeImg(p.photo)?`<img src="${safeImg(p.photo)}" alt="">`:sigil(p.name)}</span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${+p.met||0} met</span></span><span class="mt">${adminData.bans[p.id]?'<span style="color:var(--stop)">Suspended</span>':""}</span></button>`).join("")||'<section class="panel"><p>No players have made a card yet.</p></section>'}</div>`},
+ async badges(){const off=await list("mdOfficial");adminData.official=off;return `<button class="btn hot" data-a="adOfficialNew">Create official badge</button><div class="lab">Official badges</div><div class="stack">${off.map(b=>`<button class="pl" data-a="adOfficial" data-v="${b.id}"><span style="width:38px;height:38px;display:block">${badgeSVG(b.def,false,true)}</span><span style="min-width:0"><strong>${esc(b.def.name)}</strong><br><span class="mt">${RAR[b.def.r]}</span></span><span class="mt">${+b.issued||0}${b.supply?"/"+b.supply:""}</span></button>`).join("")||'<p class="mt">None yet.</p>'}</div><div class="lab">Goal badges (tap to turn off)</div><div class="grid">${BADGES.map(b=>`<button data-a="adGoal" data-v="${b.id}" aria-label="${esc(b.name)}">${badgeSVG(b,(cfg.off||[]).includes(b.id),true)}</button>`).join("")}</div>`},
+ async designs(){const ds=await list("mdDesigns");return `<div class="stack">${ds.map(x=>`<div class="pl"><span style="width:42px;height:42px;display:block">${badgeSVG(x.def,x.off,true)}</span><span style="min-width:0"><strong>${esc(x.def.name)}</strong><br><span class="mt">${esc(x.byName||"")} · ${x.minted}/${CAP}</span></span><button class="btn ${x.off?"alt":"bad"}" data-a="adDesign" data-v="${x.id}:${x.off?0:1}">${x.off?"Turn on":"Turn off"}</button></div>`).join("")||'<section class="panel"><p>No player badges yet.</p></section>'}</div>`},
+ async forge(){const F=cfg.forge;return `<form id="adforge" class="stack panel"><div class="lab">Open categories</div>${FORGE_TABS.map(([k,l])=>`<label class="row"><input type="checkbox" id="ff_${k}" ${F.on[k]?"checked":""} style="width:22px;height:22px"><span>${l}</span></label>`).join("")}<div class="lab">Fee in credits by rarity</div><div class="grid">${RAR.slice(0,4).map((n,i)=>`<label class="f"><span class="mt">${n}</span><input type="number" id="ff_fee${i}" min="0" value="${+F.fee[i]||0}"></label>`).join("")}</div><label class="row"><input type="checkbox" id="ff_consume" ${F.consume?"checked":""} style="width:22px;height:22px"><span>Forging uses up the item</span></label><label class="f"><span class="lab">Forges per player per day</span><input type="number" id="ff_limit" min="0" value="${+F.limit||0}"></label><button class="btn" type="submit">Save Forge settings</button></form>`},
+ async venues(){const qp=(await c("mdVisits").where("status","==","pending").get()).docs.map(x=>({id:x.id,...x.data()}));adminData.queue=qp;return `${qp.length?`<div class="lab">Waiting for approval</div>${qp.map(visitRow).join("")}`:""}<button class="btn hot" data-a="adVenue" data-v="">Add a venue</button><div class="stack">${venues.map(p=>`<button class="pl" data-a="adVenue" data-v="${esc(p.id)}"><span style="width:38px;height:38px;display:block">${badgeSVG(venueDef(p),false,true)}</span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${(p.staff||[]).length} staff · ${+p.radius||150}m</span></span><span class="mt">Edit</span></button>`).join("")||'<p class="mt">No venues yet.</p>'}</div>`},
+ async spots(){return `<div class="stack">${spots.map(s=>`<div class="pl"><span style="color:var(--ice);width:30px;height:30px;display:block"><svg class="ic" viewBox="24 24 52 52"><path d="${G.pin}"/></svg></span><span style="min-width:0"><strong>${esc(s.name)}</strong><br><span class="mt">by ${esc(s.byName)} · ${esc(s.info).slice(0,60)}</span></span><button class="btn bad" data-a="adSpotDel" data-v="${esc(s.id)}">Remove</button></div>`).join("")||'<section class="panel"><p>No spots yet.</p></section>'}</div>`},
+ async reports(){const rp=await list("mdReports");return `<div class="stack">${rp.map(x=>`<section class="panel stack"><p><strong>${esc(x.aboutName)}</strong> reported by ${esc(x.byName)}</p><p>${esc(x.text)}</p><div class="btns"><button class="btn alt" data-a="adRepDel" data-v="${x.id}">Dismiss</button><button class="btn" data-a="adminPlayer" data-v="${esc(x.about)}">Open player</button></div></section>`).join("")||'<section class="panel"><p>No reports.</p></section>'}</div>`},
+ async notice(){return `<form id="adnotice" class="panel stack"><label class="f"><span class="lab">Banner shown to every player</span><textarea id="ad_msg" maxlength="160">${esc(cfg.msg||"")}</textarea></label><button class="btn" type="submit">Save notice</button></form>`},
+};
+const visitRow=x=>`<section class="panel stack"><p><strong>${esc(x.name)}</strong> at ${esc((venues.find(v=>v.id===x.venue)||{}).name||"venue")}</p><div class="btns"><button class="btn alt" data-a="visitNo" data-v="${x.id}">Deny</button><button class="btn" data-a="visitOk" data-v="${x.id}">Approve visit</button></div></section>`;
+async function adminPlayer(id){sheet(`<div class="wait"><div class="spin"></div></div>`);const r=++reqId;const [card,bSnap,vs,en]=await Promise.all([getCard(id),d("mdBans/"+id).get(),c("mdBadges").where("owner","==",id).get(),c("mdEnc").where("members","array-contains",id).get()]);if(r!==reqId)return;if(!card){sheet(`${sh("No card")}<p>This player has no card.</p>`);return}adminData.vault=vs.docs.map(x=>({id:x.id,...x.data()}));const b=bSnap.exists?bSnap.data():null;
+ sheet(`${sh(card.name)}${miniCard(card)}<div class="row between">${stat(adminData.vault.length,"badges")}${stat(en.size,"encounters")}</div>${b?`<p class="err">Suspended: ${esc(b.reason)}</p>`:""}
+ <div class="btns"><button class="btn alt" data-a="adClear" data-v="${id}:photo" ${card.photo?"":"disabled"}>Remove picture</button><button class="btn alt" data-a="adClear" data-v="${id}:bg" ${card.img?"":"disabled"}>Remove background</button><button class="btn alt w" data-a="adClear" data-v="${id}:text">Clear bio and facts</button><button class="btn hot w" data-a="adGrant" data-v="${id}">Give a badge</button></div>
+ ${b?`<button class="btn" data-a="adUnban" data-v="${id}">Lift suspension</button>`:`<label class="f"><span class="lab">Reason for suspension</span><input type="text" id="ad_reason" maxlength="120"></label><button class="btn bad" data-a="adBan" data-v="${id}">Suspend from MyDex</button>`}
+ <div class="lab">Vault (tap to take a badge back)</div><div class="grid">${adminData.vault.map(x=>`<button data-a="adRevoke" data-v="${x.id}:${id}" aria-label="${esc(x.def.name)}">${badgeSVG(x.def,false,true)}</button>`).join("")}</div>`)}
+async function adGrant(id){const off=await list("mdOfficial");adminData.official=off;sheet(`${sh("Give a badge")}<div class="lab">Official</div><div class="grid">${off.map(b=>`<button data-a="adGive" data-v="${id}:o:${b.id}" aria-label="${esc(b.def.name)}">${badgeSVG(b.def,false,true)}</button>`).join("")}</div><div class="lab">Catalog</div><div class="grid">${BADGES.map(b=>`<button data-a="adGive" data-v="${id}:b:${b.id}" aria-label="${esc(b.name)}">${badgeSVG(b,false,true)}</button>`).join("")}</div>`)}
+const oDraft={name:"",sh:1,g:"crown",h:28,p:7,s:9,r:4,supply:0};
+function drawOfficial(){const nm=$("#o_name");if(nm)oDraft.name=nm.value;const sup=$("#o_sup");if(sup)oDraft.supply=+sup.value||0;const chips=(k,names)=>`<div class="chips">${names.map((n,i)=>`<button data-a="odraft" data-v="${k}|${i}" aria-pressed="${oDraft[k]===i}">${n}</button>`).join("")}</div>`;
+ sheet(`${sh("Official badge")}<div class="preview">${badgeSVG({...oDraft,name:oDraft.name||"Official"})}</div><label class="f"><span class="lab">Name</span><input type="text" id="o_name" maxlength="30" value="${esc(oDraft.name)}"></label><label class="f"><span class="lab">Supply (0 = no limit)</span><input type="number" id="o_sup" min="0" value="${oDraft.supply}"></label><div class="lab">Rarity</div>${chips("r",RAR)}<div class="lab">Icon</div><div class="pick">${Object.keys(G).map(g=>`<button data-a="odraft" data-v="g|${g}" aria-pressed="${oDraft.g===g}" aria-label="${g}"><svg class="ic" viewBox="24 24 52 52"><path d="${G[g]}"/></svg></button>`).join("")}</div><div class="lab">Color</div><div class="pick">${HUES.map(h=>`<button data-a="odraft" data-v="h|${h}" aria-pressed="${oDraft.h===h}" aria-label="Color ${h}"><span style="width:60%;height:60%;display:block;background:hsl(${h} 100% 65%)"></span></button>`).join("")}</div><div class="lab">Frame</div>${chips("sh",SHAPE_NAMES)}<div class="lab">Frame animation</div>${chips("p",MOTION_A)}<div class="lab">Icon animation</div>${chips("s",MOTION_B)}<div class="err" id="o_err" role="alert"></div><button class="btn hot" data-a="adOfficialSave">Create badge</button>`,true)}
+function adVenue(id){const p=venues.find(v=>v.id===id)||{};const staff=(p.staff||[]).map(u=>((adminData.cards||[]).find(x=>x.id===u)||{}).name||"").filter(Boolean).join(", ");
+ sheet(`${sh(id?"Edit venue":"Add a venue")}<label class="f"><span class="lab">Name</span><input type="text" id="v_name" maxlength="30" value="${esc(p.name||"")}"></label><label class="f"><span class="lab">Info</span><textarea id="v_info" maxlength="200">${esc(p.info||"")}</textarea></label><div class="btns"><label class="f"><span class="lab">Latitude</span><input type="number" step="any" id="v_lat" value="${p.lat??""}"></label><label class="f"><span class="lab">Longitude</span><input type="number" step="any" id="v_lng" value="${p.lng??""}"></label></div><button class="btn alt" data-a="vHere">Use my location</button><label class="f"><span class="lab">Check-in range in meters</span><input type="number" id="v_rad" min="30" value="${+p.radius||150}"></label><label class="f"><span class="lab">Staff who can approve (usernames, comma separated)</span><input type="text" id="v_staff" value="${esc(staff)}"></label><div class="err" id="v_err" role="alert"></div><button class="btn" data-a="vSave" data-v="${esc(id||"")}">Save venue</button>${id?`<button class="btn bad" data-a="vDel" data-v="${esc(id)}">Delete venue</button>`:""}`)}
+async function visitDecide(id,ok){let x=(adminData.queue||[]).find(v=>v.id===id);if(!x)return;const p=venues.find(v=>v.id===x.venue);const b=DB.batch();b.update(d("mdVisits/"+id),{status:ok?"ok":"no",by:myId});if(ok&&p)b.set(d(`mdBadges/${x.uid}_v_${uid()}`),{...badgeDoc("venue",venueDef(p),p.name),owner:x.uid,venue:p.id});try{await b.commit();toast(ok?"Visit approved.":"Visit denied.");if(tab==="admin")drawAdmin();if($("#sheet"))A.staffQueue()}catch(e){bad(e);toast("Couldn't save that.")}}
+/* ---------- Actions ---------- */
+const adminDo=async(fn,msg)=>{try{await fn();if(msg)toast(msg);if(tab==="admin")drawAdmin()}catch(e){bad(e);toast("Couldn't save that.")}};
+const A={
+ signin:startSignIn, lock:lockUp, close:closeSheet, closeDex(){NH.close()},
+ tab(v){closeSheet();if(v===tab)return;tab=v;render(true);if(v==="radar"&&pos)scanNear()},
+ inbox(){sheet(`${sh("Badge requests")}${incoming.map(reqCard).join("")||"<p>No requests.</p>"}`)},
+ reqOk:approve,
+ reqNo(id){d("mdReq/"+id).update({status:"no",done:Date.now()}).catch(bad);closeSheet()},
+ styleSheet:drawStyle,
+ rmPhoto(){S.profile.photo="";save();render();drawStyle()},
+ setBg(v){S.look.bg=v;save();render();drawStyle()},
+ setColor(v){S.look.color=v;applyTheme();save();render();drawStyle();toast(NEON[v][0]+" neon on")},
+ moodSheet(){sheet(`${sh("How are you feeling?")}<p class="mt">People nearby see this color next to your name.</p>${Object.entries(MOOD).map(([k,m])=>`<button class="opt" data-a="setMood" data-v="${k}" aria-pressed="${S.mood===k}" style="--m:${m.c}"><span class="bubble"></span><span><strong>${m.t}</strong><br><span class="mt">${m.d}</span></span></button>`).join("")}`)},
+ setMood(v){S.mood=v;S.m.moods++;closeSheet();bump("mood");render();toast("Status: "+MOOD[v].t)},
+ editCard(){const P=S.profile;sheet(`${sh("Edit my card")}<form id="cardform" class="stack" novalidate><label class="f"><span class="lab">Username</span><input type="text" id="f_name" maxlength="18" value="${esc(myName())}"></label><label class="f"><span class="lab">Age</span><input type="number" id="f_age" inputmode="numeric" min="${MIN_AGE}" max="99" value="${esc(P.age)}"></label><label class="f"><span class="lab">Quick bio</span><textarea id="f_bio" maxlength="120">${esc(P.bio)}</textarea></label>${P.facts.map((f,i)=>`<label class="f"><span class="lab">Fact ${i+1}</span><input type="text" id="f_fact${i}" maxlength="40" value="${esc(f)}"></label>`).join("")}<div class="err" id="f_err" role="alert"></div><button class="btn" type="submit">Save card</button></form>`)},
+ mintSheet(){if(design)return ownBadgeSheet();Object.assign(draft,{name:"",sh:0,g:"bolt",h:190,p:0,s:0});drawMint()},
+ draft(v){const [k,x]=v.split("|"),nm=$("#m_name");if(nm)draft.name=nm.value;draft[k]=k==="g"?x:+x;drawMint(true)},
+ async mintNow(){const nm=$("#m_name").value.trim();if(!nm){$("#m_err").textContent="Give your badge a name.";return}const def={name:nm,sh:draft.sh,g:draft.g,h:draft.h,p:draft.p,s:draft.s,r:3,cat:"Player made",mine:true};try{await d("mdDesigns/"+myId).set({def,minted:0,off:false,byName:myName(),at:Date.now()});closeSheet();queue({title:`Badge created · ${CAP} copies`,name:nm,sub:"Give it to people you meet. Every copy counts down.",badges:[def]})}catch(e){bad(e);$("#m_err").textContent="Couldn't save your badge. Try again."}},
+ async askLoc(){const m=$("#locmsg");if(m)m.textContent="Requesting location…";try{await getPos();S.locOn=true;save();render();scanNear()}catch(e){sheet(`${sh("Location is off")}<p>MyDex couldn't read your location. Allow location for this site in your browser or phone settings, then try again.</p><button class="btn" data-a="askLoc">Try again</button>`)}},
+ async scan(){try{await getPos()}catch(e){}bump("scan");await scanNear();toast(`Scan complete. ${near.filter(p=>p.mood!=="r").length} open to meeting nearby.`)},
+ toggleVis(){S.visible=!S.visible;save();if(S.visible)pushPres();else dropPres();render();toast(S.visible?"You're visible on the radar.":"You're hidden from the radar.")},
+ player:playerSheet,
+ enc(v){const [id,m]=v.split(":");if(!design)return needDesign();if(left()<=0)return toast(`All ${CAP} of your badges have been given out.`);sendReq(id,m==="ex"?"ex":"send","own",null,{near:true})},
+ async swapWith(pid){if(!allBadges().length)return toast("Your vault is empty.");sheet(`${sh("Pick a badge to offer")}<div class="grid">${allBadges().map(it=>`<button data-a="swapGive" data-v="${pid}:${it.u}" aria-label="${esc(it.def.name)}">${badgeSVG(it.def)}</button>`).join("")}</div>`)},
+ async swapGive(v){const [pid,u]=v.split(":");const s=await c("mdBadges").where("owner","==",pid).get();const list=s.docs.map(x=>({id:x.id,...x.data()})).filter(x=>!(x.kind==="custom"&&x.by===pid));adminData.swap=list;sheet(`${sh(`Pick one from ${nameFor(pid)}`)}${list.length?`<div class="grid">${list.map(x=>`<button data-a="swapDo" data-v="${pid}:${u}:${x.id}" aria-label="${esc(x.def.name)}">${badgeSVG(x.def)}</button>`).join("")}</div>`:"<p>They don't have any badges to swap yet.</p>"}`)},
+ swapDo(v){const [p,u,id]=v.split(":");const w=adminData.swap.find(x=>x.id===id);sendReq(p,"swap",u,id,{wantDef:w&&w.def})},
+ swapPick(u){const r=reachable();sheet(`${sh("Swap with who?")}<div class="stack">${r.map(p=>playerRow(p,"swapGiveFrom:"+u)).join("").replace(/data-a="swapGiveFrom:([^"]+)" data-v="([^"]+)"/g,'data-a="swapGive" data-v="$2:$1"')||"<p>Nobody is around right now.</p>"}</div>`)},
+ sendPick(key){const df=ownOrItem(key),r=reachable();sheet(`${sh("Send to who?")}<div style="width:90px;height:90px;margin:0 auto">${badgeSVG(df)}</div><div class="stack">${r.map(p=>`<button class="pl" data-a="sendConfirm" data-v="${esc(p.id)}:${key}" style="--m:${(MOOD[p.mood]||MOOD.g).c}"><span class="bubble s"></span><span><strong>${esc(p.name)}</strong></span><span class="mt">${esc(p.range)}</span></button>`).join("")||"<p>Nobody is around right now.</p>"}</div>`)},
+ sendConfirm(v){const [p,k]=v.split(":");NAMES[p]=nameFor(p);const isNear=near.some(x=>x.id===p),df=ownOrItem(k);if(k==="own"){if(left()<=0)return toast(`All ${CAP} of your badges have been given out.`);return sendReq(p,"send","own",null,{near:isNear})}sheet(`${sh(`Give ${df.name}?`)}<div style="width:110px;height:110px;margin:0 auto">${badgeSVG(df)}</div><p>If ${esc(nameFor(p))} accepts, this badge leaves your vault and belongs to them. You can't take it back.</p><div class="btns"><button class="btn alt" data-a="close">Keep it</button><button class="btn hot" data-a="giveNow" data-v="${p}:${k}">Send it</button></div>`)},
+ giveNow(v){const [p,k]=v.split(":");sendReq(p,"gift",k,null,{})},
+ block(id){S.blocked=[...new Set([...S.blocked,id])];d("mdBlocks/"+myId).set({list:S.blocked}).catch(bad);near=near.filter(p=>p.id!==id);closeSheet();save();render();toast("Blocked. They can't send you requests.")},
+ report(id){sheet(`${sh(`Report ${nameFor(id)}`)}<label class="f"><span class="lab">What happened?</span><textarea id="r_text" maxlength="300"></textarea></label><div class="err" id="r_err" role="alert"></div><button class="btn hot" data-a="reportSend" data-v="${id}">Send report</button>`)},
+ async reportSend(id){const text=$("#r_text").value.trim();if(!text){$("#r_err").textContent="Tell us what happened.";return}try{await c("mdReports").add({by:myId,byName:myName(),about:id,aboutName:nameFor(id),text,at:Date.now()});closeSheet();toast("Report sent.")}catch(e){bad(e);$("#r_err").textContent="Couldn't send that. Try again."}},
+ vf(v){vaultFilter=v;vaultIdx=0;render()},
+ vjump(v){vaultIdx=+v;const x=$("#car");if(x)x.scrollIntoView({block:"nearest"});centerCar(true);renderVinfo();bump("cycle")},
+ vstep(v){const n=vaultList().length;if(!n)return;vaultIdx=(vaultIdx+ +v+n)%n;centerCar(true);renderVinfo();bump("cycle")},
+ toggleDisp(key){const i=S.display.indexOf(key);if(i>=0)S.display.splice(i,1);else{if(S.display.length>=DISPLAY_MAX)return toast("Display is full. Remove one first.");S.display.push(key)}checkAwards();save();renderVinfo()},
+ badgeInfo(id){const b=BY[id],e=S.earned[id];sheet(`${sh(b.name)}<div class="preview">${badgeSVG(b)}</div><div class="row between"><span class="rar" style="color:${RARC[b.r]}">${RAR[b.r]}</span><span class="mt">${MOTION_A[b.p]} + ${MOTION_B[b.s]}</span></div><p>${esc(b.goal)}</p><p class="mt">${e?"You earned this badge.":`Progress ${Math.min(metric(b),b.target)}/${b.target}`}</p>`)},
+ forge:drawForge,
+ forgePick(v){const [k,i]=v.split(":");forgePick(k,+i)},
+ forgeNow(v){const [k,i]=v.split(":");forgeNow(k,+i)},
+ startDrop(){if(!pos){toast("Turn on location in Radar first.");return}dropping=!dropping;render();if(dropping)toast("Tap the map where the spot is.")},
+ spot(id){const s=spots.find(x=>x.id===id);if(!s)return;bump("spotOpen");const mine=s.by===myId;if(!mine)d("mdSpots/"+id).update({views:(+s.views||0)+1}).catch(()=>{});sheet(`${sh(s.name)}<div class="row between"><span class="rar" style="color:var(--ice)">${esc(s.vibe)}</span><span class="mt">${+s.views||0} taps${pos?" · "+distTxt(distM(pos.lat,pos.lng,s.lat,s.lng)):""}</span></div><p>${esc(s.info)||"No details yet."}</p><p class="mt">Added by ${esc(s.byName)}</p>${mine||IS_ADMIN?`<button class="btn bad" data-a="delSpot" data-v="${esc(s.id)}">Remove spot</button>`:""}`)},
+ delSpot(id){d("mdSpots/"+id).delete().catch(bad);closeSheet()},
+ place(id){const p=venues.find(x=>x.id===id);if(!p)return;const st=visitState(p),dist=pos?distM(pos.lat,pos.lng,p.lat,p.lng):null,inRange=dist!=null&&dist<=(+p.radius||150);
+  sheet(`${sh(p.name)}<div class="preview">${badgeSVG(venueDef(p))}</div><p>${esc(p.info)}</p>${!pos?`<p class="err">Turn on location in Radar to check in.</p><button class="btn" data-a="tab" data-v="radar">Go to Radar</button>`:st==="ok"?`<p class="mt" style="color:var(--ice)">Visit approved today. Come back tomorrow.</p>`:st==="pending"?`<p class="mt">Waiting for staff to approve your visit.</p>`:st==="no"?`<p class="mt">Staff didn't approve this visit.</p>`:inRange||IS_ADMIN?`<button class="btn" data-a="checkin" data-v="${esc(id)}">Request visit approval</button>`:`<p class="mt">You're ${distTxt(dist)} away. Get closer to check in.</p>`}`)},
+ async checkin(id){try{await d(`mdVisits/${myId}_${id}_${today()}`).set({uid:myId,name:myName(),venue:id,day:today(),status:"pending",at:Date.now()});closeSheet();toast("Request sent to staff.")}catch(e){bad(e);toast("Couldn't send that.")}},
+ async staffQueue(){const ids=staffVenues().map(v=>v.id);const s=await c("mdVisits").where("status","==","pending").get();const q=s.docs.map(x=>({id:x.id,...x.data()})).filter(x=>ids.includes(x.venue));adminData.queue=q;sheet(`${sh("Venue approvals")}${q.map(visitRow).join("")||"<p>Nobody is waiting.</p>"}`)},
+ visitOk(id){visitDecide(id,true)},visitNo(id){visitDecide(id,false)},
+ async newSpot(){const name=$("#s_name").value.trim(),pub=$("#s_pub").checked,e=$("#s_err");if(!name){e.textContent="Name your spot.";return}if(!pub){e.textContent="Only public places can be shared. Check the box to confirm.";return}const [lat,lng]=pendingXY;try{await c("mdSpots").add({by:myId,byName:myName(),name,vibe:$("#s_vibe").value.trim()||"Chill",info:$("#s_info").value.trim(),lat,lng,views:0,at:Date.now()});closeSheet();bump("spot");toast("Spot added.")}catch(x){bad(x);e.textContent="Couldn't save that. Try again."}},
+ adminTab(v){adminTab=v;drawAdmin()},
+ adminPlayer(id){adminPlayer(id).catch(bad)},
+ adClear(v){const [id,k]=v.split(":");const u=k==="photo"?{photo:""}:k==="bg"?{img:"",bg:"grid"}:{bio:"",facts:["","",""]};adminDo(()=>d("mdCards/"+id).update(u),"Removed.").then(()=>adminPlayer(id))},
+ adBan(id){const reason=$("#ad_reason").value.trim()||"Broke the MyDex rules.";adminDo(()=>d("mdBans/"+id).set({reason,at:Date.now()}),"Player suspended.").then(()=>adminPlayer(id))},
+ adUnban(id){adminDo(()=>d("mdBans/"+id).delete(),"Suspension lifted.").then(()=>adminPlayer(id))},
+ adRevoke(v){const [b,id]=v.split(":");adminDo(()=>d("mdBadges/"+b).delete(),"Badge removed.").then(()=>adminPlayer(id))},
+ adGrant(id){adGrant(id).catch(bad)},
+ adGive(v){const [id,t,k]=v.split(":");const o=t==="o"?adminData.official.find(x=>x.id===k):null;if(o&&o.supply&&(+o.issued||0)>=o.supply)return toast("That badge has reached its supply.");const def=o?o.def:BY[k];const b=DB.batch();b.set(c("mdBadges").doc(),{...badgeDoc("official",def,"MyDex"),owner:id});if(o)b.update(d("mdOfficial/"+k),{issued:(+o.issued||0)+1});adminDo(()=>b.commit(),"Badge given.").then(()=>adminPlayer(id))},
+ adOfficialNew(){Object.assign(oDraft,{name:"",supply:0});drawOfficial()},
+ odraft(v){const [k,x]=v.split("|");oDraft[k]=k==="g"?x:+x;drawOfficial()},
+ adOfficialSave(){const name=$("#o_name").value.trim();if(!name){$("#o_err").textContent="Name the badge.";return}const {sh:shp,g,h,p,s,r}=oDraft;closeSheet();adminDo(()=>c("mdOfficial").add({def:{name,cat:"Official",sh:shp,g,h,p,s,r},supply:+$("#o_sup")?.value||oDraft.supply||0,issued:0,at:Date.now()}),"Official badge created.")},
+ adOfficial(id){const o=adminData.official.find(x=>x.id===id);sheet(`${sh(o.def.name)}<div class="preview">${badgeSVG(o.def)}</div><p class="mt">Issued ${+o.issued||0}${o.supply?" of "+o.supply:""}. Give it from a player's profile.</p><button class="btn bad" data-a="adOfficialDel" data-v="${id}">Delete this badge type</button>`)},
+ adOfficialDel(id){closeSheet();adminDo(()=>d("mdOfficial/"+id).delete(),"Deleted. Copies players hold stay in their vaults.")},
+ adGoal(id){const off=new Set(cfg.off||[]);off.has(id)?off.delete(id):off.add(id);adminDo(()=>d("mdConfig/main").set({...cfg,off:[...off]}),off.has(id)?"Goal badge off.":"Goal badge on.")},
+ adDesign(v){const [id,o]=v.split(":");adminDo(()=>d("mdDesigns/"+id).update({off:o==="1"}),"Updated.")},
+ adSpotDel(id){adminDo(()=>d("mdSpots/"+id).delete(),"Spot removed.")},
+ adRepDel(id){adminDo(()=>d("mdReports/"+id).delete(),"Dismissed.")},
+ adVenue(id){adVenue(id)},
+ async vHere(){try{const p=await getPos();$("#v_lat").value=p.lat.toFixed(6);$("#v_lng").value=p.lng.toFixed(6)}catch(e){$("#v_err").textContent="Couldn't read your location."}},
+ async vSave(id){const name=$("#v_name").value.trim(),lat=parseFloat($("#v_lat").value),lng=parseFloat($("#v_lng").value),e=$("#v_err");if(!name){e.textContent="Name the venue.";return}if(!Number.isFinite(lat)||!Number.isFinite(lng)){e.textContent="Add the location.";return}if(!adminData.cards)adminData.cards=await list("mdCards");const names=$("#v_staff").value.split(",").map(x=>x.trim().toLowerCase()).filter(Boolean),staff=[];for(const n of names){const m=adminData.cards.find(x=>x.name.toLowerCase()===n);if(!m){e.textContent=`No player named ${n}.`;return}staff.push(m.id)}const body={name,info:$("#v_info").value.trim(),lat,lng,radius:Math.max(30,+$("#v_rad").value||150),staff,at:Date.now()};closeSheet();adminDo(()=>id?d("mdVenues/"+id).set(body):c("mdVenues").add(body),"Venue saved.")},
+ vDel(id){closeSheet();adminDo(()=>d("mdVenues/"+id).delete(),"Venue deleted.")},
+};
+const draft={name:"",sh:0,g:"bolt",h:190,p:0,s:0};
+const HUES=[190,240,265,300,325,350,28,170];
+function drawMint(keep){const pv=Object.assign({},draft,{name:draft.name||"Your badge",r:3});const chips=(k,names)=>`<div class="chips">${names.map((n,i)=>`<button data-a="draft" data-v="${k}|${i}" aria-pressed="${draft[k]===i}">${n}</button>`).join("")}</div>`;
+ sheet(`${sh("Create my badge")}<div class="preview">${badgeSVG(pv)}</div><p class="mt" style="text-align:center">One design per player. ${CAP} copies, and it can't be changed once created.</p><label class="f"><span class="lab">Badge name</span><input type="text" id="m_name" maxlength="18" value="${esc(draft.name)}"></label><div class="lab">Icon</div><div class="pick">${Object.keys(G).map(g=>`<button data-a="draft" data-v="g|${g}" aria-pressed="${draft.g===g}" aria-label="${g}"><svg class="ic" viewBox="24 24 52 52"><path d="${G[g]}"/></svg></button>`).join("")}</div><div class="lab">Color</div><div class="pick">${HUES.map(h=>`<button data-a="draft" data-v="h|${h}" aria-pressed="${draft.h===h}" aria-label="Color ${h}"><span style="width:60%;height:60%;display:block;background:hsl(${h} 100% 65%)"></span></button>`).join("")}</div><div class="lab">Frame</div>${chips("sh",SHAPE_NAMES)}<div class="lab">Frame animation</div>${chips("p",MOTION_A)}<div class="lab">Icon animation</div>${chips("s",MOTION_B)}<div class="err" id="m_err" role="alert"></div><button class="btn hot" data-a="mintNow">Create badge</button>`,keep)}
+function ownBadgeSheet(){const x=design,given=CAP-left();sheet(`${sh(x.def.name)}<div class="preview">${badgeSVG(x.def)}</div><div class="row between"><div class="lab">Supply</div><div class="mt">${left()} of ${CAP} left</div></div><div class="bar"><i style="width:${left()/CAP*100}%"></i></div><p class="mt">${given} given out.${x.off?" Turned off by MyDex staff.":" Open a player on the Radar to give one and log an encounter."}</p><button class="btn" data-a="tab" data-v="radar">Go to Radar</button>`)}
+document.addEventListener("click",e=>{const map=$("#map");
+ if(dropping&&map&&e.target.closest("#map")){const r=map.getBoundingClientRect();pendingXY=fromMap((e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100);dropping=false;render();
+  sheet(`${sh("New chill spot")}<label class="f"><span class="lab">Name</span><input type="text" id="s_name" maxlength="30"></label><label class="f"><span class="lab">Vibe</span><input type="text" id="s_vibe" maxlength="16" placeholder="Rooftop, quiet, late night"></label><label class="f"><span class="lab">Info for other players</span><textarea id="s_info" maxlength="200"></textarea></label><label class="row"><input type="checkbox" id="s_pub" style="width:22px;height:22px"><span>This is a public place, not someone's home.</span></label><div class="err" id="s_err" role="alert"></div><button class="btn" data-a="newSpot">Add spot</button>`);return}
+ const x=e.target.closest("[data-a]");if(!x)return;const f=A[x.dataset.a];if(f)f(x.dataset.v)});
+document.addEventListener("input",e=>{if(e.target.id==="m_name")draft.name=e.target.value;if(e.target.id==="ad_q"){adminData.q=e.target.value;clearTimeout(adminData.t);adminData.t=setTimeout(async()=>{const box=$("#admin");const v=e.target.value;await drawAdmin();const i=$("#ad_q");if(i){i.focus();i.value=v}},350)}});
+document.addEventListener("submit",e=>{e.preventDefault();
+ if(e.target.id==="adforge"){const on={};FORGE_TABS.forEach(([k])=>on[k]=$("#ff_"+k).checked);const fee=[0,1,2,3].map(i=>Math.max(0,+$("#ff_fee"+i).value||0)),forge={on,fee,consume:$("#ff_consume").checked,limit:Math.max(0,+$("#ff_limit").value||0)};adminDo(()=>d("mdConfig/main").set({...cfg,forge}),"Forge settings saved.");return}
+ if(e.target.id==="adnotice"){const msg=$("#ad_msg").value.trim();adminDo(()=>d("mdConfig/main").set({...cfg,msg}),"Notice saved.");return}
+ if(e.target.id!=="cardform")return;const name=$("#f_name").value.trim(),age=+$("#f_age").value,err=$("#f_err");
+ if(!name){err.textContent="Choose a username.";return}
+ if(!Number.isInteger(age)||age<MIN_AGE||age>99){err.textContent=`MyDex is for players ${MIN_AGE} and up. Enter your real age.`;return}
+ S.profile={...S.profile,name,age,bio:$("#f_bio").value.trim(),facts:[0,1,2].map(i=>$("#f_fact"+i).value.trim())};closeSheet();checkAwards();save();render();toast("Card saved.")});
+function net(){if(ban)return;const on=navigator.onLine;$("#offline").hidden=on;const x=$("#netchip");x.classList.toggle("off",!on);x.lastChild.textContent=on?"ONLINE":"OFFLINE"}
+addEventListener("online",net);addEventListener("offline",net);net();
+
+/* ---------- Sign in, unlock, book ---------- */
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+let busy=false,started=false;
+async function startSignIn(){if(busy)return;busy=true;const b=$("#signin"),who=$("#who"),boot=$("#boot");b.disabled=true;b.textContent="Verifying…";boot.classList.add("unlocking");
+ if(!started){await load();applyTheme();if(!S.profile.name)S.profile.name=NH.name().slice(0,18);subscribe();started=true}
+ who.textContent="Account verified";render();await wait(850);boot.classList.remove("unlocking");boot.classList.add("unlocked");await wait(620);boot.classList.add("open");await wait(1650);boot.hidden=true;ready=true;login();await starter();if(S.locOn)getPos().then(()=>{render();pushPres();scanNear()}).catch(()=>{});checkAwards();nextMoment();banner();busy=false;save();
+ const h=location.hash.slice(1);if(h==="forge"){tab="vault";render(true);drawForge("items");location.hash=""}else if(h==="admin"&&IS_ADMIN){tab="admin";render(true);location.hash=""}}
+async function lockUp(){if(busy)return;busy=true;closeSheet();await persist();ready=false;if(S.visible)dropPres();const boot=$("#boot"),b=$("#signin");boot.hidden=false;void boot.offsetWidth;boot.classList.remove("open");await wait(850);boot.classList.remove("unlocked");b.disabled=false;b.textContent="Sign in to unlock";$("#who").textContent="MyDex is locked.";busy=false}
+renderNav();$("#who").textContent="Sign in as "+NH.name();
+if(location.hash==="#admin"||location.hash==="#forge")setTimeout(()=>{if(!busy&&!ready)startSignIn()},200);
+window.__mydexReady=true;
+})();
+</script>
+
+</body></html>
