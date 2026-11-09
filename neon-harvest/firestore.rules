@@ -236,6 +236,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Store insights: one anonymous visit counter per player, per store, per day. Players write only their own;
+    // only that store's partner (and the owner) can read the counts.
+    match /rowvisits/{slot}/v/{id} {
+      allow read: if isOwner() || isPartner(slot) || (signedIn() && id.matches('^[0-9]+_' + me() + '$'));
+      allow create, update: if signedIn() && id == string(nd().d) + '_' + me()
+        && nd().keys().hasOnly(['d', 'n', 'hr', 'views', 'ret', 'at'])
+        && nd().d is int && nd().d > request.time.toMillis() / 86400000 - 2 && nd().d < request.time.toMillis() / 86400000 + 1
+        && nd().n is int && nd().n >= 1 && nd().n <= 300
+        && nd().hr is map && nd().hr.size() <= 24 && nd().views is map && nd().views.size() <= 50
+        && nd().ret is bool && nd().at is int;
+      allow delete: if isOwner();
+    }
+
     // Car Display: one plot per player (the document id is the player's id). Everyone can see every plot.
     match /carplots/{uid} {
       allow read: if signedIn();
