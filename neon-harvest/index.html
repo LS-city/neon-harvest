@@ -6112,14 +6112,15 @@ const DEX_X={term:560,forge:980,board:1380};
 const PET_PART=new Set(["chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hdd","cable"]), DEX_RAR={common:0,uncommon:1,rare:2,epic:3};
 const dexArtCache={};
 function dexArt(a){ if(!a||typeof a.id!=="string") return ""; const k=a.t+":"+a.id; if(k in dexArtCache) return dexArtCache[k]; let url="";
-  try{ const cv=document.createElement("canvas"); cv.width=cv.height=112; const c=cv.getContext("2d");
-    if(a.t==="item"&&BY[a.id]) drawItem(c,a.id,56,60,62,0);
-    else if(a.t==="pet"&&PETS[a.id]){ const tall=PET_TALL.includes(a.id); drawPetAt(c,56,98,112/(tall?95:42),a.id,undefined,1,0,false); }
-    if((a.t==="item"&&BY[a.id])||(a.t==="pet"&&PETS[a.id])) url=cv.toDataURL("image/png"); }catch(e){ url=""; }
+  try{ const Z=480, cv=document.createElement("canvas"); cv.width=cv.height=Z; const c=cv.getContext("2d",{willReadFrequently:true}); let ok=false;
+    if(a.t==="item"&&BY[a.id]){ drawItem(c,a.id,Z/2,Z/2,150,0); ok=true; }
+    else if(a.t==="pet"&&PETS[a.id]){ const f0=c.fill; c.fill=function(){ c.fill=f0; c.beginPath(); }; drawPetAt(c,Z/2,390,300/(PET_TALL.includes(a.id)?95:42),a.id,undefined,1,0,false); ok=true; }
+    if(ok){ const px=c.getImageData(0,0,Z,Z).data; let x0=Z,y0=Z,x1=-1,y1=-1; for(let y=0;y<Z;y++) for(let x=0;x<Z;x++) if(px[(y*Z+x)*4+3]>70){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+      if(x1>=x0){ const out=document.createElement("canvas"), N=176; out.width=out.height=N; const oc=out.getContext("2d"), sc=N*.92/Math.max(x1-x0+1,y1-y0+1); oc.translate(N/2,N/2); oc.scale(sc,sc); oc.translate(-(x0+x1+1)/2,-(y0+y1+1)/2); oc.drawImage(cv,0,0); const fin=document.createElement("canvas"); fin.width=fin.height=N; const fc=fin.getContext("2d"), sil=document.createElement("canvas"); sil.width=sil.height=N; const sc2=sil.getContext("2d"); sc2.drawImage(out,0,0); { const im=sc2.getImageData(0,0,N,N), q=im.data; for(let i=0;i<q.length;i+=4){ q[i]=216; q[i+1]=246; q[i+2]=255; q[i+3]=q[i+3]>150?255:0; } sc2.putImageData(im,0,0); } for(let i=0;i<12;i++){ const an=i/12*Math.PI*2; fc.drawImage(sil,Math.cos(an)*2.5,Math.sin(an)*2.5); } fc.drawImage(out,0,0); url=fin.toDataURL("image/png"); } } }catch(e){ url=""; }
   return dexArtCache[k]=url; }
 function dexForgeList(){ const out={items:[],parts:[],pcs:[],drugs:[],pets:[]};
-  for(const [id,qty] of invList()){ const it=BY[id], e={kind:"item",id,name:it.n,r:DEX_RAR[it.r]||0,qty}; if(it.t==="trip") out.drugs.push(e); else if(it.t==="build"||it.t==="miner") out.pcs.push(e); else if(PET_PART.has(it.t)) out.parts.push(e); else out.items.push(e); }
-  WARD.pet.opts.forEach((o,i)=>{ const n=o[0]; if(n!=="None"&&PETS[n]&&isOwned("pet",i)) out.pets.push({kind:"pet",id:n,name:n,r:o[1]>=400?3:o[1]>=200?2:o[1]>0?1:0,qty:1}); });
+  for(const [id,qty] of invList()){ const it=BY[id], cat=it.t==="trip"?"drugs":(it.t==="build"||it.t==="miner")?"pcs":PET_PART.has(it.t)?"parts":"items", e={kind:"item",id,name:it.n,r:DEX_RAR[it.r]||0,qty,fx:cat}; out[cat].push(e); }
+  WARD.pet.opts.forEach((o,i)=>{ const n=o[0]; if(n!=="None"&&PETS[n]&&isOwned("pet",i)) out.pets.push({kind:"pet",id:n,name:n,r:o[1]>=400?3:o[1]>=200?2:o[1]>0?1:0,qty:1,fx:"pets"}); });
   return out; }
 window.NHMYDEX={ db:()=>DB, uid:()=>myId, name:()=>myName||"Runner", isAdmin:()=>!!IS_ADMIN, close:closeMyDex, toast:(t,c)=>toast(t,c), art:dexArt, forgeList:dexForgeList,
   online:()=>onlinePlayers().map(p=>({by:p.by,name:nameOf(p.by)})),
@@ -6127,7 +6128,7 @@ window.NHMYDEX={ db:()=>DB, uid:()=>myId, name:()=>myName||"Runner", isAdmin:()=
   forgePay:(e,fee,consume)=>{ save.credits-=fee; if(e.kind==="item"&&consume) addItem(e.id,-1); persist(); hud(); } };
 let dexFrame=null;
 function openMyDex(view){ if($("#gmydex")) return; if(!DB||!myId){ toast("Sign in to use MyDex."); return; } closePanel(); const wrap=el("div",{id:"gmydex",role:"dialog","aria-label":"MyDex"});
-  const fr=document.createElement("iframe"); fr.title="MyDex"; fr.setAttribute("allow","geolocation"); fr.src="mydex.html?v=1"+(view?"#"+view:""); dexFrame=fr; wrap.append(fr); $("#game").appendChild(wrap); releaseKeys&&releaseKeys(); try{ stTrack("act","Open MyDex"); }catch(e){} }
+  const fr=document.createElement("iframe"); fr.title="MyDex"; fr.setAttribute("allow","geolocation"); fr.src="mydex.html?v=5"+(view?"#"+view:""); dexFrame=fr; wrap.append(fr); $("#game").appendChild(wrap); releaseKeys&&releaseKeys(); try{ stTrack("act","Open MyDex"); }catch(e){} }
 function closeMyDex(){ const w=$("#gmydex"); if(w) w.remove(); dexFrame=null; }
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#gmydex")){ closeMyDex(); e.preventDefault(); e.stopImmediatePropagation(); } },true);
 function dexHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:DEX_X.term,hw:100,label:"Open MyDex",act:()=>openMyDex()},{x:DEX_X.forge,hw:100,label:"Badge Forge: turn items into badges",act:()=>openMyDex("forge")},...(IS_ADMIN?[{x:DEX_X.board,hw:90,label:"MyDex admin controls",act:()=>openMyDex("admin")}]:[])]; }

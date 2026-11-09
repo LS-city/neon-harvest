@@ -122,6 +122,36 @@ label.btn{cursor:pointer}
 .bd *{animation-play-state:paused}
 .live .bd *,.bd.live *{animation-play-state:running}
 .bd.lock{filter:grayscale(1) brightness(.55)}
+.fa-items{animation:faItems 2.6s ease-in-out infinite alternate}
+.fa-parts{animation:faParts 1.7s steps(1) infinite}
+.fa-pcs{animation:faPcs 3.2s ease-in-out infinite}
+.fa-drugs{animation:faDrugs 3.4s linear infinite}
+.fa-pets{animation:faPets 1.15s ease-in-out infinite}
+.fe{fill:none;stroke-linecap:round;transform-origin:50px 50px}
+.f-ember{animation:flow 2.4s linear infinite;stroke:#ffb347;stroke-width:1.700}
+.f-ember2{animation:flow 3.6s linear infinite reverse;stroke:#ff4fb0;stroke-width:.9}
+.f-holo{fill:#fff;opacity:.3;animation:fHolo 2.8s ease-in-out infinite}
+.f-glint{fill:#fff;transform-box:fill-box;transform-origin:center;animation:fGlint 1.8s ease-in-out infinite}
+.f-zap{stroke:#a9f4ff;stroke-width:1.500;animation:fZap 1.2s steps(1) infinite}
+.f-scan{fill:#7ceaff;opacity:.55;animation:fScan 1.9s linear infinite}
+.f-load{stroke:#3dff9a;stroke-width:2;stroke-dasharray:100;animation:fLoad 3.2s ease-in-out infinite}
+.f-led{animation:gbl 1s steps(2) infinite}
+.f-ring{stroke-width:2.200;animation:fRing 2.1s ease-out infinite}
+.f-heart{fill:#ff6fb4}
+.f-mote{fill:#ffd18a;animation:gsp 2.2s ease-out infinite}
+@keyframes faItems{from{transform:translateY(-2.500px) scale(.97)}to{transform:translateY(2.500px) scale(1.04)}}
+@keyframes faParts{0%,62%,70%,100%{transform:none;opacity:1}64%{transform:translate(-1px,.6px);opacity:.65}67%{transform:translate(1.200px,-.6px);opacity:1}}
+@keyframes faPcs{0%,100%{opacity:.82}12%,88%{opacity:1}}
+@keyframes faDrugs{0%{filter:hue-rotate(0deg);transform:rotate(-5deg) scale(.95)}50%{filter:hue-rotate(180deg);transform:rotate(5deg) scale(1.08)}100%{filter:hue-rotate(360deg);transform:rotate(-5deg) scale(.95)}}
+@keyframes faPets{0%,100%{transform:translateY(1.500px) scale(1.05,.94)}50%{transform:translateY(-3px) scale(.96,1.05)}}
+@keyframes fHolo{0%{transform:translateX(-46px) skewX(-20deg)}70%,100%{transform:translateX(50px) skewX(-20deg)}}
+@keyframes fGlint{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1);opacity:1}}
+@keyframes fZap{0%,28%{opacity:1}30%,100%{opacity:0}}
+@keyframes fScan{from{transform:translateY(-27px)}to{transform:translateY(27px)}}
+@keyframes fLoad{from{stroke-dashoffset:100}80%,to{stroke-dashoffset:0}}
+@keyframes fRing{from{transform:scale(.25);opacity:.9}to{transform:scale(1);opacity:0}}
+.bd .f-ember,.bd .f-ember2{fill:none}
+.a-rip2,.f-ring,.f-mote,.f-glint,.f-zap,.g-spark{animation-fill-mode:backwards}
 .a-flow{animation:flow 1.6s linear infinite}
 .sheen{animation:sheen 4.8s ease-in-out infinite}
 @keyframes flow{to{stroke-dashoffset:-16}}
@@ -144,7 +174,7 @@ label.btn{cursor:pointer}
 .g-hue{animation:ghue 4s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes trace{to{stroke-dashoffset:-100}}
-@keyframes rip{from{transform:scale(.55);opacity:.95}to{transform:scale(1.05);opacity:0}}
+@keyframes rip{from{transform:scale(.55);opacity:.95}to{transform:scale(.8);opacity:0}}
 @keyframes rock{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
 @keyframes cor{from{transform:scale(.88);opacity:.45}to{transform:scale(1);opacity:1}}
 @keyframes gfloat{from{transform:translateY(-3px)}to{transform:translateY(3px)}}
@@ -327,6 +357,19 @@ function primary(p,pts){switch(p){
  case 8:return `<g class="fx a-rock"><path d="${arc(-40,40,38)}"/><path d="${arc(140,220,38)}"/></g>`;
  default:return `<g class="fx a-cor"><path d="M20 28v-8h8M72 20h8v8M80 72v8h-8M28 80h-8v-8"/></g>`;
 }}
+const SPK="M0-4 1-1 4 0 1 1 0 4-1 1-4 0-1-1Z", HRT="M0 3C-4 0-4-3-2-3-1-3 0-2 0-1 0-2 1-3 2-3 4-3 4 0 0 3Z";
+function forgeFxIn(k){switch(k){
+ case "items":return `<rect class="f-holo" x="44" y="20" width="9" height="60"/>`;
+ case "pcs":return `<rect class="f-scan" x="22" y="49" width="56" height="1.600"/>`;
+ case "drugs":return ["#ff4fb0","#7ceaff","#ffd83d"].map((c,i)=>`<circle class="fe f-ring" style="stroke:${c};animation-delay:${i*.7}s" cx="50" cy="50" r="26"/>`).join("");
+ default:return ""}}
+function forgeFxOut(k,r){let o=`<circle class="fe f-ember" cx="50" cy="50" r="29.200" pathLength="100" stroke-dasharray="14 11"/><circle class="fe f-ember2" cx="50" cy="50" r="31" pathLength="100" stroke-dasharray="5 15"/>`;
+ for(let i=0;i<=r;i++)o+=`<circle class="f-mote" style="animation-delay:${i*.45}s" cx="${36+i*9}" cy="${72-(i%2)*3}" r="1.100"/>`;
+ if(k==="items")o+=`<g class="a-spin" style="transform-origin:50px 50px">${[0,120,240].map((a,i)=>`<g transform="rotate(${a} 50 50) translate(50 21)"><path class="f-glint" style="animation-delay:${i*.6}s" d="${SPK}"/></g>`).join("")}</g>`;
+ if(k==="parts")o+=[0,120,240].map((a,i)=>`<path class="fe f-zap" style="animation-delay:${i*.4}s" transform="rotate(${a} 50 50)" d="M50 17l-3 4 5 1-4 5"/>`).join("");
+ if(k==="pcs")o+=`<circle class="fe f-load" cx="50" cy="50" r="27.500" pathLength="100" transform="rotate(-90 50 50)"/>`+[43,50,57].map((x,i)=>`<circle class="f-led" style="animation-delay:${i*.25}s" cx="${x}" cy="72" r="1.300" fill="${["#3dff9a","#ffd83d","#7ceaff"][i]}"/>`).join("");
+ if(k==="pets")o+=`<g class="a-spin" style="transform-origin:50px 50px">${[0,180].map(a=>`<g transform="rotate(${a} 50 50) translate(50 20)"><path class="f-heart" d="${HRT}"/></g>`).join("")}</g><g class="a-rev" style="transform-origin:50px 50px"><g transform="translate(50 19)"><path class="f-glint" d="${SPK}"/></g></g>`;
+ return o}
 let bdN=0;
 function badgeSVG(d,lock,lite){
  const pts=SHAPES[d.sh%SHAPES.length], g=G[d.g]||G.star, sm=d.s, cls=["g-float","g-breathe","g-flick","g-glitch","","g-tilt","","","","g-hue"][sm]||"";
@@ -342,7 +385,7 @@ function badgeSVG(d,lock,lite){
  const plate=`<polygon class="fr" points="${pts}" style="fill:url(#${k}p);stroke:url(#${k}m);stroke-width:${d.r>=3?3.2:2.5}"/>`;
  const bevel=`<polygon class="bev" points="${pts}" transform="translate(50 50) scale(.88) translate(-50 -50)"/>`;
  const lens=`<circle cx="50" cy="50" r="27" style="fill:url(#${k}l);stroke:url(#${k}m);stroke-width:1.300"/>`;
- const artURL=d.art?NH.art(d.art):"";const glyph=artURL?`<g class="${cls}" style="transform-origin:50px 50px"><image href="${artURL}" x="27" y="27" width="46" height="46" preserveAspectRatio="xMidYMid meet"/></g>`:`<g class="gl ${cls}"><path class="glow" d="${g}"/><path d="${g}"/></g>`;
+ const artURL=d.art?NH.art(d.art):"";const fxk=artURL?(d.fx||(d.art.t==="pet"?"pets":"items")):"";const glyph=artURL?`<clipPath id="${k}a"><circle cx="50" cy="50" r="26"/></clipPath><g clip-path="url(#${k}a)"><g class="fa-${fxk}" style="transform-origin:50px 50px"><circle cx="50" cy="50" r="24" fill="hsl(${h} 100% 72% / .24)"/><image href="${artURL}" x="29.500" y="29.500" width="41" height="41" preserveAspectRatio="xMidYMid meet"/></g>${forgeFxIn(fxk)}</g>${forgeFxOut(fxk,d.r||0)}`:`<g class="gl ${cls}"><path class="glow" d="${g}"/><path d="${g}"/></g>`;
  let detail="",top="";
  if(!lite){
   let tr="";const n=6+d.r*2;
@@ -630,7 +673,7 @@ const reachable=()=>[...near,...onlineGame()];
 const ownOrItem=key=>key==="own"?design&&design.def:defOf(V.find(x=>x.u===key));
 /* ---------- Badge Forge ---------- */
 const FORGE_TABS=[["items","Items"],["parts","Parts"],["pcs","PCs"],["drugs","Drugs"],["pets","Companions"]];
-const forgeDef=e=>({name:e.name.slice(0,36),cat:{item:"Forged item",pet:"Forged companion"}[e.kind],sh:hash(e.id)%8,g:"cube",h:[190,150,215,285][e.r||0],p:hash(e.id+"a")%10,s:[0,1,2,3,5,6,7,8,9][hash(e.id+"b")%9],r:e.r||0,art:{t:e.kind,id:e.id}});
+const forgeDef=e=>({name:e.name.slice(0,36),cat:{item:"Forged item",pet:"Forged companion"}[e.kind],sh:hash(e.id)%8,g:"cube",h:[190,150,215,285][e.r||0],p:hash(e.id+"a")%10,s:[0,1,2,3,5,6,7,8,9][hash(e.id+"b")%9],r:e.r||0,art:{t:e.kind,id:e.id},fx:e.fx});
 const petDocId=e=>`${myId}_pet_${e.id.replace(/[^A-Za-z0-9]/g,"-")}`;
 const forged=e=>e.kind==="pet"&&V.some(x=>x.u===petDocId(e));
 function drawForge(cat){const F=cfg.forge,list=NH.forgeList()[cat]||[],on=F.on[cat];
