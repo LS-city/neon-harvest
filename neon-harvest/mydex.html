@@ -127,6 +127,10 @@ label.btn{cursor:pointer}
 .fa-pcs{animation:faPcs 3.2s ease-in-out infinite}
 .fa-drugs{animation:faDrugs 3.4s linear infinite}
 .fa-pets{animation:faPets 1.15s ease-in-out infinite}
+.fa-wardrobe{animation:faWardrobe 2.8s ease-in-out infinite}
+.f-spot{fill:#fff;opacity:.16;transform-origin:50px 20px;animation:fSpot 3.4s ease-in-out infinite alternate}
+.f-stitch{stroke:#fff;stroke-width:1.300;stroke-dasharray:3 4;animation:flow 3s linear infinite,ghue 4s linear infinite}
+.f-hook{fill:none;stroke:#e8eefc;stroke-width:1.500;stroke-linecap:round}
 .fa-weapons{animation:faWeapons 2s cubic-bezier(.7,0,.2,1) infinite}
 .f-slash{fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-dasharray:34 100;animation:fSlash 2s cubic-bezier(.7,0,.2,1) infinite backwards}
 .f-lock{fill:none;stroke:#ff5a4a;stroke-width:1.700;stroke-linecap:square;transform-origin:50px 50px;animation:fLock 2s ease-in-out infinite}
@@ -152,6 +156,8 @@ label.btn{cursor:pointer}
 @keyframes fSlash{0%,42%{stroke-dashoffset:34;opacity:0}46%{opacity:.95}62%{stroke-dashoffset:-100;opacity:.9}66%,100%{stroke-dashoffset:-100;opacity:0}}
 @keyframes fLock{0%,100%{transform:rotate(45deg) scale(1.1);opacity:.55}50%{transform:rotate(45deg) scale(.94);opacity:1}54%{transform:rotate(45deg) scale(1.02);stroke:#fff}}
 @keyframes fHit{0%,50%{transform:translate(0,0) scale(0);opacity:0}54%{transform:translate(0,0) scale(1);opacity:1}82%,100%{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}
+@keyframes faWardrobe{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) scale(1.03)}}
+@keyframes fSpot{from{transform:rotate(-24deg)}to{transform:rotate(24deg)}}
 @keyframes fHolo{0%{transform:translateX(-46px) skewX(-20deg)}70%,100%{transform:translateX(50px) skewX(-20deg)}}
 @keyframes fGlint{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1);opacity:1}}
 @keyframes fZap{0%,28%{opacity:1}30%,100%{opacity:0}}
@@ -368,6 +374,7 @@ function primary(p,pts){switch(p){
 const SPK="M0-4 1-1 4 0 1 1 0 4-1 1-4 0-1-1Z", HRT="M0 3C-4 0-4-3-2-3-1-3 0-2 0-1 0-2 1-3 2-3 4-3 4 0 0 3Z";
 function forgeFxIn(k){switch(k){
  case "items":return `<rect class="f-holo" x="44" y="20" width="9" height="60"/>`;
+ case "wardrobe":return `<polygon class="f-spot" points="46,20 54,20 68,78 32,78"/><g class="fa-wardrobe" style="transform-origin:50px 50px"><path class="f-hook" d="M50 30v-3a2.800 2.800 0 1 0-2.800-2.800"/></g>`;
  case "weapons":return `<path class="f-slash" d="M28 66Q50 58 72 32" pathLength="100"/>`;
  case "pcs":return `<rect class="f-scan" x="22" y="49" width="56" height="1.600"/>`;
  case "drugs":return ["#ff4fb0","#7ceaff","#ffd83d"].map((c,i)=>`<circle class="fe f-ring" style="stroke:${c};animation-delay:${i*.7}s" cx="50" cy="50" r="26"/>`).join("");
@@ -377,11 +384,12 @@ function forgeFxOut(k,r){let o=`<circle class="fe f-ember" cx="50" cy="50" r="29
  if(k==="items")o+=`<g class="a-spin" style="transform-origin:50px 50px">${[0,120,240].map((a,i)=>`<g transform="rotate(${a} 50 50) translate(50 21)"><path class="f-glint" style="animation-delay:${i*.6}s" d="${SPK}"/></g>`).join("")}</g>`;
  if(k==="parts")o+=[0,120,240].map((a,i)=>`<path class="fe f-zap" style="animation-delay:${i*.4}s" transform="rotate(${a} 50 50)" d="M50 17l-3 4 5 1-4 5"/>`).join("");
  if(k==="pcs")o+=`<circle class="fe f-load" cx="50" cy="50" r="27.500" pathLength="100" transform="rotate(-90 50 50)"/>`+[43,50,57].map((x,i)=>`<circle class="f-led" style="animation-delay:${i*.25}s" cx="${x}" cy="72" r="1.300" fill="${["#3dff9a","#ffd83d","#7ceaff"][i]}"/>`).join("");
+ if(k==="wardrobe")o+=`<circle class="fe f-stitch" cx="50" cy="50" r="27.500"/>`+[[28,30],[72,32],[70,70],[30,68]].map(([x,y],i)=>`<g transform="translate(${x} ${y})"><path class="f-glint" style="animation-delay:${i*.45}s" d="${SPK}"/></g>`).join("");
  if(k==="weapons")o+=`<g class="f-lock">${[0,90,180,270].map(a=>`<path transform="rotate(${a} 50 50)" d="M45 18.500h10M50 18.500v4"/>`).join("")}</g>`+[[-16,-12],[-5,-19],[14,-13],[19,4],[10,16],[-14,13]].map(([x,y])=>`<circle class="f-hit" cx="50" cy="50" r="1.300" style="--x:${x}px;--y:${y}px"/>`).join("");
  if(k==="pets")o+=`<g class="a-spin" style="transform-origin:50px 50px">${[0,180].map(a=>`<g transform="rotate(${a} 50 50) translate(50 20)"><path class="f-heart" d="${HRT}"/></g>`).join("")}</g><g class="a-rev" style="transform-origin:50px 50px"><g transform="translate(50 19)"><path class="f-glint" d="${SPK}"/></g></g>`;
  return o}
-const FXK=["items","weapons","parts","pcs","drugs","pets"];
-function sanDef(x){x=x&&typeof x==="object"?x:{};const n=(v,m)=>{v=Math.floor(+v);return Number.isFinite(v)&&v>=0?v%m:0};return {id:String(x.id||"").slice(0,60),name:String(x.name||"Badge").slice(0,40),sh:n(x.sh,8),g:Object.prototype.hasOwnProperty.call(G,x.g)?x.g:"star",h:n(x.h,720),p:n(x.p,10),s:n(x.s,10),r:n(x.r,5),art:x.art&&typeof x.art==="object"&&typeof x.art.id==="string"?{t:x.art.t==="pet"?"pet":"item",id:x.art.id.slice(0,60)}:null,fx:FXK.includes(x.fx)?x.fx:""}}
+const FXK=["items","weapons","wardrobe","parts","pcs","drugs","pets"];
+function sanDef(x){x=x&&typeof x==="object"?x:{};const n=(v,m)=>{v=Math.floor(+v);return Number.isFinite(v)&&v>=0?v%m:0};return {id:String(x.id||"").slice(0,60),name:String(x.name||"Badge").slice(0,40),sh:n(x.sh,8),g:Object.prototype.hasOwnProperty.call(G,x.g)?x.g:"star",h:n(x.h,720),p:n(x.p,10),s:n(x.s,10),r:n(x.r,5),art:x.art&&typeof x.art==="object"&&typeof x.art.id==="string"?{t:x.art.t==="pet"?"pet":x.art.t==="look"?"look":"item",id:x.art.id.slice(0,60)}:null,fx:FXK.includes(x.fx)?x.fx:""}}
 let bdN=0;
 function badgeSVG(d,lock,lite){d=sanDef(d);
  const pts=SHAPES[d.sh%SHAPES.length], g=G[d.g]||G.star, sm=d.s, cls=["g-float","g-breathe","g-flick","g-glitch","","g-tilt","","","","g-hue"][sm]||"";
@@ -451,7 +459,7 @@ const d=p=>DB.doc(p), c=p=>DB.collection(p), myName=()=>S.profile.name||NH.name(
 function hash(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 const STARTER_IDS=STARTER.map(b=>b.id);
 const fresh=()=>({v:2,profile:{name:"",age:21,bio:"",facts:["","",""],photo:""},look:{bg:"grid",img:"",color:"cyan"},mood:"g",display:[],earned:{},m:{trades:0,gifts:0,recv:0,moods:0,sentOwn:0,daily:0,weekly:0},blocked:[],visible:false,locOn:false,streak:0,last:"",day:{k:"",c:{},done:{}},week:{k:"",c:{},done:{}},seen:[],starter:false});
-const DEF_CFG={forge:{on:{items:true,weapons:true,parts:true,pcs:true,drugs:true,pets:true},fee:[25,50,100,250],consume:true,limit:10},off:[],msg:""};
+const DEF_CFG={forge:{on:{items:true,weapons:true,wardrobe:true,parts:true,pcs:true,drugs:true,pets:true},fee:[25,50,100,250],consume:true,limit:10},off:[],msg:""};
 let S=fresh(), V=[], design=null, met={}, incoming=[], outgoing=[], cfg=DEF_CFG, spots=[], venues=[], myVisits=[], ban=null, pos=null, near=[], rulesBad=false;
 let tab="card", vaultFilter="all", vaultIdx=0, ready=false, saveT=0, reqId=0, dropping=false, adminTab="players", pendingXY=null;
 const pad=n=>String(n).padStart(2,"0");
@@ -697,22 +705,22 @@ async function approve(id){const r=incoming.find(x=>x.id===id);if(!r)return;if(r
 const reachable=()=>[...near.filter(p=>p.mood!=="r"),...onlineGame()];
 const ownOrItem=key=>key==="own"?design&&design.def:defOf(V.find(x=>x.u===key));
 /* ---------- Badge Forge ---------- */
-const FORGE_TABS=[["items","Items"],["weapons","Weapons"],["parts","Parts"],["pcs","PCs"],["drugs","Drugs"],["pets","Companions"]];
-const forgeDef=e=>({name:e.name.slice(0,36),cat:{item:"Forged item",pet:"Forged companion"}[e.kind],sh:hash(e.id)%8,g:"cube",h:[190,150,215,285][e.r||0],p:hash(e.id+"a")%10,s:[0,1,2,3,5,6,7,8,9][hash(e.id+"b")%9],r:e.r||0,art:{t:e.kind,id:e.id},fx:e.fx});
-const petDocId=e=>`${myId}_pet_${e.id.replace(/[^A-Za-z0-9]/g,"-")}`;
-const forged=e=>e.kind==="pet"&&(V.some(x=>x.u===petDocId(e))||(S.petF||[]).includes(e.id));
+const FORGE_TABS=[["items","Items"],["weapons","Weapons"],["wardrobe","Wardrobe"],["parts","Parts"],["pcs","PCs"],["drugs","Drugs"],["pets","Companions"]];
+const forgeDef=e=>({name:e.name.slice(0,36),cat:{item:"Forged item",pet:"Forged companion",look:"Forged wardrobe"}[e.kind],sh:hash(e.id)%8,g:"cube",h:[190,150,215,285][e.r||0],p:hash(e.id+"a")%10,s:[0,1,2,3,5,6,7,8,9][hash(e.id+"b")%9],r:e.r||0,art:{t:e.kind,id:e.id},fx:e.fx});
+const petDocId=e=>`${myId}_${e.kind}_${e.id.replace(/[^A-Za-z0-9]/g,"-")}`;
+const forged=e=>e.kind!=="item"&&(V.some(x=>x.u===petDocId(e))||(S.petF||[]).includes(e.id));
 function drawForge(cat){const F=cfg.forge,list=NH.forgeList()[cat]||[],on=F.on[cat];
  sheet(`${sh("Badge Forge")}<p class="mt">Turn what you own into a badge you can display, trade or gift on MyDex.</p><div class="chips">${FORGE_TABS.map(([k,l])=>`<button data-a="forge" data-v="${esc(k)}" aria-pressed="${cat===k}">${l}</button>`).join("")}</div>
- ${!on?`<section class="panel"><p>The Forge is closed for this category right now.</p></section>`:list.length?`<div class="grid">${list.map((e,i)=>`<button data-a="forgePick" data-v="${esc(cat)}:${esc(i)}" aria-label="${esc(e.name)}" style="position:relative">${badgeSVG(forgeDef(e),forged(e))}${e.qty>1?`<span class="mt" style="position:absolute;right:4px;bottom:0">x${e.qty}</span>`:""}</button>`).join("")}</div>`:`<section class="panel"><p>${cat==="pets"?"You don't have any companions yet.":"Nothing of this type in your stash yet."}</p></section>`}`,true)}
+ ${!on?`<section class="panel"><p>The Forge is closed for this category right now.</p></section>`:list.length?`<div class="grid">${list.map((e,i)=>`<button data-a="forgePick" data-v="${esc(cat)}:${esc(i)}" aria-label="${esc(e.name)}" style="position:relative">${badgeSVG(forgeDef(e),forged(e))}${e.qty>1?`<span class="mt" style="position:absolute;right:4px;bottom:0">x${e.qty}</span>`:""}</button>`).join("")}</div>`:`<section class="panel"><p>${cat==="pets"?"You don't have any companions yet.":cat==="wardrobe"?"You don't own any wardrobe pieces yet.":"Nothing of this type in your stash yet."}</p></section>`}`,true)}
 const forgeLeft=()=>Math.max(0,cfg.forge.limit-(S.day.c.forge||0));
-function forgePick(cat,i){const e=NH.forgeList()[cat][i];if(!e)return;const F=cfg.forge,fee=F.fee[e.r||0]||0,keeps=e.kind==="pet"||!F.consume,dup=forged(e),cant=!NH.forgeCan(e,fee);
+function forgePick(cat,i){const e=NH.forgeList()[cat][i];if(!e)return;const F=cfg.forge,fee=F.fee[e.r||0]||0,keeps=e.kind!=="item"||!F.consume,dup=forged(e),cant=!NH.forgeCan(e,fee);
  sheet(`${sh(e.name)}<div class="preview">${badgeSVG(forgeDef(e))}</div><div class="row between"><span class="rar" style="color:${RARC[e.r||0]}">${RAR[e.r||0]}</span><span class="mt">₵${fee} · ${forgeLeft()} left today</span></div>
- <p>${keeps?(e.kind==="pet"?"Your companion stays with you. Each companion can be forged once.":"You keep this item."):"Forging uses up 1 of this item. You can't get it back."}</p>${cant?`<p class="err">You need ₵${fee} to forge this.</p>`:""}${dup?`<p class="err">You already forged this companion.</p>`:""}
+ <p>${keeps?(e.kind==="pet"?"Your companion stays with you. Each companion can be forged once.":e.kind==="look"?"You keep this wardrobe piece. Each piece can be forged once.":"You keep this item."):"Forging uses up 1 of this item. You can't get it back."}</p>${cant?`<p class="err">You need ₵${fee} to forge this.</p>`:""}${dup?`<p class="err">You already forged this one.</p>`:""}
  <div class="btns"><button class="btn alt" data-a="forge" data-v="${esc(cat)}">Back</button><button class="btn hot" data-a="forgeNow" data-v="${esc(cat)}:${esc(i)}" ${cant||dup||!forgeLeft()?"disabled":""}>Forge badge</button></div>`)}
 async function forgeNow(cat,i){const e=NH.forgeList()[cat][i],F=cfg.forge;if(!e||!F.on[cat]||!forgeLeft()||forged(e))return;const fee=F.fee[e.r||0]||0;if(!NH.forgeCan(e,fee)){toast("You don't have what that needs.");return}
- const df=forgeDef(e),id=e.kind==="pet"?petDocId(e):`${myId}_f_${uid()}`;
+ const df=forgeDef(e),id=e.kind!=="item"?petDocId(e):`${myId}_f_${uid()}`;
  sheet(`<div class="wait"><div class="spin"></div><h2 style="font:700 19px var(--display)">Forging</h2></div>`);
- try{await d("mdBadges/"+id).set(badgeDoc(e.kind,df,"Badge Forge"));NH.forgePay(e,fee,F.consume);if(e.kind==="pet")S.petF=[...(S.petF||[]),e.id];bump("forge");closeSheet();queue({title:"Badge forged",name:df.name,sub:"It's in your vault now.",badges:[df]})}
+ try{await d("mdBadges/"+id).set(badgeDoc(e.kind==="pet"?"pet":"item",df,"Badge Forge"));NH.forgePay(e,fee,F.consume);if(e.kind!=="item")S.petF=[...(S.petF||[]),e.id];bump("forge");closeSheet();queue({title:"Badge forged",name:df.name,sub:"It's in your vault now.",badges:[df]})}
  catch(err){bad(err);closeSheet();toast("The Forge couldn't make that. Nothing was used up.")}}
 
 /* ---------- Admin ---------- */
