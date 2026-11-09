@@ -232,8 +232,30 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'done']))
         || (signedIn() && resource.data.by == me() && resource.data.status == 'cancelled'
             && resource.data.get('refunded', false) == false && request.resource.data.refunded == true
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['refunded']));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['refunded']))
+        // A digital reward is delivered in the game, so the player's own code is marked picked up right away.
+        || (signedIn() && resource.data.by == me() && resource.data.status == 'ready'
+            && resource.data.get('dig', '') != ''
+            && get(/databases/$(database)/documents/rowitems/$(slot)/items/$(resource.data.item)).data.get('dig', '') == resource.data.dig
+            && request.resource.data.status == 'picked'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'done']));
       allow delete: if false;
+    }
+
+    // Neon Row Specials: digital items the owner designs for a store. Everyone can see them; only the owner makes them.
+    match /rowdigi/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    // Requests from a store's partner to the owner for a special item. The partner sees only their own.
+    match /rowreqs/{id} {
+      allow read: if isOwner() || (signedIn() && resource.data.by == me());
+      allow create: if signedIn() && nd().slot is string && isPartner(nd().slot) && nd().by == me() && nd().status == 'open'
+        && nd().keys().hasOnly(['slot', 'store', 'by', 'byName', 'title', 'idea', 'extra', 'status', 'reply', 'at'])
+        && nd().title is string && nd().title.size() > 0 && nd().title.size() <= 60
+        && nd().idea is string && nd().idea.size() <= 500 && nd().extra is string && nd().extra.size() <= 80
+        && nd().reply == '' && nd().at is int;
+      allow update: if isOwner()
+        || (signedIn() && od().by == me() && od().status == 'open' && nd().status == 'cancelled'
+            && nd().diff(od()).affectedKeys().hasOnly(['status']));
+      allow delete: if isOwner();
     }
 
     // Store insights: one anonymous visit counter per player, per store, per day. Players write only their own;
