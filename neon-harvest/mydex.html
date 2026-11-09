@@ -470,7 +470,7 @@ async function persist(){
  dirty=false;clearTimeout(saveT);const w1=d(`data/users/${myId}/mydex`).set(JSON.parse(JSON.stringify(S))).catch(bad);
  const P=S.profile, card={name:(P.name||NH.name()).slice(0,18),age:Math.max(MIN_AGE,+P.age||MIN_AGE),bio:P.bio.slice(0,120),facts:P.facts.map(f=>f.slice(0,40)),photo:P.photo||"",bg:S.look.bg,img:S.look.bg==="img"?S.look.img:"",mood:S.mood,met:Object.keys(met).length,display:S.display.slice(0,DISPLAY_MAX).map(k=>{const it=k==="own"?"own":V.find(x=>x.u===k);return it&&defOf(it)?defOf(it):null}).filter(Boolean),at:Date.now()};
  const sig=JSON.stringify({...card,at:0});
- if(sig!==lastCard){const prev=lastCard;lastCard=sig;d("mdCards/"+myId).set(card).catch(e=>{lastCard=prev;bad(e)})}
+ if(sig!==lastCard&&vLoaded&&dLoaded){const prev=lastCard;lastCard=sig;d("mdCards/"+myId).set(card).catch(e=>{lastCard=prev;bad(e)})}
  if(S.visible&&pos) pushPres();
  await w1;
 }
@@ -480,9 +480,10 @@ async function load(){const s=await d(`data/users/${myId}/mydex`).get();if(s.exi
 function applyMod(card){let ch=false;if(!card.photo&&S.profile.photo){S.profile.photo="";ch=true}if(!card.img&&S.look.img&&S.look.bg==="img"){S.look.img="";S.look.bg="grid";ch=true}if(!card.bio&&S.profile.bio&&!(card.facts||[]).some(Boolean)){S.profile.bio="";S.profile.facts=["","",""];ch=true}return ch}
 let refreshT=0;
 function refresh(){clearTimeout(refreshT);refreshT=setTimeout(()=>{if(!ready)return;checkAwards();if(tab!=="admin")render();updInbox()},120)}
+let vLoaded=false,dLoaded=false,dataDone,dataReady=new Promise(r=>dataDone=r);const markData=()=>{if(vLoaded&&dLoaded)dataDone()};
 function subscribe(){
- c("mdBadges").where("owner","==",myId).onSnapshot(s=>{V=s.docs.map(x=>({u:x.id,...x.data()})).filter(x=>x.def&&typeof x.def==="object").sort((a,b)=>(b.at||0)-(a.at||0));S.display=S.display.filter(k=>k==="own"||V.some(x=>x.u===k));refresh();save()},badSub);
- d("mdDesigns/"+myId).onSnapshot(s=>{design=s.exists?s.data():null;refresh()},badSub);
+ c("mdBadges").where("owner","==",myId).onSnapshot(s=>{V=s.docs.map(x=>({u:x.id,...x.data()})).filter(x=>x.def&&typeof x.def==="object").sort((a,b)=>(b.at||0)-(a.at||0));if(s.metadata&&s.metadata.fromCache){refresh();return}vLoaded=true;const was=S.display.length;S.display=S.display.filter(k=>k==="own"||V.some(x=>x.u===k));markData();refresh();if(ready||S.display.length!==was)save()},e=>{markData();badSub(e)});
+ d("mdDesigns/"+myId).onSnapshot(s=>{design=s.exists?s.data():null;if(!(s.metadata&&s.metadata.fromCache)){dLoaded=true;markData()}refresh()},e=>{dLoaded=true;markData();badSub(e)});
  c("mdEnc").where("members","array-contains",myId).onSnapshot(s=>{const m={};s.docs.forEach(x=>{const a=x.data().members.find(v=>v!==myId);m[a]=x.data().at});met=m;metLoaded=true;syncCounts();refresh();save()},badSub);
  c("mdReq").where("to","==",myId).onSnapshot(s=>{const nw=s.docs.map(x=>({id:x.id,...x.data()})).filter(x=>x.status==="pending"&&!S.blocked.includes(x.from));if(ready&&nw.length>incoming.length){const r=nw[nw.length-1];toast(`${r.fromName} sent you a badge request.`);NH.toast("MyDex: "+r.fromName+" sent you a badge request.")}incoming=nw;updInbox()},badSub);
  c("mdReq").where("from","==",myId).onSnapshot(s=>{outgoing=s.docs.map(x=>({id:x.id,...x.data()}));outgoing.forEach(onOutgoing);refresh()},badSub);
@@ -844,8 +845,8 @@ addEventListener("online",net);addEventListener("offline",net);net();
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 let busy=false,started=false;
 async function startSignIn(){if(busy)return;busy=true;const b=$("#signin"),who=$("#who"),boot=$("#boot");b.disabled=true;b.textContent="Verifying…";boot.classList.add("unlocking");
- if(!started){try{await load()}catch(e){busy=false;boot.classList.remove("unlocking");b.disabled=false;b.textContent="Try again";who.textContent="Couldn't reach your MyDex. Check your connection.";return}applyTheme();if(!S.profile.name)S.profile.name=NH.name().slice(0,18);subscribe();started=true}
- who.textContent="Account verified";render();await wait(850);boot.classList.remove("unlocking");boot.classList.add("unlocked");await wait(620);boot.classList.add("open");await wait(1650);boot.hidden=true;ready=true;login();await starter();syncCounts();outgoing.forEach(onOutgoing);if(S.locOn)getPos().then(()=>{render();pushPres();scanNear()}).catch(()=>{});checkAwards();nextMoment();banner();busy=false;save();
+ if(!started){try{await load()}catch(e){busy=false;boot.classList.remove("unlocking");b.disabled=false;b.textContent="Try again";who.textContent="Couldn't reach your MyDex. Check your connection.";return}applyTheme();if(!S.profile.name)S.profile.name=NH.name().slice(0,18);subscribe();started=true;await Promise.race([dataReady,wait(4000)])}
+ who.textContent="Account verified";render();await wait(850);boot.classList.remove("unlocking");boot.classList.add("unlocked");await wait(620);boot.classList.add("open");await wait(1650);boot.hidden=true;ready=true;render();login();await starter();syncCounts();outgoing.forEach(onOutgoing);if(S.locOn)getPos().then(()=>{render();pushPres();scanNear()}).catch(()=>{});checkAwards();nextMoment();banner();busy=false;save();
  const h=location.hash.slice(1);if(h==="forge"){tab="vault";render(true);drawForge("items");location.hash=""}else if(h==="admin"&&IS_ADMIN){tab="admin";render(true);location.hash=""}}
 async function lockUp(){if(busy)return;busy=true;closeSheet();await persist();ready=false;if(S.visible)dropPres();const boot=$("#boot"),b=$("#signin");boot.hidden=false;void boot.offsetWidth;boot.classList.remove("open");await wait(850);boot.classList.remove("unlocked");b.disabled=false;b.textContent="Sign in to unlock";$("#who").textContent="MyDex is locked.";busy=false}
 renderNav();$("#who").textContent="Sign in as "+NH.name();
