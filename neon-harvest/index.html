@@ -82,6 +82,7 @@ canvas.dccsym{vertical-align:-3px;margin-right:4px;display:inline-block}
 #chatlog .logbody{overflow-y:auto;display:flex;flex-direction:column;gap:2px;min-height:0;flex:1}
 #chatlog .logbody .t{color:#6f6494;font-size:10px;margin-right:4px}
 #btnLog{flex:none;padding:6px 9px}
+#btnDex{border-color:#7ceaff;color:#7ceaff;background:rgba(124,234,255,.12);box-shadow:0 0 10px rgba(124,234,255,.45);font-weight:600}
 #btnMsg{position:relative}
 #btnMsg .badge{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--mag);color:#fff;font-size:10px;line-height:17px;text-align:center}
 .msglist{display:flex;flex-direction:column;gap:6px;max-height:min(46vh,380px);overflow-y:auto;padding:6px;border:1px solid var(--line);background:rgba(7,4,15,.6)}
@@ -270,6 +271,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile{--top:calc(54px + env(safe-area-inset-top,0px));--cvh:max(min(86vw,54vh),min(110vw,calc(100vh - var(--top) - 350px)));background:#07040f}
 #game.mobile #overlay{z-index:15}
 #game.mobile button,#game.mobile .btn,#game.mobile .k{touch-action:manipulation}
+#game.mobile #btnDex{position:fixed;top:calc(var(--top) + 8px);right:max(8px,env(safe-area-inset-right,0px));z-index:6;width:58px;height:46px;min-height:46px;padding:0;font-family:var(--f-display);font-size:13px;background:#0b1433}
 #game.mobile input,#game.mobile select,#game.mobile textarea{font-size:16px!important}
 #game.mobile .hud.top{padding:calc(6px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));min-height:var(--top);flex-wrap:nowrap;background:linear-gradient(rgba(7,4,15,.95),rgba(7,4,15,.75));border-bottom:1px solid var(--line);z-index:5}
 #game.mobile .brand{display:none}
@@ -411,6 +413,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <span class="pill" id="trippill" hidden></span>
       <button class="pill on" id="online" type="button" title="Players online">ONLINE <b>1</b></button>
       <button class="btn" id="btnChar" type="button">Character [C]</button>
+      <button class="btn" id="btnDex" type="button" title="Open MyDex" aria-label="Open MyDex">MyDex</button>
       <button class="btn" id="btnBag" type="button">Stash [I]</button>
       <button class="btn" id="btnMsg" type="button">Messages [M]</button>
       <button class="btn" id="btnTravel" type="button" title="Fast travel anywhere (T)">Fast Travel [T]</button>
@@ -3723,7 +3726,7 @@ try{ const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,
 function applyMobileLayout(){ const g=$("#game"); if(!g) return; g.classList.toggle("mobile",MOBILE); g.classList.toggle("portrait",MOBILE&&innerHeight>innerWidth);
   if(MOBILE&&!g.dataset.mset){ g.dataset.mset="1";
     const lab=(id,txt,aria)=>{ const b=$(id); if(!b) return; const bd=b.querySelector(".badge"); b.textContent=txt; if(bd) b.append(bd); b.classList.add("mbtn"); if(aria) b.setAttribute("aria-label",aria); };
-    lab("#btnBag","🎒","Stash"); lab("#btnMsg","💬","Messages");
+    lab("#btnDex","DEX","Open MyDex"); lab("#btnBag","🎒","Stash"); lab("#btnMsg","💬","Messages");
     const ch=document.querySelector(".pill.ch"); if(ch&&ch.firstChild&&ch.firstChild.nodeType===3) ch.firstChild.textContent="◆";
     const cr=document.querySelector(".pill.cr"); if(cr&&cr.firstChild&&cr.firstChild.nodeType===3) cr.firstChild.textContent="₵";
     const on=$("#online"); if(on&&on.firstChild&&on.firstChild.nodeType===3) on.firstChild.textContent="●";
@@ -9676,6 +9679,7 @@ function openChat(cid,pend){ const c=buildChats().find(x=>x.id===cid)||pend; if(
   send.onclick=doSend; inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); doSend(); } });
   body.append(el("div",{class:"chatrow"},inp,send)); setTimeout(()=>inp.focus(),30); }
 $("#btnMsg").addEventListener("click",()=>openMessages());
+$("#btnDex").addEventListener("click",()=>openMyDex());
 $("#prompt").addEventListener("click",()=>{ if(nearHot&&$("#overlay").hidden) useHot(); });
 $("#btnMenu").addEventListener("click",()=>openMobileMenu());
 function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sceneName(me.scene)}`); currentView="menu";
