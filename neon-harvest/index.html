@@ -129,6 +129,13 @@ canvas.dccsym{vertical-align:-3px;margin-right:4px;display:inline-block}
 #gmydex{position:absolute;inset:0;z-index:70;background:#05030c;display:flex;justify-content:center}
 #gmydex iframe{border:0;width:100%;max-width:460px;height:100%;display:block;background:#080b1c}
 #g1211{position:absolute;inset:0;z-index:70;background:#120a24;display:flex;flex-direction:column}
+.idledock{position:fixed;left:max(8px,env(safe-area-inset-left,0px));top:170px;z-index:31;width:min(330px,76vw);background:rgba(10,6,22,.9);border:1px solid #43f0a4;border-radius:8px;padding:8px 10px;font:12px 'IBM Plex Mono',monospace;color:#e9e2ff;box-shadow:0 0 18px rgba(67,240,164,.22)}
+.idledock .idh{display:flex;justify-content:space-between;gap:8px;align-items:center}.idledock .idh strong{color:#43f0a4;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idledock .idl{color:#ff3fa8;font-size:10px;letter-spacing:.1em;text-transform:uppercase;animation:idlb 1.2s ease-in-out infinite}.idledock .idp{color:#ffb84a;font-size:10px;text-transform:uppercase}
+@keyframes idlb{50%{opacity:.35}}
+.idledock .ida{color:#ffd36a;margin:4px 0}.idledock .idlog{color:#cfc6ff;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.idledock .ids{color:#7ce7ff;font-size:11px;margin-top:4px}
+.idledock .btn{min-height:30px;padding:2px 10px;font-size:11px}
+.idledock .idmin{background:none;border:1px solid #3c2367;color:#cfc6ff;border-radius:4px;width:24px;height:22px;padding:0;cursor:pointer;font-size:12px;line-height:1}
 #gccj{position:absolute;inset:0;z-index:70;background:#07041a;display:flex;flex-direction:column}
 #gccj .g1bar{display:flex;align-items:center;gap:10px;padding:calc(6px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));border-bottom:1px solid #3c2367;background:#140a36}
 #gccj .g1bar strong{font-family:var(--f-display);color:#ffd36a;text-shadow:2px 2px 0 #ff3fa8;letter-spacing:.1em}
@@ -295,7 +302,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile .stats .pill{font-size:12px;padding:0 8px;height:40px;display:inline-flex;align-items:center;gap:4px;flex:none}
 #game.mobile .stats{overflow-x:auto;scrollbar-width:none}#game.mobile .stats::-webkit-scrollbar{display:none}
 #game.mobile #btnMenu{position:sticky;right:0;margin-left:auto;flex:none;z-index:1;background:#0b0716;box-shadow:-8px 0 8px 2px rgba(7,4,15,.9)}
-#game.mobile #btnRole,#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #btnMusic{display:none!important}
+#game.mobile #btnRole,#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #btnMusic,#game.mobile #btnIdle{display:none!important}
 #mstatus,#mquick{display:none}
 #game.mobile #mstatus{display:flex;position:absolute;top:calc(var(--top) + 6px);left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));flex-wrap:wrap;gap:4px;z-index:5;pointer-events:none}
 #game.mobile #mstatus .pill{font-size:11px;height:auto;min-height:24px;padding:3px 8px;background:rgba(11,7,22,.86);display:inline-flex;align-items:center;max-width:100%;white-space:normal;line-height:1.25}
@@ -440,6 +447,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
       <button class="btn" id="btnMusic" type="button" title="Choose your music">🎵 Music</button>
+      <button class="btn" id="btnIdle" type="button" title="Send your runner off to do things on their own">🤖 Idle</button>
       <button class="btn hot" id="btnAdmin" type="button" hidden>Admin</button>
       <button class="btn mbtn" id="btnMenu" type="button" aria-label="Menu">☰</button>
     </div>
@@ -2932,6 +2940,7 @@ function fightBot(n,police){ if(n.out) return; gangCd=Date.now()+15e3; emote("at
   if(win){ n.out=Date.now()+3*6e4; n.mug=0; cityGen(me.scene).filter(c=>c.k==="civ"&&Math.abs(c.x-me.x)<260).slice(0,4).forEach((c,i)=>{ relAdd(npcKey(c),1); lifeFeel(c,"grateful",4*6e4,.35,0,"You ran off the Rust Jaws"); setTimeout(()=>{ c.emote={e:"cheer",t:T}; npcSay(c,["Thank you!","Get outta here, Rust Jaws!","My hero!","Nice one!"][i%4]); },300+i*300); }); const pay=police?80:30+Math.floor(Math.random()*30), ch=police?5:3+Math.floor(Math.random()*5); save.chips+=ch; earn(pay,police?`Busted ${n.name} (+${ch} chips)`:`Scrapped ${n.name} (+${ch} chips)`,"#ff7a5a"); rstat(police?"busts":"botwins"); beep(1400,.06); }
   else { const lose=Math.min(Math.floor(save.credits),20+Math.floor(Math.random()*40)); save.credits-=lose; persist(); npcSay(n,"Pathetic, meatbag."); toast(`${n.name} knocked you down and took ₵${lose}.`,"#ff5a4a"); me.slowUntil=T+4; beep(120,.25,"square"); } }
 function gangMug(n){ const amt=Math.max(10,Math.min(150,Math.floor(save.credits*.08))); npcSay(n,"Credits or circuits, meatbag!"); beep(140,.2,"square"); gangCd=Date.now()+9e4;
+  if(typeof IDLE!=="undefined"&&IDLE){ const wpn=String(save.look&&save.look.hand||"").startsWith("wpn_"); if(wpn){ const c0=save.credits; fightBot(n,false); idleLog(save.credits>=c0?`⚔ ${n.name} tried to mug your runner. They fought back and won!`:`⚔ ${n.name} tried to mug your runner. They fought back but lost ₵${Math.round(c0-save.credits)}.`); } else { me.x=clamp(me.x+(me.x<n.x?-140:140),30,SCENES[me.scene].w-30); n.mug=0; idleLog(`🏃 ${n.name} tried to mug your runner. They ran for it.`); } return; }
   card(`⚙ ${n.name} of the Rust Jaws blocks your path: "Hand over ₵${amt}!"`,[["Pay ₵"+amt,()=>{ const a=Math.min(amt,Math.floor(save.credits)); save.credits-=a; persist(); toast(`You paid the Rust Jaws ₵${a}.`,"#ff7a5a"); n.mug=0; },false],["Fight back",()=>{ fightBot(n,false); },true],["Run!",()=>{ me.x=clamp(me.x+(me.x<n.x?-140:140),30,SCENES[me.scene].w-30); n.mug=0; toast("You slipped away."); },false]],2e4);
   setTimeout(()=>{ n.mug=0; },2e4); }
 function hackATM(sc){ const k="atm_"+sc; if(rcd(k)) return toast(`This ATM's security reset. Try again in ${cdTxt(rcd(k))}.`);
@@ -3849,11 +3858,106 @@ function render(){
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
-  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); }catch(e){}
+  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); }catch(e){}
   // rain (street)
   if(me.scene==="street"){ ctx.strokeStyle="rgba(170,190,255,.25)"; ctx.beginPath(); for(const r of rain){ r.y+=r.v*dt; if(r.y>1) r.y-=1; const x=camX+((r.x*VW+T*30)%VW), y=r.y*H; ctx.moveTo(x,y); ctx.lineTo(x-2,y+9); } ctx.stroke(); }
   ctx.setTransform(1,0,0,1,0,0);
 }
+/* ============================================================ IDLE MODE: send your runner to do things on their own, live on screen */
+const IDLE_TASKS=[
+  {k:"credits",ic:"💰",n:"Make credits",d:"Works shifts at The Glitch, Byte Bowl and Cyber Buys, switching every few minutes.",earn:"Credits · RP for members · NRC"},
+  {k:"parts",ic:"🔧",n:"Find parts",d:"Digs every scrap pile in Scrap Alley as soon as it's ready, and keeps your companion out on expeditions.",earn:"Parts · chips · floppies"},
+  {k:"party",ic:"🪩",n:"Party at the clubs",d:"Dances at The Third Eye, hangs out at The Glitch and grabs a booth at the Gamers Den.",earn:"Just for fun"},
+  {k:"rp",ic:"💠",n:"Earn RP",d:"Works the Harvest Assembly line. Club members earn RP from every credit of work.",earn:"RP for members · credits · NRC"},
+  {k:"nrc",ic:"🔷",n:"Earn NRC",d:"Works the Gamers Den crew. Work pay turns into NRC.",earn:"NRC · credits · RP for members"},
+  {k:"all",ic:"🔄",n:"Do a bit of everything",d:"Rotates through every job, digging for parts and partying.",earn:"A bit of everything"},
+];
+const IDLE_JOBTASKS=[
+  {k:"bar",ic:"🍸",n:"Bartend at The Glitch",d:"Serves drinks and food at the bar."},
+  {k:"bowl",ic:"🍜",n:"Cook at Byte Bowl",d:"Works the noodle stove at Byte Market."},
+  {k:"cb",ic:"🛒",n:"Sell at Cyber Buys",d:"Helps customers and rings up sales."},
+  {k:"club",ic:"💊",n:"Work The Third Eye bar",d:"Serves club items at The Third Eye."},
+  {k:"den",ic:"🕹",n:"Den Crew",d:"Serves the booths at the Gamers Den."},
+  {k:"asm",ic:"🏭",n:"Harvest Assembly line",d:"Builds orders on the assembly line."},
+];
+const idleR=(a,b)=>a+Math.random()*(b-a), idlePick=a=>a[(Math.random()*a.length)|0];
+const IDLE_JOBS={
+  bar:{scene:"bar",n:"The Glitch",spots:[380,635],every:[14,20],tip:[3,12],src:"The Glitch shift",pay:()=>{ const it=idlePick([...DRINKS,...FOODS]); return {v:it.v,it:it.id,what:`Served ${it.n}`}; }},
+  bowl:{scene:"byte",n:"Byte Bowl Noodles",spots:[1560,1640],every:[14,20],tip:[3,10],src:"Byte Bowl shift",pay:()=>{ const it=idlePick(BB_FOODS); return {v:it.v,it:it.id,what:`Cooked ${it.n}`}; }},
+  cb:{scene:"cyberbuys",n:"Cyber Buys",spots:[330,590,1740,2000,1375],every:[16,24],tip:[3,13],src:"Cyber Buys shift",pay:()=>{ const it=idlePick(CB_ITEMS); return {v:Math.max(1,Math.round(it.v*.15)),it:it.id,what:`Sold ${it.n}`}; }},
+  club:{scene:"club",n:"The Third Eye",spots:[300,450],every:[16,22],tip:[4,14],src:"The Third Eye shift",pay:()=>{ const it=idlePick(CAT.filter(i=>i.t==="trip"&&i.v>0&&i.v<400)); return {v:Math.round(it.v*1.3),it:it.id,what:`Served ${it.n}`}; }},
+  den:{scene:"den",n:"the Gamers Den",spots:[420,900,1100,1300,1500],every:[14,20],tip:[3,12],src:"Gamers Den shift",pay:()=>{ const it=idlePick(DEN_MENU); return {v:it.v,it:it.id,what:`Served ${it.n} to a booth`}; }},
+  asm:{scene:"assembly",n:"Harvest Assembly",get spots(){ return [0,2,4,6,8].map(i=>ASM_X(i)); },every:[18,26],tip:[2,8],src:"Harvest Assembly wages",pay:()=>{ const o=idlePick(ASM_ORDERS); return {v:o.pay,it:BY[o.icon]?o.icon:null,what:`Built ${o.n}`}; }},
+};
+const IDLE_SCRAP=[2980,3140,3300,3460,3600];
+let IDLE=null, idleDockEl=null;
+function idleTask(k){ return IDLE_TASKS.find(t=>t.k===k)||IDLE_JOBTASKS.find(t=>t.k===k); }
+function idleNrc(){ try{ return nrcBal()+(+nrcPend||0); }catch(e){ return 0; } }
+function idleStart(k){ const T0=idleTask(k); if(!T0) return; closePanel(); if(me.dead||(typeof jailed==="function"&&jailed())){ toast("Your runner can't go idle right now."); return; } if(me.scene==="ascend"||me.scene==="void"){ toast("Leave this place first, then go idle."); return; }
+  me.seat=null; me.homeSit=null; me.dancing=false; target=null; IDLE={k,t0:Date.now(),cur:null,phase:"go",spot:null,next:0,wage:0,rot:0,rotAt:0,log:[],fl:[],act:"Getting ready…",st:{cr:0,parts:0,chips:0,rp0:+save.rp||0,nrc0:idleNrc()}};
+  idleLog(`${T0.ic} ${T0.n}`); beep(660,.06); setTimeout(()=>beep(990,.08),80); idleDockUpd(true); try{ stTrack("act","Idle: "+T0.n); }catch(e){} }
+function idleStop(why){ if(!IDLE) return; const S=idleStats(); IDLE=null; target=null; me.dancing=false; if(idleDockEl) idleDockEl.hidden=true; toast(`${why?why+" ":""}Idle stopped · ${S}`,"#43f0a4"); }
+function idleStats(){ if(!IDLE) return ""; const s=IDLE.st, rp=Math.max(0,(+save.rp||0)-s.rp0), nrcG=Math.max(0,idleNrc()-s.nrc0), m=Math.floor((Date.now()-IDLE.t0)/60e3), sec=Math.floor((Date.now()-IDLE.t0)/1000)%60;
+  return [`₵+${s.cr}`,rp?`RP +${rp}`:"",nrcG?`NRC +${nrcG}`:"",s.parts?`🔧 ${s.parts}`:"",s.chips?`chips +${s.chips}`:"",`⏱ ${m}:${String(sec).padStart(2,"0")}`].filter(Boolean).join(" · "); }
+function idleLog(t){ if(!IDLE) return; IDLE.log.unshift(t); IDLE.log.length=Math.min(IDLE.log.length,30); idleDockUpd(); }
+function idleAct(t){ if(IDLE&&IDLE.act!==t){ IDLE.act=t; idleDockUpd(); } }
+function idleFloat(t,col){ if(IDLE){ IDLE.fl.push({t,col:col||"#ffd36a",t0:performance.now()}); if(IDLE.fl.length>6) IDLE.fl.shift(); } }
+function idleGoTo(scene,x){ if(me.scene!==scene){ if(IDLE.travelAt&&Date.now()-IDLE.travelAt<2500) return false; IDLE.travelAt=Date.now(); idleLog(`🚇 Heads to ${sceneName(scene)}`); idleAct(`Traveling to ${sceneName(scene)}`); go(scene,clamp(x-200,SCENES[scene].spawn,SCENES[scene].w-100)); return false; }
+  if(Math.abs(me.x-x)>10){ if(!target||Math.abs(target.x-x)>2) target={x,y:me.y}; return false; } target=null; return true; }
+function idleSub(){ const k=IDLE.k, now=Date.now(); const rot=(list,mins)=>{ if(!IDLE.rotAt){ IDLE.rot=0; IDLE.rotAt=now+mins*60e3; } else if(now>IDLE.rotAt){ IDLE.rot=(IDLE.rot+1)%list.length; IDLE.rotAt=now+mins*60e3; } return list[IDLE.rot]; };
+  if(k==="credits") return rot(["bar","bowl","cb"],4); if(k==="rp") return "asm"; if(k==="nrc") return "den"; if(k==="parts") return "dig"; if(k==="party") return "party"; if(k==="all") return rot(["bar","dig","asm","party","bowl","den","cb","club"],3); return k; }
+function idleTick(){ if(!IDLE) return; if(!save||me.dead){ idleStop("Your runner got knocked out."); return; } if(typeof jailed==="function"&&jailed()){ idleStop("Your runner got locked up."); return; }
+  if(keys.a||keys.d||keys.w||keys.s||keys.arrowleft||keys.arrowright||keys.arrowup||keys.arrowdown||keys.padleft||keys.padright||keys.padup||keys.paddown){ idleStop("You took control."); return; }
+  const busy=!$("#overlay").hidden||$("#g1211")||$("#gccj")||$("#gdsim")||$("#gmydex")||document.visibilityState!=="visible"||($("#title")&&!$("#title").hidden);
+  if(busy){ if(!IDLE.paused){ IDLE.paused=true; target=null; idleDockUpd(); } IDLE.pauseMs=(IDLE.pauseMs||0)+250; if(IDLE.next) IDLE.next+=250; if(IDLE.wage) IDLE.wage+=250; return; } if(IDLE.paused){ IDLE.paused=false; idleDockUpd(); }
+  const now=Date.now(), sub=idleSub(); if(sub!==IDLE.cur){ IDLE.cur=sub; IDLE.phase="go"; IDLE.spot=null; IDLE.next=0; IDLE.digStart=0; me.dancing=false; me.homeSit=null; if(IDLE.log.length) idleLog(`↻ Switching to ${sub==="dig"?"digging for parts":sub==="party"?"partying":IDLE_JOBS[sub].n}`); }
+  if(sub==="dig") return idleDig(now); if(sub==="party") return idleParty(now); return idleWork(sub,now); }
+function idleWork(j,now){ const J=IDLE_JOBS[j];
+  if(IDLE.phase==="go"){ if(IDLE.spot==null) IDLE.spot=idlePick(J.spots); if(!idleGoTo(J.scene,IDLE.spot)){ if(me.scene===J.scene) idleAct(`Walking to work at ${J.n}`); return; } IDLE.phase="work"; if(!IDLE.next) IDLE.next=now+idleR(3,5)*1000; if(!IDLE.wage) IDLE.wage=now+60e3; idleAct(`Working at ${J.n}`); return; }
+  if(now>=IDLE.next){ const o=J.pay(), base=Math.max(1,Math.round(o.v)), tip=Math.round(idleR(J.tip[0],J.tip[1])*tipMult()); save.credits+=base+tip; earnRP(base+tip,J.src); IDLE.st.cr+=base+tip; persist(); hud();
+    me.emote={e:"use",t:T,it:o.it||undefined}; idleFloat(`+₵${base+tip}`); idleLog(`${o.what}: +₵${base}${tip?` +₵${tip} tip`:""}`); beep(1500,.05); setTimeout(()=>beep(1900,.05),70);
+    IDLE.next=now+idleR(J.every[0],J.every[1])*1000; if(J.spots.length>1&&Math.random()<.45){ IDLE.spot=idlePick(J.spots); IDLE.phase="go"; } }
+  if(IDLE.wage&&now>=IDLE.wage){ IDLE.wage=now+60e3; save.credits+=3; earnRP(3,J.src); IDLE.st.cr+=3; idleLog("Shift wage: +₵3"); persist(); hud(); } }
+function idleDig(now){
+  const pn=curPet(); if(pn&&now>(IDLE.roamTry||0)){ IDLE.roamTry=now+20e3; const r=save.petRoam; if(!(r&&Date.now()<r.until)&&!petFetchBusy()){ const z=ROAM_ZONES[1]||ROAM_ZONES[0]; startRoam(z.k); closePanel(); idleLog(`🧭 Sent ${pn} on an expedition to the ${z.n}`); } }
+  const ready=IDLE_SCRAP.map((x,i)=>i).filter(i=>scrapReady(i));
+  if(!ready.length){ const soon=Math.ceil(Math.min(...IDLE_SCRAP.map((x,i)=>scrapLeft(i)))); if(idleGoTo("street",3290)){ idleAct(`Waiting for the scrap piles to refill (${soon}s)`); if(now>(IDLE.waitEmote||0)){ IDLE.waitEmote=now+9000; me.emote={e:idlePick(["wave","pose","dance"]),t:T}; } } else if(me.scene==="street") idleAct("Walking to Scrap Alley"); return; }
+  const i=ready.reduce((a,b)=>Math.abs(IDLE_SCRAP[b]-me.x)<Math.abs(IDLE_SCRAP[a]-me.x)?b:a), x=IDLE_SCRAP[i];
+  if(!idleGoTo("street",x)){ if(me.scene==="street") idleAct("Walking to a scrap pile"); IDLE.digStart=0; return; }
+  if(!IDLE.digStart){ IDLE.digStart=now; me.emote={e:"use",t:T}; idleAct("Digging through the scrap pile…"); beep(260,.05,"triangle"); return; } if(now-IDLE.digStart<1600) return; IDLE.digStart=0;
+  const cnt=()=>invList().reduce((a,[,n])=>a+n,0), n0=cnt(), c0=save.chips; dig(i); const got=Math.max(0,cnt()-n0), ch=Math.max(0,save.chips-c0); IDLE.st.parts+=got; IDLE.st.chips+=ch; idleFloat(`+${got} part${got===1?"":"s"}`,"#43f0a4"); idleLog(`🔧 Dug up ${got} item${got===1?"":"s"} and ${ch} chips`); }
+const IDLE_PARTY=[{scene:"club",x:1590,k:"dance",n:"The Third Eye dance floor"},{scene:"club",x:1940,k:"dance",n:"The Third Eye stage"},{scene:"bar",x:900,k:"hang",n:"The Glitch"},{scene:"den",k:"booth",n:"a Gamers Den booth"}];
+function idleParty(now){ if(IDLE.phase==="go"&&IDLE.spot==null){ IDLE.spot=idlePick(IDLE_PARTY); IDLE.until=now+idleR(60,100)*1000; }
+  const P=IDLE.spot; let x=P.x; if(P.k==="booth"){ if(!P.seat){ const used=new Set((typeof denCust!=="undefined"?denCust:[]).map(c=>c.seat)); P.seat=idlePick(DEN_SEATS.filter(s=>!used.has(s.k))); } x=P.seat.x; }
+  if(IDLE.phase==="go"){ if(!idleGoTo(P.scene,x)){ if(me.scene===P.scene) idleAct(`Heading to ${P.n}`); return; } IDLE.phase="party"; IDLE.next=now+3000; idleLog(`🪩 Partying at ${P.n}`);
+    if(P.k==="dance"){ me.dancing=true; me.danceNext=0; idleAct(`Dancing at ${P.n}`); } else if(P.k==="booth"){ const h=hotspots("den").find(h=>h.x===P.seat.x); try{ h&&h.act(); }catch(e){} idleAct(`Chilling in ${P.n}`); } else idleAct(`Hanging out at ${P.n}`); return; }
+  if(now>=IDLE.next){ IDLE.next=now+idleR(5,9)*1000; const e=P.k==="dance"?idlePick(["dance","cheer","dance"]):idlePick(["cheer","wave","pose"]); if(P.k!=="dance") me.emote={e,t:T}; else if(Math.random()<.4) emote("cheer"); idleFloat(idlePick(["♪","♫","✦","🎉"]),idlePick(["#ff3fa8","#38e8ff","#ffd36a"]));
+    if(Math.random()<.35){ const tr=me.scene==="club"?TRACKS[clubTrack]:me.scene==="bar"?TRACKS[barTrack]:DEN_TRACKS[denTrack]; idleLog(P.k==="dance"?`💃 Dancing to ${tr?tr.n:"the music"}`:idlePick([`Cheered with the crowd`,`Vibing to ${tr?tr.n:"the music"}`,`Waved at the regulars`])); } }
+  if(now>IDLE.until){ me.dancing=false; me.homeSit=null; IDLE.phase="go"; IDLE.spot=null; } }
+setInterval(()=>{ try{ idleTick(); }catch(e){ console.error("idle",e); } },250);
+function drawIdle(){ if(!IDLE||!me) return; const now=performance.now(), x=me.x, top=me.y-150; ctx.save(); ctx.textAlign="center";
+  const pulse=.6+.4*Math.sin(now/300); ctx.font="700 9px Silkscreen, monospace"; const lab=IDLE.paused?"IDLE · PAUSED":"IDLE"; const w=ctx.measureText(lab).width+14; ctx.fillStyle="rgba(10,6,22,.85)"; ctx.fillRect(x-w/2,top-12,w,14); ctx.strokeStyle=`rgba(67,240,164,${pulse})`; ctx.strokeRect(x-w/2+.5,top-11.5,w-1,13); ctx.fillStyle="#43f0a4"; ctx.fillText(lab,x,top-2);
+  IDLE.fl=IDLE.fl.filter(f=>now-f.t0<1600); IDLE.fl.forEach((f,i)=>{ const u=(now-f.t0)/1600; ctx.globalAlpha=1-u; ctx.font="700 12px Silkscreen, monospace"; ctx.fillStyle=f.col; ctx.fillText(f.t,x+(i%2?14:-14),top-20-u*30); }); ctx.restore(); }
+function idlePlace(){ if(!idleDockEl) return; try{ const cv=$("#world").getBoundingClientRect(), hb=($(".hud.top")||{getBoundingClientRect:()=>({bottom:110})}).getBoundingClientRect().bottom; let top=Math.max(cv.top,hb)+8; if(goalsEl&&!goalsEl.hidden){ top=goalsEl.getBoundingClientRect().bottom+8; } idleDockEl.style.top=top+"px"; idleDockEl.style.left=(cv.left+8)+"px"; }catch(e){} }
+function idleDockUpd(force){ if(!IDLE){ if(idleDockEl) idleDockEl.hidden=true; return; }
+  if(!idleDockEl){ idleDockEl=el("div",{class:"idledock",role:"status","aria-live":"polite"}); document.body.append(idleDockEl); }
+  const now=Date.now(); if(!force&&IDLE.dockAt&&now-IDLE.dockAt<400){ clearTimeout(IDLE.dockT); IDLE.dockT=setTimeout(()=>idleDockUpd(true),420); return; } IDLE.dockAt=now;
+  const T0=idleTask(IDLE.k), d=idleDockEl; d.hidden=false; d.innerHTML=""; idlePlace(); const mob=document.body.clientWidth<700;
+  const tg=el("button",{type:"button",class:"idmin","aria-label":IDLE.min?"Expand idle box":"Shrink idle box",text:IDLE.min?"▾":"▴",onclick:()=>{ IDLE.min=!IDLE.min; idleDockUpd(true); }});
+  d.append(el("div",{class:"idh"},el("strong",{text:`🤖 IDLE · ${T0.ic} ${T0.n}`}),el("span",{style:"display:flex;gap:6px;align-items:center"},IDLE.paused?el("span",{class:"idp",text:"paused"}):el("span",{class:"idl",text:"live"}),tg)),
+    el("div",{class:"ida",text:`▸ ${IDLE.paused?"Paused while a menu is open":IDLE.act}`})); if(IDLE.min) return; d.append(
+    ...IDLE.log.slice(0,mob?2:4).map((l,i)=>el("div",{class:"idlog",style:`opacity:${1-i*.18}`,text:l})),
+    el("div",{class:"ids",text:idleStats()}),
+    el("div",{class:"row",style:"gap:6px;margin-top:4px"},el("button",{class:"btn",type:"button",text:"Change",onclick:()=>openIdle()}),el("button",{class:"btn",type:"button",text:"Log",onclick:()=>openIdleLog()}),el("button",{class:"btn hot",type:"button",text:"■ Stop",onclick:()=>idleStop("")}))); }
+setInterval(()=>{ if(IDLE&&idleDockEl&&!idleDockEl.hidden){ const s=idleDockEl.querySelector(".ids"); if(s) s.textContent=idleStats(); const show=$("#overlay").hidden&&!$("#gccj")&&!$("#g1211"); idleDockEl.style.display=show?"":"none"; idlePlace(); } },1000);
+function openIdleLog(){ if(!IDLE) return; const body=panel("Idle log",`Everything your runner did this session. ${idleStats()}`); currentView="idlelog"; const l=el("div",{class:"list"}); IDLE.log.forEach(t=>l.append(el("div",{class:"li"},el("div",{class:"grow",text:t})))); body.append(l,el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"▶ Back to watching",onclick:()=>closePanel()}),el("button",{class:"btn",type:"button",text:"■ Stop idle",onclick:()=>{ closePanel(); idleStop(""); }}))); }
+function openIdle(){ const body=panel("Idle","Send your runner off to do things on their own. Watch everything they do live on screen. Press any move key, or Stop, to take control back."); currentView="idle";
+  if(IDLE){ const T0=idleTask(IDLE.k); body.append(el("div",{class:"detail",style:"border-color:#43f0a4"},el("div",{class:"info"},el("strong",{style:"color:#43f0a4",text:`Now: ${T0.ic} ${T0.n}`}),el("span",{class:"sub",text:idleStats()}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"▶ Keep watching",onclick:()=>closePanel()}),el("button",{class:"btn",type:"button",text:"■ Stop",onclick:()=>{ closePanel(); idleStop(""); }}))))); }
+  const row=t=>el("div",{class:"li"},el("span",{style:"font-size:22px;width:30px;text-align:center",text:t.ic}),el("div",{class:"grow"},el("div",{text:t.n}),el("div",{class:"sub",text:t.d}),t.earn?el("div",{class:"sub",style:"color:#ffd36a",text:`Earns: ${t.earn}`}):""),el("button",{class:"btn hot",type:"button",text:IDLE&&IDLE.k===t.k?"Running":"Start",...(IDLE&&IDLE.k===t.k?{disabled:true}:{}),onclick:()=>idleStart(t.k)}));
+  const l=el("div",{class:"list"}); IDLE_TASKS.forEach(t=>l.append(row(t))); body.append(el("strong",{text:"What should your runner do?"}),l);
+  const l2=el("div",{class:"list"}); IDLE_JOBTASKS.forEach(t=>l2.append(row({...t,earn:"Credits · RP for members · NRC"}))); body.append(el("strong",{text:"Or work one job"}),l2);
+  const mem=myId&&typeof dccActive==="function"&&dccActive(myId); body.append(el("p",{class:"sub",text:`Idle work pays the same as working yourself, and the same daily RP and NRC limits apply. ${mem?"You're a Data Collectors Club member, so work also earns RP.":"RP only comes from work for Data Collectors Club members."} Your runner only works while the game is open on screen. Opening a menu pauses it.`})); }
+
 function nameOf(by){ if(!by) return "Runner"; if(by===myId) return myName||"Runner"; const h=homes[by]; if(h&&typeof h.name==="string"){ const n=cleanName(h.name); if(n&&!nameProblem(n)) return n; } return names[by]||"Runner"; }
 
 /* ============================================================ CHAT / EMOTES */
@@ -3882,6 +3986,7 @@ $("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrc
 /* ============================================================ HOW TO PLAY */
 const HELP=[
  {id:"start",icon:"🚀",n:"Getting started",topics:[
+  {id:"idle",icon:"🤖",n:"Idle mode",sub:"Send your runner to do things on their own",where:"Top bar → 🤖 Idle (phones: ☰ → Idle)",steps:["Open 🤖 Idle and pick a task: Make credits, Find parts, Party at the clubs, Earn RP, Earn NRC, Do a bit of everything, or one job.","Watch your runner travel, walk, work, dig and dance live on screen. The box on the right shows what they're doing, a running log and what you've earned.","Press any move key or ■ Stop to take control back."],secs:[["Pay",["Idle work pays exactly the same as working yourself, with the same daily RP and NRC limits. RP from work is for Data Collectors Club members."]],["When it runs",["Only while the game is open on screen. Opening a menu, a mini game, or switching tabs pauses it."]]]},
   {id:"music",icon:"🎵",n:"Music picker",sub:"Choose the music you hear",where:"Top bar → 🎵 Music (phones: ☰ → Music)",steps:["Open 🎵 Music.","Pick a tab: Game & anime, Companion Clash, Club & bar, or City & silence.","Press ▶ Play on any track. Only you hear your pick."],secs:[["Clubs and the Den",["The Glitch, The Third Eye and the Gamers Den play their shared jukebox. Tick “Also play my pick…” to hear your own track there instead (just for you)."]],["Goals tracker",["The goals box on the top left can be hidden with ✕. Tap 🧭 to bring it back, or open Goals and use the show/hide button."]]]},
   {id:"welcome",icon:"👋",n:"Welcome",sub:"What NEON HARVEST is, and who it's for",secs:[
     ["Adults only",["NEON HARVEST is for players 21 and older. New accounts confirm their date of birth once before playing, and real-life reward pickups need a photo ID."]],
@@ -10916,6 +11021,7 @@ $("#btnDex").addEventListener("click",()=>openMyDex());
 $("#prompt").addEventListener("click",()=>{ if(nearHot&&$("#overlay").hidden) useHot(); });
 $("#btnMenu").addEventListener("click",()=>openMobileMenu());
 $("#btnMusic").addEventListener("click",()=>{ beep(700,.05); openMusic(); });
+$("#btnIdle").addEventListener("click",()=>{ beep(700,.05); openIdle(); });
 function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sceneName(me.scene)}`); currentView="menu";
   const mk=(ic,t,fn,cls)=>el("button",{class:"btn"+(cls?" "+cls:""),type:"button",onclick:fn},el("span",{class:"ic",text:ic,"aria-hidden":"true"}),el("span",{text:t}));
   const un=typeof unreadTotal==="function"?unreadTotal():0;
@@ -10923,7 +11029,7 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
     mk("👤","Character",()=>{ tryOn=null; openWardrobe("name"); }), mk("🎒","Stash",()=>openStash()), mk("💠","Reward Points",()=>openRP()), mk("🎮","Game consoles",()=>openConsoles()),
     mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
     mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
-    mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }), mk("🎵","Music",()=>openMusic()),
+    mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }), mk("🎵","Music",()=>openMusic()), mk("🤖",IDLE?"Idle (running)":"Idle",()=>openIdle(),IDLE?"hot":""),
     mk("🚇","Fast travel",()=>openFastTravel()), mk("🐾","Companion",()=>openCompanion()), mk("📇","MyDex",()=>openMyDex()), mk("🎭","Role",()=>openRoleMenu()), mk("📜","Quests",()=>openQuestLog()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
   body.append(el("strong",{text:"Emotes"}),el("div",{class:"memotes"},...["wave","dance","cheer","pose"].map(e2=>el("button",{class:"btn",type:"button",text:e2[0].toUpperCase()+e2.slice(1),onclick:()=>{ closePanel(); emote(e2); }}))));
   const st=[]; const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) st.push("Boosts: "+bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "));
