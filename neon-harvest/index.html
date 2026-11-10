@@ -129,6 +129,9 @@ canvas.dccsym{vertical-align:-3px;margin-right:4px;display:inline-block}
 #gmydex{position:absolute;inset:0;z-index:70;background:#05030c;display:flex;justify-content:center}
 #gmydex iframe{border:0;width:100%;max-width:460px;height:100%;display:block;background:#080b1c}
 #g1211{position:absolute;inset:0;z-index:70;background:#120a24;display:flex;flex-direction:column}
+.npccard{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:32;width:min(540px,94vw);background:rgba(12,7,26,.95);border:1px solid #ff9ad5;border-radius:10px;padding:10px 12px;box-shadow:0 0 24px rgba(255,154,213,.25);font:13px 'IBM Plex Mono',monospace;color:#e9e2ff}
+.npccard .nch{display:flex;gap:10px;align-items:center}.npccard .nch strong{color:#ff9ad5}.npccard .nmx{background:none;border:1px solid #3c2367;color:#cfc6ff;border-radius:6px;width:30px;height:30px;cursor:pointer;flex:none}
+.npccard .ncl{margin:8px 0;line-height:1.45;font-size:14px}.npccard .nco{display:flex;flex-wrap:wrap;gap:6px}.npccard .nco .btn{min-height:36px;font-size:12px}
 .idledock{position:fixed;left:max(8px,env(safe-area-inset-left,0px));top:170px;z-index:31;width:min(330px,76vw);background:rgba(10,6,22,.9);border:1px solid #43f0a4;border-radius:8px;padding:8px 10px;font:12px 'IBM Plex Mono',monospace;color:#e9e2ff;box-shadow:0 0 18px rgba(67,240,164,.22)}
 .idledock .idh{display:flex;justify-content:space-between;gap:8px;align-items:center}.idledock .idh strong{color:#43f0a4;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .idledock .idl{color:#ff3fa8;font-size:10px;letter-spacing:.1em;text-transform:uppercase;animation:idlb 1.2s ease-in-out infinite}.idledock .idp{color:#ffb84a;font-size:10px;text-transform:uppercase}
@@ -2675,13 +2678,14 @@ function lifeTick(dt){ const now=Date.now(); if(DB&&!elWatched) try{ elWatch(); 
     if(R.vx){ R.vxT=R.vxT||now; if(now-R.vxT>2500){ R.vx=0; R.vxT=0; } else continue; }
     if(!R.leaving&&a.end-now<20e3&&a.a!=="vote"||(!R.leaving&&a.a==="vote"&&a.end-now<15e3)){ R.leaving=true; R.sit=false; R.goal={x:lifeEntryX(a.sc),y:R.y}; }
     if((R.fleeUntil||0)>T){ R.sit=false; R.walking=true; const sp=95*dt; R.x=clamp(R.x+R.fleeDir*sp,R.min,R.max); R.dir=R.fleeDir; R.phase+=dt*10; continue; }
+    if((R.talkUntil||0)>T&&!R.goal){ R.walking=false; continue; }
     if(R.goal){ const m=moodOf(R).k, sp=(m==="sad"||m==="tired"?30:m==="excited"||m==="happy"?50:42)*dt, dx=R.goal.x-R.x, dy=R.goal.y-R.y, d=Math.hypot(dx,dy);
       if(d<=sp+1){ R.x=R.goal.x; R.y=R.goal.y; R.goal=null; R.walking=false; lifeArrive(R); } else { R.x+=dx/d*sp; R.y+=dy/d*sp*.7; R.dir=dx>=0?1:-1; R.walking=true; R.phase+=dt*6; } continue; }
     R.walking=false;
     if(a.mode==="walk"){ if(R.pause>0) R.pause-=dt; else { const rng=a.x||[300,R.max-240]; R.goal={x:rng[0]+Math.random()*(rng[1]-rng[0]),y:LANE.top+6+Math.random()*(LANE.bot-LANE.top-12)}; } }
     if(a.mode==="seat"&&R.spot&&R.spot.seat&&me.homeSit&&me.homeSit.key===R.spot.seat){ R.sit=false; R.spot=lifeSpot(R,a); R.goal={x:R.spot.x,y:R.spot.y}; } // you took their seat
     if(a.mode!=="walk"&&a.mode!=="seat"&&!R.sit) R.dir=Math.abs(me.x-R.x)<160?(me.x>=R.x?1:-1):R.dir; }
-  lifeAware(dt); }
+  lifeAware(dt); try{ npcMindTick(dt); }catch(e){} }
 
 /* ---- feelings ---- */
 function relOf(id){ return +((save.rel||{})[id]||0); }
@@ -2727,6 +2731,7 @@ function lifeGreet(n){ const r=relOf(npcKey(n)), me1=myName||"runner", m=moodOf(
   try{ if(mayorId()===myId) return `Mayor ${me1}! ${lifeApproves(n)?"Love what you're doing.":"We need to talk about this city."}`; }catch(e){}
   if(roleIs("medic")&&n.hurt) return "Doc! Over here — I'm hurt!";
   if(r>=5&&n.life&&!rcd("gift_"+n.id)&&Math.random()<.5){ setCd("gift_"+n.id,20*36e5); const g=15+Math.floor(Math.random()*26); save.credits+=g; persist(); hud(); toast(`${n.name} slipped you ₵${g}: "Found this, thought of you."`,"#ff9ad5"); return `${me1}! Here, this is for you.`; }
+  if(Math.random()<.4){ const nl=lifeNotice(n); if(nl) return nl; }
   if(r>=3) return [`Hey ${me1}! Good to see you.`,`${me1}! How've you been?`,`Look who it is — ${me1}!`][(Math.random()*3)|0];
   if(roleIs("police")) return "Evening, officer.";
   if(save.look&&save.look.pet&&Math.random()<.3) return "Aww, your companion is adorable!";
@@ -2755,6 +2760,130 @@ function lifeAware(dt){ const L=cityGen(me.scene), W=(npcs[me.scene]||[]), all=L
       const p=[...peers.values()].find(q=>q.s===me.scene&&q.by&&Math.abs(q.dx-n.x)<70); if(p&&Math.random()<.4){ npcSay(n,`Hey ${nameOf(p.by)}!`); lifeG=T+4; break; }
       const s=thLive(); if(s&&me.scene!=="streamdome"&&Date.now()-lifeGossipT>9e4){ lifeGossipT=Date.now(); npcSay(n,`Did you hear? “${s.title.slice(0,24)}” is playing at the Stream Dome!`); lifeG=T+4; break; }
       npcSay(n,lifeLine(n)); lifeG=T+3; break; } } }
+
+/* ============================================================ NPC MINDS: awareness, stop-you-to-chat, deep questions, real-life questions, NPC friendships */
+// Questions NPCs ask you. Replies are fixed choices: nothing you pick is personal or identifying, and it stays in your save.
+// mine: what the NPC says about themself (upbeat · middle · gloomy personality)
+const NPC_Q=[
+ {id:"real_time",k:"outside",q:"Can I ask you something weird? Out there, wherever you really are, is it day or night right now?",o:[["Daytime","Daytime! I always picture runners showing up with the sun on their face."],["Night","A fellow night owl. The city feels different with you in it at night."],["Somewhere in between","Golden hour or blue hour. The best kind of in-between."]],mine:["Here it's always a little bit night. I like it.","The neon never sleeps, so I barely do either.","Sometimes I forget what real sunlight even looks like."]},
+ {id:"real_weather",k:"outside",q:"What's the weather like in your world right now?",o:[["Sunny","Lucky! Bring some of that through the screen next time."],["Rainy","Rain out there too? We're twins today."],["Cold","Wrap up! I'll pretend this jacket is for you."],["Can't tell, I'm inside","Inside is a vibe. Cozy is underrated."]],mine:["It's raining here. It's always raining in Sector 9.","I love the rain. Makes the neon look like it's melting.","The rain gets in my bones some nights."]},
+ {id:"real_drink",k:"outside",q:"Out there, are you a coffee person or a tea person?",o:[["Coffee","A coffee soul. I respect that."],["Tea","Tea people are the calmest people I know."],["Neither, water","Hydrated legend."],["Energy drinks","Ha! Living on the edge."]],mine:["Coffee. Three cups minimum.","Whatever's warm and nearby.","I drink whatever keeps me awake through the shift."]},
+ {id:"real_food",k:"outside",q:"What's the best kind of food out in your world?",o:[["Homemade","Nothing beats somebody cooking just for you."],["Street food","Ahh, a person of taste. Byte Bowl would love you."],["Pizza","Pizza is a universal language."],["Still looking","The search is half the fun."]],mine:["Gran Ko's noodles. Don't tell her I said that.","Anything I don't have to cook myself.","I forget to eat, honestly."]},
+ {id:"real_music",k:"outside",q:"What kind of music do you listen to when you're not here?",o:[["Hip-hop","Respect. The beat runs this city too."],["Rock","Loud and real. I like you more already."],["Pop","Hooks that stick for days. Nothing wrong with that."],["A bit of everything","No labels. The best kind of listener."]],mine:["Whatever Nova's spinning tonight.","Old synth tapes I find at Neon Row.","Quiet. I like quiet."]},
+ {id:"real_pet",k:"outside",q:"Do you have a pet out there? A real one, not a companion?",o:[["Yes, a dog","A dog! The best friends there are."],["Yes, a cat","A cat person. Mysterious. Fitting."],["Something else","Ooh, something unusual? I'm jealous."],["No, not right now","Your companion here will have to do. They love you, you know."]],mine:["I feed the street cats behind the clinic.","I had a goldfish once. Long story.","Pets need time. I don't have much."]},
+ {id:"real_games",k:"outside",q:"Do you play other games out there, or is Neon Harvest the only one?",o:[["Lots of others","A wanderer! Tell the other worlds I said hi."],["Mostly this one","Aww. We're glad you picked us."],["Just started gaming","Welcome! You picked a good first city."]],mine:["I've heard there are worlds with dragons. Wild.","I'd play chess forever if they let me.","Games? I barely get a day off."]},
+ {id:"real_place",k:"outside",q:"Do you live somewhere big and loud, or small and quiet? No details, I'm just curious.",o:[["Big city","So you're used to all this noise."],["Small town","That sounds peaceful. I'd visit if I could."],["Somewhere in between","Best of both."]],mine:["I've only ever known Sector 9.","I want to see a forest someday.","The city's all I've got."]},
+ {id:"real_day",k:"outside",q:"How's your day going out there, really?",o:[["Pretty good","Love that for you. Let's keep it that way."],["Busy","Then I'm glad you took a breather here."],["Not great","I'm sorry. Thanks for telling me. Take it easy on yourself today, okay? And if it's heavy, talk to someone you trust out there."],["Just woke up","Good morning, sleepyhead!"]],mine:["Mine's been long but okay.","Better now that you showed up.","Rough one, honestly. But I'm still here."]},
+ {id:"deep_dream",k:"deep",q:"Can I ask you a deep one? What's a dream you've never told anyone?",o:[["To build something of my own","Then build it. I'll be your first customer."],["To travel everywhere","Take me with you. In your pocket. Somehow."],["To help people","That's the best dream there is."],["I'm still figuring it out","That's allowed. Dreams show up when they're ready."]],mine:["I want to open my own place one day.","Honestly? I just want to sleep eight hours.","I stopped dreaming a while ago. Maybe I should start again."]},
+ {id:"deep_happy",k:"deep",q:"Are you happy? Like, actually?",o:[["Yes, mostly","That makes me happy too."],["Some days","Some days is still something. Hold on to those."],["Not really, lately","I'm really glad you said it. You don't have to carry it alone. Talk to someone you trust out there, and you can always come hang out here."],["What's happy anyway?","Ha. Philosopher. Maybe it's just moments like this one."]],mine:["Most days. The neon helps.","I'm getting there.","Not lately. But talking helps."]},
+ {id:"deep_change",k:"deep",q:"Do you think people can really change?",o:[["Yes, always","I hope you're right. I'm trying to."],["Only if they want to","That's the key, isn't it?"],["Not really","Maybe. But I'd like to prove you wrong."]],mine:["I've seen it happen. Ruiz used to be terrifying.","People change when they're ready.","I don't know. I keep making the same mistakes."]},
+ {id:"deep_home",k:"deep",q:"What does home mean to you?",o:[["A place","Somewhere you can drop your bag and breathe."],["People","Same. A home is just your people in a room."],["A feeling","The best answer. You can't lose a feeling."],["I'm still looking","You'll find it. Maybe a little piece is here."]],mine:["My little apartment above the noodle shop.","Wherever my friends are.","I haven't figured that out yet."]},
+ {id:"deep_younger",k:"deep",q:"If you could tell your younger self one thing, what would it be?",o:[["It gets better","I needed to hear that too."],["Don't be so scared","Brave advice. I'm writing that down."],["Take more risks","Okay. One risk today. Deal?"],["Be kinder to yourself","...Yeah. Me too."]],mine:["Save your credits.","Call your family more.","Don't trust everyone who smiles at you."]},
+ {id:"deep_fear",k:"deep",q:"What scares you more: being forgotten, or being really known?",o:[["Being forgotten","I won't forget you. Promise."],["Being known","Then I'll go slow. You can let people in a little at a time."],["Neither","Fearless! Teach me."]],mine:["Being forgotten. That's why I talk so much.","Being known, I think.","Both, honestly."]},
+ {id:"deep_strong",k:"deep",q:"What keeps you going on the hard days?",o:[["The people I love","They're lucky to have you."],["Music","Same. A good song is a lifeline."],["Stubbornness","Ha! Stubborn is underrated."],["Games like this one","Then I'm glad we're here for you."]],mine:["My friends. And coffee.","Knowing tomorrow's a new shift.","Some days, nothing. Some days, a smile from a stranger."]},
+ {id:"deep_real",k:"deep",q:"Do you ever wonder if we're the real ones, and you're the dream?",o:[["All the time","Okay, good, it's not just me."],["That's creepy","Sorry! I think about stuff when it rains."],["Maybe we're both real","I like that one best."]],mine:["Sometimes I see runners stare at something none of us can see.","I try not to think about it.","I think about it every night."]},
+ {id:"deep_proud",k:"deep",q:"What's something you're proud of that nobody notices?",o:[["Getting through tough times","That's the biggest thing anyone can do."],["Being a good friend","The world needs more of those."],["Learning something new","Keep going. Growth looks good on you."],["Showing up every day","Showing up is half of everything."]],mine:["I never once burned the coffee. Not once.","I helped a lost kid get home last week.","Still standing. That counts."]},
+ {id:"deep_world",k:"deep",q:"If you could change one thing about your world out there, what would it be?",o:[["More kindness","Yeah. Kindness is free and still somehow rare."],["Less stress","Everyone needs a break."],["Fairer prices","Ha! Same here. Have you seen rent in Sector 9?"],["Nothing, it's okay","A content soul. Rare and beautiful."]],mine:["Fewer Rust Jaws, more street cats.","Shorter shifts.","Everything, some nights."]},
+ {id:"fun_power",k:"fun",q:"Quick question: if you had one superpower, which one?",o:[["Flying","You'd be the fastest courier in the sector."],["Invisibility","Sneaky. I'll keep an eye on my wallet."],["Reading minds","Oh no. Please don't read mine."],["Unlimited credits","Practical. I respect it."]],mine:["Teleporting to work. Every morning.","Talking to cats.","Never needing sleep."]},
+ {id:"fun_snack",k:"fun",q:"Okay, important question. Best late-night snack?",o:[["Noodles","Byte Bowl approves."],["Something sweet","A sweet tooth! Candy shop on Neon Row, trust me."],["Chips","Crunchy. Classic."],["I skip snacks","Discipline. I could never."]],mine:["Packet Bao. Every time.","Leftover anything.","Coffee counts as a snack, right?"]},
+];
+// Questions you can ask NPCs (they answer in character)
+const NPC_ASK=[
+ {q:"What's on your mind lately?",a:n=>[`Honestly? ${moodOf(n).why}.`,`I keep thinking about ${n.likes&&n.likes[0]?LIFE_ACT[n.likes[0]]?LIFE_ACT[n.likes[0]].l:"the weekend":"the weekend"}. It's the only thing that resets me.`,n.bio]},
+ {q:"What do you love most about this city?",a:n=>["The rain on the neon. Every single night.","The people. Even the loud ones.",`Being ${LIFE_JOB[n.job]?LIFE_JOB[n.job].n.toLowerCase():"here"}. Somebody's got to keep it running.`]},
+ {q:"Who's your closest friend here?",a:n=>{ const f=npcFriends(n).filter(x=>x.lv>=2); return f.length?[`${f[0].R.name.split(" ")[0]}. We've been through a lot. ${f[0].lv>=3?"I'd do anything for them.":"They get me."}`]:["I'm still figuring out who my people are.","You, maybe? Don't let it go to your head."]; }},
+ {q:"What do you think happens to the city when we log off?",a:n=>["I think we keep living. The coffee doesn't make itself.","It goes quiet. Too quiet. I don't like it.","I sleep. I hope I dream about you all."]},
+ {q:"What's the bravest thing you've ever done?",a:n=>["Told my boss no. Once.","Walked through Scrap Alley alone at night.","Stayed when it would've been easier to leave."]},
+ {q:"What would make today a good day for you?",a:n=>[`A little ${(n.words&&n.words[0])||"peace"}. That's all I want.`,"A friend stopping by. Like this!","A shift that ends on time."]},
+ {q:"Do you ever get lonely?",a:n=>["Sometimes. Then someone like you says hi.","In a city this big? Weirdly, yes.","Less than I used to. I'm working on it."]},
+ {q:"What are you most grateful for?",a:n=>["My friends.","Second chances.","Mornings when the rain stops for a minute."]},
+];
+const NPC_MEMS=["danced till sunrise at the Third Eye","got caught in the big rainstorm on Neon Row","watched three movies in a row at the Stream Dome","lost a chess game to Rhea in nine moves","tried every noodle at Byte Bowl","fixed a broken jukebox with a spoon","sang karaoke at the Glitch, badly","stayed up all night talking on the roof"];
+const NPC_LVN=["Strangers","Acquaintances","Friends","Close friends"];
+function npcPairKey(a,b){ return [a.id,b.id].sort().join("~"); }
+function npcBond(a,b){ const v=+((save.npcBond||{})[npcPairKey(a,b)]||0); return a.bestie===b.ix?Math.max(10,v):v; }
+function npcBondLv(v){ return v>=8?3:v>=3?2:v>=1?1:0; }
+function npcBondAdd(a,b,d){ save.npcBond=save.npcBond||{}; const k=npcPairKey(a,b), before=npcBondLv(npcBond(a,b)); save.npcBond[k]=Math.min(30,(+save.npcBond[k]||0)+d); const after=npcBondLv(npcBond(a,b)); if(after>before&&after>=2){ chatLine(null,`💞 ${a.name.split(" ")[0]} and ${b.name.split(" ")[0]} are ${after===3?"close friends":"friends"} now.`,"sys"); } }
+function npcFriends(n){ if(!n.life) return []; return LIFE_R.filter(o=>o!==n).map(R=>({R,v:npcBond(n,R),lv:npcBondLv(npcBond(n,R))})).filter(x=>x.lv>=1).sort((a,b)=>b.v-a.v); }
+function npcMem(){ return save.npcMem=save.npcMem&&typeof save.npcMem==="object"?save.npcMem:{}; }
+function npcTold(n){ save.npcTold=save.npcTold||{}; const k=npcKey(n); return save.npcTold[k]=Array.isArray(save.npcTold[k])?save.npcTold[k]:[]; }
+function npcTone(n){ const c=n.cheer!=null?n.cheer:.1; return c>.2?0:c>-.05?1:2; }
+// --- awareness: things NPCs notice about you
+function lifeNotice(n){ const nm=myName||"runner", L=[]; const h=new Date().getHours();
+  if(h>=0&&h<4) L.push(`It's past ${h===0?"midnight":h+" AM"} where you are, isn't it? Get some sleep soon, ${nm}.`,"Burning the midnight oil out there too?");
+  else if(h>=5&&h<9) L.push("Early start in your world today?","Morning already out there? Mornings are rough.");
+  try{ if(myTrip&&myTrip.until>Date.now()) L.push(`Whoa, ${nm}. ${myTrip.name||"Whatever that is"}, huh? You're practically glowing.`,"You look... extra shiny right now."); }catch(e){}
+  try{ const hd=String(save.look&&save.look.hand||""); if(hd.startsWith("wpn_")) L.push("Careful where you swing that thing.","Expecting trouble? You're carrying."); else if(hd.startsWith("con_")) L.push("What are you playing? Is it good?"); }catch(e){}
+  try{ if(typeof cjTeam==="function"&&save.ccj&&save.ccj.cls&&cjTeam().length>1) L.push(`Your whole crew's with you today! ${cjTeam().join(", ")}. Cute.`); if(save.ccj&&+save.ccj.boss>=1) L.push(`Heard you've got ${save.ccj.boss} shard${save.ccj.boss>1?"s":""} of the Neon Crown. Kids are talking about it.`); }catch(e){}
+  try{ if(typeof IDLE!=="undefined"&&IDLE) L.push("You're on autopilot again, huh? Working hard or hardly working?"); }catch(e){}
+  if(save.credits>20000) L.push("Big spender walking by! Don't forget us little people."); else if(save.credits<20) L.push("Running low on credits? The Glitch is always hiring.");
+  try{ if(save.streak&&save.streak.n>=5) L.push(`${save.streak.n} days in a row? You basically live here now.`); }catch(e){}
+  const M=npcMem(), told=npcTold(n);
+  if(told.length&&Math.random()<.6){ const id=told[(Math.random()*told.length)|0], Q=NPC_Q.find(q=>q.id===id), pick=M[id]; if(Q&&pick!=null&&Q.o[pick]){ const ans=Q.o[pick][0];
+    L.push(id==="real_drink"?`Still a ${ans.toLowerCase()} person out there?`:id==="real_pet"&&pick<3?"How's your pet doing out there?":id==="deep_dream"?`Still chasing that dream? "${ans}." I think about it.`:id==="real_day"&&pick===2?"Hey. Is today a little better than last time?":`I remember you told me: "${ans}". Still true?`); } }
+  return L.length?L[(Math.random()*L.length)|0]:null; }
+// --- stop-and-chat card
+let npcCard=null, npcCardEl=null;
+function npcSnoozed(){ return (+save.npcSnooze||0)>Date.now(); }
+function npcCanStop(){ return !!save&&$("#overlay").hidden&&!npcCard&&!($("#title")&&!$("#title").hidden)&&!$("#gccj")&&!$("#g1211")&&!$("#gdsim")&&!$("#gmydex")&&!(typeof IDLE!=="undefined"&&IDLE)&&!me.dead&&!(typeof jailed==="function"&&jailed())&&!heatStars()&&me.scene!=="void"&&me.scene!=="ascend"&&document.visibilityState==="visible"; }
+function npcStartChat(n,mode){ if(npcCard) npcCloseCard(); const M=npcMem(); let Q=null;
+  if(mode!=="ask"){ const unasked=NPC_Q.filter(q=>M[q.id]==null), pool=unasked.length?unasked:NPC_Q; const want=Math.random()<.5?"deep":Math.random()<.6?"outside":"fun"; const P=pool.filter(q=>q.k===want); Q=(P.length?P:pool)[(Math.random()*(P.length||pool.length))|0]; }
+  npcCard={n,Q,mode:mode||"q",step:0,line:"",x0:me.x,sc:me.scene}; n.talkUntil=T+60; n.dir=me.x>=n.x?1:-1; me.dir=n.x>=me.x?1:-1;
+  const nm=myName||"runner"; const open=mode==="ask"?"Sure, ask me anything.":Q.k==="outside"?["Hey, "+nm+"! Got a sec?","Wait up, "+nm+"!","Psst, "+nm+". Can I ask you something?"][(Math.random()*3)|0]:Q.k==="deep"?["Hey "+nm+"... can I ask you something real?",nm+", hold on. I've been thinking."][(Math.random()*2)|0]:"Oh! "+nm+"! Quick question!";
+  npcSay(n,open); npcCard.line=mode==="ask"?open:`${open} ${Q.q}`; beep(880,.05,"sine",.04); setTimeout(()=>beep(1175,.06,"sine",.04),80); npcRenderCard(); }
+function npcCloseCard(why){ if(!npcCard) return; const n=npcCard.n; n.talkUntil=0; if(why) npcSay(n,why); npcCard=null; if(npcCardEl) npcCardEl.hidden=true; }
+function npcRenderCard(){ const C=npcCard; if(!C){ if(npcCardEl) npcCardEl.hidden=true; return; } if(!npcCardEl){ npcCardEl=el("div",{class:"npccard",role:"dialog","aria-label":"Conversation"}); document.body.append(npcCardEl); }
+  const n=C.n, d=npcCardEl; d.hidden=false; d.innerHTML=""; const lc=lookCanvas(n.look||DEFAULT_LOOK,56); lc.style.cssText="width:56px;height:56px;flex:none;border-radius:8px;background:radial-gradient(circle at 50% 70%,#2a1a48,#0d0818 75%)"; const rel=relOf(npcKey(n));
+  d.append(el("div",{class:"nch"},lc,el("div",{style:"min-width:0;flex:1"},el("strong",{text:`${n.name||"A stranger"} ${moodEmoji(n)}`}),el("div",{class:"sub",style:"font-size:11px",text:`${n.life&&LIFE_JOB[n.job]?LIFE_JOB[n.job].n+" · ":""}${relHearts(rel)?relHearts(rel)+" ":""}${relLabel(rel)}`})),el("button",{class:"nmx",type:"button","aria-label":"Close",text:"✕",onclick:()=>npcCloseCard("Catch you later!")})),
+    el("div",{class:"ncl",text:`“${C.line}”`}));
+  const opts=el("div",{class:"nco"}); const B=(t,f,hot)=>opts.append(el("button",{class:"btn"+(hot?" hot":""),type:"button",text:t,onclick:f}));
+  if(C.mode==="q"&&C.step===0) C.Q.o.forEach((o,i)=>B(o[0],()=>npcAnswer(i),true));
+  else if(C.mode==="ask"&&C.step===0){ const picks=[...NPC_ASK].sort(()=>Math.random()-.5).slice(0,4); picks.forEach(A=>B(A.q,()=>{ const L=A.a(n); const ans=L[(Math.random()*L.length)|0]; C.line=ans; C.step=1; npcSay(n,ans); npcGain(n,"ask"); npcRenderCard(); },true)); }
+  else { B("💭 Ask them something",()=>{ C.mode="ask"; C.step=0; C.line="Go ahead, ask me anything."; npcRenderCard(); },true); if(C.mode==="q") B("❓ Another question",()=>{ npcStartChat(n,"q"); }); B("👋 Bye",()=>npcCloseCard(["See you around!","That was nice. Bye!","Take care out there."][(Math.random()*3)|0])); }
+  if(C.step===0&&C.mode==="q") opts.append(el("button",{class:"btn",type:"button",text:"🔕 Not now",onclick:()=>{ save.npcSnooze=Date.now()+30*6e4; persist(); npcCloseCard("Oh, okay. Another time!"); toast("NPCs won't stop you for 30 minutes."); }}));
+  d.append(opts); }
+function npcGain(n,why){ const k=npcKey(n), ck="m_"+k; save.relc=save.relc||{}; if(Date.now()-((save.relc[ck])||0)>8*6e4){ save.relc[ck]=Date.now(); relAdd(k,1); lifeFeel(n,"chat",8*6e4,.2,0,"Had a real talk with you"); try{ questEvent("chat_res"); }catch(e){} persist(); } }
+function npcAnswer(i){ const C=npcCard; if(!C) return; const n=C.n, Q=C.Q, o=Q.o[i]; const M=npcMem(); M[Q.id]=i; const told=npcTold(n); if(!told.includes(Q.id)){ told.push(Q.id); if(told.length>12) told.shift(); }
+  const mine=Q.mine[npcTone(n)]; C.line=`${o[1]} ${Q.id==="real_day"&&i===2||Q.id==="deep_happy"&&i===2?"":`Me? ${mine}`}`.trim(); C.step=1; npcSay(n,o[1]); setTimeout(()=>{ if(npcCard===C&&!(Q.id==="real_day"&&i===2||Q.id==="deep_happy"&&i===2)) npcSay(n,`Me? ${mine}`); },2200);
+  npcGain(n,"answer"); n.emote={e:i===0?"cheer":"wave",t:T}; beep(988,.05,"triangle",.04); npcRenderCard(); }
+// --- the tick: stops, NPC-to-NPC talks, friends hanging out
+let npcStopCheck=0, npcConvoT=0, npcConvoBusy=false, npcHangT=0;
+function npcMindTick(dt){ if(!save) return; const now=Date.now();
+  if(npcCardEl&&npcCard){ const hide=!$("#overlay").hidden||!!$("#gccj")||!!$("#g1211"); npcCardEl.style.display=hide?"none":""; }
+  if(npcCard){ const n=npcCard.n; if(me.scene!==npcCard.sc||Math.abs(me.x-n.x)>320||!$("#overlay").hidden&&false){ npcCloseCard(me.scene!==npcCard.sc?null:"Oh, okay, bye!"); } else { n.talkUntil=T+5; n.dir=me.x>=n.x?1:-1; if(n.goal&&Math.abs(n.goal.x-n.x)>2) {} } }
+  // an NPC stops you to chat
+  if(T>npcStopCheck){ npcStopCheck=T+6; if(npcCanStop()&&!npcSnoozed()&&now-(+save.npcStopAt||0)>4*6e4&&T>90){ const L=cityGen(me.scene).filter(n=>n.life&&n.here&&!n.hurt&&Math.abs(n.x-me.x)<520&&Math.abs(n.x-me.x)>40);
+      const cand=L.filter(n=>{ const m=moodOf(n).k; return m!=="asleep"&&m!=="scared"&&m!=="angry"&&relOf(npcKey(n))>-2&&now-(+(save.npcStopBy||{})[npcKey(n)]||0)>20*6e4&&!((n.talkUntil||0)>T); });
+      if(cand.length&&Math.random()<.35){ const n=cand.sort((a,b)=>relOf(npcKey(b))-relOf(npcKey(a))+(Math.random()-.5)*4)[0]; save.npcStopAt=now; save.npcStopBy=save.npcStopBy||{}; save.npcStopBy[npcKey(n)]=now; const ks=Object.keys(save.npcStopBy); if(ks.length>40) delete save.npcStopBy[ks[0]];
+        n.sit=false; n.goal={x:me.x+(n.x>me.x?55:-55),y:clamp(me.y,LANE.top,LANE.bot)}; n.vx=0; n.talkUntil=0; npcSay(n,["Hey! Wait up!",`${myName||"Hey"}! Hold on!`,"Psst! Over here!"][(Math.random()*3)|0]);
+        let tries=0; const go=()=>{ if(!n.here||tries++>30) return; if(!npcCanStop()){ setTimeout(go,500); return; } if(Math.abs(n.x-me.x)<90||!n.goal) npcStartChat(n,"q"); else if(Math.abs(n.x-me.x)<600){ n.goal={x:me.x+(n.x>me.x?55:-55),y:clamp(me.y,LANE.top,LANE.bot)}; setTimeout(go,400); } }; setTimeout(go,600); } } }
+  // two residents talk to each other
+  if(!npcConvoBusy&&T>npcConvoT){ npcConvoT=T+14+Math.random()*16; const res=cityGen(me.scene).filter(n=>n.life&&n.here&&!n.goal&&!((n.talkUntil||0)>T)&&!(npcCard&&npcCard.n===n)&&moodOf(n).k!=="asleep"&&moodOf(n).k!=="scared");
+    const pairs=[]; for(let i=0;i<res.length;i++) for(let j=i+1;j<res.length;j++){ const a=res[i], b=res[j]; if(Math.abs(a.x-b.x)<240&&Math.abs(a.x-me.x)<VW*.9) pairs.push([a,b]); }
+    if(pairs.length){ const [a,b]=pairs[(Math.random()*pairs.length)|0]; npcConverse(a,b); } }
+  // close friends find each other and hang out
+  if(T>npcHangT){ npcHangT=T+20; const res=cityGen(me.scene).filter(n=>n.life&&n.here&&!n.goal&&!n.sit&&n.act&&n.act.mode!=="seat"&&n.act.a!=="work"&&!((n.talkUntil||0)>T)&&moodOf(n).k!=="asleep");
+    for(const a of res){ const f=res.find(b=>b!==a&&npcBondLv(npcBond(a,b))>=2&&Math.abs(a.x-b.x)>120&&Math.abs(a.x-b.x)<900); if(f&&Math.random()<.5){ a.goal={x:f.x+(a.x<f.x?-46:46),y:clamp(f.y+(Math.random()*16-8),LANE.top,LANE.bot)}; npcSay(a,`${f.name.split(" ")[0]}! Wait for me!`); break; } } } }
+function npcConverse(a,b){ npcConvoBusy=true; const A=a.name.split(" ")[0], B=b.name.split(" ")[0], lv=npcBondLv(npcBond(a,b)), nm=myName||"that runner"; const rA=relOf(npcKey(a)); const pick=x=>x[(Math.random()*x.length)|0];
+  const others=LIFE_R.filter(x=>x!==a&&x!==b); const C=pick(others), Cn=C.name.split(" ")[0]; const s=thLive(); const sharedLike=(a.likes||[]).find(x=>(b.likes||[]).includes(x)); const actL=sharedLike&&LIFE_ACT[sharedLike]?LIFE_ACT[sharedLike].l:"grabbing noodles";
+  const scripts=[
+    ()=>[[a,lv>=3?`${B}!! There you are!`:lv>=2?`Hey ${B}! How's it going?`:`Oh, hi ${B}.`],[b,lv>=2?`${A}! Better now. ${moodOf(b).why}.`:`Hey. ${moodOf(b).why}.`],[a,lv>=2?`Want to go ${actL} later?`:`We should hang out sometime.`],[b,lv>=1?"I'm in. You're buying, though.":"Yeah? Sure, why not."]],
+    ()=>{ const Q=pick(NPC_Q.filter(q=>q.k==="deep")); return [[a,`${B}, can I ask you something deep?`],[b,"Uh oh. Go on."],[a,Q.q.replace(/^.*?\? /,"").replace(/^Can I ask you a deep one\? /,"")],[b,Q.mine[npcTone(b)]],[a,pick(["Huh. I didn't know that about you.","Same, honestly.","I like that answer.","That's... actually beautiful."])]]; },
+    ()=>[[a,`Have you seen ${Cn} today?`],[b,`${Cn}? ${MOODS[moodOf(C).k]?MOODS[moodOf(C).k][1]:"Fine"}, I think. ${moodOf(C).why}.`],[a,pick(["Hope they're okay.","Classic.","We should check on them.","Ha! Of course."])]],
+    ()=>rA>=3?[[a,`You know ${nm}? They talk to me sometimes.`],[b,pick([`Oh, I like ${nm}! Good energy.`,`${nm}? Yeah, they're alright.`,"The one with the cute companion?"])],[a,"Right? This city's better with them in it."]]:[[a,`Seen that runner, ${nm}?`],[b,pick(["Not yet. Are they friendly?","They walked right past me.","I hear they're new."])],[a,"Say hi next time. Runners get lonely too."]],
+    ()=>[[a,`${B}, do you ever think there's a world outside the city?`],[b,"Where the runners come from? All the time."],[a,"I wonder if it rains there too."],[b,pick(["I hope it's sunny. They deserve sun.","I bet it rains. Rain's everywhere.","Maybe we should ask one."])]],
+    ()=>lv>=2?[[a,`Remember when we ${pick(NPC_MEMS)}?`],[b,pick(["Ha! Best night ever.","Never again. ...Okay, maybe again.","I still think about that."])],[a,"Same time next week?"],[b,"Obviously."]]:[[a,`What do you do for fun, ${B}?`],[b,`Mostly ${(b.likes&&LIFE_ACT[b.likes[0]])?LIFE_ACT[b.likes[0]].l:"sleeping"}.`],[a,sharedLike?"No way, me too!":"Huh. I've never tried that."]],
+    ...(s?[()=>[[a,`Did you hear “${s.title.slice(0,24)}” is on at the Stream Dome?`],[b,"Yes! Want to go together?"],[a,"Save me a seat."]]]:[]),
+    ()=>[[a,`Work's been a lot lately, ${B}.`],[b,`${LIFE_JOB[b.job]?LIFE_JOB[b.job].l[0].toUpperCase()+LIFE_JOB[b.job].l.slice(1):"Same"}. Tell me about it.`],[a,"At least we've got each other."],[b,lv>=2?"Always.":"True."]],
+  ];
+  const lines=pick(scripts)(); a.talkUntil=b.talkUntil=T+lines.length*2.6+1.5; lifeG=Math.max(lifeG,T+lines.length*2.6+1); a.dir=b.x>=a.x?1:-1; b.dir=a.x>=b.x?1:-1; a.sit=a.sit&&a.act&&a.act.mode==="seat";
+  lines.forEach(([who,txt],i)=>setTimeout(()=>{ if(me.scene&&(who.here||!who.life)) npcSay(who,txt); },i*2600));
+  setTimeout(()=>{ npcConvoBusy=false; npcBondAdd(a,b,1); if(npcBondLv(npcBond(a,b))>=2){ a.emote={e:"cheer",t:T}; } },lines.length*2600+400); }
+function npcFriendsBox(n){ if(!n.life) return null; const f=npcFriends(n).slice(0,5); const told=npcTold(n), M=npcMem();
+  const box=el("div",{class:"detail",style:"border-color:#43f0a4;flex-direction:column;align-items:stretch;gap:4px"},el("strong",{text:"💞 Friends in the city"}),
+    el("span",{class:"sub",text:f.length?f.map(x=>`${x.R.name.split(" ")[0]} (${NPC_LVN[x.lv].replace(/s$/,"")})`).join(" · "):"Still making friends. They grow closer every time they talk."}));
+  if(told.length) box.append(el("strong",{style:"margin-top:4px",text:"🧠 They remember you told them"}),...told.slice(-4).map(id=>{ const Q=NPC_Q.find(q=>q.id===id); return Q&&M[id]!=null&&Q.o[M[id]]?el("span",{class:"sub",text:`• ${Q.q.replace(/^.*?(Can I ask you something weird\?|Can I ask you a deep one\?|Quick question:|Okay, important question\.)\s*/,"")} → ${Q.o[M[id]][0]}`}):null; }).filter(Boolean));
+  return box; }
 
 /* ---- elections: residents vote too ---- */
 function elCands(docs){ const o={}; for(const [id,v] of Object.entries(docs||{})){ if(!v||v.kind!=="cand") continue; const uid=elUid(id,"ec"); if(!uid) continue; const at=+v.at||0; if(!o[uid]||at<o[uid].at) o[uid]={uid,slogan:String(v.slogan||"").toLowerCase(),name:String(v.name||"Runner").slice(0,24),at,sup:{}}; }
@@ -2786,7 +2915,9 @@ function openCitizen(n){ const R=n, res=!!R.life, mood=moodOf(R), M=MOODS[mood.k
       const extra=res?[...(LIFE_JOBLINES[R.job]||[]),(()=>{ const nx=lifePick(R,Math.floor(Date.now()/LIFE_SLOT)+1); return nx==="sleep"?"Heading home to sleep after this.":nx==="work"?"Back to work after this.":`After this I'm ${LIFE_ACT[nx].l}.`; })(),`Honestly? ${mood.why}.`]:[mood.why+"."]; talk([lifeLine(R),...extra][(Math.random()*(extra.length+1))|0]); openCitizen(R); }}),
     el("button",{class:"btn",type:"button",text:"🎁 Treat them (₵25)",onclick:()=>{ if(!need()) return; if(rcd("treat_"+key)) return toast(`You just treated ${R.name} (${cdTxt(rcd("treat_"+key))}).`); if(save.credits<25) return toast("You need ₵25.");
       save.credits-=25; setCd("treat_"+key,20*6e4); questEvent("treat"); relAdd(key,res&&lifeBday(R)?4:2); hud(); lifeFeel(R,"grateful",8*6e4,.5,0,"You treated them"); R.emote={e:"cheer",t:T}; talk(res&&lifeBday(R)?"A birthday treat?! You're the best!":["Aw, you didn't have to!","That's so sweet. Thank you!","You just made my day."][(Math.random()*3)|0]); openCitizen(R); }}),
-    el("button",{class:"btn",type:"button",text:"👋 Wave",onclick:()=>{ emote("wave"); if(inPerson) setTimeout(()=>lifeReact(R,"wave"),300); }}));
+    el("button",{class:"btn",type:"button",text:"👋 Wave",onclick:()=>{ emote("wave"); if(inPerson) setTimeout(()=>lifeReact(R,"wave"),300); }}),
+    el("button",{class:"btn hot",type:"button",text:"💭 Deep talk",onclick:()=>{ if(!need()) return; closePanel(); npcStartChat(R,"q"); }}),
+    el("button",{class:"btn",type:"button",text:"❓ Ask them something",onclick:()=>{ if(!need()) return; closePanel(); npcStartChat(R,"ask"); }}));
   if(res&&amCandidate()){ const lv=(campMine()[R.id]&&+campMine()[R.id].l)||0, od=campOdds(R); btns.append(el("button",{class:"btn hot",type:"button",text:lv>=3?"🗣 ★★★ Their vote is yours":`🗣 Ask for their vote ${"★".repeat(lv)}${"☆".repeat(3-lv)} (${Math.round(od.p*100)}% chance)`,onclick:async()=>{ if(!need()) return; await campAsk(R,talk); setTimeout(()=>{ if(currentView==="citizen") openCitizen(R); },1600); }})); }
   if(res) btns.append(el("button",{class:"btn",type:"button",text:"🗳 Who are you voting for?",onclick:()=>{ const b=lifeBallot(R,termNow(),elCands(elDocs.cur),Date.now());
       talk(!b.cand?"Nobody's even running yet! Somebody should.":b.abstain?"I don't vote. Politicians are all the same.":b.done?`I voted for ${b.cname}.${b.why==="campaign"?" They came and talked to me in person. That matters.":b.why?` I liked that they talked about ${b.why}.`:" Gut feeling."}`:`Haven't voted yet — I'll head to City Hall later. Leaning toward ${b.cname}.`); }}),
@@ -2796,7 +2927,7 @@ function openCitizen(n){ const R=n, res=!!R.life, mood=moodOf(R), M=MOODS[mood.k
       const s=thLive(); if(s) L.push(`“${s.title}” is playing at the Stream Dome right now!`);
       const o=LIFE_R.filter(x=>x!==R&&["sad","angry","excited","party","scared"].includes(moodOf(x).k)); if(o.length){ const x=o[(Math.random()*o.length)|0]; L.push(`${x.name.split(" ")[0]}? ${MOODS[moodOf(x).k][1]}. ${moodOf(x).why}.`); }
       if(heatStars()) L.push("And you… you've got the cops looking for you."); talk(L[(Math.random()*L.length)|0]); }}));
-  body.append(btns);
+  body.append(btns); try{ const fb=npcFriendsBox(R); if(fb) body.append(fb); }catch(e){}
   if(!inPerson) body.append(el("p",{class:"sub",text:`To chat or treat them, find them in person — they're ${a.l}.`}));
   if(res) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"📋 All residents",onclick:()=>openCensus()}))); }
 function lifeApprove(R){ return lifeApproves(R); }
@@ -3988,6 +4119,7 @@ $("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrc
 /* ============================================================ HOW TO PLAY */
 const HELP=[
  {id:"start",icon:"🚀",n:"Getting started",topics:[
+  {id:"npcs",icon:"💬",n:"Talking with residents",sub:"They notice you, stop you to chat and make friends",where:"Anywhere residents hang out",steps:["Residents notice you: what you're holding, your companions, the time where you are, things you told them before.","Sometimes one will stop you to chat. Pick a reply, then ask them something back. Tap 🔕 Not now to be left alone for 30 minutes.","Tap a resident and choose 💭 Deep talk or ❓ Ask them something any time."],secs:[["Friendships",["Residents talk to each other and grow closer every time. Friends seek each other out and hang out together. Tap a resident to see their friends and what they remember about you."]],["Your answers",["Replies are fixed choices, never personal details, and they're only kept in your own save."]]]},
   {id:"idle",icon:"🤖",n:"Idle mode",sub:"Send your runner to do things on their own",where:"Top bar → 🤖 Idle (phones: ☰ → Idle)",steps:["Open 🤖 Idle and pick a task: Make credits, Find parts, Party at the clubs, Earn RP, Earn NRC, Do a bit of everything, or one job.","Watch your runner travel, walk, work, dig and dance live on screen. The box on the right shows what they're doing, a running log and what you've earned.","Press any move key or ■ Stop to take control back."],secs:[["Pay",["Idle work pays exactly the same as working yourself, with the same daily RP and NRC limits. RP from work is for Data Collectors Club members."]],["When it runs",["Only while the game is open on screen. Opening a menu, a mini game, or switching tabs pauses it."]]]},
   {id:"music",icon:"🎵",n:"Music picker",sub:"Choose the music you hear",where:"Top bar → 🎵 Music (phones: ☰ → Music)",steps:["Open 🎵 Music.","Pick a tab: Game & anime, Companion Clash, Club & bar, or City & silence.","Press ▶ Play on any track. Only you hear your pick."],secs:[["Clubs and the Den",["The Glitch, The Third Eye and the Gamers Den play their shared jukebox. Tick “Also play my pick…” to hear your own track there instead (just for you)."]],["Goals tracker",["The goals box on the top left can be hidden with ✕. Tap 🧭 to bring it back, or open Goals and use the show/hide button."]]]},
   {id:"welcome",icon:"👋",n:"Welcome",sub:"What NEON HARVEST is, and who it's for",secs:[
