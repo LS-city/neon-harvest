@@ -868,6 +868,40 @@ for(const [key,M] of Object.entries(XMIX)) XFX[key]={lift:M.lift||(t=>{ for(cons
   screen:(c,W,H,k,T,blob)=>{ let f="", tf=""; for(const q of M.p){ c.save(); const r=XFX[q].screen(c,W,H,k*.75,T,blob)||{}; c.restore(); f+=" "+(r.f||""); if(r.tf&&!tf) tf=r.tf; } c.save(); M.sig(c,W,H,k,T); c.restore(); return {f:f.trim(),tf}; },
   behind:(c,head,t)=>{ for(const q of M.p) if(XFX[q].behind){ c.save(); XFX[q].behind(c,head,t); c.restore(); } },
   front:(c,dir,hip,sh,head,t)=>{ for(const q of M.p) if(XFX[q].front){ c.save(); XFX[q].front(c,dir,hip,sh,head,t); c.restore(); } }};
+/* --- Gamers Den menu effects (only usable inside the Den; everyone in the Den sees them) */
+Object.assign(XFX,{
+  den_mana:{screen:(c,W,H,k,T)=>{ XS.vign(c,W,H,"30,90,255",.3*k); XS.rise(c,W,H,T,22,.18,(x,y,u)=>XS.dot(c,x,y,1.5+u*2.5,`rgba(120,200,255,${.4*k*(1-u)})`)); return {f:`saturate(${1+.25*k}) hue-rotate(${-8*k}deg)`}; },
+    front:(c,dir,hip,sh,head,t)=>{ for(let i=0;i<8;i++){ const u=(t*.6+i/8)%1, a=u*Math.PI*4+i; XS.dot(c,Math.cos(a)*(10-u*4),-4-u*46,1.6,`rgba(120,200,255,${1-u})`); }
+      c.fillStyle="#0b0716"; c.fillRect(-12,head-20,24,4); c.fillStyle="#38a8ff"; c.fillRect(-11,head-19,22*(.4+.6*((t*.25)%1)),2); c.fillStyle="#9fd8ff"; c.font="5px monospace"; c.textAlign="center"; c.fillText("MP",0,head-22); }},
+  den_crit:{screen:(c,W,H,k,T)=>{ const p=(T*.7)%1; if(p<.08){ c.fillStyle=`rgba(255,80,60,${.14*k})`; c.fillRect(0,0,W,H); } XS.vign(c,W,H,"255,60,40",.18*k); return {f:`contrast(${1+.12*k})`}; },
+    front:(c,dir,hip,sh,head,t)=>{ for(let i=0;i<3;i++){ const u=(t*.55+i/3)%1, n=[999,1337,4096][i]; c.save(); c.globalAlpha=1-u; c.font=`700 ${i?7:9}px Silkscreen, monospace`; c.textAlign="center"; c.lineWidth=2; c.strokeStyle="#0b0716"; const tx=(i-1)*12, ty=head-12-u*26, s=i?String(n):"CRIT!"; c.strokeText(s,tx,ty); c.fillStyle=i?"#ffd23a":"#ff5a4a"; c.fillText(s,tx,ty); c.restore(); } }},
+  den_life:{screen:(c,W,H,k,T)=>{ XS.wash(c,W,H,"60,255,140",.05*k); XS.rise(c,W,H,T,10,.12,(x,y,u)=>{ c.fillStyle=`rgba(80,255,150,${.35*k*(1-u)})`; c.fillRect(x,y,6,6); c.fillRect(x+6,y,6,6); c.fillRect(x-3,y+3,18,6); c.fillRect(x,y+9,12,3); c.fillRect(x+3,y+12,6,3); }); return {f:`saturate(${1+.2*k})`}; },
+    front:(c,dir,hip,sh,head,t)=>{ for(let i=0;i<2;i++){ const u=(t*.5+i*.5)%1; c.save(); c.globalAlpha=1-u; c.translate(i?10:-10,head-10-u*24); c.fillStyle="#43f0a4"; for(const [x,y,w] of [[-4,-3,3],[1,-3,3],[-5,0,10],[-4,3,8],[-2,6,4]]) c.fillRect(x,y,w,3); c.font="700 6px Silkscreen, monospace"; c.textAlign="center"; c.fillText("+1",0,-6); c.restore(); } }},
+  den_boss:{screen:(c,W,H,k,T)=>{ XS.vign(c,W,H,"255,60,20",(.25+.15*Math.sin(T*3))*k); return {f:`saturate(${1+.3*k}) contrast(${1+.1*k})`, tf:RM?"":`translateX(${(Math.sin(T*40)*.8*k).toFixed(1)}px)`}; },
+    behind:(c,head,t)=>{ c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<9;i++){ const x=(i-4)*5, h=26+Math.sin(t*9+i*1.7)*8; const g=c.createLinearGradient(0,0,0,-h-20); g.addColorStop(0,"rgba(255,120,30,.55)"); g.addColorStop(1,"rgba(255,40,20,0)"); c.fillStyle=g; c.beginPath(); c.moveTo(x-5,0); c.quadraticCurveTo(x-6,-h*.6,x+Math.sin(t*5+i)*3,-h-20); c.quadraticCurveTo(x+6,-h*.6,x+5,0); c.fill(); } c.restore(); }},
+  den_lvl:{screen:(c,W,H,k,T)=>{ c.save(); c.globalCompositeOperation="lighter"; XS.rays(c,W/2,H*.35,18,W*.8,T,`rgba(255,210,80,${.06*k})`,.05); c.restore(); return {f:`brightness(${1+.06*k}) saturate(${1+.2*k})`}; },
+    behind:(c,head,t)=>{ const u=(t*.6)%1; c.strokeStyle=`rgba(255,210,58,${1-u})`; c.lineWidth=2; c.beginPath(); c.ellipse(0,0,8+u*26,3+u*8,0,0,7); c.stroke(); },
+    front:(c,dir,hip,sh,head,t)=>{ const b=Math.sin(t*4)*1.5; c.save(); c.font="700 8px Silkscreen, monospace"; c.textAlign="center"; c.lineWidth=2.5; c.strokeStyle="#0b0716"; c.strokeText("LEVEL UP!",0,head-14+b); c.fillStyle=`hsl(${45+Math.sin(t*3)*10},100%,60%)`; c.shadowColor="#ffd23a"; c.shadowBlur=8; c.fillText("LEVEL UP!",0,head-14+b); c.restore(); }},
+  den_sakura:{screen:(c,W,H,k,T)=>{ XS.wash(c,W,H,"255,140,200",.05*k); XS.fall(c,W,H,T,26,.08,(x,y,u,i)=>XS.petal(c,x,y,4+XR(i,4)*3,T*2+i,`rgba(255,${170+XR(i,5)*50|0},215,${.6*k})`)); return {f:`saturate(${1+.15*k}) hue-rotate(${-6*k}deg)`}; },
+    front:(c,dir,hip,sh,head,t)=>{ for(let i=0;i<7;i++){ const a=t*1.6+i*.9; XS.petal(c,Math.cos(a)*(14+i%3*3),-22+Math.sin(a*1.3)*16,2.4,a,i%2?"#ffb7dc":"#ff8fc7"); } }},
+  den_limit:{screen:(c,W,H,k,T)=>{ XS.vign(c,W,H,"120,220,255",.25*k); if(Math.random()<.12*k){ c.save(); c.globalAlpha=.5; XS.bolt(c,Math.random()*W,0,H*.5,"#bff4ff"); c.restore(); } return {f:`contrast(${1+.15*k}) brightness(${1+.05*k})`}; },
+    lift:t=>2+Math.sin(t*6)*1,
+    behind:(c,head,t)=>{ c.save(); c.globalCompositeOperation="lighter"; c.fillStyle="rgba(140,230,255,.35)"; c.beginPath(); c.moveTo(-14,2); for(let i=0;i<=10;i++){ const x=-14+i*2.8, y=head-10-(i%2?8:20)-Math.sin(t*12+i)*4; c.lineTo(x,y); } c.lineTo(14,2); c.closePath(); c.fill(); c.strokeStyle="rgba(255,255,255,.6)"; c.stroke();
+      if(Math.sin(t*17)>.6){ c.strokeStyle="#e8fbff"; c.lineWidth=1; c.beginPath(); let x=-10+Math.random()*20, y=head-8; c.moveTo(x,y); for(let k=0;k<4;k++){ x+=(Math.random()-.5)*10; y+=8; c.lineTo(x,y); } c.stroke(); } c.restore(); }},
+  den_pixel:{screen:(c,W,H,k,T)=>{ XS.scan(c,W,H,T,"0,0,0",.12*k); for(let i=0;i<10*k;i++){ c.fillStyle=`hsla(${(i*50+T*60)%360},100%,60%,${.12*k})`; const s=8+(i%3)*8; c.fillRect((i*271+((T*4)|0)*97)%W,(i*163+((T*3)|0)*61)%H,s,s); } return {f:`contrast(${1+.15*k}) saturate(${1+.35*k})`}; },
+    front:(c,dir,hip,sh,head,t)=>{ for(let i=0;i<6;i++){ const a=t*2+i*1.05; c.fillStyle=["#ff3fa8","#38e8ff","#f5f06a","#43f0a4","#b06bff","#ff8a2a"][i]; c.fillRect(Math.round(Math.cos(a)*15/2)*2-2,Math.round((-24+Math.sin(a)*14)/2)*2,4,4); } }},
+  den_combo:{screen:(c,W,H,k,T)=>{ XS.vign(c,W,H,"255,63,168",.15*k); return {f:`saturate(${1+.2*k})`}; },
+    front:(c,dir,hip,sh,head,t)=>{ const n=2+Math.floor(t*1.5)%98, pop=1+.25*Math.max(0,1-((t*1.5)%1)*4); c.save(); c.translate(0,head-14); c.scale(pop,pop); c.font="700 8px Silkscreen, monospace"; c.textAlign="center"; c.lineWidth=2.5; c.strokeStyle="#0b0716"; c.strokeText(`x${n} COMBO`,0,0); c.fillStyle="#ff3fa8"; c.fillText(`x${n} COMBO`,0,0); c.restore(); for(let i=0;i<4;i++){ const a=t*3+i*1.57; XS.dot(c,Math.cos(a)*18,head-14+Math.sin(a)*5,1.2,"#f5f06a"); } }},
+  den_isekai:{screen:(c,W,H,k,T)=>{ XS.vign(c,W,H,"150,60,255",.3*k); c.save(); c.globalCompositeOperation="lighter"; c.translate(W/2,H*.5); c.rotate(T*.08); c.strokeStyle=`rgba(190,140,255,${.12*k})`; c.lineWidth=2; for(const r of [.2,.28]){ c.beginPath(); c.arc(0,0,H*r,0,7); c.stroke(); } for(let i=0;i<6;i++){ c.rotate(Math.PI/3); c.beginPath(); c.moveTo(0,-H*.28); c.lineTo(H*.24,H*.14); c.stroke(); } c.restore(); return {f:`saturate(${1+.3*k}) hue-rotate(${12*k}deg)`}; },
+    behind:(c,head,t)=>{ c.save(); c.scale(1,.32); c.strokeStyle="rgba(190,140,255,.85)"; c.shadowColor="#b06bff"; c.shadowBlur=10; c.lineWidth=2; c.beginPath(); c.arc(0,0,26,0,7); c.stroke(); c.lineWidth=1; c.beginPath(); c.arc(0,0,19,0,7); c.stroke(); c.rotate(t*.8); for(let i=0;i<6;i++){ c.rotate(Math.PI/3); c.beginPath(); c.moveTo(0,-26); c.lineTo(22,13); c.stroke(); c.fillStyle="#e3d0ff"; c.fillRect(-1.5,-24,3,3); } c.restore();
+      const g=c.createLinearGradient(0,0,0,head-30); g.addColorStop(0,"rgba(176,107,255,.3)"); g.addColorStop(1,"rgba(176,107,255,0)"); c.fillStyle=g; c.fillRect(-18,head-30,36,-(head-30)); }},
+  den_speed:{screen:(c,W,H,k,T)=>{ c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<14;i++){ const y=(i*97)%H, x=((T*900+i*313)%(W+300))-150; c.fillStyle=`rgba(200,240,255,${.12*k})`; c.fillRect(W-x,y,120,2); } c.restore(); return {f:`saturate(${1+.2*k})`}; },
+    behind:(c,head,t)=>{ for(let i=0;i<6;i++){ const y=-8-i*7, l=14+((t*40+i*13)%14); c.fillStyle=`rgba(180,240,255,${.6-i*.07})`; c.fillRect(-l-10,y,l,1.5); c.fillRect(10,y,l,1.5); } },
+    front:(c,dir,hip,sh,head,t)=>{ const s=(t%60), txt=`${String(Math.floor(s)).padStart(2,"0")}:${String(Math.floor((s%1)*100)).padStart(2,"0")}`; c.save(); c.font="700 7px 'IBM Plex Mono', monospace"; c.textAlign="center"; c.fillStyle="#0b0716"; c.fillRect(-15,head-21,30,9); c.fillStyle="#43f0a4"; c.fillText(txt,0,head-14); c.restore(); }},
+  den_rage:{screen:(c,W,H,k,T)=>{ XS.wash(c,W,H,"255,40,40",(.05+.04*Math.sin(T*5))*k); return {f:`saturate(${1+.3*k}) contrast(${1+.1*k})`}; },
+    front:(c,dir,hip,sh,head,t)=>{ const p=1+.15*Math.sin(t*8); c.save(); c.translate(dir*8,head-8); c.scale(p,p); c.strokeStyle="#ff3a3a"; c.lineWidth=1.6; for(let i=0;i<4;i++){ c.rotate(Math.PI/2); c.beginPath(); c.moveTo(1.5,-1.5); c.quadraticCurveTo(2.5,-4.5,5.5,-4.5); c.stroke(); } c.restore();
+      for(let i=0;i<3;i++){ const u=(t*.8+i/3)%1; XS.dot(c,(i-1)*6+Math.sin(t*3+i)*2,head-6-u*18,2+u*3,`rgba(230,230,240,${.5*(1-u)})`); } }},
+});
 const FX_KEYS=["joint","vape","hyper","bong","shroom","acid","eye","pixel","laugh","chrome","love","drift","warp","void",...FUSIONS.map(F=>F.fx),...Object.keys(XFX)];
 const TRIP_LVL=["","","×2","PEAK ×3"];
 for(const it of [
@@ -880,6 +914,23 @@ for(const it of [
   {id:"trip_bubble",n:"Bubblegum Cloud",r:"uncommon",v:30},{id:"trip_ember",n:"Ember Drops",r:"uncommon",v:32},{id:"trip_tide",n:"Tidal Syrup",r:"uncommon",v:34},{id:"trip_echo",n:"Echo Chamber",r:"uncommon",v:36},{id:"trip_prism",n:"Prism Powder",r:"uncommon",v:38},{id:"trip_moon",n:"Moon Milk",r:"uncommon",v:35},
   {id:"trip_storm",n:"Thunder Tonic",r:"rare",v:55},{id:"trip_bloomx",n:"Petal Haze",r:"rare",v:50},{id:"trip_quantum",n:"Quantum Quartz",r:"rare",v:60},{id:"trip_vortex",n:"Vortex Vial",r:"rare",v:58},{id:"trip_solar",n:"Solar Flare",r:"rare",v:65},
   {id:"trip_aurora",n:"Aurora Elixir",r:"epic",v:110},{id:"trip_nebula",n:"Nebula Nectar",r:"epic",v:125},{id:"trip_overclock",n:"Overclock Serum",r:"epic",v:140},{id:"trip_god",n:"God Particle",r:"epic",v:500}]) CAT.push({...it,t:"trip",desc:TRIPS[it.id].desc+" Use it inside The Third Eye club."});
+/* --- Gamers Den menu: original snacks and drinks that only work inside the Den */
+const DEN_ING={pixel:{n:"Pixel Syrup",c:"#ff3fa8"},mana:{n:"Mana Fizz",c:"#38e8ff"},boba:{n:"Boba Pearls",c:"#d9a066"},matcha:{n:"Matcha Dust",c:"#43f0a4"},ember:{n:"Ember Spice",c:"#ff8a2a"}};
+const DEN_MENU=[
+  {id:"den_mana",n:"Mana Potion Soda",r:"common",v:25,fx:"den_mana",dur:150,buffs:["luck"],mix:["mana","pixel","mana"],col:"#38a8ff",ic:"potion",desc:"A fizzing blue potion. Mana sparkles spiral up you and an MP bar fills over your head. Lucky salvage."},
+  {id:"den_crit",n:"Critical Hit Cola",r:"common",v:28,fx:"den_crit",dur:120,buffs:["tips"],mix:["ember","pixel","mana"],col:"#ff5a4a",ic:"can",desc:"Big damage numbers pop off your head. +25% shift tips."},
+  {id:"den_life",n:"Extra Life Onigiri",r:"common",v:30,fx:"den_life",dur:150,buffs:["speed"],mix:["matcha","boba","matcha"],col:"#43f0a4",ic:"onigiri",desc:"Pixel hearts and +1s float up around you. Faster feet."},
+  {id:"den_sakura",n:"Sakura Mochi",r:"common",v:32,fx:"den_sakura",dur:180,buffs:["luck"],mix:["pixel","boba","matcha"],col:"#ff8fc7",ic:"mochi",desc:"Cherry blossom petals swirl around you and drift across the room. Lucky salvage."},
+  {id:"den_pixel",n:"Pixel Pop Boba",r:"uncommon",v:45,fx:"den_pixel",dur:150,buffs:["tips"],mix:["boba","pixel","mana"],col:"#b06bff",ic:"boba",desc:"8-bit blocks orbit you and the screen goes scanline retro. +25% shift tips."},
+  {id:"den_combo",n:"Combo Taiyaki",r:"uncommon",v:48,fx:"den_combo",dur:150,buffs:["print"],mix:["boba","ember","boba"],col:"#ffb84a",ic:"taiyaki",desc:"A COMBO counter climbs over your head. Double CHIP PRINT chips."},
+  {id:"den_lvl",n:"Level Up Latte",r:"uncommon",v:55,fx:"den_lvl",dur:180,buffs:["print","luck"],mix:["matcha","mana","boba"],col:"#ffd23a",ic:"latte",desc:"LEVEL UP! glows over your head and gold rings ripple from your feet. Double print chips and luck."},
+  {id:"den_speed",n:"Speedrun Shot",r:"uncommon",v:50,fx:"den_speed",dur:120,buffs:["speed"],mix:["ember","mana","ember"],col:"#43f0a4",ic:"shot",desc:"Speed lines trail you and a run timer ticks over your head. Faster feet."},
+  {id:"den_rage",n:"Rage Quit Wings",r:"uncommon",v:52,fx:"den_rage",dur:150,buffs:["guard"],mix:["ember","ember","pixel"],col:"#ff3a3a",ic:"wings",desc:"So hot an anger mark throbs over your head and you steam. 25% less Void damage."},
+  {id:"den_boss",n:"Boss Rush Ramen",r:"rare",v:85,fx:"den_boss",dur:200,buffs:["guard","speed"],mix:["ember","matcha","ember"],col:"#ff8a2a",ic:"ramen",desc:"Boss-fight flames roar up behind you and the screen rumbles. Less Void damage and speed."},
+  {id:"den_limit",n:"Limit Break Energy",r:"rare",v:95,fx:"den_limit",dur:180,buffs:["speed","tips"],mix:["mana","ember","pixel"],col:"#7ce7ff",ic:"energy",desc:"A crackling power-up aura flares around you and you hover. Speed and +25% tips."},
+  {id:"den_isekai",n:"Isekai Tea",r:"rare",v:120,fx:"den_isekai",dur:240,buffs:["speed","print","luck","tips"],mix:["matcha","pixel","mana"],col:"#b06bff",ic:"tea",desc:"A magic summoning circle spins under your feet and a beam rises around you. Every boost."},
+];
+const DEN_BY={}; for(const d of DEN_MENU){ DEN_BY[d.id]=d; CAT.push({id:d.id,n:d.n,r:d.r,v:d.v,t:"den",kit:"den",mix:d.mix,col:d.col,desc:d.desc+" Only works inside the Gamers Den."}); }
 /* ============================================================ SMACKED DIGITAL: GAME CONSOLES (60 consoles × 7 games) */
 // Members redeem consoles with RP at Smacked Shop → Digital. Hold one in your hand, slot any of its 7 games,
 // play a session everyone can see, and show it off on your shelves. Consoles are account-bound (no selling or trading).
@@ -1321,7 +1372,7 @@ function hud(){ jobHud(); try{ nrcHud(); }catch(e){} if(save.look&&save.look.han
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
 function beep(f=660,d=.06,type="square",vol=.05){ if(!soundOn||!AC) return; const o=AC.createOscillator(),g=AC.createGain(); o.type=type;o.frequency.value=f; g.gain.setValueAtTime(vol,AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+d); }
-function startMusic(){ if(musicTimer||!AC) return; const notes=[220,262,330,392,330,262,196,247]; let i=0; startClubSeq(); musicTimer=setInterval(()=>{ if(!soundOn||me.scene==="club"||me.scene==="bar") return; const inBar=me.scene==="bar"; beep(notes[i%8]*(inBar?1:.5),.18,"sawtooth",inBar?.025:.012); if(i%4===0) beep(55,.25,"triangle",inBar?.06:.03); i++; },220); }
+function startMusic(){ if(musicTimer||!AC) return; const notes=[220,262,330,392,330,262,196,247]; let i=0; startClubSeq(); musicTimer=setInterval(()=>{ if(!soundOn||me.scene==="club"||me.scene==="bar"||me.scene==="den") return; const inBar=me.scene==="bar"; beep(notes[i%8]*(inBar?1:.5),.18,"sawtooth",inBar?.025:.012); if(i%4===0) beep(55,.25,"triangle",inBar?.06:.03); i++; },220); }
 $("#btnSnd").onclick=()=>{ soundOn=!soundOn; try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); AC.resume(); startMusic(); }catch(e){} $("#btnSnd").textContent=soundOn?"Sound on":"Sound off"; $("#btnSnd").setAttribute("aria-pressed",String(soundOn)); };
 
 /* ============================================================ ITEM ART */
@@ -1578,6 +1629,7 @@ function drawItem(c,id,cx,cy,S,t){ if(offWorld(c,cx,cy,S)) return;
         glow(1); c.fillStyle=col; c.font=`bold ${S*.1}px monospace`; c.textAlign="center"; c.textBaseline="middle"; c.fillText("MINING",0,-S*.03); c.shadowBlur=0;
         for(let i=0;i<6;i++){ const on=Math.sin(t*6+i)>0; c.fillStyle=on?"#43f0a4":"#2a2440"; c.fillRect(-S*.38+i*S*.13,S*.13,S*.06,S*.04); } tick(); }
       break; }
+    case "den": { drawDenItem(c,id,S,t,glow); break; }
     case "trip": {
       const id=it.id;
       if(id==="trip_pill"){ c.save(); c.rotate(Math.sin(t*2)*.4); c.fillStyle="#ff3fa8"; c.beginPath(); c.arc(-S*.12,0,S*.13,Math.PI/2,Math.PI*1.5); c.lineTo(0,-S*.13); c.lineTo(0,S*.13); c.fill(); c.fillStyle="#38e8ff"; c.beginPath(); c.arc(S*.12,0,S*.13,-Math.PI/2,Math.PI/2); c.lineTo(0,S*.13); c.lineTo(0,-S*.13); c.fill(); c.fillRect(-S*.12,-S*.13,S*.24,S*.26); c.fillStyle="#ff3fa8"; c.fillRect(-S*.12,-S*.13,S*.12,S*.26); c.restore();
@@ -2035,7 +2087,7 @@ function roleIs(k){ return pRole()===k; }
 function heatStars(){ return Math.max(0,Math.min(5,Math.ceil(+save.heat||0))); }
 function jailed(){ return !!(save.jail&&+save.jail.until>Date.now()); }
 function jailLeft(){ return jailed()?Math.ceil((save.jail.until-Date.now())/1000):0; }
-function onShift(){ return mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0; }
+function onShift(){ return mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0||denSlot>=0; }
 function rcd(k){ return Math.max(0,((save.rcd||{})[k]||0)-Date.now()); }
 function setCd(k,ms){ save.rcd=save.rcd||{}; save.rcd[k]=Date.now()+ms; }
 function cdTxt(ms){ const s=Math.ceil(ms/1000); return s>=60?`${Math.ceil(s/60)}m`:`${s}s`; }
@@ -3312,6 +3364,7 @@ const SCENES={
   vip:{w:1100, spawn:120},
   assembly:{w:2900, spawn:140},
   void:{w:2700, spawn:140},
+  den:{w:2760, spawn:140},
   bar:{w:1800, spawn:120},
   home:{w:2900, spawn:120},
   cyberbuys:{w:2200, spawn:120},
@@ -3413,8 +3466,9 @@ function hotspotsBase(sc){
     ...Array.from({length:landPlotCount},(_,i)=>{ const o=landOwners()[i], mine=o&&o.by===landMe();
       return {x:plotX(i),hw:62,label:mine?`Your plot #${i+1}: collect ₵ and manage Credit Miners`:o?`Plot #${i+1}: ${plotName(o)}'s tower`:myPlot()>=0?`Plot #${i+1} for sale (you own #${myPlot()+1})`:`Buy plot #${i+1} for ₵${LAND_PRICE.toLocaleString()}`,act:()=>openPlot(i)}; }),
   ];
+  if(sc==="den") return denHot();
   if(sc==="void") return [
-    {x:120,hw:60,label:"Take the metro",act:()=>{ if(T-lastHitT<6){ toast("You're in combat. Wait a few seconds before leaving."); return; } openMetro(); }},
+    {x:120,hw:60,label:"Step out of the cabinet (back to the Gamers Den)",act:()=>{ if(T-lastHitT<6){ toast("You're in combat. Wait a few seconds before leaving."); return; } go("den",2565); }},
     {x:264,hw:50,label:"Top fraggers and weapon stats",act:()=>openFraggers()},
     {x:392,hw:42,label:`Bot Control: ${botMode().n} mode`,act:()=>openBotControl()},
   ];
@@ -3712,7 +3766,7 @@ function stepInner(now){
   let sp=(buffOn("speed")?195:150)*(1+petTrait("speed")/100); if(me.blocking||(me.slowUntil||0)>T) sp*=.5; if(me.dead) sp=0; me.moving=!!(ix||iy)&&$("#overlay").hidden;
   if(me.seat!=null&&me.moving){ me.seat=null; pushPresence(true); }
   if(me.seat!=null){ me.moving=false; me.x=SEATS[me.seat].x; me.y=SEATS[me.seat].y; }
-  if(me.homeSit&&(me.moving||(me.scene!=="home"&&me.scene!=="vip"&&me.scene!=="ascend"&&me.scene!=="line"&&me.scene!=="streamdome"))){ me.homeSit=null; pushPresence(true); }
+  if(me.homeSit&&(me.moving||(me.scene!=="home"&&me.scene!=="vip"&&me.scene!=="ascend"&&me.scene!=="line"&&me.scene!=="streamdome"&&me.scene!=="den"))){ me.homeSit=null; pushPresence(true); }
   if(me.homeSit){ me.moving=false; me.x=me.homeSit.x; me.y=me.homeSit.y||272; }
   if(me.trainUntil>T&&T-(me.lastPunch||0)>.32){ me.lastPunch=T; me.emote={e:"atk",t:T}; beep(110+Math.random()*40,.04,"square",.03); }
   if(me.moving){ const n=Math.hypot(ix,iy)||1; me.x=clamp(me.x+ix/n*sp*dt,30,sc.w-30); me.y=clamp(me.y+iy/n*sp*.6*dt,LANE.top,LANE.bot); if(ix) me.dir=ix>0?1:-1; me.phase+=dt*7; }
@@ -3726,14 +3780,14 @@ function stepInner(now){
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
   // npcs
   for(const n of (npcs[me.scene]||[])){ n.stop=!!(n.name&&Math.abs(me.x-n.x)<70&&Math.abs(me.y-n.y)<60); if(n.stop){ n.dir=me.x>=n.x?1:-1; continue; } if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; } }
-  tickCustomers(); tickJobs(); tickCb(); tickBb(); tickClub(); tickVoid();
+  tickCustomers(); tickJobs(); tickCb(); tickBb(); tickDen(); tickClub(); tickVoid();
   pushPresence(false);
   if(cv.height>4){ render(); screenFx(); }
   tickItemCans(T); tickLookCans(T);
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
@@ -3743,11 +3797,12 @@ function render(){
   for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:lifeName(n),say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance||n.danceUntil>T?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}});
   for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say&&!isBlocked(p.by)?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
+  if(me.scene==="den") denEnts(ents);
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(onShift()?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   try{ cityEnts(ents); }catch(e){}
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
@@ -3808,7 +3863,7 @@ const HELP=[
     ["NRC (Neon Row Coins)",["Everyone earns these by playing. Spend them only at Neon Row stores."]]],rel:["earnmoney","earnchips","dcc","nrc"]},
   {id:"travel",icon:"🚇",n:"Getting around",sub:"The street, the Metro and Fast Travel",secs:[
     ["Sector 9",["The main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley and The Third Eye club."]],
-    ["The Metro (free)",["Runs to Byte Market, The Grid, Smacked Shop, Neon Row, The Void, Harvest Assembly, Linx Land, the Civic Center, Data Sim HQ, the Stream Dome, Companion Clash, the Car Display, MyDex Hub, The Line (12/11) and Story Mode.","Rust Gate Prison is where you end up if you're arrested."]],
+    ["The Metro (free)",["Runs to Byte Market, The Grid, Smacked Shop, Neon Row, the Gamers Den, Harvest Assembly, Linx Land, the Civic Center, Data Sim HQ, the Stream Dome, Companion Clash, the Car Display, MyDex Hub, The Line (12/11) and Story Mode.","Rust Gate Prison is where you end up if you're arrested."]],
     ["Fast Travel",["Press T (or ☰ → Fast travel on phones) to jump to any Metro line or straight to key spots: your apartment, The Glitch, Parts Depot, Cyber Buys, the Trade Board, Scrap Alley, The Third Eye, Byte Bowl Noodles, the Courier Hub, Volt Armory, the UPLOAD arcade and your Linx Land plot.","You can't fast travel mid-fight in The Void."]],
     ["Find people",["Tap ONLINE at the top to see who's playing and where, and jump to them."]]]},
   {id:"rules",icon:"🛡",n:"House rules & safety",sub:"Be decent, report, block",secs:[
@@ -3853,7 +3908,7 @@ const HELP=[
 
  {id:"money",icon:"💰",n:"Make money (₵)",topics:[
   {id:"earnmoney",icon:"📈",n:"Pay at a glance",sub:"Every way to earn credits, compared",secs:[
-    ["Jobs",["Harvest Assembly line: ₵400 every 30 minutes (₵800/hr) while you keep building, plus speed tips. Shifts last up to 60 minutes, 2 shifts per day.","The Glitch bar: each order's value plus tips, and ₵2/min wages (up to ₵120 a shift) once you've served one.","Byte Bowl Noodles: menu price plus tips, and ₵2/min (up to ₵120) once you've served one.","Cyber Buys & More register: 15% commission on each sale plus tips, and ₵2/min (up to ₵120) once you've made a sale.","The Third Eye club bar: pay per order plus tips, and ₵3/min (up to ₵150) once you've served one."]],
+    ["Jobs",["Harvest Assembly line: ₵400 every 30 minutes (₵800/hr) while you keep building, plus speed tips. Shifts last up to 60 minutes, 2 shifts per day.","The Glitch bar: each order's value plus tips, and ₵2/min wages (up to ₵120 a shift) once you've served one.","Byte Bowl Noodles: menu price plus tips, and ₵2/min (up to ₵120) once you've served one.","Cyber Buys & More register: 15% commission on each sale plus tips, and ₵2/min (up to ₵120) once you've made a sale.","The Third Eye club bar: pay per order plus tips, and ₵3/min (up to ₵150) once you've served one.","Gamers Den crew: booth orders plus tips, ₵18 per cabinet fix, and ₵3/min (up to ₵150) once you've done one task."]],
     ["While you're away",["Credit Miners in Linx Land: 50 / 90 / 150 / 250 credits an hour each (Mk.I–IV), up to 6 miners, 12-hour buffer.","Daily home bonus: ₵20 × your Home Vibe (up to ₵1,500) every 20 hours."]],
     ["Games",["UPLOAD arcade: ₵65–₵290 for each level's first clear, ₵10 per replay.","Data Collectors Club members also earn Reward Points on shifts, courier deliveries and story quests."]]],rel:["assembly","shifts","linx"]},
   {id:"assembly",icon:"🏭",n:"Harvest Assembly",sub:"The best-paying job",where:"Metro → Harvest Assembly",steps:[
@@ -3863,11 +3918,12 @@ const HELP=[
     "Keep building to keep getting paid."],secs:[
     ["Pay",["₵400 every 30 minutes in wages (₵800 an hour), paid as you go starting with your first finished build, as long as you've built something in the last 3 minutes.","Speed tip on every build: finish with 75%+ of the timer left for ₵5, 50%+ for ₵3, 25%+ for ₵1, and +₵1 on a perfect streak of 5+."]],
     ["Rules",["Each shift lasts up to 60 minutes and you can work 2 shifts a day (resets at midnight). The Shift Board shows how many you have left.","Wrong part: −2.5 seconds. Timer runs out: the build is scrapped and your streak resets. Blueprints get bigger the more you build.","Leaving the warehouse (or closing the game) clocks you out."]]]},
-  {id:"shifts",icon:"🍸",n:"Bar & shop shifts",sub:"The Glitch, Byte Bowl, Cyber Buys, The Third Eye",secs:[
+  {id:"shifts",icon:"🍸",n:"Bar & shop shifts",sub:"The Glitch, Byte Bowl, Cyber Buys, The Third Eye, Gamers Den",secs:[
     ["The Glitch (Sector 9)",["Clock in at the Job Board (4 staff). Mix drinks, cook from Kai's Kitchen and hand over parts to NPC and player orders.","Golden Handshake, Glitch Dumplings and Full Stack Bowl add +25% tips."]],
     ["Byte Bowl Noodles (Byte Market)",["4 staff. Cook bowls, bao, skewers and drinks for market shoppers."]],
     ["Cyber Buys & More (Sector 9)",["Grab what each customer wants from the right aisle and ring it up at the register."]],
-    ["The Third Eye (Sector 9)",["Serve club items to the seats from the club bar."]]],rel:["earnmoney","glitch","thirdeye"]},
+    ["The Third Eye (Sector 9)",["Serve club items to the seats from the club bar."]],
+    ["Gamers Den (Metro)",["Serve booth orders and fix glitching cabinets. See Den Crew job."]]],rel:["earnmoney","glitch","thirdeye","dencrew"]},
   {id:"gigs",icon:"📦",n:"Gigs & deliveries",sub:"Vex's jobs and the Courier Hub",secs:[
     ["Vex (The Glitch)",["Vex hands out delivery jobs: bring her the parts she asks for to get credits."]],
     ["Courier Hub (Byte Market)",["New tickets every 20 minutes. Carry packages between stalls before the timer runs out, deliver parts, or fill rig commissions.","Every 5th job earns a bonus part."]]]},
@@ -3893,9 +3949,9 @@ const HELP=[
     ["Boosts",["Each Home Server in your stash boosts the rack 25% (up to 2), and your Home Vibe adds up to +40% more."]]],rel:["workbench","vibe"]},
   {id:"plants",icon:"🌱",n:"Plants",sub:"Grow chips at home",where:"Your living room",secs:[
     ["How it works",["Water a Bio-Lum Plant or Neon Bonsai every 8 hours. At growth 5/5, harvest it for 12 chips (plant) or 25 chips (bonsai) and it grows again."]]]},
-  {id:"void",icon:"⚔",n:"The Void",sub:"Fight bots and players for chips",where:"Metro → The Void",steps:["Start in the safe zone by the Metro; it heals you.","Pick Easy, Normal or Hard at the Bot Control terminal.","Press F to attack and hold G to block. Watch for red warning rings and aim lines and step away to dodge."],secs:[
+  {id:"void",icon:"⚔",n:"THE VOID cabinet",sub:"Fight bots and players for chips",where:"Gamers Den → THE VOID arcade cabinet",steps:["Ride the Metro to the Gamers Den and walk to THE VOID cabinet at the far end. Tap ▶ Insert coin and play.","Start in the safe zone; it heals you. Step out of the cabinet there to go back to the Den.","Pick Easy, Normal or Hard at the Bot Control terminal.","Press F to attack and hold G to block. Watch for red warning rings and aim lines and step away to dodge."],secs:[
     ["Rewards",["Harder modes pay more chips per kill, up to 40 for the SENTINEL Ω boss.","7 bot types drop their own loot: tech and gear, weapons, gadgets, decor, food and wardrobe unlocks. Hard mode has the best odds, and SENTINEL Ω always drops two rare-or-better items. Walk over a drop within 45 seconds to grab it."]],
-    ["Fighting players",["Whoever gets deleted loses 15% of their credits and chips and is sent home; half goes to the player who got the kill."]]]},
+    ["Fighting players",["Whoever gets deleted loses 15% of their credits and chips and is sent home; half goes to the player who got the kill."]]],rel:["den"]},
   {id:"grid",icon:"🟦",n:"The Grid",sub:"UPLOAD, the arcade and wager duels",where:"Metro → The Grid",secs:[
     ["UPLOAD",["First clears pay 4 to 22 chips (and ₵65–₵290) per level, gold root keys pay +1 chip each, and clearing all 10 levels wins a HALO Singularity Chip."]],
     ["Grid Arcade (₵10 a play)",["NEON PONG: ↑/↓ or W/S (or drag). First to 7 beats the CPU. Easy, Normal or Hard pays 3, 6 or 10 chips per win.","BYTE BREAKER: smash 6 rows of bricks; the top rows take two hits. 1 chip per 250 points.","GRID RUNNER: jump (double-jump in the air) over firewalls and grab gold chips. 1 chip per 300 m.","FIREWALL INVADERS: shoot the virus swarm before it lands. 1 chip per 400 points.","Up to 15 chips per run, and a new personal best pays ₵25. The Arcade High Scores board shows the top player of each game."]],
@@ -3929,6 +3985,16 @@ const HELP=[
     ["Rewards",["At the Curtain the stars bless you with ₵150–300 and 20–40 chips, every 3 stardust becomes 1 chip (up to 40), and the top scorer is named Audience MVP."]]]}]},
 
  {id:"places",icon:"🏙",n:"Places",topics:[
+  {id:"den",icon:"🕹",n:"Gamers Den",sub:"The gamer & anime bar",where:"Metro → Gamers Den",steps:["Order something at the Den Bar and use it while you're here.","Grab a seat in one of the six themed booths.","Pick a track on the jukebox (₵5).","Check the boards for games, watch parties and events, or pin your own.","Play THE VOID arcade cabinet at the far end."],secs:[
+    ["The booths",["Mecha Hangar, Sakura Garden, Pixel Dungeon, Starship Bridge, Ramen Alley and Dragon Lair. Walk up to a seat and press E to sit."]],
+    ["The jukebox",["12 original anime- and game-style tracks: an 8-bit overworld march, a boss battle, a magical-girl transformation, a shonen opening, lo-fi study beats and more. Everyone in the Den hears your pick."]]],rel:["denmenu","denboards","dencrew","void"]},
+  {id:"denmenu",icon:"🍙",n:"Den menu",sub:"Snacks and drinks with their own effects",where:"Gamers Den → Den Bar",steps:["Walk up to the Den Bar and press E.","Order from the menu. Orders go to your Stash.","Tap Use (in the Den Bar or your Stash) while you're in the Den."],secs:[
+    ["The menu",["12 items, from Mana Potion Soda and Critical Hit Cola to Boss Rush Ramen and Isekai Tea. Each has its own animation everyone in the Den sees (damage numbers, LEVEL UP!, sakura petals, a power-up aura, a magic circle…) and a boost."]],
+    ["Good to know",["They only work inside the Gamers Den, and the effect ends when you leave. Take the same item again to make it last longer."]]]},
+  {id:"denboards",icon:"📌",n:"Den boards",sub:"Games, watch parties and events",where:"Gamers Den → Game Night board and Watch parties & events board",steps:["Walk up to a board and press E.","Browse Games hosting, Watch parties and Events.","Tap 📌 Pin a post: pick the type, a title, when, where and your platform.","Show your username, add your Discord name, or both, so people can reach you."],secs:[
+    ["Rules",["Up to 3 posts at a time. Posts come down 6 hours after the start time, or after a day if there's no time.","Tap Copy Discord or Message to reach a host. Use 🚩 Report on anything that breaks the house rules. Never post personal info."]]]},
+  {id:"dencrew",icon:"🧑‍🍳",n:"Den Crew job",sub:"Serve booths and fix cabinets",where:"Gamers Den → Den Crew board",steps:["Clock in at the Den Crew board (4 crew at a time).","Watch for raised hands in the booths. Press E at the Den Bar for your crew console.","Mix each order in ticket order and serve it.","When a cabinet glitches, walk over and enter the reboot code with the arrows."],secs:[
+    ["Pay",["Each order pays its menu price plus a tip for speed and accuracy. Each cabinet fix pays ₵18 and a chip.","₵3/min wages (up to ₵150 a shift) once you've finished your first task. Leaving the Den ends your shift."]]],rel:["earnmoney"]},
   {id:"glitch",icon:"🍹",n:"The Glitch",sub:"Vex's bar on Sector 9",where:"Sector 9 street",secs:[
     ["Inside",["Vex's bar (11 drinks), Kai's Kitchen (7 dishes), the Job Board, a jukebox with 13 tracks (₵5 a play, everyone in the bar hears it), the CHIP PRINT arcade and two backrooms."]]],rel:["shifts","chipprint","backrooms"]},
   {id:"thirdeye",icon:"🔮",n:"The Third Eye",sub:"The club, its menu and fusions",where:"Sector 9 street",secs:[
@@ -4153,6 +4219,7 @@ function stashActions(id,refresh){ const it=BY[id], acts=el("div",{class:"row",s
   if(it.t==="decor") acts.append(el("button",{class:"btn hot",type:"button",text:"Place in living room",onclick:()=>{ placeDecor(id); refresh(); }}));
   if(it.t==="drink"||it.t==="food") acts.append(el("button",{class:"btn hot",type:"button",text:it.t==="food"?"Eat it":"Drink it",onclick:()=>{ consumeItem(id); refresh(); }}));
   if(it.t==="enc") acts.append(el("button",{class:"btn hot",type:"button",text:"Decrypt",onclick:()=>openDecrypt()}));
+  if(it.t==="den"){ const ub=el("button",{class:"btn hot",type:"button",text:me.scene==="den"?"Use it":"Use (inside the Gamers Den only)",onclick:()=>useDen(id)}); if(me.scene!=="den") ub.disabled=true; acts.append(ub); }
   if(it.t==="trip"){ const ub=el("button",{class:"btn hot",type:"button",text:me.scene==="club"?"Use it":"Use (inside The Third Eye only)",onclick:()=>useTrip(id)}); if(me.scene!=="club") ub.disabled=true; acts.append(ub); const mx=typeof knownMixesFor==="function"?knownMixesFor(id):[]; for(const F of mx){ const other=F.a===id?F.b:F.a; const b=el("button",{class:"btn",type:"button",style:"border-color:#ffd36a;color:#ffd36a",text:`⚗ Mix + ${BY[other].n}`,onclick:()=>mixFusion(F)}); if(me.scene!=="club") b.disabled=true; acts.append(b); } }
   if(canHold(it)) acts.append(el("button",{class:"btn hot",type:"button",text:save.look.hand===id?"Unequip from hand":"Equip in hand",onclick:()=>{ const on=save.look.hand!==id; save.look={...save.look,hand:on?id:""}; persist(); pushPresence(true); toast(on?`${it.n} equipped. Try the Pose emote.`:`${it.n} unequipped.`); refresh(); }}));
   acts.append(el("button",{class:"btn",type:"button",text:"Put on a shelf",onclick:()=>{ const slot=save.display.indexOf(null); if(slot<0){ toast("All 6 shelves are full. Take something down first."); return; } save.display[slot]=id; addItem(id,-1); persist(); toast(`${it.n} placed on shelf ${slot+1}`); refresh(); }}));
@@ -4778,7 +4845,7 @@ function payShift(base,tip){ tip=Math.round(tip*tipMult()); save.credits+=base+t
 
 /* drink mixing minigame */
 function mixDrink(drinkId,sub,done){
-  const d=BY[drinkId]; const food=d.t==="food", ING=d.kit==="bowl"?BOWL_ING:food?KITCHEN:INGR; const body=panel((food?"Cooking · ":"Mixing · ")+d.n,sub);
+  const d=BY[drinkId]; const food=d.t==="food", ING=d.kit==="bowl"?BOWL_ING:d.kit==="den"?DEN_ING:food?KITCHEN:INGR; const body=panel((food?"Cooking · ":"Mixing · ")+d.n,sub);
   const recipe=d.mix; let poured=[], mistakes=0; const t0=performance.now();
   const ticket=el("div",{class:"row"}); const renderTicket=()=>{ ticket.innerHTML=""; ticket.append(el("span",{class:"sub",text:"Order ticket:"})); recipe.forEach((g,i)=>ticket.append(el("span",{class:"tag",style:`color:${ING[g].c};opacity:${i<poured.length?.35:1}`,text:`${i+1}. ${ING[g].n}`}))); };
   renderTicket();
@@ -5061,6 +5128,286 @@ function tickBb(){ if(me.scene!=="byte") return;
     if(c.moving){ c.x+=Math.sign(dx)*Math.min(Math.abs(dx),130*dt); c.dir=Math.sign(dx); c.phase+=dt*7; } else if(!c.leaving&&!c.arrived){ c.arrived=true; beep(600,.04); }
     if(c.arrived&&!c.leaving){ c.dir=-1; c.left-=dt; if(c.left<=0){ c.leaving=true; toast("A Byte Bowl customer got tired of waiting and left."); beep(160,.12); } } }
   bbCustomers=bbCustomers.filter(c=>!(c.leaving&&Math.abs(c.x-c.home)<3)); }
+/* ============================================================ GAMERS DEN: a gamer & anime bar (The Void lives in a cabinet here) */
+const DEN_BOOTHS=[{x:820,n:"Mecha Hangar",c:"#38e8ff"},{x:1010,n:"Sakura Garden",c:"#ff8fc7"},{x:1200,n:"Pixel Dungeon",c:"#ffb84a"},{x:1390,n:"Starship Bridge",c:"#7c9cff"},{x:1580,n:"Ramen Alley",c:"#ff5a4a"},{x:1770,n:"Dragon Lair",c:"#ff3a3a"}];
+const DEN_SEATS=DEN_BOOTHS.flatMap((b,i)=>[{k:`den_b${i}L`,x:b.x-50,y:298,b:i},{k:`den_b${i}R`,x:b.x+50,y:298,b:i}]);
+const DEN_X={bar:420,crew:660,juke:1960,game:2130,watch:2310,cabs:[{x:2450,n:"Bullet Bloom"},{x:2565,n:"THE VOID",big:true},{x:2680,n:"Puzzle Drop"}]};
+const DEN_TRACKS=[
+  {n:"Pixel Quest Overworld",bpm:132,col:"#43f0a4",style:"chip",root:60,sc:"maj",prog:[0,4,5,3],mel:"0.2.4.2.0.4.7...6.4.5.4.2.....",vibe:"8-bit adventure · overworld march"},
+  {n:"Final Boss Protocol",bpm:168,col:"#ff3a3a",style:"rock",root:57,sc:"min",prog:[0,5,6,4],mel:"0.0.7.0.6.0.5.4.0.0.7.0.9.7.6.4.",vibe:"Boss battle · fast minor riffs"},
+  {n:"Magical Girl Transform!",bpm:150,col:"#ff8fc7",style:"magic",root:65,sc:"maj",prog:[0,5,3,4],mel:"4.5.7...9.7.5.4.2.4.5...4.2.0...",vibe:"Anime transformation · sparkly and bright"},
+  {n:"Shonen Rush Opening",bpm:172,col:"#ff8a2a",style:"rock",root:62,sc:"maj",prog:[5,3,0,4],mel:"7.7.9.b.9.7...4.4.5.7.5.4.2.....",vibe:"Anime opening · power chords and a big hook"},
+  {n:"Lo-fi Study Den",bpm:78,col:"#b8a0ff",style:"lofi",root:57,sc:"maj",prog:[1,4,0,5],mel:"4...2...0.......5...4...2.......",vibe:"Lo-fi beats · rainy window chill"},
+  {n:"Character Select",bpm:140,col:"#38e8ff",style:"select",root:59,sc:"min",prog:[0,0,5,6],mel:"0.3.4.7.0.3.4.7.6.4.3.0.6.4.3...",vibe:"Fighting game select screen · pumped"},
+  {n:"Sakura Station",bpm:112,col:"#ffb7dc",style:"slice",root:64,sc:"maj",prog:[3,4,2,5],mel:"2.4.5.7...5.4.2.0...2.4...2.....",vibe:"Slice of life · train ride after school"},
+  {n:"Mecha Launch Sequence",bpm:138,col:"#7c9cff",style:"mecha",root:55,sc:"min",prog:[0,6,5,4],mel:"0...0.2.3...3.4.7.......6.4.3.2.",vibe:"Mecha anime · launch countdown brass"},
+  {n:"Dungeon Crawl 64",bpm:104,col:"#ffb84a",style:"dungeon",root:52,sc:"min",prog:[0,5,0,4],mel:"0...3...2...0...5...4...3...2...",vibe:"Retro dungeon · echoing and eerie"},
+  {n:"Victory Fanfare Loop",bpm:128,col:"#ffd23a",style:"chip",root:67,sc:"maj",prog:[0,3,4,0],mel:"0.0.0.4...2...4.....7...........",vibe:"Battle won · celebratory fanfare"},
+  {n:"Speedrun Zone",bpm:184,col:"#43f0a4",style:"rock",root:60,sc:"min",prog:[0,6,5,6],mel:"7.6.7.4.7.6.7.3.7.6.7.4.9.7.6.4.",vibe:"Speedrun · breakneck arpeggios"},
+  {n:"Hero's Last Stand",bpm:92,col:"#e9e2ff",style:"ballad",root:62,sc:"maj",prog:[0,5,3,4],mel:"4.......5...4...2.......0.......",vibe:"Ending theme · slow and hopeful"},
+];
+const DEN_SCALES={maj:[0,2,4,5,7,9,11],min:[0,2,3,5,7,8,10]};
+let denTrack=0, denTrackBy=null, denPosts=[], denPostsOn=false, denSlots=[null,null,null,null], denSlot=-1, denBeat=null, denShift=null, denCust=[], denNext=0, denOrderNext=0, denGlitch={}, denGlitchNext=0, denSig="", denKiko=null;
+const isDenFx=fx=>typeof fx==="string"&&fx.startsWith("den_");
+function denNote(tr,deg,oct){ const S=DEN_SCALES[tr.sc]||DEN_SCALES.maj; const o=Math.floor(deg/7); return tr.root+(oct||0)*12+S[((deg%7)+7)%7]+12*o; }
+function playDenStep(tr,s,at,sp){ const bar=Math.floor(s/16)%tr.prog.length, deg=tr.prog[bar], ch=[denNote(tr,deg),denNote(tr,deg+2),denNote(tr,deg+4)], st=tr.style;
+  // drums
+  if(st==="lofi"){ if(s%16===0||s%16===10) kick(at); if(s%8===4) snare(at); if(s%4===2) hat(at,.02,.05); }
+  else if(st==="ballad"){ if(s%16===0) kick(at); if(s%16===8) snare(at); }
+  else if(st==="dungeon"){ if(s%8===0) kick(at); if(s%16===12) snare(at); if(s%4===2) hat(at,.015,.08); }
+  else if(st==="rock"||st==="select"||st==="mecha"){ if(s%4===0||s%8===6) kick(at); if(s%8===4) snare(at); hat(at,s%2?.018:.03,.04); }
+  else { if(s%8===0) kick(at); if(s%8===4) snare(at); if(s%2===0) hat(at,.022,.04); }
+  // bass
+  if(st==="rock"||st==="speed"){ if(s%2===0) tone("sawtooth",mtof(ch[0]-24),at,sp*1.6,.08,700); }
+  else if(st==="lofi"||st==="ballad"){ if(s%8===0) tone("triangle",mtof(ch[0]-24),at,sp*7,.12,500); }
+  else if(s%4===0) tone(st==="chip"?"square":"triangle",mtof(ch[0]-12),at,sp*3,st==="chip"?.04:.09,st==="chip"?1200:700);
+  // harmony
+  if(st==="chip"||st==="select"||st==="magic") tone("square",mtof(ch[s%3]+12),at,sp*.8,.016,3000);
+  else if(st==="rock"&&s%4===0) for(const m of [ch[0],ch[0]+7]) tone("sawtooth",mtof(m),at,sp*3.6,.025,1800);
+  else if(s%16===0) for(const m of ch) tone("triangle",mtof(m),at,sp*15,st==="lofi"?.03:.026,st==="lofi"?900:1600);
+  if(st==="magic"&&s%2===1) tone("sine",mtof(ch[(s>>1)%3]+24),at,sp*.6,.02,6000);
+  // lead melody
+  const c=tr.mel[s%tr.mel.length]; if(c&&c!=="."){ const d=parseInt(c,16); const len=(()=>{ let n=1; while(n<8&&tr.mel[(s+n)%tr.mel.length]==="."){ n++; } return n; })();
+    const wave=st==="chip"||st==="dungeon"?"square":st==="lofi"||st==="ballad"||st==="slice"?"triangle":st==="rock"||st==="mecha"?"sawtooth":"square";
+    tone(wave,mtof(denNote(tr,d,1)),at,sp*len*.95,st==="lofi"?.04:st==="rock"?.035:.045,st==="lofi"?1400:st==="dungeon"?1800:3200); } }
+/* --- scene drawing */
+function denBoothArt(b,i,t){ const x=b.x, L=x-82, c=b.c;
+  ctx.fillStyle="#120a20"; ctx.fillRect(L,108,164,160); ctx.strokeStyle=c; ctx.globalAlpha=.6; ctx.strokeRect(L+.5,108.5,163,159); ctx.globalAlpha=1;
+  ctx.save(); ctx.beginPath(); ctx.rect(L+4,112,156,110); ctx.clip();
+  if(i===0){ ctx.fillStyle="#1a2230"; ctx.fillRect(L,112,164,110); ctx.fillStyle="#2a3448"; ctx.beginPath(); ctx.moveTo(x-40,222); ctx.lineTo(x-34,150); ctx.lineTo(x-14,128); ctx.lineTo(x+14,128); ctx.lineTo(x+34,150); ctx.lineTo(x+40,222); ctx.fill(); ctx.fillStyle="#3a4660"; ctx.fillRect(x-6,118,12,14);
+    ctx.fillStyle=c; ctx.shadowColor=c; ctx.shadowBlur=10; ctx.fillRect(x-22,156,14,4+Math.sin(t*2)); ctx.fillRect(x+8,156,14,4+Math.sin(t*2)); ctx.shadowBlur=0; ctx.fillStyle="#ffb84a"; ctx.fillRect(x-30,176,60,3); for(let k=0;k<5;k++){ ctx.fillStyle=k%2?"#ffb84a":"#14101e"; ctx.fillRect(L+8+k*30,212,30,8); } }
+  else if(i===1){ const g=ctx.createLinearGradient(0,112,0,222); g.addColorStop(0,"#2a1040"); g.addColorStop(1,"#3a1630"); ctx.fillStyle=g; ctx.fillRect(L,112,164,110); ctx.fillStyle="#fff1d0"; ctx.beginPath(); ctx.arc(x+40,138,14,0,7); ctx.fill();
+    ctx.strokeStyle="#3a2018"; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(L,190); ctx.quadraticCurveTo(x-20,150,x+20,160); ctx.stroke(); ctx.lineWidth=1; for(let k=0;k<18;k++){ ctx.fillStyle=k%3?"#ff8fc7":"#ffd0e8"; ctx.beginPath(); ctx.arc(L+10+(k*37)%120,150+(k*23)%40,4,0,7); ctx.fill(); }
+    for(let k=0;k<6;k++){ const u=((t*.15+k/6)%1); XS.petal(ctx,L+20+((k*53)%130)+Math.sin(t+k)*6,112+u*110,3,t+k,"#ffb7dc"); } }
+  else if(i===2){ ctx.fillStyle="#262230"; ctx.fillRect(L,112,164,110); for(let y=112;y<222;y+=12) for(let xx=L+((y/12)%2)*12;xx<L+164;xx+=24){ ctx.strokeStyle="rgba(0,0,0,.4)"; ctx.strokeRect(xx+.5,y+.5,24,12); }
+    for(const tx of [x-50,x+50]){ ctx.fillStyle="#5a3a1a"; ctx.fillRect(tx-2,150,4,14); const f=Math.floor(t*6)%2; ctx.fillStyle=f?"#ffb84a":"#ff5a4a"; ctx.fillRect(tx-4,138-f*2,8,10); ctx.fillStyle="#ffe9a8"; ctx.fillRect(tx-2,142,4,5); }
+    ctx.fillStyle="#7a4a1a"; ctx.fillRect(x-20,190,40,24); ctx.fillStyle="#ffd23a"; ctx.fillRect(x-20,198,40,3); ctx.fillRect(x-3,196,6,8); ctx.fillStyle="rgba(255,210,58,.25)"; ctx.beginPath(); ctx.arc(x,186,26+Math.sin(t*3)*2,0,7); ctx.fill(); }
+  else if(i===3){ ctx.fillStyle="#05060f"; ctx.fillRect(L,112,164,110); for(let k=0;k<40;k++){ const u=((t*.4+k*.137)%1); const sx=x+(((k*71)%100)-50)*u*1.8, sy=160+(((k*43)%60)-30)*u*1.6; ctx.fillStyle=`rgba(220,230,255,${u})`; ctx.fillRect(sx,sy,1+u*2,1); }
+    ctx.strokeStyle="#7c9cff"; ctx.lineWidth=6; ctx.strokeRect(L+8,116,148,96); ctx.lineWidth=1; ctx.fillStyle="#1a2040"; ctx.fillRect(L+4,200,156,22); for(let k=0;k<12;k++){ ctx.fillStyle=Math.sin(t*4+k)>0?["#43f0a4","#ff5a4a","#38e8ff"][k%3]:"#2a3060"; ctx.fillRect(L+14+k*12,206,6,4); } }
+  else if(i===4){ ctx.fillStyle="#140a14"; ctx.fillRect(L,112,164,110); for(let k=0;k<3;k++){ const lx=L+30+k*52, sw=Math.sin(t*1.4+k)*1.5; ctx.fillStyle="#d8282a"; ctx.beginPath(); ctx.ellipse(lx+sw,132,8,10,0,0,7); ctx.fill(); ctx.fillStyle="rgba(255,220,120,.4)"; ctx.beginPath(); ctx.ellipse(lx+sw,132,4,6,0,0,7); ctx.fill(); }
+    ctx.fillStyle="#2a1a10"; ctx.beginPath(); ctx.ellipse(x,196,30,10,0,0,Math.PI); ctx.fill(); ctx.fillStyle="#f5e663"; ctx.fillRect(x-26,190,52,4); ctx.strokeStyle="rgba(240,240,255,.5)"; ctx.lineWidth=2; for(let k=0;k<3;k++){ const u=(t*.6+k/3)%1; ctx.globalAlpha=1-u; ctx.beginPath(); ctx.moveTo(x-12+k*12,186-u*20); ctx.quadraticCurveTo(x-4+k*12,176-u*20,x-12+k*12,166-u*20); ctx.stroke(); } ctx.globalAlpha=1; ctx.lineWidth=1; }
+  else { ctx.fillStyle="#200808"; ctx.fillRect(L,112,164,110); ctx.fillStyle="#3a0e0e"; ctx.beginPath(); ctx.moveTo(L+10,222); ctx.quadraticCurveTo(x-30,150,x+10,140); ctx.quadraticCurveTo(x+50,132,x+60,118); ctx.lineTo(x+66,124); ctx.quadraticCurveTo(x+56,150,x+20,160); ctx.quadraticCurveTo(x+40,180,x+70,222); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x-10,150); ctx.lineTo(x-50,120); ctx.lineTo(x-30,160); ctx.fill(); const e=.5+.5*Math.sin(t*2); ctx.fillStyle=`rgba(255,${120+e*80},40,1)`; ctx.shadowColor="#ff8a2a"; ctx.shadowBlur=8*e; ctx.beginPath(); ctx.ellipse(x+52,128,3,1.4,-.4,0,7); ctx.fill(); ctx.shadowBlur=0;
+    for(let k=0;k<14;k++){ ctx.fillStyle=k%2?"#ffd23a":"#e0a020"; ctx.beginPath(); ctx.ellipse(L+20+((k*41)%124),214-(k%3)*3,4,2,0,0,7); ctx.fill(); } }
+  ctx.restore();
+  neonText(b.n.toUpperCase(),x,104,8,c,flick(60+i,t));
+  // benches + table
+  for(const sx of [x-50,x+50]){ ctx.fillStyle="#2a1440"; ctx.fillRect(sx-30,226,60,44); ctx.fillStyle=c; ctx.globalAlpha=.35; ctx.fillRect(sx-30,226,60,3); ctx.globalAlpha=1; ctx.fillStyle="#3a1c58"; ctx.fillRect(sx-30,266,60,10); for(let k=0;k<3;k++){ ctx.fillStyle="rgba(0,0,0,.25)"; ctx.fillRect(sx-28+k*20,230,1,34); } }
+  ctx.fillStyle="#0b0716"; ctx.fillRect(x-16,248,32,6); ctx.fillRect(x-3,254,6,24); ctx.fillStyle=c; ctx.fillRect(x-16,247,32,1);
+  ctx.fillStyle="#e9e2ff"; ctx.fillRect(x-8,243,5,5); ctx.fillStyle=c; ctx.fillRect(x+3,242,4,6); }
+function drawDen(t){
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#0c0618"); g.addColorStop(.7,"#1a0b2e"); g.addColorStop(1,"#0b0716"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
+  // ceiling LED strip and wall panels
+  for(let x=Math.floor(camX/20)*20;x<camX+VW;x+=20){ ctx.fillStyle=`hsl(${(x*.4+t*60)%360},90%,55%)`; ctx.globalAlpha=.55; ctx.fillRect(x,8,14,3); } ctx.globalAlpha=1;
+  for(let x=Math.floor(camX/120)*120;x<camX+VW;x+=120){ ctx.fillStyle="rgba(255,255,255,.025)"; ctx.fillRect(x,20,2,240); }
+  // posters (original art)
+  for(const [px,hue,k] of [[600,300,0],[1020,190,1],[1580,30,2],[1870,260,3],[2220,140,4]]){ ctx.fillStyle="#1a1030"; ctx.fillRect(px-26,28,52,70); ctx.fillStyle=`hsl(${hue},80%,45%)`; ctx.fillRect(px-22,32,44,46);
+    ctx.fillStyle="#fff"; if(k%2){ ctx.beginPath(); ctx.arc(px,52,10,0,7); ctx.fill(); ctx.fillStyle=`hsl(${hue},80%,25%)`; ctx.fillRect(px-6,49,4,5); ctx.fillRect(px+2,49,4,5); } else { ctx.beginPath(); ctx.moveTo(px,38); ctx.lineTo(px+14,72); ctx.lineTo(px-14,72); ctx.fill(); }
+    ctx.fillStyle="#e9e2ff"; ctx.font="6px Silkscreen, monospace"; ctx.textAlign="center"; ctx.fillText(["NEO KAIJU","STAR CADET","PIXEL SAGA","MOON SQUAD","BYTE FIGHT"][k],px,90); }
+  // sign
+  const fl=flick(71,t); ctx.save(); ctx.font="700 40px Silkscreen, monospace"; ctx.textAlign="center"; ctx.shadowBlur=16*fl; ctx.shadowColor="#ff3fa8"; ctx.fillStyle="#ff3fa8"; ctx.globalAlpha=.6+.4*fl; ctx.fillText("GAMERS DEN",1300,62); ctx.shadowColor="#38e8ff"; ctx.fillStyle="#38e8ff"; ctx.font="700 11px Silkscreen, monospace"; ctx.fillText("GAMES · ANIME · BAR",1300,80); ctx.restore();
+  // metro
+  ctx.fillStyle="#0a0712"; ctx.fillRect(60,190,120,72); ctx.fillStyle="#b06bff"; ctx.fillRect(56,180,128,8); neonText("◉ METRO",120,172,12,"#b06bff",1);
+  // bar
+  ctx.fillStyle="#1a0e2a"; ctx.fillRect(250,100,350,130); for(let s=0;s<3;s++){ ctx.fillStyle="#2a1840"; ctx.fillRect(256,120+s*34,338,3); for(let k=0;k<16;k++){ const hue=(k*47+s*90)%360; ctx.fillStyle=`hsl(${hue},80%,${50+10*Math.sin(t*2+k)}%)`; ctx.fillRect(262+k*20,104+s*34,8,16); ctx.fillStyle="rgba(255,255,255,.3)"; ctx.fillRect(263+k*20,106+s*34,2,8); } }
+  ctx.fillStyle="#0b0716"; ctx.fillRect(268,112,108,0); neonText("DEN BAR",425,96,12,"#ff3fa8",flick(72,t));
+  ctx.fillStyle="#140a24"; ctx.fillRect(250,228,350,40); ctx.fillStyle="#ff3fa8"; ctx.fillRect(250,226,350,3); for(let k=0;k<7;k++){ ctx.fillStyle=`hsla(${(k*50+t*40)%360},90%,60%,.5)`; ctx.fillRect(262+k*48,240,30,3); }
+  // menu screen
+  ctx.fillStyle="#05030a"; ctx.fillRect(470,108,120,92); ctx.strokeStyle="#38e8ff"; ctx.strokeRect(470.5,108.5,119,91); ctx.fillStyle="#38e8ff"; ctx.font="7px Silkscreen, monospace"; ctx.textAlign="left"; ctx.fillText("MENU · DEN ONLY",476,118);
+  const off=Math.floor(t/3)%3; for(let k=0;k<5;k++){ const d=DEN_MENU[(off*4+k)%DEN_MENU.length]; ctx.fillStyle=d.col; ctx.fillText(d.n.slice(0,17),476,131+k*13); ctx.fillStyle="#e9e2ff"; ctx.textAlign="right"; ctx.fillText("₵"+d.v,586,131+k*13); ctx.textAlign="left"; }
+  // crew board
+  ctx.fillStyle="#1a1030"; ctx.fillRect(626,130,68,80); ctx.strokeStyle="#43f0a4"; ctx.strokeRect(626.5,130.5,67,79); neonText("DEN CREW",660,124,8,"#43f0a4",1); ctx.fillStyle="#e9e2ff"; ctx.font="6px Silkscreen, monospace"; ctx.textAlign="center";
+  const act=denActive(); for(let k=0;k<STAFF_MAX;k++){ const s=act.find(a=>a.slot===k); ctx.fillStyle=s?"#43f0a4":"#4a3a6a"; ctx.fillText(s?(s.by===myId||s.by==="local"?"YOU":nameOf(s.by).slice(0,9).toUpperCase()):"OPEN",660,146+k*14); }
+  ctx.fillStyle="#ffb84a"; ctx.fillText("NOW HIRING",660,204);
+  for(let i=0;i<DEN_BOOTHS.length;i++){ const b=DEN_BOOTHS[i]; if(b.x+100>camX&&b.x-100<camX+VW) denBoothArt(b,i,t); }
+  // jukebox
+  const jx=DEN_X.juke, tr=DEN_TRACKS[denTrack]||DEN_TRACKS[0]; ctx.fillStyle="#2a1440"; ctx.beginPath(); ctx.moveTo(jx-30,262); ctx.lineTo(jx-30,170); ctx.arc(jx,170,30,Math.PI,0); ctx.lineTo(jx+30,262); ctx.fill(); ctx.strokeStyle=tr.col; ctx.lineWidth=2; ctx.stroke(); ctx.lineWidth=1;
+  for(let k=0;k<8;k++){ const h=6+Math.abs(Math.sin(t*(tr.bpm/30)+k*1.3))*28; ctx.fillStyle=`hsl(${(k*40+t*50)%360},90%,60%)`; ctx.fillRect(jx-22+k*6,226-h,4,h); } ctx.fillStyle="#0b0716"; ctx.fillRect(jx-22,230,44,20); ctx.fillStyle=tr.col; ctx.font="5px Silkscreen, monospace"; ctx.textAlign="center"; ctx.fillText("♪ "+tr.n.toUpperCase().slice(0,18),jx,242);
+  neonText("JUKEBOX",jx,134,9,tr.col,1);
+  // boards
+  for(const [bx,kind,title,col] of [[DEN_X.game,"game","GAME NIGHT","#43f0a4"],[DEN_X.watch,"watch","WATCH PARTIES & EVENTS","#ff8fc7"]]){ ctx.fillStyle="#3a2414"; ctx.fillRect(bx-66,118,132,112); ctx.fillStyle="#a07a4a"; ctx.fillRect(bx-62,122,124,104); neonText(title,bx,112,8,col,1);
+    const L=denLive().filter(p=>kind==="game"?p.kind==="game":p.kind!=="game").slice(0,4);
+    if(!L.length){ ctx.fillStyle="#3a2414"; ctx.font="6px Silkscreen, monospace"; ctx.textAlign="center"; ctx.fillText("PIN YOURS HERE",bx,176); }
+    L.forEach((p,k)=>{ const px=bx-58+(k%2)*60, py=128+Math.floor(k/2)*48; ctx.fillStyle=["#fff6c8","#d8f5ff","#ffe0f0","#e0ffe8"][k]; ctx.fillRect(px,py,54,42); ctx.fillStyle="#ff3a3a"; ctx.beginPath(); ctx.arc(px+27,py+3,2,0,7); ctx.fill();
+      ctx.fillStyle="#1a1030"; ctx.font="5px Silkscreen, monospace"; ctx.textAlign="center"; const tl=p.title.toUpperCase(); ctx.fillText(tl.slice(0,12),px+27,py+16); if(tl.length>12) ctx.fillText(tl.slice(12,24),px+27,py+23); ctx.fillStyle="#6a4a8a"; ctx.fillText(denWhenShort(p),px+27,py+34); }); }
+  // cabinets
+  for(const cb of DEN_X.cabs){ const x=cb.x, w=cb.big?70:50, top=cb.big?96:126, gl=denGlitch[cb.n]; ctx.fillStyle=cb.big?"#1a0814":"#160c26"; ctx.beginPath(); ctx.moveTo(x-w/2,262); ctx.lineTo(x-w/2,top+20); ctx.lineTo(x-w/2+6,top); ctx.lineTo(x+w/2-6,top); ctx.lineTo(x+w/2,top+20); ctx.lineTo(x+w/2,262); ctx.fill();
+    const cc=cb.big?"#ff5a4a":["#38e8ff","#43f0a4"][x%2]; ctx.strokeStyle=cc; ctx.stroke(); ctx.fillStyle="#05030a"; const sy=top+30, sh=cb.big?70:52; ctx.fillRect(x-w/2+8,sy,w-16,sh);
+    if(gl){ for(let k=0;k<30;k++){ ctx.fillStyle=`rgba(255,255,255,${Math.random()*.6})`; ctx.fillRect(x-w/2+8+Math.random()*(w-18),sy+Math.random()*(sh-2),3,2); } neonText("ERROR",x,sy+sh/2+3,7,"#ff5a4a",Math.sin(t*10)>0?1:.3); }
+    else if(cb.big){ ctx.save(); ctx.beginPath(); ctx.rect(x-27,sy,54,sh); ctx.clip(); for(let k=0;k<6;k++){ ctx.fillStyle=k%2?"#ff5a4a":"#38e8ff"; ctx.fillRect(x-27+((t*30+k*20)%60),sy+40+Math.sin(t*3+k)*8,4,10); } ctx.strokeStyle="rgba(255,90,74,.5)"; ctx.beginPath(); ctx.moveTo(x-27,sy+52); ctx.lineTo(x+27,sy+52); ctx.stroke(); ctx.restore(); neonText("INSERT COIN",x,sy+16,6,"#f5f06a",Math.sin(t*4)>0?1:.25); }
+    else { ctx.save(); ctx.beginPath(); ctx.rect(x-17,sy,34,sh); ctx.clip(); for(let k=0;k<8;k++){ ctx.fillStyle=`hsl(${(k*45+t*80)%360},90%,60%)`; ctx.fillRect(x-17+((k*13+t*20)%34),sy+((k*17+t*25)%sh),4,4); } ctx.restore(); }
+    ctx.fillStyle=cc; ctx.font=`700 ${cb.big?9:6}px Silkscreen, monospace`; ctx.textAlign="center"; ctx.shadowColor=cc; ctx.shadowBlur=8; ctx.fillText(cb.n,x,top+18); ctx.shadowBlur=0;
+    ctx.fillStyle="#2a1840"; ctx.fillRect(x-w/2+4,sy+sh+6,w-8,12); ctx.fillStyle="#ff3a3a"; ctx.beginPath(); ctx.arc(x-8,sy+sh+12,3,0,7); ctx.fill(); ctx.fillStyle="#f5f06a"; ctx.beginPath(); ctx.arc(x+4,sy+sh+12,2.5,0,7); ctx.fill(); ctx.fillStyle="#38e8ff"; ctx.beginPath(); ctx.arc(x+12,sy+sh+12,2.5,0,7); ctx.fill(); }
+  // floor
+  ctx.fillStyle="#140a22"; ctx.fillRect(camX,262,VW,80); for(let x=Math.floor(camX/40)*40;x<camX+VW;x+=40) for(let y=262;y<342;y+=20){ ctx.fillStyle=((x/40+(y-262)/20)%2)?"#1a0e2c":"#120820"; ctx.fillRect(x,y,40,20); }
+  ctx.fillStyle="rgba(255,63,168,.12)"; ctx.fillRect(camX,262,VW,2); ctx.fillStyle="#0e0a18"; ctx.fillRect(camX,342,VW,18); }
+/* --- hotspots */
+function denHot(){ const out=[{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
+  {x:DEN_X.bar,hw:150,label:denShift?"Den Bar: crew console (on shift)":"Den Bar: order from the Den menu",act:()=>denShift?denConsole():openDenBar("menu")},
+  {x:DEN_X.crew,hw:36,label:denShift?"Den Crew board: you're on shift":`Den Crew board: work a shift (${denActive().length}/${STAFF_MAX})`,act:()=>openDenBar("shift")}];
+  for(const s of DEN_SEATS){ const mine=!!(me.homeSit&&me.homeSit.key===s.k), b=DEN_BOOTHS[s.b], taken=denCust.some(c=>c.seat===s.k&&!c.leaving);
+    out.push({x:s.x,hw:22,label:mine?"Stand up":taken?`${b.n} booth (taken)`:`Sit in the ${b.n} booth`,act:()=>{ if(mine){ me.homeSit=null; pushPresence(true); return; } if(taken){ toast("Someone's sitting there. Try another seat."); return; } me.homeSit={key:s.k,x:s.x,y:s.y}; me.x=s.x; me.y=s.y; target=null; pushPresence(true); }}); }
+  out.push({x:DEN_X.juke,hw:34,label:`Den jukebox: ${(DEN_TRACKS[denTrack]||DEN_TRACKS[0]).n} (₵5 to change)`,act:()=>openDenJuke()},
+    {x:DEN_X.game,hw:66,label:"Game Night board: games players are hosting",act:()=>openDenBoard("game")},
+    {x:DEN_X.watch,hw:66,label:"Watch parties & events board",act:()=>openDenBoard("watch")});
+  for(const cb of DEN_X.cabs){ const gl=denGlitch[cb.n];
+    out.push({x:cb.x,hw:cb.big?40:26,label:gl&&denShift?`Fix ${cb.n} (it's glitching)`:cb.big?"Play THE VOID (arcade cabinet)":`${cb.n} cabinet`,act:()=>{ if(gl&&denShift) return denFix(cb.n); if(cb.big) return openVoidCab(); toast(gl?`${cb.n} is glitching. The Den Crew will fix it.`:`${cb.n} is in attract mode. THE VOID is the cabinet everyone's playing tonight.`); }}); }
+  return out; }
+function openVoidCab(){ const body=panel("THE VOID","An arcade cabinet in the Gamers Den. Step inside the game and fight."); currentView=null;
+  body.append(el("div",{class:"detail",style:"border-color:#ff5a4a"},el("div",{style:"font:700 26px Silkscreen,monospace;color:#ff5a4a;text-shadow:0 0 12px #ff5a4a;padding:8px",text:"VOID"}),el("div",{class:"info"},
+    el("span",{text:"A PvP arena with Void bots. Pick a bot mode at Bot Control in the safe zone, press F to attack and hold G to block."}),
+    el("span",{class:"sub",text:"Getting deleted costs 15% of your credits and chips (half goes to whoever got you) and sends you home. Step out of the cabinet any time from the safe zone."}))),
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"▶ Insert coin and play",onclick:()=>{ closePanel(); beep(880,.08,"square"); setTimeout(()=>beep(1320,.1,"square"),90); go("void",140); }}),el("button",{class:"btn",type:"button",text:"Not now",onclick:closePanel}))); }
+/* --- the Den Bar: menu, my items, shifts */
+function denItems(){ return invList().filter(([id])=>BY[id]&&BY[id].t==="den"); }
+function openDenBar(tab){ tab=tab||"menu"; if(tab==="shift"&&denShift) return denConsole();
+  const own=denItems().reduce((a,[,n])=>a+n,0); const body=panel("Den Bar","Kiko: \"Welcome, player one. Everything on this menu only works in here.\""); currentView="denbar:"+tab;
+  const tabs=el("div",{class:"tabs"}); for(const [k,l] of [["menu","Menu"],["mine",`My Den items (${own})`],["shift",`Den Crew shifts (${denActive().length}/${STAFF_MAX})`]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>openDenBar(k)})); body.append(tabs);
+  if(tab==="menu"){ const l=el("div",{class:"list"}); for(const d of DEN_MENU){ const n=invList().find(([id])=>id===d.id);
+      l.append(el("div",{class:"li"},itemCanvas(d.id,48),el("div",{class:"grow"},el("div",{class:"r-"+d.r,text:d.n}),el("div",{class:"sub",text:d.desc}),n?el("div",{class:"r-uncommon",text:`You have ${n[1]}`}):null),
+        el("div",{style:"display:flex;flex-direction:column;gap:4px"},el("button",{class:"btn hot",type:"button",text:`Order ₵${d.v}`,"aria-label":`Order ${d.n} for ₵${d.v}`,onclick:()=>denBuy(d)}),n?el("button",{class:"btn",type:"button",text:"Use",onclick:()=>useDen(d.id)}):null))); }
+    body.append(l,el("p",{class:"sub",text:"Orders go to your Stash. Use them anywhere in the Gamers Den; the effect ends when you leave. Take the same item again to make it last longer."})); return; }
+  if(tab==="mine"){ const L=denItems(); if(!L.length){ body.append(el("div",{class:"empty",text:"No Den items yet. Order something from the menu."})); return; } const l=el("div",{class:"list"});
+    for(const [id,n] of L) l.append(el("div",{class:"li"},itemCanvas(id,44),el("div",{class:"grow"},el("div",{class:"r-"+BY[id].r,text:`${BY[id].n} ×${n}`}),el("div",{class:"sub",text:DEN_BY[id].desc})),el("button",{class:"btn hot",type:"button",text:"Use",onclick:()=>useDen(id)})));
+    body.append(l); return; }
+  const act=denActive(), list=el("div",{class:"list"});
+  for(let k=0;k<STAFF_MAX;k++){ const s=act.find(a=>a.slot===k); const who=s?(s.by===myId||s.by==="local"?"You":nameOf(s.by)):null; list.append(el("div",{class:"li"},el("span",{class:"tag "+(who?"r-uncommon":""),text:`Crew ${k+1}`}),el("div",{class:"grow",text:who?`${who} · on shift`:"Open"}))); }
+  const b=el("button",{class:"btn hot",type:"button",text:act.length>=STAFF_MAX?"Crew is full":"Clock in for a Den Crew shift",onclick:denClockIn}); if(act.length>=STAFF_MAX) b.disabled=true;
+  body.append(el("strong",{text:`Den Crew ${act.length}/${STAFF_MAX}`}),list,el("div",{class:"row"},b),
+    el("div",{class:"guide"},el("h3",{text:"The job"}),el("ul",{},
+      el("li",{text:"Booth orders: guests in the booths raise a hand and order from the Den menu. Mix each one in ticket order and serve it for the menu price plus a tip for speed and accuracy."}),
+      el("li",{text:"Cabinet repair: arcade cabinets glitch now and then. Walk up and run the reboot code for ₵18 and a chip."}),
+      el("li",{text:"Wages: ₵3/min (up to ₵150 a shift) once you've finished your first task. Leaving the Den ends your shift."})))); }
+function denBuy(d){ if(save.credits<d.v){ toast(`Not enough credits. You need ${d.v-Math.floor(save.credits)} more.`); beep(150,.15); return; } save.credits-=d.v; addItem(d.id); persist(); hud(); toast(`Kiko slides you a ${d.n}. It's in your Stash.`,d.col); beep(1200,.08); openDenBar("menu"); }
+function useDen(id){ const d=DEN_BY[id]; if(!d||!hasItem(id)) return; if(me.scene!=="den"){ toast("Den items only work inside the Gamers Den."); return; }
+  addItem(id,-1); persist(); closePanel(); me.emote={e:"use",t:T,it:id}; pushPresence(true,{emote:{e:"use",at:Date.now(),it:id}}); beep(520,.12,"square");
+  setTimeout(()=>{ const now=Date.now(), cur=myTrip&&myTrip.until>now?myTrip:null; if(cur&&cur.id===id){ myTrip={...cur,until:Math.min(now+15*60e3,cur.until+d.dur*600)}; toast(`${d.n} again: it lasts longer.`,d.col); }
+    else { myTrip={fx:d.fx,id,name:d.n,lvl:1,until:now+d.dur*1000,den:true}; toast(`${d.n}: ${d.desc.split(".")[0]}.`,d.col); }
+    save.buffs=save.buffs||{}; for(const k of d.buffs) save.buffs[k]=Math.max(+save.buffs[k]||0,myTrip.until); persist(); hud(); pushPresence(true); beep(880,.1,"square"); setTimeout(()=>beep(1320,.12,"square"),100); },900); }
+/* --- Den Crew shifts */
+function denActive(){ return denSlots.map((s,i)=>s&&s.by&&Date.now()-(+s.beat||0)<SHIFT_STALE?{slot:i,by:s.by}:null).filter(Boolean); }
+async function denClockIn(){ if(denSlot>=0) return; if(!DB){ denSlot=0; denSlots[0]={by:"local",beat:Date.now()}; return denStart(); }
+  for(let i=0;i<STAFF_MAX;i++){ const ref=DB.doc("staff/denslot"+i);
+    try{ const sn=await ref.get(); const d=sn.exists?sn.data():null;
+      if(!d||!d.by||d.by===myId||Date.now()-(+d.beat||0)>SHIFT_STALE){ await ref.set({by:myId,beat:Date.now(),since:Date.now()}); denSlot=i; denSlots[i]={by:myId,beat:Date.now()}; return denStart(); } }catch(e){} }
+  toast("The Den Crew is full. Try again soon."); }
+function denStart(){ denShift={served:0,earned:0,tips:0,fixed:0,start:Date.now()}; denOrderNext=T+3; denGlitchNext=T+25; clearInterval(denBeat);
+  denBeat=setInterval(()=>{ if(!DB&&denSlots[0]) denSlots[0].beat=Date.now(); if(DB&&denSlot>=0) DB.doc("staff/denslot"+denSlot).update({beat:Date.now()}).catch(()=>{}); },60e3);
+  pushPresence(true); closePanel(); toast("You're on the Den Crew. Watch the booths for raised hands and the cabinets for glitches.","#43f0a4"); chatLine(null,"Den Crew: press E at the Den Bar for your crew console. Serve booth orders and fix glitching cabinets.","sys"); }
+async function denClockOut(){ if(denSlot<0||!denShift) return; clearInterval(denBeat); const slot=denSlot; denSlot=-1;
+  if(DB){ try{ await DB.doc("staff/denslot"+slot).set({by:null,beat:0}); }catch(e){} } else denSlots[0]=null;
+  const done=denShift.served+denShift.fixed, mins=Math.floor((Date.now()-denShift.start)/60e3), wage=done?Math.min(150,mins*3):0; save.credits+=wage; earnRP(wage,"Gamers Den shift"); persist();
+  toast(`Den Crew shift over: ${denShift.served} orders, ${denShift.fixed} cabinets fixed. ₵${denShift.earned} + ₵${denShift.tips} tips + ₵${wage} wages`,"#43f0a4");
+  denCust.forEach(c=>{ c.want=null; }); denGlitch={}; denShift=null; pushPresence(true); }
+function denConsole(refresh){ const mins=Math.floor((Date.now()-denShift.start)/60e3);
+  const body=panel(`Den Crew · Crew ${denSlot+1}`,`On shift ${mins} min · ${denShift.served} orders · ${denShift.fixed} fixes · ₵${denShift.earned} + ₵${denShift.tips} tips`,refresh); currentView="denconsole";
+  const waiting=denCust.filter(c=>c.arrived&&!c.leaving&&c.want); body.append(el("strong",{text:`Booth orders (${waiting.length})`}));
+  if(!waiting.length) body.append(el("div",{class:"empty",text:"No hands up right now. Guests order every 10 to 18 seconds."}));
+  const l=el("div",{class:"list"}); for(const c of waiting){ const d=BY[c.want], pct=c.left/c.max, b=DEN_BOOTHS[(DEN_SEATS.find(s=>s.k===c.seat)||{b:0}).b];
+    l.append(el("div",{class:"li"},itemCanvas(c.want,48),el("div",{class:"grow"},el("div",{text:`${d.n} for the ${b.n} booth`}),el("div",{class:pct>.5?"r-uncommon":pct>.25?"":"r-epic",text:`Patience ${Math.ceil(c.left)}s · pays ₵${d.v} + tip`})),el("button",{class:"btn hot",type:"button",text:"Mix",onclick:()=>denServe(c)}))); }
+  body.append(l); const gl=Object.keys(denGlitch);
+  if(gl.length){ body.append(el("strong",{text:"Glitching cabinets"})); const g=el("div",{class:"list"}); for(const n of gl) g.append(el("div",{class:"li"},el("span",{class:"tag r-epic",text:"ERROR"}),el("div",{class:"grow",text:`${n} is glitching. Walk over to it or fix it from here.`}),el("button",{class:"btn hot",type:"button",text:"Fix",onclick:()=>denFix(n)}))); body.append(g); }
+  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Den menu",onclick:()=>openDenBar("menu")}),el("button",{class:"btn",type:"button",text:"Clock out",onclick:async()=>{ await denClockOut(); closePanel(); }}))); }
+function denServe(c){ const d=BY[c.want]; mixDrink(c.want,"A guest is waiting in their booth. Speed and accuracy earn bigger tips.",res=>{
+  if(!denShift){ closePanel(); return; }
+  if(!denCust.includes(c)||c.leaving||!c.want){ addItem(d.id); persist(); toast(`They left before you finished. The ${d.n} went to your Stash.`); denConsole(); return; }
+  const tip=Math.round(Math.max(0,5+(c.left/c.max)*12-res.mistakes*4)*tipMult()); c.want=null; c.happy=T; c.fx=DEN_BY[d.id].fx; c.fxUntil=T+40; c.stay=Math.max(c.stay,T+50);
+  save.credits+=d.v+tip; earnRP(d.v+tip,"Gamers Den shift"); denShift.served++; denShift.earned+=d.v; denShift.tips+=tip; persist(); hud(); toast(`+₵${d.v}${tip?` and ₵${tip} tip`:""}`,"#43f0a4"); beep(1500,.06); setTimeout(()=>beep(1900,.06),70); denConsole(); }); }
+function denFix(n){ if(!denGlitch[n]) return toast(`${n} is running fine now.`); const arrows=["←","↑","→","↓"], keys={ArrowLeft:0,ArrowUp:1,ArrowRight:2,ArrowDown:3}; const code=Array.from({length:5},()=>Math.floor(Math.random()*4)); let pos=0, miss=0;
+  const body=panel(`Reboot ${n}`,"Enter the reboot code in order. Use the buttons or your arrow keys."); currentView=null;
+  const show=el("div",{style:"display:flex;gap:8px;justify-content:center;font:700 28px Silkscreen,monospace;padding:10px"}); const msg=el("div",{class:"sub",role:"status",style:"text-align:center"});
+  const draw=()=>{ show.innerHTML=""; code.forEach((a,i)=>show.append(el("span",{style:`color:${i<pos?"#43f0a4":i===pos?"#f5f06a":"#6b5a8a"}`,text:arrows[a]}))); };
+  const press=a=>{ if(!denGlitch[n]){ closePanel(); return; } if(a===code[pos]){ pos++; beep(600+pos*120,.05,"square"); if(pos===code.length){ delete denGlitch[n]; denShift.fixed++; save.credits+=18; save.chips+=1; earnRP(18,"Gamers Den shift"); persist(); hud(); toast(`${n} rebooted. +₵18 and 1 chip`,"#43f0a4"); beep(1600,.1); setTimeout(()=>denShift?denConsole():closePanel(),400); return; } }
+    else { miss++; pos=0; msg.textContent=`Wrong key. The code restarts (${miss} miss${miss>1?"es":""}).`; beep(150,.12,"sawtooth"); } draw(); };
+  const pad=el("div",{class:"row",style:"justify-content:center"}); arrows.forEach((a,i)=>pad.append(el("button",{class:"btn",type:"button",style:"font-size:20px;min-width:52px",text:a,onclick:()=>press(i)})));
+  body.append(show,pad,msg); draw(); body.tabIndex=-1; body.addEventListener("keydown",e=>{ if(e.key in keys){ e.preventDefault(); press(keys[e.key]); } }); setTimeout(()=>body.focus(),30); }
+setInterval(()=>{ if(currentView!=="denconsole"||$("#overlay").hidden||!denShift) return; const sig=JSON.stringify([denCust.filter(c=>c.arrived&&!c.leaving&&c.want).map(c=>c.id+":"+Math.ceil(c.left/5)),Object.keys(denGlitch),denShift.served]); if(sig!==denSig){ denSig=sig; const sc=document.querySelector(".panel .body"); const top=sc?sc.scrollTop:0; denConsole(true); const nb=document.querySelector(".panel .body"); if(nb) nb.scrollTop=top; } },1000);
+/* --- guests in the booths */
+function denSpawn(){ const free=DEN_SEATS.filter(s=>!denCust.some(c=>c.seat===s.k&&!c.leaving)&&!(me.homeSit&&me.homeSit.key===s.k)); if(!free.length) return; const s=free[Math.floor(Math.random()*free.length)];
+  denCust.push({id:Math.random().toString(36).slice(2),seat:s.k,sx:s.x,sy:s.y,home:Math.random()<.5?150:2380,x:0,y:300,dir:1,phase:0,look:randomLook(),want:null,max:80,left:80,arrived:false,leaving:false,moving:true,stay:T+rnd(80,200)}); const c=denCust[denCust.length-1]; c.x=c.home; }
+function tickDen(){ if(me.scene!=="den"){ if(denShift) denClockOut(); if(myTrip&&myTrip.den){ myTrip=null; pushPresence(true); toast("Your Den item wears off as you leave the Gamers Den."); } if(denCust.length) denCust=[]; return; }
+  const want=denShift?6:4; if(denCust.filter(c=>!c.leaving).length<want&&T>denNext){ denSpawn(); denNext=T+rnd(4,9); }
+  if(denShift&&T>denOrderNext){ const c=denCust.filter(c=>c.arrived&&!c.leaving&&!c.want); if(c.length){ const g=c[Math.floor(Math.random()*c.length)]; g.want=pickMenu(DEN_MENU.filter(d=>d.r!=="epic")).id; g.left=g.max=80; beep(900,.04); } denOrderNext=T+rnd(10,18); }
+  if(denShift&&T>denGlitchNext){ const ok=DEN_X.cabs.filter(cb=>!denGlitch[cb.n]); if(ok.length){ const cb=ok[Math.floor(Math.random()*ok.length)]; denGlitch[cb.n]=T+70; toast(`${cb.n} is glitching! Den Crew, go fix it.`,"#ff5a4a"); } denGlitchNext=T+rnd(40,70); }
+  for(const k of Object.keys(denGlitch)) if(T>denGlitch[k]) delete denGlitch[k];
+  for(const c of denCust){ if(!c.leaving&&c.arrived&&!c.want&&T>c.stay) c.leaving=true;
+    const tx=c.leaving?c.home:c.sx; const dx=tx-c.x; c.moving=Math.abs(dx)>2;
+    if(c.moving){ c.x+=Math.sign(dx)*Math.min(Math.abs(dx),120*dt); c.y+=(c.leaving?0:(c.sy-c.y))*Math.min(1,dt*3); c.dir=Math.sign(dx); c.phase+=dt*7; } else if(!c.leaving&&!c.arrived){ c.arrived=true; c.y=c.sy; c.dir=DEN_SEATS.find(s=>s.k===c.seat).x<DEN_BOOTHS[DEN_SEATS.find(s=>s.k===c.seat).b].x?1:-1; }
+    if(c.arrived&&!c.leaving&&c.want){ c.left-=dt; if(c.left<=0){ c.want=null; c.leaving=true; toast("A booth guest got tired of waiting and left."); beep(160,.12); } } }
+  denCust=denCust.filter(c=>!(c.leaving&&Math.abs(c.x-c.home)<3)); }
+function drawDenItem(c,id,S,t,glow){ const d=DEN_BY[id]; if(!d) return; const col=d.col, u=S/100, R=(x,y,w,h,f)=>{ c.fillStyle=f; c.fillRect(x*u,y*u,w*u,h*u); };
+  const E=(x,y,rx,ry,f)=>{ c.fillStyle=f; c.beginPath(); c.ellipse(x*u,y*u,rx*u,ry*u,0,0,7); c.fill(); };
+  switch(d.ic){
+    case "potion": E(0,10,22,24,"#1a1030"); glow(.8); E(0,14,19,19,col); c.shadowBlur=0; R(-7,-34,14,20,"#cfd8e6"); R(-9,-40,18,7,"#8a5a2a"); for(let i=0;i<4;i++){ const k=(t*.8+i/4)%1; E(-8+i*5,20-k*26,2.5,2.5,"rgba(255,255,255,.7)"); } break;
+    case "can": R(-16,-30,32,60,col); R(-16,-30,32,5,"#cfd8e6"); R(-16,25,32,5,"#cfd8e6"); c.save(); c.fillStyle="#fff"; c.font=`700 ${12*u}px Silkscreen, monospace`; c.textAlign="center"; c.translate(0,4*u); c.rotate(-.2); c.fillText("CRIT",0,0); c.restore(); glow(.6); R(-16,-6,4,10,"#ffd23a"); c.shadowBlur=0; break;
+    case "onigiri": c.fillStyle="#f4f0ff"; c.beginPath(); c.moveTo(0,-30*u); c.quadraticCurveTo(30*u,22*u,24*u,26*u); c.lineTo(-24*u,26*u); c.quadraticCurveTo(-30*u,22*u,0,-30*u); c.fill(); R(-14,6,28,20,"#14281c"); glow(.6); c.fillStyle=col; c.font=`700 ${11*u}px Silkscreen, monospace`; c.textAlign="center"; c.fillText("+1",0,-4*u); c.shadowBlur=0; break;
+    case "mochi": for(const [x,f] of [[-16,"#ff8fc7"],[0,"#f4f0ff"],[16,"#43f0a4"]]) E(x,6-Math.abs(x)*.3,12,12,f); R(-2,-34,4,64,"#c9a06a"); break;
+    case "boba": c.fillStyle="#e9e2ff"; c.globalAlpha=.25; c.beginPath(); c.moveTo(-20*u,-24*u); c.lineTo(20*u,-24*u); c.lineTo(15*u,34*u); c.lineTo(-15*u,34*u); c.fill(); c.globalAlpha=1; c.fillStyle=col; c.beginPath(); c.moveTo(-18*u,-12*u); c.lineTo(18*u,-12*u); c.lineTo(15*u,34*u); c.lineTo(-15*u,34*u); c.fill(); for(let i=0;i<7;i++) E(-10+(i%4)*7,22+Math.floor(i/4)*6,3,3,"#2a1a10"); R(4,-40,4,30,"#ff3fa8"); for(let i=0;i<3;i++){ c.fillStyle=["#38e8ff","#f5f06a","#43f0a4"][i]; c.fillRect((-10+i*8)*u,(-6-((t*20+i*7)%10))*u,4*u,4*u); } break;
+    case "taiyaki": c.fillStyle="#d9902a"; c.beginPath(); c.ellipse(-4*u,0,26*u,16*u,0,0,7); c.fill(); c.beginPath(); c.moveTo(18*u,0); c.lineTo(34*u,-14*u); c.lineTo(34*u,14*u); c.fill(); E(-20,-4,3,3,"#2a1a10"); c.strokeStyle="#a86a1a"; c.lineWidth=2*u; for(let i=0;i<3;i++){ c.beginPath(); c.arc((-2+i*8)*u,0,8*u,-1,1); c.stroke(); } glow(.5); c.fillStyle="#ff3fa8"; c.font=`700 ${8*u}px Silkscreen, monospace`; c.textAlign="center"; c.fillText("x99",0,-22*u); c.shadowBlur=0; break;
+    case "latte": R(-20,-10,40,40,"#f4f0ff"); c.strokeStyle="#f4f0ff"; c.lineWidth=5*u; c.beginPath(); c.arc(24*u,8*u,9*u,-1.3,1.3); c.stroke(); E(0,-10,20,6,"#c98a4a"); glow(.8); c.strokeStyle=col; c.lineWidth=2*u; c.beginPath(); c.moveTo(-8*u,-10*u); c.lineTo(0,-16*u); c.lineTo(8*u,-10*u); c.stroke(); c.shadowBlur=0; c.fillStyle=col; c.font=`700 ${8*u}px Silkscreen, monospace`; c.textAlign="center"; c.fillText("LV UP",0,16*u); break;
+    case "shot": c.fillStyle="rgba(233,226,255,.35)"; c.beginPath(); c.moveTo(-14*u,-20*u); c.lineTo(14*u,-20*u); c.lineTo(10*u,28*u); c.lineTo(-10*u,28*u); c.fill(); c.fillStyle=col; c.beginPath(); c.moveTo(-12*u,-4*u); c.lineTo(12*u,-4*u); c.lineTo(10*u,28*u); c.lineTo(-10*u,28*u); c.fill(); for(let i=0;i<4;i++){ const k=(t*1.5+i/4)%1; R(-30-k*20,-10+i*8,14,2,"rgba(180,240,255,.7)"); } break;
+    case "wings": E(0,18,30,10,"#2a1840"); for(const [x,a] of [[-14,-.5],[0,0],[14,.5]]){ c.save(); c.translate(x*u,4*u); c.rotate(a); c.fillStyle="#c8401a"; c.beginPath(); c.ellipse(0,0,8*u,16*u,0,0,7); c.fill(); c.fillStyle="#ff6a2a"; c.beginPath(); c.ellipse(-2*u,-4*u,4*u,8*u,0,0,7); c.fill(); c.restore(); } for(let i=0;i<3;i++){ const k=(t*.7+i/3)%1; E(-10+i*10,-14-k*20,3+k*3,3+k*3,`rgba(240,240,255,${.6*(1-k)})`); } break;
+    case "ramen": c.fillStyle="#1a1030"; c.beginPath(); c.moveTo(-32*u,-2*u); c.lineTo(32*u,-2*u); c.quadraticCurveTo(28*u,30*u,0,32*u); c.quadraticCurveTo(-28*u,30*u,-32*u,-2*u); c.fill(); R(-30,-6,60,6,"#f5e663"); E(-12,-6,7,5,"#f4f0ff"); E(-12,-6,3,3,"#ffb84a"); R(6,-10,14,6,"#ff8a5a"); glow(1); for(let i=0;i<4;i++){ const h=10+Math.sin(t*8+i*1.7)*5; c.fillStyle=i%2?"#ff5a1a":"#ffb84a"; c.beginPath(); c.moveTo((-18+i*12)*u,-8*u); c.quadraticCurveTo((-14+i*12)*u,(-8-h)*u,(-12+i*12)*u,(-14-h)*u); c.quadraticCurveTo((-10+i*12)*u,(-8-h)*u,(-6+i*12)*u,-8*u); c.fill(); } c.shadowBlur=0; break;
+    case "energy": R(-14,-32,28,64,"#14101e"); glow(1); c.strokeStyle=col; c.lineWidth=3*u; c.beginPath(); c.moveTo(4*u,-22*u); c.lineTo(-8*u,2*u); c.lineTo(2*u,2*u); c.lineTo(-4*u,24*u); c.lineTo(10*u,-4*u); c.lineTo(0,-4*u); c.closePath(); c.stroke(); c.shadowBlur=0; R(-14,-32,28,4,"#cfd8e6"); break;
+    case "tea": c.save(); c.scale(1,.35); c.strokeStyle=col; c.lineWidth=2*u; glow(1); c.rotate(t*.6); c.beginPath(); c.arc(0,90*u,40*u,0,7); c.stroke(); for(let i=0;i<6;i++){ c.rotate(Math.PI/3); c.beginPath(); c.moveTo(0,50*u); c.lineTo(34*u,110*u); c.stroke(); } c.restore(); c.shadowBlur=0; E(0,8,22,14,"#e9e2ff"); E(0,2,18,6,"#6ad28a"); c.strokeStyle="rgba(233,226,255,.6)"; c.lineWidth=2*u; for(let i=0;i<2;i++){ const k=(t*.6+i/2)%1; c.globalAlpha=1-k; c.beginPath(); c.moveTo((-4+i*8)*u,(-6-k*20)*u); c.quadraticCurveTo((2+i*8)*u,(-14-k*20)*u,(-4+i*8)*u,(-22-k*20)*u); c.stroke(); } c.globalAlpha=1; break;
+  } }
+function denEnts(ents){ if(!denKiko){ denKiko=randomLook(); }
+  ents.push({x:560,y:272,o:{dir:-1,phase:0,moving:false,look:denKiko,name:"Kiko",say:Math.floor(T/9)%4===0?{text:["Order up, player one!","New track on the jukebox?","The Void cabinet's hungry for coins.","Booths are open, grab a seat!"][Math.floor(T/36)%4],t:Math.floor(T/9)*9}:null}});
+  for(const c of denCust) ents.push({x:c.x,y:c.y,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",sit:c.arrived&&!c.leaving,fx:c.fx&&T<c.fxUntil?c.fx:null,say:c.arrived&&!c.leaving&&c.want?{text:`🙋 ${BY[c.want].n}, please!`,t:T}:null}}); }
+/* --- jukebox */
+function openDenJuke(){ const body=panel("Den Jukebox","Original anime- and game-style tracks. ₵5 a pick; everyone in the Den hears it."); currentView=null; const l=el("div",{class:"list"});
+  DEN_TRACKS.forEach((tr,i)=>l.append(el("div",{class:"li"},el("span",{style:`color:${tr.col};font-size:20px`,text:i===denTrack?"♫":"♪"}),el("div",{class:"grow"},el("div",{style:`color:${tr.col}`,text:tr.n}),el("div",{class:"sub",text:`${tr.vibe} · ${tr.bpm} BPM`})),
+    i===denTrack?el("span",{class:"tag r-uncommon",text:"Playing"}):el("button",{class:"btn hot",type:"button",text:"₵5",onclick:()=>pickDenJuke(i)}))));
+  body.append(l,el("p",{class:"sub",text:soundOn?"Sound is on.":"Turn sound on (top right) to hear the music."})); }
+async function pickDenJuke(i){ if(save.credits<5){ toast("You need ₵5 for the jukebox."); return; } save.credits-=5; persist(); hud(); denTrack=i; denTrackBy=myId; step16=0;
+  if(DB){ try{ await DB.doc("club/denjuke").set({track:i,by:myId||"",at:Date.now()}); }catch(e){} } toast(`Jukebox: ${DEN_TRACKS[i].n}`,DEN_TRACKS[i].col); openDenJuke(); }
+/* --- the boards: games players host, anime watch parties and events */
+const DEN_KIND={game:{n:"Game hosting",icon:"🎮",c:"#43f0a4"},watch:{n:"Anime watch party",icon:"📺",c:"#ff8fc7"},event:{n:"Game or anime event",icon:"🎉",c:"#ffb84a"}};
+const DEN_PLAT=["PC","PlayStation","Xbox","Switch","Mobile","Retro/arcade","Other"], DEN_WHERE=["Online","In the Gamers Den","Stream Dome","In person"];
+function cleanDenPost(id,d){ if(!d||typeof d!=="object"||!DEN_KIND[d.kind]) return null; const discord=String(d.discord||"").slice(0,40);
+  return {id,by:String(d.by||""),name:String(d.name||"").slice(0,24),kind:d.kind,title:String(d.title||"").slice(0,50),detail:String(d.detail||"").slice(0,160),plat:DEN_PLAT.includes(d.plat)?d.plat:"",where:DEN_WHERE.includes(d.where)?d.where:"",discord,showName:d.showName!==false,when:+d.when||0,until:+d.until||0,at:+d.at||0}; }
+function denWatch(){ if(denPostsOn||!DB) return; denPostsOn=true; DB.collection("denposts").onSnapshot(q=>{ denPosts=q.docs.map(x=>cleanDenPost(x.id,x.data())).filter(Boolean); if(currentView&&String(currentView).startsWith("denboard:")) openDenBoard(String(currentView).split(":")[1],true); },()=>{ denPostsOn=false; }); }
+function denLive(){ const now=Date.now(); return denPosts.filter(p=>p.until>now&&!isBlocked(p.by)).sort((a,b)=>(a.when||a.at)-(b.when||b.at)); }
+function denWhenTxt(p){ if(!p.when) return "Anytime"; const d=new Date(p.when), now=Date.now(); if(p.when<=now&&p.when>now-4*36e5) return "Happening now"; return d.toLocaleString([], {weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); }
+function denWhenShort(p){ if(!p.when) return "ANYTIME"; const now=Date.now(); if(p.when<=now) return "NOW"; return new Date(p.when).toLocaleString([], {weekday:"short",hour:"numeric"}).toUpperCase(); }
+function openDenBoard(tab,refresh){ denWatch(); tab=tab||"game"; const body=panel(tab==="post"?"Pin a post":"Den Boards","Find games to join, anime watch parties and events. Pin your own for everyone to see.",refresh); currentView="denboard:"+tab;
+  const tabs=el("div",{class:"tabs"}); for(const [k,l] of [["game","🎮 Games hosting"],["watch","📺 Watch parties"],["event","🎉 Events"],["post","📌 Pin a post"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:l,onclick:()=>openDenBoard(k)})); body.append(tabs);
+  if(tab==="post") return denPostForm(body);
+  const L=denLive().filter(p=>p.kind===tab); const K=DEN_KIND[tab];
+  if(!L.length) body.append(el("div",{class:"empty",text:`No ${K.n.toLowerCase()} posts right now. Be the first: tap 📌 Pin a post.`}));
+  const l=el("div",{class:"list"}); for(const p of L){ const mine=p.by===myId, host=p.showName?(p.name||nameOf(p.by)):"";
+    const meta=[denWhenTxt(p),p.plat,p.where].filter(Boolean).join(" · ");
+    const acts=el("div",{style:"display:flex;flex-direction:column;gap:4px;align-items:stretch"});
+    if(p.discord) acts.append(el("button",{class:"btn",type:"button",text:"Copy Discord",onclick:async()=>{ try{ await navigator.clipboard.writeText(p.discord); toast(`Copied ${p.discord}`,"#7c9cff"); }catch(e){ toast(`Discord: ${p.discord}`,"#7c9cff"); } }}));
+    if(!mine&&p.showName&&p.by) acts.append(el("button",{class:"btn",type:"button",text:"Message",onclick:()=>{ closePanel(); openDM(p.by); }}));
+    if(mine||IS_ADMIN) acts.append(el("button",{class:"btn",type:"button",text:mine?"Take down":"Remove (owner)",onclick:async()=>{ try{ await DB.doc("denposts/"+p.id).delete(); toast("Post taken down."); }catch(e){ toast("Couldn't remove it."); } }}));
+    if(!mine) acts.append(el("button",{class:"btn",type:"button",text:"🚩 Report",onclick:()=>openReport("post",p.by,host||"this post",{post:p.title})}));
+    l.append(el("div",{class:"li",style:`border-left:3px solid ${K.c}`},el("span",{style:"font-size:24px",text:K.icon}),el("div",{class:"grow"},el("div",{},el("strong",{text:p.title})),el("div",{class:"sub",style:`color:${K.c}`,text:meta}),p.detail?el("div",{text:p.detail}):null,
+      el("div",{class:"sub",text:[host?`Host: ${host}`:"",p.discord?`Discord: ${p.discord}`:""].filter(Boolean).join(" · ")||"Host hid their name"})),acts)); }
+  body.append(l,el("p",{class:"sub",text:"Posts come down by themselves after the start time passes. Only share what you're comfortable with, and never post personal info."})); }
+function denPostForm(body){ if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to pin a post."})); return; }
+  const mineLive=denLive().filter(p=>p.by===myId); const f=(label,input,x)=>el("label",{class:"fld"},label,input,x||null);
+  const kind=el("select",{class:"num"}); for(const [k,K] of Object.entries(DEN_KIND)) kind.append(el("option",{value:k,text:`${K.icon} ${K.n}`}));
+  const title=el("input",{class:"num",maxlength:"50",placeholder:"Game or anime, e.g. Co-op raid night, Mecha anime marathon"});
+  const detail=el("textarea",{rows:"3",maxlength:"160",style:"width:100%;box-sizing:border-box;font-family:var(--f-ui);background:#0d0818;color:var(--text);border:1px solid var(--line);padding:8px",placeholder:"What's the plan? Skill level, how many players, episodes, rules…"});
+  const plat=el("select",{class:"num"}); plat.append(el("option",{value:"",text:"(none)"})); DEN_PLAT.forEach(x=>plat.append(el("option",{value:x,text:x})));
+  const where=el("select",{class:"num"}); DEN_WHERE.forEach(x=>where.append(el("option",{value:x,text:x})));
+  const when=el("input",{class:"num",type:"datetime-local"}); const now=el("label",{class:"row",style:"gap:6px;align-items:center"},el("input",{type:"checkbox",id:"dp_now"}),"Starting now");
+  const discord=el("input",{class:"num",maxlength:"37",placeholder:"Optional, e.g. pixelhero or pixelhero#1234",autocomplete:"off"});
+  const show=el("input",{type:"checkbox"}); show.checked=true; const msg=el("div",{class:"sub",role:"status"});
+  const go_=el("button",{class:"btn hot",type:"button",text:"📌 Pin it",onclick:async()=>{ const t=title.value.trim(), dc=discord.value.trim(), nowOn=now.querySelector("input").checked;
+    if(mineLive.length>=3){ msg.textContent="You have 3 posts up. Take one down first."; return; } if(t.length<3){ msg.textContent="Give your post a title."; return; }
+    if(dc&&!/^[a-zA-Z0-9_.]{2,32}(#\d{4})?$/.test(dc)){ msg.textContent="That Discord name doesn't look right (letters, numbers, _ and . only)."; return; }
+    if(!dc&&!show.checked){ msg.textContent="Show your username or add a Discord name so people can reach you."; return; }
+    let w=nowOn?Date.now():when.value?new Date(when.value).getTime():0; if(w&&w>Date.now()+14*864e5){ msg.textContent="Pick a time within the next 2 weeks."; return; } if(w&&!nowOn&&w<Date.now()-36e5){ msg.textContent="That time has already passed."; return; }
+    if(rcd("denpost")){ msg.textContent=`Wait ${cdTxt(rcd("denpost"))} before pinning another.`; return; }
+    const until=w?w+6*36e5:Date.now()+24*36e5; go_.disabled=true;
+    try{ await DB.collection("denposts").add({by:myId,name:(myName||"Runner").slice(0,24),kind:kind.value,title:t.slice(0,50),detail:detail.value.trim().slice(0,160),plat:plat.value,where:where.value,discord:dc,showName:show.checked,when:w,until,at:Date.now()});
+      setCd("denpost",60e3); persist(); toast("Pinned to the Den board!","#43f0a4"); openDenBoard(kind.value==="game"?"game":kind.value); }
+    catch(e){ go_.disabled=false; msg.textContent=IS_ADMIN?"Couldn't pin it. Publish the updated Firestore rules, then try again.":"Couldn't pin it right now. Try again in a bit."; } }});
+  body.append(f("What are you posting?",kind),f("Title",title),f("Details (optional)",detail),el("div",{class:"row",style:"flex-wrap:wrap;gap:10px"},f("Platform",plat),f("Where",where)),f("When",when,now),
+    f("Discord name (optional)",discord),el("label",{class:"row",style:"gap:8px;align-items:center"},show,"Show my username on the post"),el("div",{class:"row"},go_),msg,
+    el("p",{class:"sub",text:`You can have up to 3 posts up at once (${mineLive.length} now). Posts come down 6 hours after the start time, or after a day if there's no time.`})); }
 function bbConsole(refresh){ const i=STALL_BY.noodle, mins=Math.floor((Date.now()-bbShift.start)/60e3);
   const body=panel(`Byte Bowl Noodles · Stove ${bbSlot+1}`,`On shift ${mins} min · served ${bbShift.served} · earned ₵${bbShift.earned} + ₵${bbShift.tips} tips`,refresh); currentView="bbconsole";
   const waiting=bbCustomers.filter(c=>c.arrived&&!c.leaving);
@@ -5144,7 +5491,7 @@ function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):me.s
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {dexhub:"MyDex Hub",datasim:"Data Sim HQ",racers:"the Car Display",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"The Void",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
+function sceneName(s){ return {dexhub:"MyDex Hub",datasim:"Data Sim HQ",racers:"the Car Display",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -5156,7 +5503,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},datasim:{n:"Data Sim HQ",x:140,d:"Rassir's Data Sim: hire data scouts, track trends in any state or ZIP, earn ₵ for every Data Box"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},void:{n:"The Void",x:140,d:"PvP arena: fight with fists or your equipped weapon"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},racers:{n:"Car Display",x:140,d:"Buy a plot with chips and show off your customized 3D cars and trucks"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},datasim:{n:"Data Sim HQ",x:140,d:"Rassir's Data Sim: hire data scouts, track trends in any state or ZIP, earn ₵ for every Data Box"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},den:{n:"Gamers Den",x:140,d:"Gamer & anime bar: themed booths, Den menu, jukebox, event boards and THE VOID arcade cabinet"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"The Lethe Clinic: a dark psychological text story with 9 endings. Up to ₵2,000 + 1,000 chips"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},racers:{n:"Car Display",x:140,d:"Buy a plot with chips and show off your customized 3D cars and trucks"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -9370,7 +9717,9 @@ function playStep(tr,s,at,sp){ if(tr.style) return playGenre(tr,s,at,sp); const 
   tone("square",mtof(chord[[0,1,2,1][s%4]]+12),at,sp*.85,.022,2400);
   if(s%16===0) for(const m of chord) tone("triangle",mtof(m),at,sp*15,.028,1600); }
 function startClubSeq(){ if(seqTimer||!AC) return; master=AC.createGain(); master.gain.value=.5; master.connect(AC.destination); nextNote=AC.currentTime+.1;
-  seqTimer=setInterval(()=>{ if(!soundOn||(me.scene!=="club"&&me.scene!=="bar")){ nextNote=AC.currentTime+.05; return; } const inBar=me.scene==="bar", tr=TRACKS[inBar?barTrack:clubTrack]||TRACKS[0], sp=60/tr.bpm/4; master.gain.value=inBar?.32:.5;
+  seqTimer=setInterval(()=>{ if(!soundOn||(me.scene!=="club"&&me.scene!=="bar"&&me.scene!=="den")){ nextNote=AC.currentTime+.05; return; }
+    if(me.scene==="den"){ const tr=DEN_TRACKS[denTrack]||DEN_TRACKS[0], sp=60/tr.bpm/4; master.gain.value=.34; while(nextNote<AC.currentTime+.12){ playDenStep(tr,step16,nextNote,sp); nextNote+=sp; step16=(step16+1)%64; } return; }
+    const inBar=me.scene==="bar", tr=TRACKS[inBar?barTrack:clubTrack]||TRACKS[0], sp=60/tr.bpm/4; master.gain.value=inBar?.32:.5;
     while(nextNote<AC.currentTime+.12){ playStep(tr,step16,nextNote,sp); nextNote+=sp; step16=(step16+1)%64; } },25); }
 
 /* --- screen effects for the local player */
@@ -9799,7 +10148,7 @@ function drawVoid(t){
   ctx.fillStyle="rgba(56,232,255,.06)"; ctx.fillRect(0,0,SAFE_X,H); ctx.save(); ctx.strokeStyle=`rgba(56,232,255,${.5+.3*Math.sin(t*4)})`; ctx.shadowColor="#38e8ff"; ctx.shadowBlur=14; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(SAFE_X,30); ctx.lineTo(SAFE_X,342); ctx.stroke();
   ctx.lineWidth=1; ctx.globalAlpha=.35; for(let y=40;y<340;y+=18){ ctx.beginPath(); ctx.moveTo(SAFE_X-8,y+((t*30)%18)); ctx.lineTo(SAFE_X+8,y+9+((t*30)%18)); ctx.stroke(); } ctx.restore();
   neonText("SAFE ZONE",SAFE_X/2+40,40,11,"#38e8ff",1); neonText("COMBAT ZONE →",SAFE_X+90,140,10,"#ff5a4a",flick(51,t));
-  ctx.fillStyle="#0a0712"; ctx.fillRect(60,190,120,72); ctx.fillStyle="#ff5a4a"; ctx.fillRect(56,180,128,8); neonText("◉ METRO",120,172,12,"#ff5a4a",1);
+  ctx.fillStyle="#0a0712"; ctx.fillRect(60,190,120,72); ctx.fillStyle="#ff5a4a"; ctx.fillRect(56,180,128,8); neonText("◉ EXIT CABINET",120,172,11,"#ff5a4a",1);
   ctx.fillStyle="#0b0716"; ctx.fillRect(212,80,104,110); ctx.strokeStyle="#ff3fa8"; ctx.strokeRect(212.5,80.5,103,109); neonText("TOP FRAGGERS",264,74,8,"#ff3fa8",1);
   const rows=Object.entries(homes).map(([id,h])=>[id,Math.floor(+h.kills)||0]).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,6);
   ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="left"; if(!rows.length){ ctx.fillStyle="#9a8cc0"; ctx.fillText("No kills yet.",218,100); ctx.fillText("Be the first.",218,112); }
@@ -10067,6 +10416,8 @@ setInterval(hud,1000);
     db.collection("clubstaff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); clubSlots=nx;
       if(clubSlot>=0){ const mine=nx[clubSlot]; if(!mine||mine.by!==myId){ clubSlot=-1; clearInterval(clubBeat); clubShift=null; clubHolding=null; toast("Your club shift slot was released."); } }
       resolveNames(nx.filter(x=>x&&x.by).map(x=>x.by)); },()=>{});
+    db.doc("club/denjuke").onSnapshot(s=>{ const d=s.exists?s.data():null; const i=d?Math.floor(+d.track):-1; if(d&&i>=0&&i<DEN_TRACKS.length){ if(i!==denTrack&&me.scene==="den") step16=0; denTrack=i; denTrackBy=d.by||null; } },()=>{});
+    try{ denWatch(); }catch(e){}
     db.doc("club/glitchjuke").onSnapshot(s=>{ const d=s.exists?s.data():null; const i=d?Math.floor(+d.track):-1; if(d&&i>=0&&i<TRACKS.length){ if(i!==barTrack&&me.scene==="bar") step16=0; barTrack=i; jukeHue=trackHue(TRACKS[i]); barTrackBy=typeof d.by==="string"&&d.by?d.by:null; if(barTrackBy) resolveNames([barTrackBy]); if(currentView==="jukebox"&&!$("#overlay").hidden) jukebox(); } },()=>{});
     db.doc("club/stage").onSnapshot(s=>{ const d=s.exists?s.data():null; const i=d?Math.floor(+d.track):-1; if(d&&i>=0&&i<TRACKS.length){ if(i!==clubTrack) step16=0; clubTrack=i; clubTrackBy=typeof d.by==="string"&&d.by?d.by:null; if(clubTrackBy) resolveNames([clubTrackBy]); } },()=>{});
     db.collection("cbstaff").onSnapshot(s=>{ const nx=[null,null,null,null]; s.docs.forEach(d=>{ const m=/^slot([0-3])$/.exec(d.id); if(m) nx[+m[1]]=d.data(); }); cbSlots=nx;

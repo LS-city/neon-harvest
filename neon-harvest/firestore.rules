@@ -242,6 +242,20 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Gamers Den boards: game nights, anime watch parties and events. Signed-in players read; you post and remove your own; the owner can remove any.
+    match /denposts/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && nd().by == me()
+        && nd().keys().hasOnly(['by', 'name', 'kind', 'title', 'detail', 'plat', 'where', 'discord', 'showName', 'when', 'until', 'at'])
+        && nd().kind in ['game', 'watch', 'event']
+        && nd().title is string && nd().title.size() > 0 && nd().title.size() <= 50
+        && nd().detail is string && nd().detail.size() <= 160
+        && nd().discord is string && nd().discord.size() <= 40
+        && nd().name is string && nd().name.size() <= 24
+        && nd().plat is string && nd().plat.size() <= 20 && nd().where is string && nd().where.size() <= 30
+        && nd().until is int && nd().until <= request.time.toMillis() + 15 * 86400000;
+      allow delete: if isOwner() || (signedIn() && resource.data.by == me());
+    }
     // Neon Row Specials: digital items the owner designs for a store. Everyone can see them; only the owner makes them.
     match /rowdigi/{id} { allow read: if signedIn(); allow write: if isOwner(); }
     // Requests from a store's partner to the owner for a special item. The partner sees only their own.
