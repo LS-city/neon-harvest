@@ -271,10 +271,10 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #online{font-family:var(--f-ui);font-size:13px;color:var(--text);cursor:pointer} #online:hover{border-color:var(--cyan)}
 #hppill{--hp:100%;background:linear-gradient(90deg,rgba(67,240,164,.4) var(--hp),rgba(21,14,38,.82) var(--hp));font-weight:600;min-width:72px}
 #hppill[data-low="1"]{background:linear-gradient(90deg,rgba(255,90,74,.55) var(--hp),rgba(21,14,38,.82) var(--hp))}
-#combat,#clubBtn,#conBtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:4}
+#combat,#clubBtn,#denBtn,#conBtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:4}
 #combat .btn{font-family:var(--f-display);font-size:13px;padding:12px 16px;touch-action:none}
 #combat .atk{border-color:#ff5a4a;color:#fff;box-shadow:0 0 14px rgba(255,90,74,.45) inset}
-@media (pointer:coarse){#combat,#clubBtn,#conBtn{right:calc(max(16px,env(safe-area-inset-right,0px)) + 214px);bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
+@media (pointer:coarse){#combat,#clubBtn,#denBtn,#conBtn{right:calc(max(16px,env(safe-area-inset-right,0px)) + 214px);bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
 #deathov{position:absolute;inset:0;z-index:18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;background:radial-gradient(circle,rgba(120,0,20,.6),rgba(5,0,8,.94));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #deathov .dtitle{font-family:var(--f-display);font-size:clamp(44px,12vw,96px);color:#ff5a4a;text-shadow:3px 0 #38e8ff,-3px 0 #ff3fa8;animation:dglitch .25s steps(2) infinite}
 @keyframes dglitch{50%{transform:translateX(3px) skewX(-6deg)}}
@@ -295,7 +295,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile .stats .pill{font-size:12px;padding:0 8px;height:40px;display:inline-flex;align-items:center;gap:4px;flex:none}
 #game.mobile .stats{overflow-x:auto;scrollbar-width:none}#game.mobile .stats::-webkit-scrollbar{display:none}
 #game.mobile #btnMenu{position:sticky;right:0;margin-left:auto;flex:none;z-index:1;background:#0b0716;box-shadow:-8px 0 8px 2px rgba(7,4,15,.9)}
-#game.mobile #btnRole,#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd{display:none!important}
+#game.mobile #btnRole,#game.mobile #btnAdmin,#game.mobile #btnQuests,#game.mobile #btnTravel,#game.mobile #btnChar,#game.mobile #btnHelp,#game.mobile #btnSnd,#game.mobile #btnMusic{display:none!important}
 #mstatus,#mquick{display:none}
 #game.mobile #mstatus{display:flex;position:absolute;top:calc(var(--top) + 6px);left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));flex-wrap:wrap;gap:4px;z-index:5;pointer-events:none}
 #game.mobile #mstatus .pill{font-size:11px;height:auto;min-height:24px;padding:3px 8px;background:rgba(11,7,22,.86);display:inline-flex;align-items:center;max-width:100%;white-space:normal;line-height:1.25}
@@ -344,7 +344,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile.portrait #chatlog{top:calc(var(--top) + var(--cvh) + 64px);bottom:calc(64px + 176px + env(safe-area-inset-bottom,0px));left:12px;right:12px;width:auto;max-height:none;justify-content:flex-end;overflow:hidden}
 #game.mobile.portrait #chatlog.open{top:calc(var(--top) + var(--cvh) + 10px);bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
 #game.mobile.portrait #pad{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
-#game.mobile.portrait #combat,#game.mobile.portrait #clubBtn,#game.mobile.portrait #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(66px + 92px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-end}
+#game.mobile.portrait #combat,#game.mobile.portrait #clubBtn,#game.mobile.portrait #denBtn,#game.mobile.portrait #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(66px + 92px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-end}
 #game.mobile.portrait #invites{top:calc(var(--top) + 10px + var(--mst,0px));right:max(10px,env(safe-area-inset-right,0px));left:max(10px,env(safe-area-inset-left,0px));width:auto;z-index:9}
 #game.mobile:not(.portrait) #invites{top:calc(var(--top) + 8px + var(--mst,0px))}
 #game.mobile #invites .icard{box-shadow:0 6px 24px rgba(0,0,0,.6)}
@@ -356,7 +356,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile:not(.portrait) #chatlog{top:calc(var(--top) + 6px);bottom:auto;left:max(12px,env(safe-area-inset-left,0px));width:min(320px,40vw)}
 #game.mobile:not(.portrait) #chatlog.open{max-height:calc(100vh - var(--top) - 80px)}
 #game.mobile:not(.portrait) #prompt{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
-#game.mobile:not(.portrait) #combat,#game.mobile:not(.portrait) #clubBtn,#game.mobile:not(.portrait) #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+#game.mobile:not(.portrait) #combat,#game.mobile:not(.portrait) #clubBtn,#game.mobile:not(.portrait) #denBtn,#game.mobile:not(.portrait) #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 /* windows become full-screen sheets with a big close button */
 #game.mobile #overlay{padding:0;align-items:stretch;justify-content:stretch}
 #game.mobile .panel{width:100%;max-width:none;height:100%;max-height:none;border:0;box-shadow:none}
@@ -439,6 +439,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" id="btnRole" type="button" title="Your role (R)">Role [R]</button>
       <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
+      <button class="btn" id="btnMusic" type="button" title="Choose your music">🎵 Music</button>
       <button class="btn hot" id="btnAdmin" type="button" hidden>Admin</button>
       <button class="btn mbtn" id="btnMenu" type="button" aria-label="Menu">☰</button>
     </div>
@@ -477,6 +478,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
     </div>
   </div>
   <div id="clubBtn" hidden><button class="btn hot" id="btnClubItems" type="button">💊 My club items</button></div>
+  <div id="denBtn" hidden><button class="btn hot" id="btnDenItems" type="button">🍙 My den items</button></div>
   <div id="conBtn" hidden><button class="btn hot" id="btnConPlay" type="button">🎮 Play</button><button class="btn" id="btnConOpen" type="button" aria-label="Console and games">🕹️</button></div>
   <div id="combat" hidden><button class="btn" id="btnBlock" type="button">Block [G]</button><button class="btn atk" id="btnAtk" type="button">Attack [F]</button></div>
   <div id="deathov" hidden></div>
@@ -1170,7 +1172,7 @@ function conOwned(id){ return hasItem(id)||save.look&&save.look.hand===id||(save
 function conGames(id){ save.conGames=save.conGames||{}; const g=save.conGames[id]; return Array.isArray(g)?g:[]; }
 function conIns(id){ const v=(save.conIns||{})[id]; return Number.isInteger(v)&&v>=0&&v<7?v:-1; }
 function syncConLook(){ if(!save.look) return; const h=save.look.hand; if(h&&CON_BY[h]){ const g=conIns(h); if(save.look.cg!==g){ save.look.cg=g; return true; } } else if(save.look.cg!=null){ delete save.look.cg; return true; } return false; }
-setInterval(()=>{ try{ if(save&&syncConLook()){ persist(); pushPresence(true); } const b=$("#conBtn"); if(b){ const K=save.look&&CON_BY[save.look.hand]; b.hidden=!K||!$("#overlay").hidden||me.scene==="void"||me.scene==="ascend"||me.dead; if(K) $("#btnConPlay").textContent=MOBILE?"🎮 Play":`🎮 Play ${K.n}`; const g=$("#game"), cb=$("#clubBtn"); const ci=$("#btnClubItems"), short=!!(g&&g.classList.contains("portrait")); if(ci){ const want=short?"💊 Items":"💊 My club items"; if(ci.textContent!==want) ci.textContent=want; } if(g&&g.classList.contains("portrait")){ const w=cb&&!cb.hidden?cb.getBoundingClientRect().width+10:0; b.style.right=`calc(max(14px, env(safe-area-inset-right, 0px)) + ${Math.round(w)}px)`; } else b.style.right=""; } }catch(e){} },500);
+setInterval(()=>{ try{ if(save&&syncConLook()){ persist(); pushPresence(true); } const b=$("#conBtn"); if(b){ const K=save.look&&CON_BY[save.look.hand]; b.hidden=!K||!$("#overlay").hidden||me.scene==="void"||me.scene==="ascend"||me.dead; if(K) $("#btnConPlay").textContent=MOBILE?"🎮 Play":`🎮 Play ${K.n}`; const g=$("#game"), cb=$("#clubBtn").hidden?$("#denBtn"):$("#clubBtn"); const ci=$("#btnClubItems"), di=$("#btnDenItems"), short=!!(g&&g.classList.contains("portrait")); if(ci){ const want=short?"💊 Items":"💊 My club items"; if(ci.textContent!==want) ci.textContent=want; } if(di){ const want=short?"🍙 Items":"🍙 My den items"; if(di.textContent!==want) di.textContent=want; } if(g&&g.classList.contains("portrait")){ const w=cb&&!cb.hidden?cb.getBoundingClientRect().width+10:0; b.style.right=`calc(max(14px, env(safe-area-inset-right, 0px)) + ${Math.round(w)}px)`; } else b.style.right=""; } }catch(e){} },500);
 function conInHand(c,K,gi,dir,t,flourish){ const scr=CON_SCREEN[K.sh], S=K.sh==="halo"||K.sh==="tower"||K.sh==="cab"||K.sh==="vector"?16:14; c.save(); c.translate(dir*4,-3); drawConsoleArt(c,K,S,t,gi); c.restore();
   if(!scr&&gi>=0){ c.save(); c.translate(dir*17,-12); c.globalAlpha=.85; c.strokeStyle=gameCol(K,gi); c.shadowColor=c.strokeStyle; c.shadowBlur=6; c.lineWidth=.6; c.strokeRect(-7,-4.5,14,9); drawGameScreen(c,-7,-4.5,14,9,K,gi,t); c.restore(); }
   if(flourish){ c.save(); c.strokeStyle=conAcc(K,t); c.shadowColor=c.strokeStyle; c.shadowBlur=10; c.globalAlpha=.4+.3*Math.sin(t*8); c.lineWidth=1.2; c.beginPath(); c.arc(dir*4,-3,13,0,7); c.stroke(); c.restore(); } }
@@ -1387,7 +1389,24 @@ function hud(){ jobHud(); try{ nrcHud(); }catch(e){} if(save.look&&save.look.han
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
 function beep(f=660,d=.06,type="square",vol=.05){ if(!soundOn||!AC) return; const o=AC.createOscillator(),g=AC.createGain(); o.type=type;o.frequency.value=f; g.gain.setValueAtTime(vol,AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+d); }
-function startMusic(){ if(musicTimer||!AC) return; const notes=[220,262,330,392,330,262,196,247]; let i=0; startClubSeq(); musicTimer=setInterval(()=>{ if(!soundOn||me.scene==="club"||me.scene==="bar"||me.scene==="den"||(CJ&&CJ.open)) return; const inBar=me.scene==="bar"; beep(notes[i%8]*(inBar?1:.5),.18,"sawtooth",inBar?.025:.012); if(i%4===0) beep(55,.25,"triangle",inBar?.06:.03); i++; },220); }
+function wmTrack(venue){ const m=save&&save.music; if(!m||!m.k||m.k==="city"||m.k==="off") return null; if(venue&&!m.all) return null; const [g,i]=String(m.k).split(":");
+  if(g==="club"&&TRACKS[+i]) return {tr:TRACKS[+i],play:playStep,g:.42}; if(g==="den"&&DEN_TRACKS[+i]) return {tr:DEN_TRACKS[+i],play:playDenStep,g:.34}; if(g==="cj"&&CJ_TRACKS[i]) return {tr:CJ_TRACKS[i],play:cjPlayStep,g:.36}; return null; }
+function wmCustom(){ const m=save&&save.music; return !!(m&&m.k&&m.k!=="city"); }
+function wmName(k){ const [g,i]=String(k||"city").split(":"); return g==="club"&&TRACKS[+i]?TRACKS[+i].n:g==="den"&&DEN_TRACKS[+i]?DEN_TRACKS[+i].n:g==="cj"&&CJ_TRACKS[i]?CJ_TRACKS[i].n:k==="off"?"Silence":"Sector 9 Night Loop"; }
+function setWorldMusic(k){ save.music={...(save.music||{}),k}; step16=0; persist(); }
+function openMusic(tab){ tab=tab||"den"; const m=save.music||{}, cur=m.k||"city"; const body=panel("Music",`Pick the music you hear while you play. Only you hear your pick. Now playing: ${wmName(cur)}`); currentView="music";
+  if(!soundOn) body.append(el("div",{class:"detail",style:"border-color:#ffd36a"},el("div",{class:"info"},el("strong",{text:"🔇 Sound is off"}),el("span",{class:"sub",text:"Turn sound on to hear your music."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"🔊 Turn sound on",onclick:()=>{ $("#btnSnd").click(); openMusic(tab); }})))));
+  const cb=el("input",{type:"checkbox"}); cb.checked=!!m.all; cb.onchange=()=>{ save.music={...(save.music||{}),all:cb.checked}; step16=0; persist(); toast(cb.checked?"Your pick now plays in the clubs and the Den too.":"Clubs and the Den play their own jukebox again."); };
+  cb.style.cssText="flex:none;width:18px;height:18px;margin:0"; body.append(el("label",{style:"display:flex;gap:10px;align-items:center;cursor:pointer"},cb,el("span",{class:"sub",style:"flex:1",text:"Also play my pick in The Glitch, The Third Eye and the Gamers Den (instead of their jukebox, just for me)"})));
+  const tabs=el("div",{class:"row",style:"flex-wrap:wrap"}); for(const [k,l] of [["den",`🎮 Game & anime (${DEN_TRACKS.length})`],["cj",`⚔ Companion Clash (${Object.keys(CJ_TRACKS).length})`],["club",`🎧 Club & bar (${TRACKS.length})`],["basic","🌃 City & silence"]]) tabs.append(el("button",{class:"btn"+(k===tab?" hot":""),type:"button",text:l,onclick:()=>openMusic(k)})); body.append(tabs);
+  const row=(k,n,sub,col)=>el("div",{class:"li"},el("span",{style:`color:${col||"#e9e2ff"};font-size:18px;width:20px;text-align:center`,text:cur===k?"♫":"♪"}),el("div",{class:"grow"},el("div",{style:col?`color:${col}`:"",text:n}),el("div",{class:"sub",text:sub})),cur===k?el("span",{class:"tag r-uncommon",text:"Playing"}):el("button",{class:"btn hot",type:"button",text:"▶ Play",onclick:()=>{ setWorldMusic(k); if(!soundOn) $("#btnSnd").click(); toast(`Music: ${n}`,col||"#e9e2ff"); openMusic(tab); }}));
+  const l=el("div",{class:"list"});
+  if(tab==="den") DEN_TRACKS.forEach((t,i)=>l.append(row("den:"+i,t.n,`${t.vibe} · ${t.bpm} BPM`,t.col)));
+  else if(tab==="cj") for(const [k,t] of Object.entries(CJ_TRACKS)) l.append(row("cj:"+k,t.n,`Companion Clash JRPG · ${t.bpm} BPM`,"#ffd36a"));
+  else if(tab==="club") TRACKS.forEach((t,i)=>l.append(row("club:"+i,t.n,`${t.vibe} · ${t.bpm} BPM`,t.col)));
+  else { l.append(row("city","Sector 9 Night Loop","The classic Neon Harvest city tune","#38e8ff")); l.append(row("off","Silence","No music out in the world. Clubs and the Den still play theirs.","#8d86ab")); }
+  body.append(l); }
+function startMusic(){ if(musicTimer||!AC) return; const notes=[220,262,330,392,330,262,196,247]; let i=0; startClubSeq(); musicTimer=setInterval(()=>{ if(!soundOn||me.scene==="club"||me.scene==="bar"||me.scene==="den"||(CJ&&CJ.open)||wmCustom()) return; const inBar=me.scene==="bar"; beep(notes[i%8]*(inBar?1:.5),.18,"sawtooth",inBar?.025:.012); if(i%4===0) beep(55,.25,"triangle",inBar?.06:.03); i++; },220); }
 $("#btnSnd").onclick=()=>{ soundOn=!soundOn; try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); AC.resume(); startMusic(); }catch(e){} $("#btnSnd").textContent=soundOn?"Sound on":"Sound off"; $("#btnSnd").setAttribute("aria-pressed",String(soundOn)); };
 
 /* ============================================================ ITEM ART */
@@ -2527,15 +2546,23 @@ function goalsTick(){ if(!save||!save.qstat) return; goalsInit();
   const D=save.daily; for(const k of D.g){ if(D.done.includes(k)) continue; const p=dgProg(k); if(p.cur>=p.n){ D.done.push(k); save.credits+=DG_PAY; save.chips+=DG_CHIPS; persist(); hud(); toast(`📅 Daily goal done: ${p.t} +₵${DG_PAY} +${DG_CHIPS} chips`,"#38e8ff"); beep(990,.08,"triangle"); } }
   if(!D.all&&D.g.length&&D.done.length>=D.g.length){ D.all=true; save.credits+=DG_ALL_PAY; save.chips+=DG_ALL_CHIPS; persist(); hud(); toast(`🏁 All daily goals done! Bonus +₵${DG_ALL_PAY} +${DG_ALL_CHIPS} chips. New goals tomorrow.`,"#ffb13f"); }
   goalsTracker(); if(currentView==="goals"&&!$("#overlay").hidden&&Date.now()-(goalsPainted||0)>4000) openGoals(); }
-let goalsEl=null, goalsPainted=0;
+let goalsEl=null, goalsPainted=0, goalsBtn=null, goalsMini=null, goalsX=null;
+function setGoalsMin(v){ save.goalsMin=v?1:0; persist(); goalsTracker(); }
 function goalsTracker(){ const titleUp=$("#title")&&!$("#title").hidden, show=!!save&&!titleUp&&$("#overlay").hidden&&!jailed();
-  if(!goalsEl){ goalsEl=el("button",{type:"button",class:"goalpill",onclick:()=>openGoals(),"aria-label":"Goals"}); goalsEl.style.cssText="position:fixed;z-index:30;max-width:min(360px,66vw);padding:6px 10px;background:rgba(10,6,22,.82);color:#e9e2ff;border:1px solid #43f0a4;border-radius:6px;font:12px 'IBM Plex Mono',monospace;text-align:left;cursor:pointer;line-height:1.35;white-space:normal"; document.body.append(goalsEl); }
+  if(!goalsEl){ goalsEl=el("div",{class:"goalwrap"}); goalsEl.style.cssText="position:fixed;z-index:30;display:flex;align-items:flex-start;gap:4px;max-width:min(400px,72vw)";
+    goalsBtn=el("button",{type:"button",class:"goalpill",onclick:()=>openGoals(),"aria-label":"Goals"}); goalsBtn.style.cssText="padding:6px 10px;background:rgba(10,6,22,.82);color:#e9e2ff;border:1px solid #43f0a4;border-radius:6px;font:12px 'IBM Plex Mono',monospace;text-align:left;cursor:pointer;line-height:1.35;white-space:pre-line;min-width:0";
+    const sm="width:30px;height:30px;flex:none;padding:0;border-radius:6px;background:rgba(10,6,22,.82);color:#e9e2ff;border:1px solid #6b5a8a;font:14px 'IBM Plex Mono',monospace;cursor:pointer;line-height:1";
+    goalsX=el("button",{type:"button",title:"Hide goals","aria-label":"Hide goals",text:"✕",onclick:e=>{ e.stopPropagation(); setGoalsMin(1); toast("Goals hidden. Tap 🧭 to bring them back."); }}); goalsX.style.cssText=sm;
+    goalsMini=el("button",{type:"button",title:"Show goals","aria-label":"Show goals",text:"🧭",onclick:()=>setGoalsMin(0)}); goalsMini.style.cssText=sm+";border-color:#43f0a4;opacity:.8";
+    goalsEl.append(goalsBtn,goalsX,goalsMini); document.body.append(goalsEl); }
   goalsEl.hidden=!show; if(!show) return;
   const cv=$("#world").getBoundingClientRect(), hb=($(".hud.top")||{getBoundingClientRect:()=>({bottom:0})}).getBoundingClientRect().bottom; goalsEl.style.left=(cv.left+8)+"px"; goalsEl.style.top=(Math.max(cv.top,hb)+8)+"px";
-  let txt; if(!save.fn.fin){ const nx=FN_STEPS.find(s=>!save.fn.done.includes(s.k)); txt=`🧭 First Night ${save.fn.done.length}/${FN_STEPS.length}\n▸ ${nx.t}`; goalsEl.style.borderColor="#43f0a4"; }
-  else { const D=save.daily, nx=D.g.find(k=>!D.done.includes(k)); txt=`📅 Daily ${D.done.length}/${D.g.length} · 🔥 ${save.streak.n}`+(nx?`\n▸ ${dgProg(nx).t} (${dgProg(nx).cur}/${dgProg(nx).n})`:"\n✓ All done — new goals tomorrow"); goalsEl.style.borderColor="#38e8ff"; }
-  if(goalsEl.textContent!==txt){ goalsEl.textContent=txt; goalsEl.style.whiteSpace="pre-line"; } }
+  const min=!!save.goalsMin; goalsBtn.hidden=min; goalsX.hidden=min; goalsMini.hidden=!min; if(min) return;
+  let txt; if(!save.fn.fin){ const nx=FN_STEPS.find(s=>!save.fn.done.includes(s.k)); txt=`🧭 First Night ${save.fn.done.length}/${FN_STEPS.length}\n▸ ${nx.t}`; goalsBtn.style.borderColor="#43f0a4"; }
+  else { const D=save.daily, nx=D.g.find(k=>!D.done.includes(k)); txt=`📅 Daily ${D.done.length}/${D.g.length} · 🔥 ${save.streak.n}`+(nx?`\n▸ ${dgProg(nx).t} (${dgProg(nx).cur}/${dgProg(nx).n})`:"\n✓ All done — new goals tomorrow"); goalsBtn.style.borderColor="#38e8ff"; }
+  if(goalsBtn.textContent!==txt) goalsBtn.textContent=txt; }
 function openGoals(){ goalsInit(); const body=panel("Goals","Your First Night checklist, today's goals and your streak."); currentView="goals"; goalsPainted=Date.now();
+  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:save.goalsMin?"🧭 Show the goals tracker on screen":"✕ Hide the goals tracker on screen",onclick:()=>{ setGoalsMin(!save.goalsMin); openGoals(); }})));
   if(!save.fn.fin){ const box=el("div",{class:"detail",style:"border-color:#43f0a4"},el("div",{class:"info"},el("strong",{text:`🧭 First Night — ${save.fn.done.length}/${FN_STEPS.length}`}),el("span",{class:"sub",text:`Do these in any order. ₵${FN_STEP_PAY} each, then ₵${FN_DONE_PAY} + ${FN_DONE_CHIPS} chips when you finish.`})));
     const l=el("div",{class:"list"}); for(const s of FN_STEPS){ const d=save.fn.done.includes(s.k); l.append(el("div",{class:"li"},el("span",{style:`font-size:18px;color:${d?"#43f0a4":"#6a5a9a"}`,text:d?"✓":"○"}),el("div",{class:"grow"},el("strong",{text:s.t,style:d?"text-decoration:line-through;opacity:.6":""}),d?null:el("div",{class:"sub",text:s.d})))); }
     body.append(box,l); }
@@ -3855,6 +3882,7 @@ $("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrc
 /* ============================================================ HOW TO PLAY */
 const HELP=[
  {id:"start",icon:"🚀",n:"Getting started",topics:[
+  {id:"music",icon:"🎵",n:"Music picker",sub:"Choose the music you hear",where:"Top bar → 🎵 Music (phones: ☰ → Music)",steps:["Open 🎵 Music.","Pick a tab: Game & anime, Companion Clash, Club & bar, or City & silence.","Press ▶ Play on any track. Only you hear your pick."],secs:[["Clubs and the Den",["The Glitch, The Third Eye and the Gamers Den play their shared jukebox. Tick “Also play my pick…” to hear your own track there instead (just for you)."]],["Goals tracker",["The goals box on the top left can be hidden with ✕. Tap 🧭 to bring it back, or open Goals and use the show/hide button."]]]},
   {id:"welcome",icon:"👋",n:"Welcome",sub:"What NEON HARVEST is, and who it's for",secs:[
     ["Adults only",["NEON HARVEST is for players 21 and older. New accounts confirm their date of birth once before playing, and real-life reward pickups need a photo ID."]],
     ["Your progress saves",["Your stash, credits, chips, Reward Points, outfits, apartment, plots, rentals and pickup codes are saved to your account and follow you to any device you sign in on."]]],rel:["firstnight","controls","rules"]},
@@ -4005,7 +4033,7 @@ const HELP=[
   {id:"den",icon:"🕹",n:"Gamers Den",sub:"The gamer & anime bar",where:"Metro → Gamers Den",steps:["Order something at the Den Bar and use it while you're here.","Grab a seat in one of the six themed booths.","Pick a track on the jukebox (₵5).","Check the boards for games, watch parties and events, or pin your own.","Play THE VOID arcade cabinet at the far end."],secs:[
     ["The booths",["Mecha Hangar, Sakura Garden, Pixel Dungeon, Starship Bridge, Ramen Alley and Dragon Lair. Walk up to a seat and press E to sit."]],
     ["The jukebox",["12 original anime- and game-style tracks: an 8-bit overworld march, a boss battle, a magical-girl transformation, a shonen opening, lo-fi study beats and more. Everyone in the Den hears your pick."]]],rel:["denmenu","denboards","dencrew","void"]},
-  {id:"denmenu",icon:"🍙",n:"Den menu",sub:"Snacks and drinks with their own effects",where:"Gamers Den → Den Bar",steps:["Walk up to the Den Bar and press E.","Order from the menu. Orders go to your Stash.","Tap Use (in the Den Bar or your Stash) while you're in the Den."],secs:[
+  {id:"denmenu",icon:"🍙",n:"Den menu",sub:"Snacks and drinks with their own effects",where:"Gamers Den → Den Bar",steps:["Walk up to the Den Bar and press E.","Order from the menu. Orders go to your Stash.","Tap 🍙 My den items (bottom right while you're in the Den) and press Use. You can also use them from the Den Bar or your Stash."],secs:[
     ["The menu",["12 items, from Mana Potion Soda and Critical Hit Cola to Boss Rush Ramen and Isekai Tea. Each has its own animation everyone in the Den sees (damage numbers, LEVEL UP!, sakura petals, a power-up aura, a magic circle…) and a boost."]],
     ["Good to know",["They only work inside the Gamers Den, and the effect ends when you leave. Take the same item again to make it last longer."]]]},
   {id:"denboards",icon:"📌",n:"Den boards",sub:"Games, watch parties and events",where:"Gamers Den → Game Night board and Watch parties & events board",steps:["Walk up to a board and press E.","Browse Games hosting, Watch parties and Events.","Tap 📌 Pin a post: pick the type, a title, when, where and your platform.","Show your username, add your Discord name, or both, so people can reach you."],secs:[
@@ -5162,6 +5190,21 @@ const DEN_TRACKS=[
   {n:"Victory Fanfare Loop",bpm:128,col:"#ffd23a",style:"chip",root:67,sc:"maj",prog:[0,3,4,0],mel:"0.0.0.4...2...4.....7...........",vibe:"Battle won · celebratory fanfare"},
   {n:"Speedrun Zone",bpm:184,col:"#43f0a4",style:"rock",root:60,sc:"min",prog:[0,6,5,6],mel:"7.6.7.4.7.6.7.3.7.6.7.4.9.7.6.4.",vibe:"Speedrun · breakneck arpeggios"},
   {n:"Hero's Last Stand",bpm:92,col:"#e9e2ff",style:"ballad",root:62,sc:"maj",prog:[0,5,3,4],mel:"4.......5...4...2.......0.......",vibe:"Ending theme · slow and hopeful"},
+  {n:"Neon Ninja Scroll",bpm:162,col:"#ff3fa8",style:"rock",root:57,sc:"min",prog:[0,5,3,6],mel:"0.3.4.0.3.4.7.6.4.3.4...0.3.4.7.9.7.6.4.3.2.0.......",vibe:"Ninja action · rooftop chase riffs"},
+  {n:"Critter Trail Route 7",bpm:124,col:"#7bd34a",style:"chip",root:62,sc:"maj",prog:[0,3,4,0],mel:"0.4.7.4.5.4.2...0.2.4.2.1.0.4...",vibe:"Monster-catching RPG · tall grass stroll"},
+  {n:"Starfighter Squadron",bpm:146,col:"#7c9cff",style:"mecha",root:55,sc:"min",prog:[0,6,5,6],mel:"7...4.7.9.7.6.4.3.4.6...4.......",vibe:"Space shooter · stage 1 launch"},
+  {n:"Ghost Manor Waltz",bpm:96,col:"#9a7bd6",style:"dungeon",root:53,sc:"min",prog:[0,3,4,0],mel:"0..3..4..3..2..1..0.....4..6..7..6..4..3..2.....",vibe:"Spooky game · creaky ballroom waltz"},
+  {n:"Turbo Kart Cup",bpm:170,col:"#ffb84a",style:"rock",root:60,sc:"maj",prog:[0,4,5,3],mel:"0.2.4.7.9.7.4.2.4.5.7...5.4.2...",vibe:"Kart racer · final lap rush"},
+  {n:"Idol Stage Spotlight",bpm:156,col:"#ff8fc7",style:"magic",root:67,sc:"maj",prog:[3,4,2,5],mel:"4.4.5.7...7.9.7.5.4...2.4.5.4.2.0.......",vibe:"Anime idol pop · concert encore"},
+  {n:"Isekai Tavern",bpm:108,col:"#d9a066",style:"slice",root:62,sc:"maj",prog:[0,3,4,0],mel:"0.2.4.5.4.2.0...4.5.7.9.7.5.4...",vibe:"Fantasy anime · cozy tavern jig"},
+  {n:"Rainy Rooftop Confession",bpm:84,col:"#a8c8ff",style:"ballad",root:64,sc:"maj",prog:[0,5,3,4],mel:"2.......4...5...4.......2...0...",vibe:"Romance anime · rain on the school roof"},
+  {n:"Cyber Detective Noir",bpm:88,col:"#38e8ff",style:"lofi",root:50,sc:"min",prog:[0,3,5,4],mel:"4...3...2.......0...2...3...4...",vibe:"Detective anime · neon rain and jazz"},
+  {n:"Kaiju Alert!",bpm:150,col:"#ff5a4a",style:"mecha",root:52,sc:"min",prog:[0,1,0,6],mel:"0.0.0...1...0.......7.6.4.3.1...",vibe:"Giant monster anime · sirens and brass"},
+  {n:"Puzzle Drop Fever",bpm:144,col:"#f5e663",style:"chip",root:65,sc:"maj",prog:[0,4,3,4],mel:"7.4.5.7.9.7.5.4.2.4.5.2.4...0...",vibe:"Puzzle game · falling blocks speed-up"},
+  {n:"Sky Castle Flight",bpm:120,col:"#8fd0ff",style:"slice",root:60,sc:"maj",prog:[3,4,5,0],mel:"4...5...7.......9...7...5...4...",vibe:"Airship adventure · above the clouds"},
+  {n:"Rival Duel at Dusk",bpm:148,col:"#cf72ff",style:"select",root:59,sc:"min",prog:[0,5,6,4],mel:"0.4.7.0.4.7.6.4.5.3.6.5.3.2.0...",vibe:"Rival battle · showdown on the bridge"},
+  {n:"Dragon Shrine Bells",bpm:118,col:"#43f0a4",style:"magic",root:57,sc:"min",prog:[0,6,3,4],mel:"7...4...3...0...2...3...4.......",vibe:"Mythic anime · mountain shrine at dawn"},
+  {n:"Credits Roll Sunrise",bpm:96,col:"#ffd36a",style:"ballad",root:60,sc:"maj",prog:[0,4,5,3],mel:"0...2...4.......5...4...2...4...",vibe:"Game ending · credits over the sunrise"},
 ];
 const DEN_SCALES={maj:[0,2,4,5,7,9,11],min:[0,2,3,5,7,8,10]};
 let denTrack=0, denTrackBy=null, denPosts=[], denPostsOn=false, denSlots=[null,null,null,null], denSlot=-1, denBeat=null, denShift=null, denCust=[], denNext=0, denOrderNext=0, denGlitch={}, denGlitchNext=0, denSig="", denKiko=null;
@@ -10007,6 +10050,12 @@ function drawElyExtras(t){ const W=ELY.W;
 
 npcs._elyOld=[{x:ELY.bar-80,y:262,look:{jacket:5,pants:5,visor:1,hat:0,back:Math.max(0,WARD.back.opts.findIndex(o=>o[0]==="Angel wings")),aura:Math.max(0,WARD.aura.opts.findIndex(o=>o[0]==="Golden glow"))},dir:1,vx:0,name:"Seraphine",fx:"god"},{x:ELY.bar+80,y:262,look:{jacket:18,pants:7,visor:3,hat:0,back:Math.max(0,WARD.back.opts.findIndex(o=>o[0]==="Bat wings")),aura:Math.max(0,WARD.aura.opts.findIndex(o=>o[0]==="Flames"))},dir:-1,vx:0,name:"Malakai",dk:"horns"}];
 document.getElementById("btnClubItems").addEventListener("click",()=>{ beep(700,.05); openMyClubItems(); });
+document.getElementById("btnDenItems").addEventListener("click",()=>{ beep(700,.05); openMyDenItems(); });
+function openMyDenItems(){ const own=invList().filter(([id])=>BY[id]&&BY[id].t==="den"), n=own.reduce((a,[,k])=>a+k,0); const body=panel(`My den items (${n})`,"Use your Gamers Den snacks and drinks anywhere in the Den."); currentView="myden";
+  const now=Date.now(), cur=myTrip&&myTrip.den&&myTrip.until>now?myTrip:null; if(cur){ const d=DEN_BY[cur.id]; body.append(el("div",{class:"detail",style:`border-color:${d?d.col:"#ffd36a"}`},itemCanvas(cur.id,52),el("div",{class:"info"},el("strong",{style:d?`color:${d.col}`:"",text:`Active: ${cur.name}`}),el("span",{class:"sub",text:`${Math.max(1,Math.ceil((cur.until-now)/60e3))} min left. Using the same item again makes it last longer.`})))); }
+  const l=el("div",{class:"list"}); if(!own.length) l.append(el("div",{class:"empty",text:"You don't have any den items. Order them at the Den Bar."}));
+  for(const [id,k] of own){ const d=DEN_BY[id]; if(!d) continue; l.append(el("div",{class:"li"},itemCanvas(id,44),el("div",{class:"grow"},el("div",{style:`color:${d.col}`,text:`${d.n} ×${k}`}),el("div",{class:"sub",text:d.desc}),el("div",{class:"sub",text:`Lasts ${Math.round(d.dur/60*10)/10} min · ${d.buffs.map(b=>({luck:"lucky salvage",tips:"+25% tips",speed:"faster feet",print:"2× print chips",guard:"less Void damage"}[b]||b)).join(", ")}`})),el("button",{class:"btn hot",type:"button",text:"Use",onclick:()=>{ useDen(id); }}))); }
+  body.append(l,el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"🍙 Order more at the Den Bar",onclick:()=>{ if(me.scene==="den") go("den",DEN_X.bar); openDenBar("menu"); }}))); }
 /* ============================================================ NPC STORY QUESTS */
 const QUESTS={
   vex:{npc:"Vex",role:"Bartender, The Glitch",title:"Ghost in the Taps",col:"#ff3fa8",ch:[
@@ -10255,7 +10304,8 @@ function playStep(tr,s,at,sp){ if(tr.style) return playGenre(tr,s,at,sp); const 
   tone("square",mtof(chord[[0,1,2,1][s%4]]+12),at,sp*.85,.022,2400);
   if(s%16===0) for(const m of chord) tone("triangle",mtof(m),at,sp*15,.028,1600); }
 function startClubSeq(){ if(seqTimer||!AC) return; master=AC.createGain(); master.gain.value=.5; master.connect(AC.destination); nextNote=AC.currentTime+.1;
-  seqTimer=setInterval(()=>{ if(!soundOn||(me.scene!=="club"&&me.scene!=="bar"&&me.scene!=="den"&&!(CJ&&CJ.open))){ nextNote=AC.currentTime+.05; return; }
+  seqTimer=setInterval(()=>{ const venue=me.scene==="club"||me.scene==="bar"||me.scene==="den", mine=(CJ&&CJ.open)?null:wmTrack(venue); if(!soundOn||(!venue&&!(CJ&&CJ.open)&&!mine)){ nextNote=AC.currentTime+.05; return; }
+    if(mine){ const sp=60/mine.tr.bpm/4; master.gain.value=mine.g; while(nextNote<AC.currentTime+.12){ mine.play(mine.tr,step16,nextNote,sp); nextNote+=sp; step16=(step16+1)%64; } return; }
     if(CJ&&CJ.open){ const tr=CJ_TRACKS[CJ.track]; if(!tr){ nextNote=AC.currentTime+.05; return; } const sp=60/tr.bpm/4; master.gain.value=.36; while(nextNote<AC.currentTime+.12){ cjPlayStep(tr,cjStep16,nextNote,sp); nextNote+=sp; cjStep16=(cjStep16+1)%64; } return; }
     if(me.scene==="den"){ const tr=DEN_TRACKS[denTrack]||DEN_TRACKS[0], sp=60/tr.bpm/4; master.gain.value=.34; while(nextNote<AC.currentTime+.12){ playDenStep(tr,step16,nextNote,sp); nextNote+=sp; step16=(step16+1)%64; } return; }
     const inBar=me.scene==="bar", tr=TRACKS[inBar?barTrack:clubTrack]||TRACKS[0], sp=60/tr.bpm/4; master.gain.value=inBar?.32:.5;
@@ -10659,7 +10709,7 @@ function openBotControl(){ const body=panel("Bot Control","Pick how many bots yo
   for(const [k,B] of Object.entries(BOT_TYPES)){ const top=Object.entries(B.cats).sort((a,b)=>b[1]-a[1]).map(([c])=>catN[c]);
     d.append(el("div",{class:"li"},lookCanvas(B.look,40),el("div",{class:"grow"},el("div",{text:B.n+(B.boss?" (Hard mode boss)":"")}),el("div",{class:"sub",text:`${B.hp} HP · ${B.kind==="ranged"?"ranged shots":B.slam?"telegraphed ground slam":B.blink?"blinks behind you":"melee"}${B.volley?" + 3-shot volley":""} · ${B.chips[0]}–${B.chips[1]} chips`}),el("div",{class:"sub",text:`${Math.round(B.drop*100)}% drop chance${B.drops?` ×${B.drops}`:""}, mostly ${top.slice(0,2).join(" and ")}${B.minR?` · always ${B.minR} or better`:""}`})))); }
   body.append(d,el("p",{class:"sub",text:"Drops land on the floor with a glow in their rarity color. Walk over them to collect; they vanish after 45 seconds. Wardrobe unlocks you already own pay out credits instead. Bots still count as deaths: getting deleted costs 15% of your credits and chips."})); }
-function tickVoid(){ const inV=me.scene==="void"; { const cbb=$("#clubBtn"), inC=me.scene==="club"&&$("#overlay").hidden; if(cbb&&cbb.hidden===inC) cbb.hidden=!inC; } const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
+function tickVoid(){ const inV=me.scene==="void"; { const cbb=$("#clubBtn"), inC=me.scene==="club"&&$("#overlay").hidden; if(cbb&&cbb.hidden===inC) cbb.hidden=!inC; const dbb=$("#denBtn"), inD=me.scene==="den"&&$("#overlay").hidden; if(dbb&&dbb.hidden===inD) dbb.hidden=!inD; } const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
   if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`+(!MOBILE&&(save.botMode||"normal")!=="off"?` · Bots: ${botMode().n}`:""); if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
   if(inV&&!me.dead&&(me.burnUntil||0)>T&&T>=(me.burnNext||0)){ me.burnNext=T+.5; if(inSafe(me.x)) me.burnUntil=0; else { myHP=Math.max(0,myHP-2); lastHitT=T; addVfx({type:"burn",x:me.x,y:me.y}); addVfx({type:"num",x:me.x,y:me.y-84,txt:"-2",col:"#ff8a3a"}); if(myHP<=0) die(me.burnSrc||{}); } }
   if(!inV) me.burnUntil=0;
@@ -10846,6 +10896,7 @@ $("#btnMsg").addEventListener("click",()=>openMessages());
 $("#btnDex").addEventListener("click",()=>openMyDex());
 $("#prompt").addEventListener("click",()=>{ if(nearHot&&$("#overlay").hidden) useHot(); });
 $("#btnMenu").addEventListener("click",()=>openMobileMenu());
+$("#btnMusic").addEventListener("click",()=>{ beep(700,.05); openMusic(); });
 function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sceneName(me.scene)}`); currentView="menu";
   const mk=(ic,t,fn,cls)=>el("button",{class:"btn"+(cls?" "+cls:""),type:"button",onclick:fn},el("span",{class:"ic",text:ic,"aria-hidden":"true"}),el("span",{text:t}));
   const un=typeof unreadTotal==="function"?unreadTotal():0;
@@ -10853,7 +10904,7 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
     mk("👤","Character",()=>{ tryOn=null; openWardrobe("name"); }), mk("🎒","Stash",()=>openStash()), mk("💠","Reward Points",()=>openRP()), mk("🎮","Game consoles",()=>openConsoles()),
     mk("💬",un?`Messages (${un})`:"Messages",()=>openMessages()), mk("🟢","Who's online",()=>openOnline()),
     mk("📜","Chat log",()=>{ closePanel(); chatOpen=true; renderChatLog(true); }), mk("❓","How to Play",()=>openGuide()),
-    mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }),
+    mk(soundOn?"🔊":"🔇",soundOn?"Sound: on":"Sound: off",()=>{ $("#btnSnd").click(); openMobileMenu(); }), mk("🎵","Music",()=>openMusic()),
     mk("🚇","Fast travel",()=>openFastTravel()), mk("🐾","Companion",()=>openCompanion()), mk("📇","MyDex",()=>openMyDex()), mk("🎭","Role",()=>openRoleMenu()), mk("📜","Quests",()=>openQuestLog()),...(IS_ADMIN?[mk("🛡️","Admin panel",()=>openAdmin(),"hot")]:[])));
   body.append(el("strong",{text:"Emotes"}),el("div",{class:"memotes"},...["wave","dance","cheer","pose"].map(e2=>el("button",{class:"btn",type:"button",text:e2[0].toUpperCase()+e2.slice(1),onclick:()=>{ closePanel(); emote(e2); }}))));
   const st=[]; const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) st.push("Boosts: "+bf.map(k=>BUFF_N[k]+" "+Math.ceil((save.buffs[k]-Date.now())/60e3)+"m").join(" · "));
