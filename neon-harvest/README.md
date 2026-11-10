@@ -1,6 +1,6 @@
 # NEON HARVEST
 
-A social 2D cyberpunk world. Collect and build PC parts, work shifts at The Glitch, Cyber Buys & More and The Third Eye, duel in The Grid, hang out in the Gamers Den (an anime & gamer bar with booths, a themed menu, a jukebox, event boards and Den Crew shifts) and fight in The Void cabinet inside it, show off cars at the Car Display, and redeem real-life rewards at Smacked Shop.
+A social 2D cyberpunk world. Collect and build PC parts, work shifts at The Glitch, Cyber Buys & More and The Third Eye, duel in The Grid, play Companion Clash (an original JRPG starring you and your companion), hang out in the Gamers Den (an anime & gamer bar with booths, a themed menu, a jukebox, event boards and Den Crew shifts) and fight in The Void cabinet inside it, show off cars at the Car Display, and redeem real-life rewards at Smacked Shop.
 
 **Play:** https://ls-city.github.io/neon-harvest/
 
