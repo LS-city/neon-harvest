@@ -242,6 +242,27 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Neon Row interiors: layout, hired staff, posters and ads, order alerts. Each store's partner (or the owner) edits their own.
+    match /rowin/{slot} {
+      allow read: if signedIn();
+      allow write: if (isOwner() || isPartner(slot)) && slot in ['s1', 's2', 's3', 's4', 's5', 's6']
+        && request.resource.data.keys().hasOnly(['lay', 'clerk', 'greeter', 'greet', 'posters', 'screen', 'out', 'notify', 'pk', 'at']);
+    }
+    // Order emails for Neon Row partners (sent by the Trigger Email extension). A player can only queue one email,
+    // for their own real order, to that store's own email, and only when the store turned email alerts on.
+    match /mail/{id} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['to', 'message', 'slot', 'code', 'at'])
+        && nd().slot in ['s1', 's2', 's3', 's4', 's5', 's6'] && nd().code is string
+        && id == 'row_' + nd().slot + '_' + nd().code
+        && get(/databases/$(database)/documents/rowcodes/$(nd().slot)/codes/$(nd().code)).data.by == me()
+        && get(/databases/$(database)/documents/rowin/$(nd().slot)).data.get('notify', false) == true
+        && nd().to == [rowDoc(nd().slot).get('email', '')]
+        && nd().message.keys().hasOnly(['subject', 'text'])
+        && nd().message.subject is string && nd().message.subject.size() <= 120
+        && nd().message.text is string && nd().message.text.size() <= 1000;
+      allow read, update, delete: if isOwner();
+    }
     // Gamers Den boards: game nights, anime watch parties and events. Signed-in players read; you post and remove your own; the owner can remove any.
     match /denposts/{id} {
       allow read: if signedIn();

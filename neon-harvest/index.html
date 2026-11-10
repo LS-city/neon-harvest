@@ -3416,6 +3416,7 @@ const SCENES={
   assembly:{w:2900, spawn:140},
   void:{w:2700, spawn:140},
   den:{w:2760, spawn:140},
+  rowin:{w:1400, spawn:140},
   bar:{w:1800, spawn:120},
   home:{w:2900, spawn:120},
   cyberbuys:{w:2200, spawn:120},
@@ -3518,6 +3519,7 @@ function hotspotsBase(sc){
       return {x:plotX(i),hw:62,label:mine?`Your plot #${i+1}: collect ₵ and manage Credit Miners`:o?`Plot #${i+1}: ${plotName(o)}'s tower`:myPlot()>=0?`Plot #${i+1} for sale (you own #${myPlot()+1})`:`Buy plot #${i+1} for ₵${LAND_PRICE.toLocaleString()}`,act:()=>openPlot(i)}; }),
   ];
   if(sc==="den") return denHot();
+  if(sc==="rowin") return rowInHot();
   if(sc==="void") return [
     {x:120,hw:60,label:"Step out of the cabinet (back to the Gamers Den)",act:()=>{ if(T-lastHitT<6){ toast("You're in combat. Wait a few seconds before leaving."); return; } go("den",2565); }},
     {x:264,hw:50,label:"Top fraggers and weapon stats",act:()=>openFraggers()},
@@ -3831,14 +3833,14 @@ function stepInner(now){
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
   // npcs
   for(const n of (npcs[me.scene]||[])){ n.stop=!!(n.name&&Math.abs(me.x-n.x)<70&&Math.abs(me.y-n.y)<60); if(n.stop){ n.dir=me.x>=n.x?1:-1; continue; } if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; } }
-  tickCustomers(); tickJobs(); tickCb(); tickBb(); tickDen(); tickClub(); tickVoid();
+  tickCustomers(); tickJobs(); tickCb(); tickBb(); tickDen(); tickClub(); tickVoid(); try{ tickRowIn(dt); }catch(e){}
   pushPresence(false);
   if(cv.height>4){ render(); screenFx(); }
   tickItemCans(T); tickLookCans(T);
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
@@ -3848,7 +3850,7 @@ function render(){
   for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:lifeName(n),say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance||n.danceUntil>T?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}});
   for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say&&!isBlocked(p.by)?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
-  if(me.scene==="den") denEnts(ents);
+  if(me.scene==="den") denEnts(ents); if(me.scene==="rowin") rowInEnts(ents);
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
@@ -3858,7 +3860,7 @@ function render(){
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
-  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); }catch(e){}
+  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); else if(me.scene==="rowin") drawRowInFront(T); }catch(e){}
   // rain (street)
   if(me.scene==="street"){ ctx.strokeStyle="rgba(170,190,255,.25)"; ctx.beginPath(); for(const r of rain){ r.y+=r.v*dt; if(r.y>1) r.y-=1; const x=camX+((r.x*VW+T*30)%VW), y=r.y*H; ctx.moveTo(x,y); ctx.lineTo(x-2,y+9); } ctx.stroke(); }
   ctx.setTransform(1,0,0,1,0,0);
@@ -4019,6 +4021,7 @@ const HELP=[
     ["Report and block",["Tap any player for 🚩 Report (it goes privately to the owner) or Block (you stop seeing their chat, speech bubbles and requests).","The big-screen view has a 🚩 Report button for movies. Manage your blocked list in Messages."]]]}]},
 
  {id:"neonrow",icon:"🏪",n:"Neon Row",topics:[
+  {id:"rowinside",icon:"🏬",n:"Shopping inside stores",sub:"Walk in, browse, order at the counter",where:"Neon Row → walk up to an open store and press E",steps:["Walk up to an open storefront and press E to step inside.","Browse the pedestals: walk up to one to see that reward.","Order from the clerk at the counter (or the kiosk if the store has no clerk). You get a pickup code like always.","When the store confirms your pickup, you get an animated pickup collectible. Your 3rd, 5th and 10th pickup at the same store get rarer ones."],secs:[["For store partners",["Manage my store → 🏬 Inside & staff: choose from 14 animated interior layouts, hire a counter clerk and a door greeter from 10 characters, set their greeting, and pick the collectible your store gives.","🖼 Posters & ads: a sidewalk sign and rooftop billboard outside, 3 rotating ads on the big screen and 4 wall posters inside. Add a title, a line and a picture.","🔔 Order alerts: email alerts for every new order, plus desktop notifications on your device."]]]},
   {id:"neonrow_about",icon:"🏪",n:"What Neon Row is",sub:"Real local businesses, real rewards",where:"Metro → Neon Row",steps:[
     "Ride the Metro (T) to Neon Row.",
     "Walk along the six storefronts and press E (or tap) at a store to open it.",
@@ -4380,7 +4383,7 @@ function openStash(){
   const body=panel("Stash Terminal","Everything you've collected, bought or been gifted. Search, filter and sort to find anything fast."); currentView="stash";
   const inv=invList(); const tot=inv.reduce((s,[id,n])=>s+BY[id].v*n,0), cnt=inv.reduce((s,[,n])=>s+n,0);
   body.append(el("div",{class:"row",style:"flex-wrap:wrap"},el("span",{class:"pill",text:`${cnt} item${cnt===1?"":"s"} · ${inv.length} kinds`}),el("span",{class:"pill cr",text:`Worth ₵${tot.toLocaleString()}`}),el("span",{class:"pill",text:`Shelves ${save.display.filter(Boolean).length}/6`}),save.look.hand&&BY[save.look.hand]?el("span",{class:"pill",text:`In hand: ${BY[save.look.hand].n}`}):""));
-  stashSpecials(body);
+  stashSpecials(body); try{ stashPickups(body); }catch(e){}
   if(!inv.length){ body.append(el("div",{class:"empty",text:"Your stash is empty. Dig in Scrap Alley, play CHIP PRINT at The Glitch, or buy parts at the Depot."})); return; }
   // controls
   const q=el("input",{type:"search",placeholder:"Search your stash (name, type or rarity)",value:stashUI.q,autocomplete:"off","aria-label":"Search your stash",style:"flex:1;min-width:150px"});
@@ -5652,11 +5655,11 @@ function card(html,actions,ttl=60e3){ const box=$("#invites"); const c=document.
   c.append(row); box.append(c); while(box.children.length>3) box.firstChild.remove(); beep(1046,.08); setTimeout(()=>beep(1318,.08),90); if(ttl) setTimeout(()=>c.remove(),ttl); return c; }
 
 /* ============================================================ APARTMENT INVITES */
-function curHomeKey(){ return me.scene==="home"?(me.visiting||myId||"self"):me.scene==="vip"?"vip:"+(me.vip||""):null; }
+function curHomeKey(){ return me.scene==="rowin"?"row:"+(rowInSlot||""):me.scene==="home"?(me.visiting||myId||"self"):me.scene==="vip"?"vip:"+(me.vip||""):null; }
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {dexhub:"MyDex Hub",datasim:"Data Sim HQ",racers:"the Car Display",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
+function sceneName(s){ return {rowin:(rowStores[rowInSlot]&&rowStores[rowInSlot].name)||"a Neon Row store",dexhub:"MyDex Hub",datasim:"Data Sim HQ",racers:"the Car Display",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Lethe Clinic)",line:"The Line (12/11)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -6856,7 +6859,224 @@ function drawFront(c,cx,r,t,k,items){ const open=rowOpen(r), L=cx-140, st=open?r
     c.fillStyle="#0b0716"; c.fillRect(L+30,78,220,34); c.strokeStyle="#ffb84a"; c.strokeRect(L+30.5,78.5,219,33); rowNeon(c,"FOR LEASE",cx,101,16,"#ffb84a",t?flick(41+k,t):1);
     c.fillStyle="#e9e2ff"; c.font="9px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(`SPOT ${k+1} · YOUR BUSINESS HERE`,cx,196); }
   c.fillStyle="#9a8cc0"; c.font="8px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(`NO. ${k+1}`,L+250,256);
+  if(open) try{ rowOutAds(c,cx,r,t,k); }catch(e){}
 }
+/* ============================================================ NEON ROW INTERIORS: walk inside, hired clerks, posters & ads, order alerts, pickup collectibles */
+const RI_W=1400, RI_DOOR=80, RI_COUNTER=530, RI_GREET=200, RI_PED=[790,890,990,1090,1190,1290], RI_POST=[260,700,1010,1330];
+const RI_LAYS=[
+  {n:"Neon Boutique",d:"Pink mirrored floor and sweeping disco beams",w:["#2a0c2e","#1a0820"],f:"#1a0a20",ped:"#3a1440"},
+  {n:"Cozy Café",d:"Warm wood, hanging plants and steaming cups",w:["#3a2416","#2a180e"],f:"#4a2e1a",ped:"#6b4226"},
+  {n:"Arcade Shop",d:"Flashing cabinet screens and coin sparkles",w:["#0b0a24","#06061a"],f:"#120e2a",ped:"#24204a"},
+  {n:"Botanical Shop",d:"Vines, sunbeams and drifting leaves",w:["#123a24","#0b2416"],f:"#2a3a1e",ped:"#3a5a2a"},
+  {n:"Cyber Lab",d:"Grid walls, a scanning laser and floating holograms",w:["#062a2e","#03181c"],f:"#0a1e22",ped:"#103a40"},
+  {n:"Ramen Bar",d:"Swinging lanterns, noren curtains and rising steam",w:["#3a0e0e","#240808"],f:"#2a1a12",ped:"#5a2a1a"},
+  {n:"Record Store",d:"Spinning vinyl wall and a pulsing equalizer",w:["#1e1430","#120c20"],f:"#2a1e16",ped:"#3a2a40"},
+  {n:"Art Gallery",d:"Clean white walls, sweeping spotlights, color-shifting art",w:["#d8d4e4","#b8b4c8"],f:"#8a8698",ped:"#f0eef6"},
+  {n:"Space Station",d:"Portholes with passing stars and blinking panels",w:["#141c2e","#0a1020"],f:"#1a2234",ped:"#2a3650"},
+  {n:"Night Market",d:"Twinkling string lights, stall awnings and fireflies",w:["#160c24","#0c0618"],f:"#241a14",ped:"#4a2a1a"},
+  {n:"Candy Shop",d:"Pastel stripes, floating bubbles and lollipop swirls",w:["#ffc6e0","#f0a8cc"],f:"#e88ab8",ped:"#fff0f8"},
+  {n:"Library Lounge",d:"Tall bookshelves, a crackling fireplace and floating dust",w:["#2a1a10","#1a1008"],f:"#3a2414",ped:"#5a3a1e"},
+  {n:"Crystal Cave",d:"Glowing crystals that pulse with light",w:["#140a2a","#0a0418"],f:"#1a1030",ped:"#2a1a48"},
+  {n:"Rooftop Garden",d:"Big skyline windows, moving clouds and a sunset",w:["#2a1a3a","#1a1028"],f:"#2a3a24",ped:"#3a4a30"},
+];
+const RI_CLERKS=[
+  {n:"Juno",p:"Cheerful",look:{skin:1,style:2,jacket:0,pants:7,hair:5,hairCol:16,hat:0,visor:0},hi:["Hi hi! Welcome in!","What can I get you today?","Ooh, great pick!"]},
+  {n:"Rex",p:"Laid-back",look:{skin:3,style:1,jacket:7,pants:7,hair:1,hairCol:7,hat:2,visor:1},hi:["Hey. Welcome.","Take your time.","Solid choice."]},
+  {n:"Mika",p:"Shy",look:{skin:0,style:3,jacket:10,pants:15,hair:6,hairCol:20,hat:0,visor:0},hi:["Um, hi! Welcome…","Let me know if you need anything.","Th-thank you!"]},
+  {n:"Bolt-9",p:"Robot",look:{skin:5,style:1,jacket:12,pants:7,hair:0,hairCol:12,hat:3,visor:2},hi:["GREETINGS, CUSTOMER.","PLEASE SELECT AN ITEM.","TRANSACTION: EXCELLENT."]},
+  {n:"Sable",p:"Fancy",look:{skin:2,style:2,jacket:15,pants:7,hair:4,hairCol:0,hat:0,visor:0},hi:["Welcome, darling.","Only the finest here.","Exquisite taste."]},
+  {n:"Pip",p:"Energetic",look:{skin:4,style:0,jacket:2,pants:1,hair:3,hairCol:2,hat:0,visor:0},hi:["WELCOME!! Hi!!","Everything is SO good today!","Yesss, great one!"]},
+  {n:"Gran Ko",p:"Grandma",look:{skin:1,style:2,jacket:5,pants:15,hair:6,hairCol:12,hat:0,visor:0},hi:["Come in, come in, sweetie.","You look hungry. Pick something.","Good choice, dear."]},
+  {n:"Vex",p:"Punk",look:{skin:3,style:3,jacket:18,pants:7,hair:2,hairCol:0,hat:0,visor:3},hi:["Yo. Welcome.","Grab what you want.","Rad."]},
+  {n:"Nova",p:"Space cadet",look:{skin:5,style:1,jacket:11,pants:7,hair:4,hairCol:17,hat:4,visor:2},hi:["Welcome aboard!","Ready for launch?","Stellar choice!"]},
+  {n:"Taro",p:"Chef",look:{skin:2,style:1,jacket:5,pants:7,hair:1,hairCol:7,hat:1,visor:0},hi:["Irasshai! Welcome!","Fresh today. What'll it be?","Coming right up!"]},
+];
+const RI_POSTSTY=["Neon frame","Retro print","Comic burst","Minimal","Hologram","Gold frame"];
+const RP_COLL=[
+  {n:"Holo Receipt",d:"A shimmering receipt that proves you were there."},{n:"Neon Shopping Bag",d:"A glowing bag with the store's colors."},{n:"Golden Ticket",d:"A shining ticket with sparkling edges."},
+  {n:"Pixel Trophy",d:"A tiny 8-bit trophy for a confirmed pickup."},{n:"Store Stamp",d:"An inked stamp with the store's name."},{n:"Gem Coin",d:"A spinning coin with a gem in the middle."},
+  {n:"Lucky Cat",d:"A waving lucky cat in the store's colors."},{n:"Star Badge",d:"A star badge that twinkles."},{n:"Crystal Key",d:"A floating crystal key."},
+  {n:"Thank-You Card",d:"A card that opens with a little heart."},{n:"Neon Heart",d:"A beating neon heart."},{n:"Rocket Pass",d:"A pass with a rocket that blasts off."}];
+const RP_TIER=["Common","Uncommon","Rare","Epic"], RP_TCOL=["#a4aed6","#7ceaff","#b693ff","#ff4fb0"];
+let rowIn={}, rowInSlot=null, rowInShop=[], rowInSaid=0, rowInSeen={}, rowOrderClerk=null, rowImgCache={};
+function cleanRowIn(d){ d=d&&typeof d==="object"?d:{}; const n=(v,a,b,dv)=>{ v=Math.floor(+v); return Number.isFinite(v)?clamp(v,a,b):dv; };
+  const img=v=>typeof v==="string"&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<=60000?v:"";
+  const ad=a=>{ a=a&&typeof a==="object"?a:{}; return {t:String(a.t||"").slice(0,28),l:String(a.l||"").slice(0,48),c:n(a.c,0,ROW_COLS.length-1,0),s:n(a.s,0,RI_POSTSTY.length-1,0),img:img(a.img)}; };
+  const arr=(v,k)=>Array.from({length:k},(_,i)=>ad(Array.isArray(v)?v[i]:null));
+  return {lay:n(d.lay,0,RI_LAYS.length-1,0),clerk:n(d.clerk,-1,RI_CLERKS.length-1,-1),greeter:n(d.greeter,-1,RI_CLERKS.length-1,-1),greet:String(d.greet||"").slice(0,80),posters:arr(d.posters,4),screen:arr(d.screen,3),out:arr(d.out,2),notify:d.notify===true,pk:n(d.pk,-1,RP_COLL.length-1,-1),at:+d.at||0}; }
+function rowInOf(s){ return rowIn[s]||cleanRowIn({}); }
+function rowAdHas(a){ return !!(a&&(a.t||a.l||a.img)); }
+function rowImg(src){ if(!src) return null; let im=rowImgCache[src]; if(!im){ im=new Image(); im.src=src; rowImgCache[src]=im; const k=Object.keys(rowImgCache); if(k.length>60) delete rowImgCache[k[0]]; } return im.complete&&im.naturalWidth?im:null; }
+function rowAdImg(file){ return new Promise((ok,no)=>{ if(!file||!/^image\//.test(file.type)||file.size>15e6) return no(0); const u=URL.createObjectURL(file), im=new Image(); im.onerror=()=>{ URL.revokeObjectURL(u); no(0); };
+  im.onload=()=>{ URL.revokeObjectURL(u); let max=220, q=.8, d=""; for(let i=0;i<6;i++){ const k=Math.min(1,max/Math.max(im.width,im.height)), cv=document.createElement("canvas"); cv.width=Math.max(1,Math.round(im.width*k)); cv.height=Math.max(1,Math.round(im.height*k)); const c=cv.getContext("2d"); c.fillStyle="#000"; c.fillRect(0,0,cv.width,cv.height); c.drawImage(im,0,0,cv.width,cv.height); d=cv.toDataURL("image/jpeg",q); if(d.length<=58000) break; max=Math.round(max*.8); q=Math.max(.5,q-.08); } d.length<=58000?ok(d):no(0); }; im.src=u; }); }
+// --- draw one ad / poster
+function rowDrawAd(c,a,x,y,w,h,t,col0){ const col=ROW_COLS[a.c][1]||col0, s=a.s; c.save();
+  if(s===2){ c.fillStyle=col; c.beginPath(); for(let i=0;i<20;i++){ const ang=i/20*Math.PI*2, k=i%2?.86:1.04; c.lineTo(x+w/2+Math.cos(ang)*w*.5*k,y+h/2+Math.sin(ang)*h*.5*k); } c.closePath(); c.fill(); }
+  c.fillStyle=s===1?"#efe2c6":s===3?"#f4f2f8":s===2?"#ffffff":"#0b0716"; c.fillRect(x+4,y+4,w-8,h-8);
+  const im=rowImg(a.img); if(im){ const k=Math.min((w-12)/im.width,(h-(a.t||a.l?30:12))/im.height), iw=im.width*k, ih=im.height*k; c.drawImage(im,x+(w-iw)/2,y+6,iw,ih); }
+  const dark=s===1||s===3||s===2; c.textAlign="center"; const fs=Math.max(7,Math.min(13,w/9)); c.font=`700 ${fs}px Silkscreen, monospace`; c.fillStyle=dark?"#1a1020":col; if(s===0||s===4){ c.shadowColor=col; c.shadowBlur=8; }
+  const tyy=im?y+h-16:y+h/2-2; if(a.t) c.fillText(a.t.slice(0,Math.floor(w/fs*1.6)),x+w/2,tyy); c.shadowBlur=0; c.font=`${Math.max(6,fs*.62)}px 'IBM Plex Mono',monospace`; c.fillStyle=dark?"#3a2a40":"#e9e2ff"; if(a.l) c.fillText(a.l.slice(0,Math.floor(w/fs*2.4)),x+w/2,tyy+fs*.95);
+  if(s===4){ c.globalAlpha=.25+.15*Math.sin(t*4); c.fillStyle=col; for(let yy=y+4;yy<y+h-4;yy+=4) c.fillRect(x+4,yy+((t*20)%4),w-8,1); c.globalAlpha=1; }
+  c.lineWidth=s===5?4:2; c.strokeStyle=s===5?"#ffd36a":s===1?"#8a6a3a":s===3?"#cfc6ff":col; if(s===0){ c.shadowColor=col; c.shadowBlur=10+4*Math.sin(t*3); } if(s!==2) c.strokeRect(x+1,y+1,w-2,h-2); c.restore(); }
+function rowEmptyFrame(c,x,y,w,h,col){ c.save(); c.strokeStyle=col; c.globalAlpha=.35; c.setLineDash([4,4]); c.strokeRect(x+.5,y+.5,w-1,h-1); c.setLineDash([]); c.globalAlpha=.5; c.font="7px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillStyle=col; c.fillText("AD SPACE",x+w/2,y+h/2+2); c.restore(); }
+// --- interior layouts (all drawn in world units 0..1400 wide, 0..342 tall)
+function rowInterior(c,r,I,t,x0,x1,preview){ const L=RI_LAYS[I.lay]||RI_LAYS[0], col=r?rowCol(r):"#ff3fa8", R=(a,b,w,h,f)=>{ c.fillStyle=f; c.fillRect(a,b,w,h); }, k=I.lay, hsh=i=>{ const v=Math.sin(i*127.1+k*31.7)*43758.5; return v-Math.floor(v); };
+  const g=c.createLinearGradient(0,0,0,262); g.addColorStop(0,L.w[0]); g.addColorStop(1,L.w[1]); c.fillStyle=g; c.fillRect(x0,0,x1-x0,262);
+  // wall patterns
+  if(k===0){ for(let x=0;x<RI_W;x+=60){ R(x,0,2,262,"rgba(255,63,168,.12)"); } }
+  if(k===1){ for(let x=0;x<RI_W;x+=28) R(x,0,2,262,"rgba(0,0,0,.18)"); R(0,190,RI_W,6,"#5a3a22"); }
+  if(k===2){ for(let i=0;i<18;i++){ const x=40+i*78; if(x<x0-80||x>x1) continue; if(Math.abs(x-RI_COUNTER)<120||RI_POST.some(p=>Math.abs(p-x)<60)) continue; R(x,120,44,142,"#14123a"); const fl=Math.sin(t*6+i)>0; R(x+6,130,32,26,fl?["#38e8ff","#ff3fa8","#ffd36a","#43f0a4"][i%4]:"#0a0820"); R(x+12,170,20,4,"#ff3fa8"); } }
+  if(k===3){ for(let i=0;i<14;i++){ const x=i*100+30; c.strokeStyle="#2f8f4a"; c.lineWidth=3; c.beginPath(); c.moveTo(x,0); for(let y=0;y<180;y+=20) c.lineTo(x+Math.sin(t*1.5+y*.05+i)*6,y); c.stroke(); c.fillStyle="#43c06a"; for(let y=20;y<180;y+=26){ c.beginPath(); c.ellipse(x+Math.sin(t*1.5+y*.05+i)*6+5,y,6,3,.5,0,7); c.fill(); } }
+    c.save(); c.globalAlpha=.12; c.fillStyle="#fff6c0"; for(let i=0;i<5;i++){ c.beginPath(); c.moveTo(150+i*260,0); c.lineTo(230+i*260,0); c.lineTo(330+i*260,262); c.lineTo(210+i*260,262); c.fill(); } c.restore(); }
+  if(k===4){ c.strokeStyle="rgba(56,232,255,.18)"; c.lineWidth=1; for(let x=0;x<RI_W;x+=24){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,262); c.stroke(); } for(let y=0;y<262;y+=24){ c.beginPath(); c.moveTo(x0,y); c.lineTo(x1,y); c.stroke(); } const sy=(t*60)%262; R(x0,sy,x1-x0,2,"rgba(67,240,164,.5)"); }
+  if(k===5){ for(let x=0;x<RI_W;x+=40) R(x,0,20,262,"rgba(0,0,0,.12)"); for(const nx of [400,660]){ for(let i=0;i<4;i++){ const sw=Math.sin(t*1.2+i)*2; R(nx-60+i*30+sw,150,26,60,i%2?"#f0e6d0":"#d84a3a"); } } }
+  if(k===6){ for(let i=0;i<12;i++){ const x=40+(i%6)*30+(i>5?1060:0), y=40+Math.floor(i/6%1)*0; } }
+  if(k===7){ R(x0,0,x1-x0,262,"rgba(255,255,255,.04)"); }
+  if(k===8){ for(let x=0;x<RI_W;x+=90){ R(x,0,3,262,"#0a0e1a"); for(let y=30;y<250;y+=40) R(x+8,y,8,4,Math.sin(t*3+x+y)>.6?"#43f0a4":"#1a2a3a"); } }
+  if(k===9){ for(let i=0;i<5;i++){ const x=120+i*280; R(x-60,40,120,22,i%2?"#d84a3a":"#2a6aa8"); for(let s=0;s<6;s++) R(x-60+s*20,40,10,22,"rgba(255,255,255,.25)"); } }
+  if(k===10){ for(let x=0;x<RI_W;x+=40) R(x,0,20,262,"rgba(255,255,255,.35)"); }
+  if(k===11){ for(let i=0;i<14;i++){ const x=i*100; if(Math.abs(x+40-RI_COUNTER)<130||RI_POST.some(p=>Math.abs(p-x-40)<70)) continue; R(x,30,80,232,"#3a2414"); for(let s=0;s<5;s++){ R(x+4,40+s*44,72,4,"#2a180c"); for(let b=0;b<9;b++){ const hb=26+((i*7+s*3+b*5)%12); R(x+6+b*8,44+s*44+(38-hb),6,hb,["#8a2a2a","#2a5a8a","#3a7a3a","#c08a2a","#6a3a8a"][(i+s+b)%5]); } } } }
+  if(k===12){ for(let i=0;i<16;i++){ const x=40+i*88, h=40+hsh(i)*70, pu=.5+.5*Math.sin(t*2+i); const cc=["#b06bff","#38e8ff","#ff3fa8"][i%3]; c.save(); c.globalAlpha=.45+.45*pu; c.fillStyle=cc; c.shadowColor=cc; c.shadowBlur=12*pu; c.beginPath(); c.moveTo(x,262); c.lineTo(x+12,262-h); c.lineTo(x+24,262); c.fill(); c.beginPath(); c.moveTo(x+14,0); c.lineTo(x+22,30+h*.3); c.lineTo(x+30,0); c.fill(); c.restore(); } }
+  if(k===13){ for(let i=0;i<5;i++){ const x=120+i*280; if(x<x0-200||x>x1+60) continue; const gg=c.createLinearGradient(0,40,0,200); gg.addColorStop(0,"#ff8a5a"); gg.addColorStop(1,"#5a2a7a"); c.fillStyle=gg; c.fillRect(x-80,40,160,150); c.fillStyle="rgba(255,255,255,.7)"; const cx2=x-80+((t*10+i*50)%200)-20; c.beginPath(); c.ellipse(cx2,70,22,7,0,0,7); c.fill(); R(x-80,140,160,50,"#1a1028"); for(let b=0;b<8;b++) R(x-76+b*20,150-((b*13+i*7)%30),16,40+((b*13+i*7)%30),"#120a1e"); R(x-82,38,164,4,"#3a2a4a"); R(x-2,40,4,150,"#3a2a4a"); } }
+  // floor
+  const fg=c.createLinearGradient(0,262,0,342); fg.addColorStop(0,L.f); fg.addColorStop(1,"#07040e"); c.fillStyle=fg; c.fillRect(x0,262,x1-x0,80);
+  if(k===0||k===7){ c.fillStyle="rgba(255,255,255,.06)"; for(let x=Math.floor(x0/40)*40;x<x1;x+=40) for(let y=262;y<342;y+=20) if(((x/40)+(y-262)/20)%2) c.fillRect(x,y,40,20); }
+  else if(k===1||k===11||k===6||k===9){ c.fillStyle="rgba(0,0,0,.2)"; for(let y=270;y<342;y+=12) c.fillRect(x0,y,x1-x0,1); }
+  else { c.strokeStyle="rgba(255,255,255,.06)"; for(let x=Math.floor(x0/48)*48;x<x1;x+=48){ c.beginPath(); c.moveTo(x,262); c.lineTo(x+(x-700)*.3,342); c.stroke(); } }
+  R(x0,260,x1-x0,3,col); c.globalAlpha=.25; R(x0,263,x1-x0,6,col); c.globalAlpha=1;
+  // door
+  R(RI_DOOR-34,120,68,142,"#0b0716"); c.strokeStyle=col; c.lineWidth=2; c.strokeRect(RI_DOOR-34,120,68,142); R(RI_DOOR-30,124,60,80,"rgba(56,232,255,.12)"); c.font="700 9px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle=col; c.fillText("EXIT",RI_DOOR,114);
+  // ceiling animations
+  if(k===0){ for(let i=0;i<4;i++){ c.save(); c.globalCompositeOperation="lighter"; c.globalAlpha=.08; c.fillStyle=["#ff3fa8","#38e8ff","#ffd36a","#b06bff"][i]; c.translate(250+i*330,0); c.rotate(Math.sin(t*.8+i)*.6); c.fillRect(-20,0,40,300); c.restore(); } const bx=700, by=30; c.save(); c.translate(bx,by); c.rotate(t); for(let j=0;j<8;j++){ c.fillStyle=j%2?"#e9e2ff":"#8a86a8"; c.fillRect(-12+j%4*6,-12+Math.floor(j/4)*12,6,12); } c.restore(); }
+  if(k===1){ for(const x of [180,420,880,1160]){ c.strokeStyle="#5a3a22"; c.lineWidth=1; c.beginPath(); c.moveTo(x,0); c.lineTo(x+Math.sin(t+x)*3,40); c.stroke(); c.fillStyle="#2f8f4a"; for(let i=0;i<6;i++){ c.beginPath(); c.ellipse(x+Math.sin(t+x)*3+(i-3)*5,46+i%2*6,6,10,0,0,7); c.fill(); } } for(let i=0;i<5;i++){ const lx=150+i*290; c.fillStyle=`rgba(255,184,74,${.7+.2*Math.sin(t*2+i)})`; c.beginPath(); c.arc(lx,18,8,0,Math.PI); c.fill(); } }
+  if(k===5){ for(let i=0;i<6;i++){ const lx=120+i*240, sw=Math.sin(t*1.5+i)*.15; c.save(); c.translate(lx,0); c.rotate(sw); R(-1,0,2,22,"#3a2a1a"); c.fillStyle="#ff4a3a"; c.shadowColor="#ff6a3a"; c.shadowBlur=14; c.beginPath(); c.ellipse(0,36,13,16,0,0,7); c.fill(); c.shadowBlur=0; R(-9,20,18,3,"#1a0a04"); R(-9,50,18,3,"#1a0a04"); c.restore(); } }
+  if(k===6){ for(let i=0;i<10;i++){ const x=(i<5?100+i*0:0)+[130,180,230,880,930,1180,1230,1280,160,210][i], y=i<8?60:110; if(Math.abs(x-RI_COUNTER)<130) continue; c.save(); c.translate(x,y); c.rotate(t*(1+i%3*.3)); c.fillStyle="#0b0b0b"; c.beginPath(); c.arc(0,0,20,0,7); c.fill(); c.strokeStyle="#2a2a2a"; for(let rr=8;rr<20;rr+=3){ c.beginPath(); c.arc(0,0,rr,0,7); c.stroke(); } c.fillStyle=["#ff3fa8","#38e8ff","#ffd36a"][i%3]; c.beginPath(); c.arc(0,0,6,0,7); c.fill(); c.restore(); } for(let b=0;b<14;b++){ const h=10+Math.abs(Math.sin(t*6+b*.7))*40; R(870+b*10,220-h,7,h,["#43f0a4","#ffd36a","#ff3fa8"][b%3]); } }
+  if(k===7){ for(let i=0;i<4;i++){ c.save(); c.globalAlpha=.15; c.fillStyle="#fff6c0"; const sx=200+i*330+Math.sin(t*.7+i)*80; c.beginPath(); c.moveTo(sx,0); c.lineTo(sx-50,262); c.lineTo(sx+50,262); c.fill(); c.restore(); } for(const [x,y] of [[860,70],[1160,70],[150,190]]){ R(x-30,y,60,46,"#fff"); c.fillStyle=`hsl(${(t*30+x)%360},70%,60%)`; c.beginPath(); c.arc(x-8,y+22,12,0,7); c.fill(); c.fillStyle=`hsl(${(t*30+x+120)%360},70%,60%)`; c.fillRect(x+2,y+10,18,26); c.strokeStyle="#2a2a3a"; c.strokeRect(x-30,y,60,46); } }
+  if(k===8){ for(const x of [160,860,1160]){ R(x-34,50,68,68,"#2a3650"); c.save(); c.beginPath(); c.arc(x,84,28,0,7); c.clip(); c.fillStyle="#020410"; c.fillRect(x-30,54,60,60); c.fillStyle="#fff"; for(let s=0;s<12;s++){ const sx=x-30+((s*17+t*40*(1+s%3))%60), sy=56+(s*23)%56; c.fillRect(sx,sy,s%3?1:2,1); } c.fillStyle="#7c5cff"; c.beginPath(); c.arc(x+10,84+Math.sin(t*.3)*4,8,0,7); c.fill(); c.restore(); c.strokeStyle="#8fa3ff"; c.lineWidth=3; c.beginPath(); c.arc(x,84,28,0,7); c.stroke(); } }
+  if(k===9){ c.strokeStyle="#3a2a1a"; c.lineWidth=1; c.beginPath(); for(let x=0;x<RI_W;x+=4) c.lineTo(x,12+Math.sin(x*.012)*8); c.stroke(); for(let x=10;x<RI_W;x+=34){ const on=Math.sin(t*3+x)>-.3; c.fillStyle=on?["#ffd36a","#ff3fa8","#43f0a4","#38e8ff"][(x/34|0)%4]:"#3a2a2a"; c.beginPath(); c.arc(x,16+Math.sin(x*.012)*8,3,0,7); c.fill(); } for(let i=0;i<14;i++){ c.globalAlpha=.4+.4*Math.sin(t*4+i); c.fillStyle="#f5e663"; c.fillRect((i*97+Math.sin(t+i)*30)%RI_W,120+(i*37)%120+Math.cos(t+i)*8,2,2); } c.globalAlpha=1; }
+  if(k===10){ for(let i=0;i<14;i++){ const u=(t*.15+i/14)%1, x=(i*103)%RI_W, y=262-u*262; c.globalAlpha=.6*(1-u); c.strokeStyle=["#ff8fc7","#7ce7ff","#fff6a0"][i%3]; c.lineWidth=1.5; c.beginPath(); c.arc(x+Math.sin(t+i)*10,y,6+i%3*3,0,7); c.stroke(); } c.globalAlpha=1; for(const x of [160,880,1180]){ R(x-2,150,4,112,"#fff"); c.save(); c.translate(x,140); c.rotate(t*1.5); for(let j=0;j<6;j++){ c.fillStyle=j%2?"#ff3fa8":"#fff"; c.beginPath(); c.moveTo(0,0); c.arc(0,0,22,j*Math.PI/3,(j+1)*Math.PI/3); c.fill(); } c.restore(); } }
+  if(k===11){ const fx=880; R(fx-46,170,92,92,"#5a3a2a"); R(fx-34,190,68,72,"#140804"); for(let i=0;i<6;i++){ c.fillStyle=["#ff6a1a","#ffb84a","#ffd36a"][i%3]; const fh=20+Math.abs(Math.sin(t*8+i))*20; c.beginPath(); c.moveTo(fx-26+i*10,262); c.lineTo(fx-21+i*10,262-fh); c.lineTo(fx-16+i*10,262); c.fill(); } c.globalAlpha=.15+.08*Math.sin(t*9); c.fillStyle="#ff9a3a"; c.beginPath(); c.arc(fx,230,80,0,7); c.fill(); c.globalAlpha=1; for(let i=0;i<20;i++){ c.globalAlpha=.3; c.fillStyle="#fff6c0"; c.fillRect((i*71+t*6)%RI_W,40+((i*53+t*4)%200),1.5,1.5); } c.globalAlpha=1; }
+  if(k===13){ for(let i=0;i<8;i++){ const x=160+i*160; R(x-14,236,28,26,"#6b3f1f"); c.fillStyle="#3aa85a"; c.beginPath(); c.arc(x+Math.sin(t+i)*2,226,16,0,7); c.fill(); } }
+  if(k===3){ for(let i=0;i<10;i++){ const u=(t*.12+i/10)%1; c.save(); c.translate((i*137+Math.sin(t+i)*40)%RI_W,u*262); c.rotate(t*2+i); c.fillStyle=i%2?"#43c06a":"#a8d84a"; c.beginPath(); c.ellipse(0,0,5,2.5,0,0,7); c.fill(); c.restore(); } }
+  if(k===4){ for(const x of [180,880,1170]){ const b=Math.sin(t*2+x)*4; c.save(); c.globalAlpha=.6; c.strokeStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=10; c.lineWidth=1.5; c.beginPath(); for(let j=0;j<6;j++){ const a=t+j*Math.PI/3; c.lineTo(x+Math.cos(a)*20,180+b+Math.sin(a)*8); } c.closePath(); c.stroke(); c.beginPath(); c.moveTo(x,160+b); c.lineTo(x,200+b); c.stroke(); c.restore(); R(x-18,240,36,22,"#103a40"); } }
+  if(k===2){ for(let i=0;i<8;i++){ const u=(t*.6+i/8)%1; c.globalAlpha=1-u; c.fillStyle="#ffd36a"; c.beginPath(); c.arc(880+i*40,220-u*60,3,0,7); c.fill(); } c.globalAlpha=1; }
+  // ad screen over the counter + posters
+  const sx=RI_COUNTER-90, sy=60; R(sx-6,sy-6,192,108,"#0b0716"); c.strokeStyle=col; c.lineWidth=2; c.strokeRect(sx-6,sy-6,192,108); const ads=I.screen.filter(rowAdHas);
+  if(ads.length){ const a=ads[Math.floor(t/6)%ads.length]; rowDrawAd(c,{...a,s:a.s===2?0:a.s},sx,sy,180,96,t,col); c.fillStyle="rgba(255,255,255,.05)"; for(let y=sy;y<sy+96;y+=3) c.fillRect(sx,y,180,1); }
+  else { const nm=r?(r.name||"").toUpperCase():"STORE"; c.save(); c.textAlign="center"; c.font=`700 ${Math.min(22,300/Math.max(6,nm.length))}px Silkscreen, monospace`; c.fillStyle=col; c.shadowColor=col; c.shadowBlur=10+4*Math.sin(t*3); c.fillText(nm,sx+90,sy+44); c.shadowBlur=0; c.font="8px 'IBM Plex Mono',monospace"; c.fillStyle="#cfc6ff"; c.fillText(r&&r.tagline?r.tagline.slice(0,34):"Welcome in!",sx+90,sy+64); c.restore(); }
+  RI_POST.forEach((px,i)=>{ const a=I.posters[i]; if(px+60<x0||px-60>x1) return; const y=70+(i%2)*8; if(rowAdHas(a)) rowDrawAd(c,a,px-42,y,84,110,t,col); else if(preview) rowEmptyFrame(c,px-42,y,84,110,col); });
+  // counter
+  R(RI_COUNTER-110,214,220,10,col); R(RI_COUNTER-106,224,212,40,L.ped); c.globalAlpha=.4; R(RI_COUNTER-106,224,212,3,col); c.globalAlpha=1;
+  if(I.clerk<0){ R(RI_COUNTER+60,180,34,34,"#0b0716"); c.strokeStyle="#43f0a4"; c.lineWidth=1.5; c.strokeRect(RI_COUNTER+60,180,34,34); c.font="700 7px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle="#43f0a4"; c.fillText("ORDER",RI_COUNTER+77,199); c.fillText("HERE",RI_COUNTER+77,207); }
+  // pedestals with live items
+  const items=r?rowLive(rowInSlotOf(r)):[]; RI_PED.forEach((px,i)=>{ if(px+50<x0||px-50>x1) return; R(px-26,222,52,40,L.ped); R(px-30,218,60,6,col); const it=items[i]; if(!it){ c.globalAlpha=.3; c.font="7px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillStyle="#cfc6ff"; c.fillText("—",px,206); c.globalAlpha=1; return; }
+    const b=Math.sin(t*2+i)*3, dg=it.dig&&rowDigi[it.dig]; c.save(); c.globalAlpha=.25+.1*Math.sin(t*3+i); c.fillStyle=col; c.beginPath(); c.ellipse(px,214,24,6,0,0,7); c.fill(); c.restore();
+    if(dg){ const cc=ROW_COLS[dg.color||0][1]; c.save(); c.translate(px,186+b); c.rotate(Math.sin(t+i)*.1); c.fillStyle="#0b0716"; c.fillRect(-18,-18,36,36); c.strokeStyle=RD_RCOL[dg.rar||0]; c.lineWidth=2; c.shadowColor=cc; c.shadowBlur=10; c.strokeRect(-18,-18,36,36); c.shadowBlur=0; c.font="20px sans-serif"; c.textAlign="center"; c.fillText(dg.icon||"✨",0,7); c.restore(); }
+    else { c.save(); c.translate(px,190+b); c.fillStyle=col; c.fillRect(-15,-12,30,24); c.fillStyle="#fff"; c.fillRect(-2,-12,4,24); c.fillRect(-15,-2,30,4); c.strokeStyle="#fff"; c.lineWidth=2; c.beginPath(); c.ellipse(-6,-15,6,4,-.4,0,7); c.ellipse(6,-15,6,4,.4,0,7); c.stroke(); c.restore(); }
+    c.font="7px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillStyle="#e9e2ff"; c.fillText(it.title.slice(0,14),px,248); c.fillStyle=it.cur==="nrc"?"#38e8ff":"#43f0a4"; c.fillText(rowPriceTxt(it),px,257); });
+}
+function rowInSlotOf(r){ return ROW_SLOTS.find(s=>rowStores[s]===r)||rowInSlot; }
+function drawRowIn(t){ const s=rowInSlot, r=rowStores[s]; if(!r){ ctx.fillStyle="#0b0716"; ctx.fillRect(camX,0,VW,H); return; } rowInterior(ctx,r,rowInOf(s),t,Math.max(0,camX-20),Math.min(RI_W,camX+VW+20),false); ctx.fillStyle="#07040e"; ctx.fillRect(camX,342,VW,30); }
+function drawRowInFront(t){ const s=rowInSlot, r=rowStores[s]; if(!r) return; const L=RI_LAYS[rowInOf(s).lay]||RI_LAYS[0], col=rowCol(r); ctx.fillStyle=L.ped; ctx.fillRect(RI_COUNTER-106,238,212,26); ctx.fillStyle=col; ctx.globalAlpha=.6; ctx.fillRect(RI_COUNTER-106,238,212,2); ctx.globalAlpha=1; }
+function rowInHot(){ const s=rowInSlot, r=rowStores[s], k=ROW_SLOTS.indexOf(s); if(!r) return [{x:RI_DOOR,hw:60,label:"Exit to Neon Row",act:()=>go("neonrow",ROW_X[Math.max(0,k)]||420)}]; const I=rowInOf(s), live=rowLive(s), C=RI_CLERKS[I.clerk];
+  const out=[{x:RI_DOOR,hw:50,label:"Exit to Neon Row",act:()=>go("neonrow",ROW_X[k])},{x:RI_COUNTER,hw:110,label:C?`Order from ${C.n} at the counter`:"Order at the counter kiosk",act:()=>rowOrderAt(s)}];
+  RI_PED.forEach((px,i)=>{ const it=live[i]; if(it) out.push({x:px,hw:44,label:`${it.title} · ${rowPriceTxt(it)}`,act:()=>{ rowOrderClerk=s; rowConfirm(s,it); }}); });
+  const mine=rowMine.filter(e=>e.slot===s).length; if(mine) out.push({x:RI_GREET+80,hw:40,label:`My codes here (${mine})`,act:()=>openStore(s,"codes")}); if(rowCanManage(s)||IS_ADMIN) out.push({x:RI_DOOR+70,hw:30,label:"Manage this store",act:()=>{ rowTab="inside"; openStore(s,"manage"); }}); return out; }
+function rowInEnts(ents){ const s=rowInSlot, I=rowInOf(s), r=rowStores[s]; if(!r) return; const C=RI_CLERKS[I.clerk], G=RI_CLERKS[I.greeter];
+  const ago=T-rowInSaid; if(C) ents.push({x:RI_COUNTER,y:264,o:{dir:-1,phase:0,moving:false,look:C.look,name:`${C.n} · clerk`,say:rowInSay&&rowInSay.who==="c"&&T-rowInSay.t<4?{text:rowInSay.text,t:rowInSay.t}:null,emote:rowInSay&&rowInSay.who==="c"&&rowInSay.give&&T-rowInSay.t<2.5?{e:"use",t:rowInSay.t}:null}});
+  if(G) ents.push({x:RI_GREET,y:300,o:{dir:me.x<RI_GREET?-1:1,phase:0,moving:false,look:G.look,name:`${G.n} · greeter`,say:rowInSay&&rowInSay.who==="g"&&T-rowInSay.t<4?{text:rowInSay.text,t:rowInSay.t}:null,emote:rowInSay&&rowInSay.who==="g"&&T-rowInSay.t<1.5?{e:"wave",t:rowInSay.t}:null}});
+  for(const sh of rowInShop) ents.push({x:sh.x,y:sh.y,o:{dir:sh.dir,phase:sh.ph,moving:sh.mv,look:sh.look,name:""}}); }
+let rowInSay=null;
+function rowInSpeak(who,text,give){ rowInSay={who,text,t:T,give:!!give}; }
+function tickRowIn(dt){ if(me.scene!=="rowin") return; const s=rowInSlot, I=rowInOf(s);
+  if(rowInShop.length<2&&Math.random()<.004) rowInShop.push({x:RI_DOOR+20,y:280+Math.random()*50,tx:RI_PED[(Math.random()*6)|0],look:randomLook(),ph:0,mv:true,dir:1,stay:0,leave:false});
+  for(const sh of rowInShop){ const dx=sh.tx-sh.x; if(Math.abs(dx)>4){ sh.mv=true; sh.dir=Math.sign(dx); sh.x+=Math.sign(dx)*70*dt; sh.ph+=dt*8; } else { sh.mv=false; if(!sh.stay) sh.stay=T+4+Math.random()*6; if(T>sh.stay){ if(sh.leave) sh.gone=true; else if(Math.random()<.4){ sh.leave=true; sh.tx=RI_DOOR; sh.stay=0; } else { sh.tx=RI_PED[(Math.random()*6)|0]; sh.stay=0; } } } }
+  rowInShop=rowInShop.filter(s2=>!s2.gone);
+  if(!rowInSeen[s]&&T>1){ rowInSeen[s]=1; const G=RI_CLERKS[I.greeter], C=RI_CLERKS[I.clerk]; const r=rowStores[s]; if(G) rowInSpeak("g",I.greet||`Welcome to ${r.name}!`); else if(C) rowInSpeak("c",I.greet||C.hi[0]); }
+  if(rowInSay&&T-rowInSay.t>14&&Math.random()<.003){ const C=RI_CLERKS[I.clerk]; if(C&&Math.abs(me.x-RI_COUNTER)<260) rowInSpeak("c",C.hi[(Math.random()*C.hi.length)|0]); } }
+function enterRowStore(s){ const r=rowStores[s]; if(!r||!rowOpen(r)){ toast("This storefront is for lease."); return; } rowInSlot=s; rowInSeen[s]=0; rowInShop=[]; rowInSay=null; go("rowin",RI_DOOR+60); try{ rowVisit(s); }catch(e){} }
+function rowOrderAt(s){ rowOrderClerk=s; const C=RI_CLERKS[rowInOf(s).clerk]; if(C) rowInSpeak("c",C.hi[1]||"What can I get you?"); openStore(s,"rewards"); }
+// --- in-store clerk header for the order panel
+function rowClerkHeader(s){ const I=rowInOf(s), C=RI_CLERKS[I.clerk]; if(!C||me.scene!=="rowin") return null; const lc=lookCanvas({...DEFAULT_LOOK,...C.look},72); lc.style.cssText="width:72px;height:72px;flex:none;background:radial-gradient(circle at 50% 70%,#2a1a48,#0d0818 75%);border:1px solid var(--line)";
+  return el("div",{class:"detail",style:`border-color:${rowCol(rowStores[s])}`},lc,el("div",{class:"info"},el("strong",{text:`${C.n} · ${C.p} clerk`}),el("span",{style:"font-size:15px",text:`“${C.hi[1]||"What can I get you?"}”`}),el("span",{class:"sub",text:"Pick something below. I'll ring it up and have it ready for pickup."}))); }
+// --- outside ad spots (drawn on the storefront)
+function rowOutAds(c,cx,r,t,k){ const I=rowInOf(ROW_SLOTS[k]); const a0=I.out[0], a1=I.out[1];
+  if(rowAdHas(a0)){ const x=cx+92, y=214; c.fillStyle="#3a2a1a"; c.beginPath(); c.moveTo(x+6,262); c.lineTo(x+20,y); c.lineTo(x+34,262); c.lineWidth=2; c.strokeStyle="#5a4a3a"; c.stroke(); rowDrawAd(c,a0,x,y,40,46,t,rowCol(r)); }
+  if(rowAdHas(a1)){ const x=cx-50, y=4, w=100, h=40; c.fillStyle="#2a2440"; c.fillRect(x+20,y+h,3,14); c.fillRect(x+w-23,y+h,3,14); rowDrawAd(c,a1,x,y,w,h,t,rowCol(r)); } }
+// --- order alerts (email via the Trigger Email mail queue, plus desktop alerts while the game is open)
+let rowKnownCodes={};
+function rowAlertNew(s,list){ const known=rowKnownCodes[s]; const ids=new Set(list.map(x=>x.code)); if(!known){ rowKnownCodes[s]=ids; return; } const fresh=list.filter(x=>!known.has(x.code)&&x.status==="ready"); rowKnownCodes[s]=ids; if(!fresh.length) return; const r=rowStores[s];
+  for(const o of fresh){ toast(`🛎 New order at ${r.name}: ${o.title||"an item"} (${o.code})`,"#ffd36a"); } beep(1320,.1,"triangle",.06); setTimeout(()=>beep(1760,.14,"triangle",.06),140);
+  try{ if(localStorage.getItem("nh_rowalerts")==="1"&&"Notification" in window&&Notification.permission==="granted") new Notification(`New order at ${r.name}`,{body:fresh.map(o=>`${o.title||"an item"} · ${o.code} · ${o.name||"a player"}`).join("\n"),tag:"nhrow-"+s}); }catch(e){} }
+async function rowMailOrder(s,code,title,price,name){ const r=rowStores[s], I=rowInOf(s); if(!DB||!r||!I.notify||!r.email) return; try{
+  await DB.doc(`mail/row_${s}_${code}`).set({to:[r.email],slot:s,code,at:Date.now(),message:{subject:`New Neon Row order: ${title}`.slice(0,120),text:`New order at ${r.name} on Neon Row.\n\nItem: ${title}\nPrice: ${price}\nCode: ${code}\nPlayer: ${name}\nTime: ${new Date().toUTCString()}\n\nWhen they arrive, check the code and photo ID (21+), hand over the item, then mark it picked up in Neon Harvest → Neon Row → Manage my store → Redemptions.`.slice(0,1000)}}); }catch(e){} }
+// --- pickup collectibles
+function myPick(){ return (Array.isArray(save.rowPick)?save.rowPick:[]).filter(x=>x&&typeof x.code==="string"); }
+function rowPickAward(e){ if(myPick().some(x=>x.code===e.code)) return null; const I=rowInOf(e.slot), n=myPick().filter(x=>x.slot===e.slot).length+1, tier=n>=10?3:n>=5?2:n>=3?1:0;
+  let h=0; for(const ch of e.code) h=(h*31+ch.charCodeAt(0))>>>0; const d=I.pk>=0?I.pk:h%RP_COLL.length; const r=rowStores[e.slot]; const it={code:e.code,slot:e.slot,store:(r&&r.name||e.store||"Neon Row").slice(0,40),color:r?r.color:0,title:String(e.title||"").slice(0,60),d,tier,n,at:Date.now()};
+  save.rowPick=[...myPick(),it].slice(-300); persist(); return it; }
+function rowPickCanvas(p,size){ const cv=document.createElement("canvas"); cv.width=size*2; cv.height=size*2; cv.style.cssText=`width:${size}px;height:${size}px;flex:none;border-radius:10px;border:2px solid ${RP_TCOL[p.tier]};box-shadow:0 0 ${Math.round(size/7)}px ${RP_TCOL[p.tier]}88;background:radial-gradient(circle at 50% 45%,#2a1640,#0b0716 72%)`;
+  const loop=()=>{ if(!cv.isConnected){ if(cv._started) return; } else cv._started=1; drawPick(cv.getContext("2d"),p,size*2,performance.now()/1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); return cv; }
+function drawPick(c,p,S,t){ const col=ROW_COLS[p.color||0][1], tc=RP_TCOL[p.tier], u=S/100; c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,S,S); c.save(); c.scale(u,u); const R=(x,y,w,h,f)=>{ c.fillStyle=f; c.fillRect(x,y,w,h); };
+  if(p.tier>=1){ for(let i=0;i<(p.tier*4);i++){ const a=t*(.6+p.tier*.2)+i*Math.PI*2/(p.tier*4); c.globalAlpha=.5+.5*Math.sin(t*3+i); c.fillStyle=tc; c.beginPath(); c.arc(50+Math.cos(a)*40,50+Math.sin(a)*40,1.6+p.tier*.4,0,7); c.fill(); } c.globalAlpha=1; }
+  if(p.tier>=2){ c.save(); c.globalAlpha=.18+.08*Math.sin(t*2); c.fillStyle=tc; c.translate(50,50); c.rotate(t*.5); for(let i=0;i<8;i++){ c.rotate(Math.PI/4); c.fillRect(-2,0,4,46); } c.restore(); }
+  const b=Math.sin(t*2)*3; c.translate(50,50+b); c.shadowColor=col; c.shadowBlur=10; const d=p.d;
+  if(d===0){ c.rotate(Math.sin(t)*.08); R(-20,-30,40,60,"#f4f2f8"); c.fillStyle=col; for(let i=0;i<5;i++) R(-14,-22+i*9,i===4?16:28,3,i===4?col:"#8a86a8"); c.fillStyle=`hsla(${t*80%360},90%,70%,.35)`; c.fillRect(-20,-30+((t*30)%60),40,8); for(let i=0;i<5;i++){ c.fillStyle="#f4f2f8"; c.beginPath(); c.moveTo(-20+i*8,30); c.lineTo(-16+i*8,35); c.lineTo(-12+i*8,30); c.fill(); } }
+  else if(d===1){ R(-22,-14,44,40,col); c.strokeStyle="#fff"; c.lineWidth=3; c.beginPath(); c.arc(0,-14,11,Math.PI,0); c.stroke(); c.shadowBlur=0; c.font="700 9px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle="#0b0716"; c.fillText((p.store||"").slice(0,7).toUpperCase(),0,8); for(let i=0;i<3;i++){ c.globalAlpha=.5+.5*Math.sin(t*4+i); c.fillStyle="#fff"; c.fillRect(-18+i*16,-24-((t*20+i*7)%14),2,2); } c.globalAlpha=1; }
+  else if(d===2){ c.rotate(-.15+Math.sin(t)*.05); R(-32,-16,64,32,"#ffd36a"); R(-28,-12,56,24,"#ffe9a8"); c.fillStyle="#0b0716"; c.beginPath(); c.arc(-32,0,5,0,7); c.arc(32,0,5,0,7); c.fill(); c.shadowBlur=0; c.font="700 8px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle="#8a5a10"; c.fillText("ADMIT ONE",0,2); c.font="6px 'IBM Plex Mono',monospace"; c.fillText((p.store||"").slice(0,16),0,10); c.globalAlpha=.6; c.fillStyle="#fff"; c.fillRect(-32+((t*40)%64),-16,4,32); c.globalAlpha=1; }
+  else if(d===3){ R(-6,10,12,10,"#c08a2a"); R(-16,20,32,8,"#8a5a1a"); c.fillStyle="#ffd36a"; c.beginPath(); c.moveTo(-18,-22); c.lineTo(18,-22); c.lineTo(12,4); c.lineTo(-12,4); c.closePath(); c.fill(); c.strokeStyle="#ffd36a"; c.lineWidth=4; c.beginPath(); c.arc(-18,-12,7,Math.PI/2,Math.PI*1.5); c.stroke(); c.beginPath(); c.arc(18,-12,7,-Math.PI/2,Math.PI/2); c.stroke(); c.shadowBlur=0; R(-4,-16,8,8,col); }
+  else if(d===4){ c.rotate(Math.sin(t*1.5)*.1); c.strokeStyle=col; c.lineWidth=4; c.beginPath(); c.arc(0,0,30,0,7); c.stroke(); c.lineWidth=1.5; c.beginPath(); c.arc(0,0,23,0,7); c.stroke(); c.shadowBlur=0; c.font="700 8px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle=col; c.fillText((p.store||"").slice(0,9).toUpperCase(),0,-2); c.font="6px 'IBM Plex Mono',monospace"; c.fillText("PICKED UP ✓",0,9); c.fillText(new Date(p.at).toLocaleDateString(),0,17); }
+  else if(d===5){ const sx=Math.abs(Math.cos(t*1.6)); c.scale(Math.max(.08,sx),1); c.fillStyle="#ffd36a"; c.beginPath(); c.arc(0,0,28,0,7); c.fill(); c.fillStyle="#c08a2a"; c.beginPath(); c.arc(0,0,22,0,7); c.fill(); c.fillStyle=col; c.beginPath(); c.moveTo(0,-12); c.lineTo(10,0); c.lineTo(0,12); c.lineTo(-10,0); c.closePath(); c.fill(); }
+  else if(d===6){ R(-18,-6,36,32,"#fff"); c.fillStyle="#fff"; c.beginPath(); c.arc(0,-14,16,0,7); c.fill(); c.fillStyle=col; c.beginPath(); c.moveTo(-14,-24); c.lineTo(-10,-34); c.lineTo(-4,-26); c.fill(); c.beginPath(); c.moveTo(14,-24); c.lineTo(10,-34); c.lineTo(4,-26); c.fill(); c.shadowBlur=0; R(-7,-16,4,2,"#0b0716"); R(3,-16,4,2,"#0b0716"); c.save(); c.translate(18,-4); c.rotate(-.6+Math.sin(t*6)*.5); R(-3,-16,6,16,"#fff"); c.restore(); c.fillStyle="#ffd36a"; c.beginPath(); c.arc(0,10,6,0,7); c.fill(); R(-18,0,36,3,col); }
+  else if(d===7){ c.rotate(t*.6); c.fillStyle=col; c.beginPath(); for(let i=0;i<10;i++){ const rr=i%2?13:30, a=i*Math.PI/5-Math.PI/2; c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } c.closePath(); c.fill(); c.shadowBlur=0; c.fillStyle="#fff"; c.globalAlpha=.6+.4*Math.sin(t*5); c.beginPath(); c.arc(-6,-8,3,0,7); c.fill(); c.globalAlpha=1; }
+  else if(d===8){ c.rotate(Math.sin(t)*.2); c.fillStyle="rgba(124,231,255,.85)"; c.beginPath(); c.moveTo(0,-30); c.lineTo(12,-18); c.lineTo(0,-6); c.lineTo(-12,-18); c.closePath(); c.fill(); R(-3,-6,6,34,"#7ce7ff"); R(3,14,8,4,"#7ce7ff"); R(3,22,6,4,"#7ce7ff"); c.shadowBlur=0; c.fillStyle="#fff"; c.globalAlpha=.7; c.fillRect(-4,-24,3,8); c.globalAlpha=1; R(-6,-20,12,4,col); }
+  else if(d===9){ const o=(Math.sin(t*1.2)+1)/2; R(-26,-18,52,36,"#fff0f8"); c.save(); c.translate(0,-18); c.scale(1,1-o*1.6); R(-26,0,52,18,col); c.restore(); c.shadowBlur=0; c.fillStyle="#ff3f6a"; c.globalAlpha=o; c.beginPath(); c.moveTo(0,8); c.bezierCurveTo(-14,-4,-6,-14,0,-6); c.bezierCurveTo(6,-14,14,-4,0,8); c.fill(); c.globalAlpha=1; c.font="6px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillStyle="#3a2a40"; c.fillText("THANK YOU",0,14); }
+  else if(d===10){ const k=1+Math.max(0,Math.sin(t*5))*.15; c.scale(k,k); c.fillStyle=col; c.beginPath(); c.moveTo(0,22); c.bezierCurveTo(-34,0,-22,-30,0,-12); c.bezierCurveTo(22,-30,34,0,0,22); c.fill(); c.shadowBlur=0; c.strokeStyle="#fff"; c.lineWidth=1.5; c.beginPath(); c.moveTo(-14,-14); c.quadraticCurveTo(-20,-6,-16,2); c.stroke(); }
+  else { const lift=((t*.6)%1); R(-30,-20,60,40,"#1a1440"); c.strokeStyle=col; c.lineWidth=2; c.strokeRect(-30,-20,60,40); c.save(); c.beginPath(); c.rect(-30,-20,60,40); c.clip(); c.translate(0,14-lift*50); c.fillStyle="#e9e2ff"; c.beginPath(); c.moveTo(0,-14); c.lineTo(6,0); c.lineTo(-6,0); c.closePath(); c.fill(); R(-6,0,12,12,"#e9e2ff"); c.fillStyle="#ff8a2a"; c.beginPath(); c.moveTo(-5,12); c.lineTo(0,20+Math.random()*6); c.lineTo(5,12); c.fill(); c.restore(); c.shadowBlur=0; c.font="6px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillStyle=col; c.fillText("PASS",-18,-12); }
+  c.restore(); c.save(); c.scale(u,u); c.font="700 6px Silkscreen, monospace"; c.textAlign="center"; c.fillStyle=tc; c.fillText(`${RP_TIER[p.tier].toUpperCase()} · #${p.n}`,50,95); c.restore(); }
+function rowPickCelebrate(list){ if(!list.length) return; const body=panel("✨ Pickup confirmed!",list.length>1?`${list.length} pickups were confirmed. Here are your collectibles.`:`${list[0].store} confirmed your pickup. Here's a collectible to remember it.`); currentView=null;
+  const g=el("div",{style:"display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:6px"}); for(const p of list.slice(0,6)) g.append(el("div",{style:"display:flex;flex-direction:column;align-items:center;gap:4px;max-width:170px;text-align:center"},rowPickCanvas(p,list.length>1?120:160),el("strong",{text:RP_COLL[p.d].n}),el("span",{class:"sub",style:`color:${RP_TCOL[p.tier]}`,text:`${RP_TIER[p.tier]} · ${p.store} pickup #${p.n}`}),el("span",{class:"sub",text:p.title})));
+  body.append(g,el("p",{class:"sub",text:"Collect more by picking up rewards: your 3rd, 5th and 10th pickup at the same store gets a rarer, flashier version. Find them in your Stash."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Open my Stash",onclick:()=>openStash()}),el("button",{class:"btn",type:"button",text:"Nice!",onclick:()=>closePanel()}))); emote("cheer"); [784,988,1175,1568].forEach((f,i)=>setTimeout(()=>beep(f,.1,"triangle",.05),i*100)); }
+function stashPickups(body){ const L=myPick(); if(!L.length) return; body.append(el("strong",{text:`🎁 Pickup collectibles (${L.length})`})); const g=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px"});
+  for(const p of [...L].reverse().slice(0,60)) g.append(el("div",{style:"display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center"},rowPickCanvas(p,92),el("div",{style:"font-size:12px",text:RP_COLL[p.d].n}),el("div",{class:"sub",style:`color:${RP_TCOL[p.tier]};font-size:11px`,text:`${RP_TIER[p.tier]} · ${p.store} #${p.n}`}))); body.append(g); }
+// --- partner management tabs
+function rowSaveIn(s,patch,msg){ const cur=rowInOf(s), d={...cur,...patch,at:Date.now()}; rowIn[s]=cleanRowIn(d); const out={lay:d.lay,clerk:d.clerk,greeter:d.greeter,greet:d.greet,posters:d.posters,screen:d.screen,out:d.out,notify:d.notify,pk:d.pk,at:d.at};
+  if(!DB){ toast("Saved (offline preview)."); return; } DB.doc("rowin/"+s).set(out).then(()=>{ if(msg) toast(msg,"#43f0a4"); }).catch(()=>toast("Couldn't save. Check your connection and try again.")); }
+function rowInPreview(s,lay,w){ const cv=document.createElement("canvas"), W=w||300, Hh=Math.round(W*.26); cv.width=W*2; cv.height=Hh*2; cv.style.cssText=`width:${W}px;max-width:100%;height:auto;aspect-ratio:${W}/${Hh};border:1px solid var(--line);border-radius:6px;display:block;background:#000`;
+  const loop=()=>{ if(!cv.isConnected&&cv._s) return; if(cv.isConnected) cv._s=1; const c=cv.getContext("2d"); c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,cv.width,cv.height); const k=cv.width/RI_W; c.setTransform(k,0,0,k,0,0); const I={...rowInOf(s),lay}; try{ rowInterior(c,rowStores[s],I,performance.now()/1000,0,RI_W,true); }catch(e){} requestAnimationFrame(loop); }; requestAnimationFrame(loop); return cv; }
+function rowInsideTab(body,s){ const I=rowInOf(s), r=rowStores[s];
+  body.append(el("div",{class:"sub",text:"Players walk into your store, browse the pedestals and order at the counter. Pick a layout and hire staff to take orders for you."}));
+  body.append(el("strong",{text:"Current look"}),rowInPreview(s,I.lay,560));
+  body.append(el("strong",{text:`Layouts (${RI_LAYS.length})`})); const g=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px"});
+  RI_LAYS.forEach((L,i)=>g.append(el("button",{class:"card",type:"button",style:i===I.lay?`border-color:${rowCol(r)};box-shadow:0 0 0 2px ${rowCol(r)}`:"",onclick:()=>{ rowSaveIn(s,{lay:i},`Layout: ${L.n}`); openStore(s,"manage"); }},rowInPreview(s,i,170),el("div",{class:"nm",text:(i===I.lay?"✓ ":"")+L.n}),el("div",{class:"sub",style:"font-size:11px",text:L.d})))); body.append(g);
+  body.append(el("strong",{text:"Hire staff"}),el("div",{class:"sub",text:"Your clerk stands at the counter and takes orders. Your greeter welcomes people at the door. Hiring is included with your rent."}));
+  const staff=(role,key)=>{ const l=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px"}); const none=el("button",{class:"card",type:"button",style:I[key]<0?"border-color:#43f0a4":"",onclick:()=>{ rowSaveIn(s,{[key]:-1},`No ${role}.`); openStore(s,"manage"); }},el("div",{style:"font-size:28px;padding:16px 0",text:key==="clerk"?"🖥":"🚪"}),el("div",{class:"nm",text:key==="clerk"?"Self-serve kiosk":"No greeter"})); l.append(none);
+    RI_CLERKS.forEach((C,i)=>{ const lc=lookCanvas({...DEFAULT_LOOK,...C.look},80); lc.style.cssText="width:80px;height:80px;margin:0 auto"; const other=key==="clerk"?I.greeter:I.clerk; const b=el("button",{class:"card",type:"button",style:I[key]===i?"border-color:#43f0a4;box-shadow:0 0 0 2px #43f0a4":"",onclick:()=>{ if(other===i){ toast(`${C.n} already works here as your ${key==="clerk"?"greeter":"clerk"}.`); return; } rowSaveIn(s,{[key]:i},`${C.n} hired as your ${role}!`); openStore(s,"manage"); }},lc,el("div",{class:"nm",text:(I[key]===i?"✓ ":"")+C.n}),el("div",{class:"sub",style:"font-size:11px",text:`${C.p} · “${C.hi[0]}”`})); l.append(b); }); return l; };
+  body.append(el("div",{class:"sub",style:"color:#ffd36a",text:"Counter clerk"}),staff("clerk","clerk"),el("div",{class:"sub",style:"color:#ffd36a",text:"Door greeter"}),staff("greeter","greeter"));
+  const gi=el("input",{class:"num",maxlength:"80",placeholder:`Welcome to ${r.name}!`,value:I.greet,style:"flex:1;min-width:0"}); body.append(el("label",{class:"fld"},"Greeting your staff says when someone walks in",el("div",{class:"row"},gi,el("button",{class:"btn hot",type:"button",text:"Save",onclick:()=>rowSaveIn(s,{greet:gi.value.trim().slice(0,80)},"Greeting saved.")}))));
+  body.append(el("strong",{text:"Pickup collectible"}),el("div",{class:"sub",text:"When you confirm a pickup, the player gets an animated collectible from your store. Choose one, or let it be random."}));
+  const pg=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px"}); const rnd=el("button",{class:"card",type:"button",style:I.pk<0?"border-color:#43f0a4":"",onclick:()=>{ rowSaveIn(s,{pk:-1},"Collectible: random"); openStore(s,"manage"); }},el("div",{style:"font-size:30px;padding:18px 0",text:"🎲"}),el("div",{class:"nm",text:(I.pk<0?"✓ ":"")+"Random"})); pg.append(rnd);
+  RP_COLL.forEach((P,i)=>pg.append(el("button",{class:"card",type:"button",style:I.pk===i?"border-color:#43f0a4":"",onclick:()=>{ rowSaveIn(s,{pk:i},`Collectible: ${P.n}`); openStore(s,"manage"); }},rowPickCanvas({d:i,tier:2,color:r.color,store:r.name,n:1,at:Date.now()},76),el("div",{class:"nm",style:"font-size:11px",text:(I.pk===i?"✓ ":"")+P.n})))); body.append(pg); }
+function rowAdsTab(body,s){ const I=rowInOf(s), r=rowStores[s]; body.append(el("div",{class:"sub",text:"Put posters and ads inside your store and out on the street. Use a title, a short line, a picture, or all three."}));
+  const editor=(label,arr,key,i)=>{ const a={...arr[i]}; const t=el("input",{class:"num",maxlength:"28",placeholder:"Title",value:a.t,style:"min-width:0"}), l=el("input",{class:"num",maxlength:"48",placeholder:"Short line (optional)",value:a.l,style:"min-width:0"});
+    const cs=el("select",{class:"num"}); ROW_COLS.forEach(([n],j)=>cs.append(el("option",{value:String(j),text:n,...(j===a.c?{selected:""}:{})}))); const ss=el("select",{class:"num"}); RI_POSTSTY.forEach((n,j)=>ss.append(el("option",{value:String(j),text:n,...(j===a.s?{selected:""}:{})})));
+    const pv=document.createElement("canvas"); pv.width=168; pv.height=key==="out"&&i===1?68:key==="out"?110:key==="screen"?96:200; pv.style.cssText=`width:${pv.width/2}px;height:${pv.height/2}px;flex:none;background:#0b0716;border-radius:4px`;
+    const draw=()=>{ if(!pv.isConnected&&pv._s) return; if(pv.isConnected) pv._s=1; const c=pv.getContext("2d"); c.setTransform(2,0,0,2,0,0); c.clearRect(0,0,84,100); const cur={t:t.value,l:l.value,c:+cs.value,s:+ss.value,img:a.img}; if(rowAdHas(cur)) rowDrawAd(c,cur,0,0,pv.width/2,pv.height/2,performance.now()/1000,rowCol(r)); else rowEmptyFrame(c,0,0,pv.width/2,pv.height/2,"#8d86ab"); requestAnimationFrame(draw); }; requestAnimationFrame(draw);
+    const fi=el("input",{type:"file",accept:"image/*",style:"max-width:100%"}); const msg=el("span",{class:"sub"}); fi.onchange=async()=>{ msg.textContent="Shrinking…"; try{ a.img=await rowAdImg(fi.files[0]); msg.textContent="Picture ready. Press Save."; }catch(e){ msg.textContent="That picture didn't work. Try a JPG or PNG."; } };
+    const save2=()=>{ const next=[...arr]; next[i]={t:t.value.trim().slice(0,28),l:l.value.trim().slice(0,48),c:+cs.value,s:+ss.value,img:a.img||""}; rowSaveIn(s,{[key]:next},`${label} saved.`); setTimeout(()=>openStore(s,"manage"),300); };
+    return el("div",{class:"li",style:"align-items:flex-start;gap:10px"},pv,el("div",{class:"grow",style:"display:flex;flex-direction:column;gap:4px;min-width:0"},el("strong",{text:label}),t,l,el("div",{class:"row",style:"gap:6px"},cs,ss),el("div",{class:"row",style:"gap:6px;align-items:center"},fi,msg),
+      el("div",{class:"row",style:"gap:6px"},el("button",{class:"btn hot",type:"button",text:"Save",onclick:save2}),el("button",{class:"btn",type:"button",text:"Remove picture",onclick:()=>{ a.img=""; msg.textContent="Picture removed. Press Save."; }}),el("button",{class:"btn",type:"button",text:"Clear",onclick:()=>{ const next=[...arr]; next[i]={t:"",l:"",c:0,s:0,img:""}; rowSaveIn(s,{[key]:next},`${label} cleared.`); setTimeout(()=>openStore(s,"manage"),300); }})))); };
+  body.append(el("strong",{text:"Outside on Neon Row"}),el("div",{class:"list"},editor("Sidewalk sign",I.out,"out",0),editor("Rooftop billboard",I.out,"out",1)));
+  body.append(el("strong",{text:"Inside: big screen over the counter (rotates every 6 seconds)"}),el("div",{class:"list"},...[0,1,2].map(i=>editor(`Screen ad ${i+1}`,I.screen,"screen",i))));
+  body.append(el("strong",{text:"Inside: wall posters"}),el("div",{class:"list"},...[0,1,2,3].map(i=>editor(`Poster ${i+1}`,I.posters,"posters",i)))); }
+function rowAlertsTab(body,s){ const I=rowInOf(s), r=rowStores[s]; const desk=(()=>{ try{ return localStorage.getItem("nh_rowalerts")==="1"; }catch(e){ return false; } })();
+  body.append(el("div",{class:"detail",style:"border-color:#ffd36a"},el("div",{class:"info"},el("strong",{text:"📧 Email me every new order"}),el("span",{class:"sub",text:`Sends each new order to ${r.email||"your store email"} with the item, code and player, so you never miss one.`}),
+    el("div",{class:"row"},el("button",{class:"btn"+(I.notify?"":" hot"),type:"button",text:I.notify?"✓ Email alerts are on · turn off":"Turn on email alerts",onclick:()=>{ rowSaveIn(s,{notify:!I.notify},I.notify?"Email alerts off.":"Email alerts on."); setTimeout(()=>openStore(s,"manage"),200); }})))));
+  body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:"🔔 Desktop alerts on this device"}),el("span",{class:"sub",text:"Pops up a notification on this computer or phone when an order comes in while Neon Harvest is open (even in another tab). You also hear a chime and see a toast in the game."}),
+    el("div",{class:"row"},el("button",{class:"btn"+(desk?"":" hot"),type:"button",text:desk?"✓ Desktop alerts on · turn off":"Turn on desktop alerts",onclick:async()=>{ try{ if(desk){ localStorage.setItem("nh_rowalerts","0"); } else { if("Notification" in window&&Notification.permission!=="granted") await Notification.requestPermission(); localStorage.setItem("nh_rowalerts",Notification.permission==="granted"?"1":"0"); if(Notification.permission!=="granted") toast("Your browser blocked notifications. Allow them in the site settings."); } }catch(e){} openStore(s,"manage"); }}),
+      el("button",{class:"btn",type:"button",text:"Send a test",onclick:()=>{ try{ new Notification(`Test order at ${r.name}`,{body:"Demo item · NR-TEST-0000"}); }catch(e){ toast("Notifications aren't allowed on this device."); } }})))));
+  body.append(el("p",{class:"sub",text:"Orders also show up under Redemptions right away, with a chime and a toast whenever you're in the game."})); }
+
 /* --- Storefront look options: sign, font, lights, awning, windows, door, street extras, and 10 more layouts */
 const ROW_SIGNS=["Neon box","Marquee bulbs","Wood plank","LED ticker","Hologram","Rooftop letters"];
 const ROW_FONTS=[["Pixel","Silkscreen, monospace"],["Block","'Arial Black', Impact, sans-serif"],["Script","'Brush Script MT','Segoe Script',cursive"],["Mono","'IBM Plex Mono', monospace"]];
@@ -7027,14 +7247,15 @@ function drawRow(t){
 }
 function rowHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:NRC_X,hw:24,label:save.nrcCheck===utcDay()?"NRC kiosk: checked in today (see your NRC)":"NRC kiosk: daily check-in",act:()=>save.nrcCheck===utcDay()?openNRC():nrcCheckin()},
   ...ROW_SLOTS.map((s,k)=>{ const r=rowStores[s], open=rowOpen(r);
-    return {x:ROW_X[k],hw:120,label:open?`Enter ${r.name}`:IS_ADMIN?`Set up spot ${k+1} (owner)`:`Spot ${k+1}: for lease`,act:()=>open?openStore(s):IS_ADMIN?(rowEdit={slot:s,...(r||cleanRow({}))},openAdmin("row")):toast("This storefront is for lease. Businesses can rent it from the game's owner.")}; })]; }
+    return {x:ROW_X[k],hw:120,label:open?`Walk into ${r.name}`:IS_ADMIN?`Set up spot ${k+1} (owner)`:`Spot ${k+1}: for lease`,act:()=>open?enterRowStore(s):IS_ADMIN?(rowEdit={slot:s,...(r||cleanRow({}))},openAdmin("row")):toast("This storefront is for lease. Businesses can rent it from the game's owner.")}; })]; }
 
 /* --- live data */
 function rowWatch(db){
   if(!rowDigiWatch._on){ rowDigiWatch._on=1; rowDigiWatch(db); }
+  if(!rowWatch._in){ rowWatch._in=1; db.collection("rowin").onSnapshot(q=>{ q.docs.forEach(d=>{ if(ROW_SLOTS.includes(d.id)) rowIn[d.id]=cleanRowIn(d.data()); }); refreshRow(); },()=>{ rowWatch._in=0; }); }
   db.collection("row").onSnapshot(s=>{ rowStores={}; s.docs.forEach(d=>{ if(ROW_SLOTS.includes(d.id)){ const r=cleanRow(d.data()); if(r) rowStores[d.id]=r; } });
     for(const sl of ROW_SLOTS){ if(!rowSubs[sl]){ rowSubs[sl]=1; db.collection(`rowitems/${sl}/items`).onSnapshot(q=>{ rowItems[sl]=dedupeBy(q.docs.map(d=>cleanRowItem(d.id,d.data())).filter(Boolean),x=>(x.title||"").trim().toLowerCase()+"|"+x.cur); refreshRow(); },()=>{}); }
-      if(rowCanManage(sl)&&!rowStaffSubs[sl]){ rowStaffSubs[sl]=1; db.collection(`rowcodes/${sl}/codes`).onSnapshot(q=>{ rowStaff[sl]=q.docs.map(d=>({id:d.id,...d.data()})).filter(x=>typeof x.code==="string"); refreshRow(); },()=>{ rowStaffSubs[sl]=0; }); } }
+      if(rowCanManage(sl)&&!rowStaffSubs[sl]){ rowStaffSubs[sl]=1; db.collection(`rowcodes/${sl}/codes`).onSnapshot(q=>{ rowStaff[sl]=q.docs.map(d=>({id:d.id,...d.data()})).filter(x=>typeof x.code==="string"); try{ rowAlertNew(sl,rowStaff[sl]); }catch(e){} refreshRow(); },()=>{ rowStaffSubs[sl]=0; }); } }
     refreshRow(); },()=>{});
   db.doc(`data/users/${myId}/rowcodes`).onSnapshot(s=>{ const d=s.exists?s.data():null; rowMine=Array.isArray(d&&d.codes)?d.codes.filter(e=>e&&typeof e.code==="string"&&ROW_SLOTS.includes(e.slot)):[]; rowCheck(); },()=>{});
 }
@@ -7044,7 +7265,10 @@ async function rowCheck(){ if(!DB) return; for(const e of rowMine){ if(["picked"
       if(d.cur==="nrc"){ const amt=Math.floor(+d.nrc)||0, ns=await DB.doc("nrc/"+myId).get(), nb=(ns.exists?Math.floor(+ns.data().bal)||0:0)+amt; await DB.batch().update(ref,{refunded:true}).update(DB.doc("nrc/"+myId),{bal:nb,rs:e.slot,rc:e.code}).commit(); nrc={...nrc,bal:nb}; nrcHud(); toast(`${e.title} was cancelled by the store. ${amt.toLocaleString()} NRC refunded.`,"#38e8ff"); }
       else { await ref.update({refunded:true}); save.rp=(+save.rp||0)+(Math.floor(+e.rp)||0); persist(); hud(); toast(`${e.title} was cancelled by the store. ${(+e.rp||0).toLocaleString()} RP refunded.`,"#43f0a4"); }
       rowCodeSt[e.code]="refunded"; }
-    else rowCodeSt[e.code]=d.status==="cancelled"?"refunded":d.status; }catch(err){} } refreshRow(); }
+    else { rowCodeSt[e.code]=d.status==="cancelled"?"refunded":d.status; if(d.status==="picked"&&!e.dig&&!d.dig){ const pk=rowPickAward(e); if(pk) rowPickPending.push(pk); } } }catch(err){} } refreshRow(); rowPickFlush(); }
+let rowPickPending=[];
+function rowPickFlush(){ if(!rowPickPending.length) return; if(!$("#overlay").hidden||($("#title")&&!$("#title").hidden)||$("#gccj")||$("#g1211")){ clearTimeout(rowPickFlush._t); rowPickFlush._t=setTimeout(rowPickFlush,4000); return; } const L=rowPickPending; rowPickPending=[]; rowPickCelebrate(L); }
+setInterval(()=>{ try{ if(DB&&myId&&rowMine.some(e=>!e.dig&&!["picked","refunded"].includes(rowCodeSt[e.code]))) rowCheck(); }catch(e){} },60e3);
 function refreshRow(){ if(!currentView||!currentView.startsWith("row:")||$("#overlay").hidden) return; const a=document.activeElement; if(a&&["INPUT","TEXTAREA","SELECT"].includes(a.tagName)&&a.closest(".panel")) return; const [,s,t]=currentView.split(":"); openStore(s,t,true); }
 
 /* --- the store, as players see it */
@@ -7054,6 +7278,7 @@ function openStore(s,tab="rewards",refresh){ const r=rowStores[s]; if(!r){ toast
   const info=[r.addr&&`📍 ${r.addr}`,r.hours&&`🕒 ${r.hours}`].filter(Boolean);
   const card=el("div",{class:"info"},el("strong",{text:"Visit in person"}),...info.map(x=>el("span",{text:x})),el("span",{class:"sub",text:"Redeem a reward here, then show your NR- code and a photo ID (21+) at the counter. The store hands over the item."}));
   if(r.web) card.append(el("a",{href:r.web,target:"_blank",rel:"noopener noreferrer",style:`color:${rowCol(r)}`,text:"Visit their website ↗"}));
+  { const ch=tab==="rewards"&&rowOrderClerk===s?rowClerkHeader(s):null; if(ch) body.append(ch); }
   body.append(el("div",{class:"detail",style:`border-color:${rowCol(r)}`},card));
   const mine=rowMine.filter(e=>e.slot===s); const T=[["rewards","Rewards"],["codes",`My codes (${mine.length})`]];
   const partnerish=r.email&&myEmail&&r.email===myEmail&&rowOpen(r); if(IS_ADMIN||partnerish) T.push(["manage",IS_ADMIN&&!partnerish?"Manage (owner)":"Manage my store"]);
@@ -7090,6 +7315,7 @@ async function rowRedeem(s,it,btn){ const r=rowStores[s]; const fresh=(rowItems[
     try{ await DB.batch().set(DB.doc(`rowcodes/${s}/codes/${code}`),doc).update(DB.doc("nrc/"+myId),{bal:nb,ls:s,lc:code}).commit(); nrc={...nrc,bal:nb}; nrcHud(); }
     catch(e){ toast("The redemption didn't go through. You weren't charged."); btn.disabled=false; return; } }
   try{ await DB.doc(`rowitems/${s}/items/${fresh.id}`).update({sold:fresh.sold+1}); }catch(e){}
+  try{ rowMailOrder(s,code,fresh.title,rowPriceTxt(fresh),myName||"Runner"); }catch(e){} if(me.scene==="rowin"&&rowInSlot===s){ const C=RI_CLERKS[rowInOf(s).clerk]; if(C) rowInSpeak("c",C.hi[2]||"Order up!",true); }
   if(dg){ save.rowDigi=[...myDigi(),{id:dg.id,slot:s,store:(r.name||"").slice(0,40),name:dg.name,icon:dg.icon,color:dg.color,rar:dg.rar,n:fresh.sold+1,at,code}].slice(-300); persist();
     try{ await DB.doc(`rowcodes/${s}/codes/${code}`).update({status:"picked",done:Date.now()}); }catch(e){} }
   rowMine=[...rowMine,{code,slot:s,item:fresh.id,title:fresh.title,store:r.name,cur,rp:doc.rp,nrc:doc.nrc,at,...(dg?{dig:dg.id}:{})}].slice(-100); rowCodeSt[code]=dg?"picked":"ready";
@@ -7241,9 +7467,12 @@ function rowManage(body,s){ const r=rowStores[s];
     body.append(el("div",{class:"detail",style:"border-color:var(--amber)"},el("div",{class:"info"},el("strong",{text:"Verify your email to manage this store"}),el("span",{text:`You're signed in as ${myEmail}, the email the owner set for ${r.name}. Verify it once so only you can change this store's rewards.`}),
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Send verification email",onclick:async()=>{ try{ const u=await window.claude.use("user"); await u.sendVerification(); msg.textContent="Sent. Open the link in that email, then tap I've verified."; }catch(e){ msg.textContent="Couldn't send it. Try again in a minute."; } }}),
         el("button",{class:"btn",type:"button",text:"I've verified",onclick:async()=>{ try{ const u=await window.claude.use("user"); myVerified=!!(await u.refresh()); }catch(e){} if(myVerified){ toast("Email verified. Welcome to Neon Row!","#43f0a4"); rowWatch(DB); openStore(s,"manage"); } else msg.textContent="Not verified yet. Open the link in the email first."; }})),msg))); return; }
-  body.append(el("div",{class:"sub",text:`Rent paid until ${rowDay(r.until)}. ${IS_ADMIN?"You're managing this store as the owner.":"Store look and info are set by the game's owner; ask them for changes."}`}));
-  const tabs=el("div",{class:"tabs"}); [["items","My rewards"],["digital","✨ Digital items"],["insights","📊 Insights"],["payout","Reward a visitor"],["verify","Check a code"],["codes",`Redemptions (${(rowStaff[s]||[]).filter(c=>c.status==="ready").length} waiting)`]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(rowTab===k),text:l,onclick:()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }}))); body.append(tabs);
+  body.append(el("div",{class:"sub",text:`Rent paid until ${rowDay(r.until)}. ${IS_ADMIN?"You're managing this store as the owner.":"The outside sign and look are set by the game's owner. The inside, your staff, posters, ads and order alerts are yours to set below."}`}));
+  const tabs=el("div",{class:"tabs"}); [["items","My rewards"],["inside","🏬 Inside & staff"],["ads","🖼 Posters & ads"],["alerts","🔔 Order alerts"],["digital","✨ Digital items"],["insights","📊 Insights"],["payout","Reward a visitor"],["verify","Check a code"],["codes",`Redemptions (${(rowStaff[s]||[]).filter(c=>c.status==="ready").length} waiting)`]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(rowTab===k),text:l,onclick:()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }}))); body.append(tabs);
   if(rowTab==="insights") return rowInsights(body,s);
+  if(rowTab==="inside") return rowInsideTab(body,s);
+  if(rowTab==="ads") return rowAdsTab(body,s);
+  if(rowTab==="alerts") return rowAlertsTab(body,s);
   if(rowTab==="digital") return rowDigital(body,s);
   if(rowTab==="verify"){ const inp=el("input",{class:"num",id:"rowcode",placeholder:"NR-XXXX-XXXX",autocomplete:"off",style:"flex:1;min-width:0;text-transform:uppercase;font-size:16px;letter-spacing:.08em"}); const res=el("div",{class:"list"});
     const check=async()=>{ res.innerHTML=""; const code=normRowCode(inp.value); if(!code){ res.append(el("div",{class:"r-epic",text:"Enter the full code, like NR-AB12-CD34."})); return; }
