@@ -403,6 +403,8 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile:not(.portrait) #chatbar{left:calc(max(14px,env(safe-area-inset-left,0px)) + 152px);right:calc(max(14px,env(safe-area-inset-right,0px)) + 84px);width:auto;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
 #game.mobile:not(.portrait) #chatlog{top:calc(var(--top) + 6px);bottom:auto;left:max(12px,env(safe-area-inset-left,0px));width:min(320px,40vw)}
 #game.mobile:not(.portrait) #chatlog.open{max-height:calc(100vh - var(--top) - 80px)}
+/* iPhone Safari: 100vh includes the area behind the toolbar, so use the visible height when the browser supports it */
+@supports (height:100svh){ #game.mobile{--cvh:max(min(86vw,54svh),min(110vw,calc(100svh - var(--top) - 350px)))} #game.mobile:not(.portrait) #chatlog.open{max-height:calc(100svh - var(--top) - 80px)} }
 #game.mobile:not(.portrait) #prompt{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 #game.mobile:not(.portrait) #combat,#game.mobile:not(.portrait) #clubBtn,#game.mobile:not(.portrait) #denBtn,#game.mobile:not(.portrait) #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 /* windows become full-screen sheets with a big close button */
@@ -1438,6 +1440,9 @@ function hud(){ jobHud(); try{ nrcHud(); }catch(e){} if(save.look&&save.look.han
 /* ============================================================ AUDIO */
 let AC=null, musicTimer=null;
 function beep(f=660,d=.06,type="square",vol=.05){ if(!soundOn||!AC) return; const o=AC.createOscillator(),g=AC.createGain(); o.type=type;o.frequency.value=f; g.gain.setValueAtTime(vol,AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+d); }
+// Phones (iPhones especially) pause sound when you switch apps or get a call. Wake it back up on the next tap or when you return.
+function wakeAudio(){ try{ if(soundOn&&AC&&AC.state!=="running"&&AC.resume) AC.resume(); }catch(e){} }
+addEventListener("pointerdown",wakeAudio,true); addEventListener("keydown",wakeAudio,true); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) wakeAudio(); });
 function wmTrack(venue){ const m=save&&save.music; if(!m||!m.k||m.k==="city"||m.k==="off") return null; if(venue&&!m.all) return null; const [g,i]=String(m.k).split(":");
   if(g==="club"&&TRACKS[+i]) return {tr:TRACKS[+i],play:playStep,g:.42}; if(g==="den"&&DEN_TRACKS[+i]) return {tr:DEN_TRACKS[+i],play:playDenStep,g:.34}; if(g==="cj"&&CJ_TRACKS[i]) return {tr:CJ_TRACKS[i],play:cjPlayStep,g:.36}; return null; }
 const WM_SHUF=[["anime","🎮 Game & anime"],["cj","⚔ Companion Clash"],["club","🎧 Club & bar"],["all","🌈 Everything"]];
@@ -3830,7 +3835,7 @@ const cv=$("#world"), ctx=cv.getContext("2d"); let scale=1, VW=640, camX=0;
 const MOBILE=matchMedia("(pointer:coarse)").matches||(navigator.maxTouchPoints>0&&matchMedia("(max-width:1024px)").matches);
 // phones: softer, cheaper glow on the world canvas keeps the frame rate smooth (big blurs are the most expensive draw call)
 // Glow cap: phones always use a softer glow; slower computers get a lower cap from Auto smooth mode (PERF) below.
-try{ const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,"shadowBlur"); Object.defineProperty(ctx,"shadowBlur",{configurable:true,get(){ return d.get.call(ctx); },set(v){ v=+v||0; const L=(typeof PERF!=="undefined"&&PERF)?PERF.lvl:0, cap=L>=2?0:L>=1?4:MOBILE?6:99; d.set.call(ctx,v>cap?cap:v); }}); }catch(e){}
+try{ const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,"shadowBlur"); Object.defineProperty(ctx,"shadowBlur",{configurable:true,get(){ return d.get.call(ctx); },set(v){ v=+v||0; const L=(typeof PERF!=="undefined"&&PERF)?PERF.lvl:0, cap=L>=2?0:L>=1?4:MOBILE?6:16; d.set.call(ctx,v>cap?cap:v); }}); }catch(e){}
 function applyMobileLayout(){ const g=$("#game"); if(!g) return; g.classList.toggle("mobile",MOBILE); g.classList.toggle("portrait",MOBILE&&innerHeight>innerWidth);
   if(MOBILE&&!g.dataset.mset){ g.dataset.mset="1";
     const lab=(id,txt,aria)=>{ const b=$(id); if(!b) return; const bd=b.querySelector(".badge"); b.textContent=txt; if(bd) b.append(bd); b.classList.add("mbtn"); if(aria) b.setAttribute("aria-label",aria); };
@@ -3841,12 +3846,15 @@ function applyMobileLayout(){ const g=$("#game"); if(!g) return; g.classList.tog
     $("#chatin").placeholder="Say something…"; const bb=$("#btnBlock"), ba=$("#btnAtk"); if(bb) bb.textContent="Block"; if(ba) ba.textContent="Attack"; } }
 /* Auto smooth mode: if the game runs below ~40 fps for 8 seconds straight, it lowers the glow and the screen resolution
    one step at a time (up to 2 steps). The level is remembered on this device, and players can reset it in How to Play → Smooth mode. */
-var PERF={lvl:0,fr:[],last:0,t0:0}; try{ PERF.lvl=Math.max(0,Math.min(2,+localStorage.getItem("nh_perf")||0)); }catch(e){}
+var PERF={lvl:0,fr:[],last:0,t0:0}; try{ PERF.lvl=Math.max(0,Math.min(2,+localStorage.getItem("nh_perf")||0));
+  // Smooth mode used to stay on forever after one slow moment. Each new visit now tries one level better,
+  // unless the player picked the level themselves; if the device is still slow, it steps back down by itself.
+  if(PERF.lvl>0&&localStorage.getItem("nh_perf_manual")!=="1") PERF.lvl--; }catch(e){}
 function perfFrame(now){ if(document.hidden||!PERF.last){ PERF.last=now; return; } const d=now-PERF.last; PERF.last=now; if(d>250){ PERF.fr.length=0; PERF.t0=now; return; } PERF.fr.push(d); if(!PERF.t0) PERF.t0=now;
   if(now-PERF.t0<4000) return; const avg=PERF.fr.reduce((a,b)=>a+b,0)/PERF.fr.length, fps=1000/avg; PERF.fr.length=0; PERF.t0=now;
   PERF.slow=fps<40?(PERF.slow||0)+1:0;
   if(PERF.slow>=2&&PERF.lvl<2&&now>12000){ PERF.slow=0; setPerf(PERF.lvl+1); try{ toast(PERF.lvl>=2?"Smooth mode: max (lower glow and resolution)":"Smooth mode on: lighter glow for a smoother game","#38e8ff"); }catch(e){} } }
-function setPerf(l){ PERF.lvl=Math.max(0,Math.min(2,l|0)); try{ localStorage.setItem("nh_perf",String(PERF.lvl)); }catch(e){} PERF.fr.length=0; PERF.t0=0; resize(); }
+function setPerf(l,manual){ PERF.lvl=Math.max(0,Math.min(2,l|0)); try{ localStorage.setItem("nh_perf",String(PERF.lvl)); if(manual) localStorage.setItem("nh_perf_manual",PERF.lvl?"1":"0"); }catch(e){} PERF.fr.length=0; PERF.t0=0; resize(); }
 function resize(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(PERF.lvl>=2?1:(MOBILE||PERF.lvl>=1)?1.5:2,window.devicePixelRatio||1); cv.width=Math.max(2,Math.round(r.width*dpr)); cv.height=Math.max(2,Math.round(r.height*dpr)); scale=cv.height/H; VW=Math.min(4000,cv.width/scale); }
 if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cv);
 applyMobileLayout(); addEventListener("resize",()=>{ applyMobileLayout(); resize(); }); addEventListener("orientationchange",()=>setTimeout(()=>{ applyMobileLayout(); resize(); },250));
@@ -4530,7 +4538,7 @@ function openGuide(tab){ if(tab!==undefined) guideTab=HELP_T[tab]?tab:""; try{ l
     for(const c of HELP) jump.append(el("button",{class:"btn",type:"button",text:`${c.icon} ${c.n}`,onclick:()=>{ const h=document.getElementById("hcat_"+c.id); if(h) h.scrollIntoView({behavior:"smooth",block:"start"}); }}));
     q.addEventListener("input",()=>{ guideQ=q.value; draw(); });
     const names=["Off (full glow)","Light (softer glow)","Max (no glow, lower resolution)"];
-    body.append(q,jump,list,el("div",{class:"row",style:"align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;border-top:1px solid var(--line);padding-top:10px"},el("span",{class:"sub",text:`⚙ Smooth mode: ${names[PERF.lvl]}. It turns on by itself if the game runs slowly.`}),el("button",{class:"btn",type:"button",text:"Change",onclick:()=>{ setPerf((PERF.lvl+1)%3); toast("Smooth mode: "+names[PERF.lvl],"#38e8ff"); openGuide(""); }})),
+    body.append(q,jump,list,el("div",{class:"row",style:"align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;border-top:1px solid var(--line);padding-top:10px"},el("span",{class:"sub",text:`⚙ Smooth mode: ${names[PERF.lvl]}. It turns on by itself if the game runs slowly and tries better quality again on your next visit, unless you pick a level here.`}),el("button",{class:"btn",type:"button",text:"Change",onclick:()=>{ setPerf((PERF.lvl+1)%3,true); toast("Smooth mode: "+names[PERF.lvl],"#38e8ff"); openGuide(""); }})),
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Start playing",onclick:closePanel})));
     draw(); if(!MOBILE&&!guideQ) setTimeout(()=>{ try{ q.focus({preventScroll:true}); }catch(e){} },50); else if(guideQ) setTimeout(()=>q.focus(),50); return; }
   const body=panel(`${t.icon} ${t.n}`,t.sub||""); currentView="guide";
@@ -4836,14 +4844,20 @@ function openListForm(id){
     el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Post listing",onclick:async(e)=>{ const price=clamp(Math.round(+inp.value||0),1,99999); if(!hasItem(id)) return; e.target.disabled=true;
       try{ addItem(id,-1); await DB.collection("market").add({seller:myId,item:id,price,at:Date.now()}); persist(); toast(`Listed ${it.n} for ₵${price}`); openTrade("mine"); }catch(err){ addItem(id,1); toast("Couldn't post the listing. Check your connection and try again."); e.target.disabled=false; } }})));
 }
-async function cancelListing(m){ try{ await DB.doc("market/"+m.id).delete(); addItem(m.item,1); persist(); toast("Listing removed. The part is back in your stash."); openTrade("mine"); }catch(e){ toast("Couldn't remove that listing."); } }
+// Claim a shared document (order, listing, gift) so only one player or device ever gets it.
+async function takeDoc(path){ if(DB&&DB.take) return !!(await DB.take(path)); const sn=await DB.doc(path).get(); if(!sn.exists) return false; await DB.doc(path).delete(); return true; }
+const busyTx=new Set(); // stops double taps from running the same purchase twice
+async function cancelListing(m){ if(busyTx.has("m"+m.id)) return; busyTx.add("m"+m.id); try{ if(!(await takeDoc("market/"+m.id))){ toast("That listing is already gone."); openTrade("mine"); return; } addItem(m.item,1); persist(); toast("Listing removed. The part is back in your stash."); openTrade("mine"); }catch(e){ toast("Couldn't remove that listing."); } finally{ busyTx.delete("m"+m.id); } }
 async function buyListing(m){
   if(save.credits<m.price){ toast(`You need ₵${m.price-Math.floor(save.credits)} more.`); return; }
-  try{ const snap=await DB.doc("market/"+m.id).get(); if(!snap.exists){ toast("Someone bought it first."); return; }
-    await DB.doc("market/"+m.id).delete(); save.credits-=m.price; addItem(m.item,1); persist();
-    await DB.collection("gifts").add({to:m.seller,from:myId,kind:"credits",amount:m.price,note:`Sale: ${BY[m.item].n}`,at:Date.now()});
-    toast(`Bought ${BY[m.item].n}`,RAR[BY[m.item].r].c); beep(1200,.08); openTrade("board"); }
-  catch(e){ toast("The purchase didn't go through. Nothing was charged."); }
+  if(busyTx.has("m"+m.id)) return; busyTx.add("m"+m.id);
+  let took=false;
+  try{ took=await takeDoc("market/"+m.id); if(!took){ toast("Someone bought it first."); openTrade("board"); return; }
+    save.credits-=m.price; addItem(m.item,1); persist();
+    toast(`Bought ${BY[m.item].n}`,RAR[BY[m.item].r].c); beep(1200,.08); openTrade("board");
+    try{ await DB.collection("gifts").add({to:m.seller,from:myId,kind:"credits",amount:m.price,note:`Sale: ${BY[m.item].n}`,at:Date.now()}); }catch(e){ console.warn("seller payment failed",e&&e.message); } }
+  catch(e){ if(!took) toast("The purchase didn't go through. Nothing was charged."); }
+  finally{ busyTx.delete("m"+m.id); }
 }
 /* --- player interactions */
 function openPlayer(pid){
@@ -4870,7 +4884,7 @@ function openPlayer(pid){
 async function claimGift(doc){
   const d=doc.data(); if(!d||d.to!==myId) return;
   if(d.kind==="nrc") return claimNrcGift(doc,d,0);
-  try{ await DB.doc("gifts/"+doc.id).delete(); }catch(e){ return; }
+  try{ if(!(await takeDoc("gifts/"+doc.id))) return; }catch(e){ return; }
   const from=nameOf(d.from);
   if(d.kind==="credits"){ const a=clamp(Math.round(+d.amount||0),0,99999); save.credits+=a; toast(`${from} sent you ₵${a}${d.note?" · "+String(d.note).slice(0,40):""}`,"#ffb84a"); }
   else if(d.kind==="chips"){ const a=clamp(Math.round(+d.amount||0),0,99999); save.chips+=a; toast(`${from} sent you ${a} chips${d.note?" · "+String(d.note).slice(0,40):""}`,"#38e8ff"); }
@@ -4889,7 +4903,7 @@ async function claimNrcGift(doc,d,tries){
     if(Date.now()-nrcGiftToast>8000){ nrcGiftToast=Date.now(); toast(`An NRC payout from ${String(d.note||"a store").slice(0,24)} is waiting — you've hit today's NRC limit. It'll arrive on later days.`,"#ffb84a"); }
     return; }
   const g=Math.min(amt,left);
-  try{ await DB.doc("gifts/"+doc.id).delete(); }catch(e){ return; }
+  try{ if(!(await takeDoc("gifts/"+doc.id))) return; }catch(e){ return; }
   addNRC(g,`${String(d.note||"Neon Row").slice(0,24)} payout`);
   toast(`${nameOf(d.from)}${d.note?` (${String(d.note).slice(0,24)})`:""} paid you ${g.toLocaleString()} NRC for your visit!`,"#38e8ff");
   beep(1046,.1); setTimeout(()=>beep(1318,.12),100);
@@ -5296,8 +5310,7 @@ function serveCustomer(c){
     if(!hasItem(id)) return; addItem(id,-1); const tip=Math.round((c.left/c.max)*10); c.leaving=true; c.happy=T; payShift(Math.round(BY[id].v*1.3),tip); openCounter(); });
 }
 async function fulfillOrder(o,itemId){
-  try{ const snap=await DB.doc("orders/"+o.id).get(); if(!snap.exists){ toast("That order was cancelled. The item went back to your stash."); addItem(itemId); persist(); openCounter(); return; }
-    await DB.doc("orders/"+o.id).delete();
+  try{ if(!(await takeDoc("orders/"+o.id))){ toast("That order was cancelled or already served. The item went back to your stash."); addItem(itemId); persist(); openCounter(); return; }
     await DB.collection("gifts").add({to:o.from,from:myId,kind:"item",item:itemId,amount:1,note:`Served at The Glitch`,at:Date.now()});
     payShift(clamp(Math.round(+o.offer||0),0,99999),3); }
   catch(e){ toast("Couldn't complete that order. Try again."); if(BY[itemId].t!=="drink"&&BY[itemId].t!=="food") addItem(itemId); persist(); }
@@ -5309,7 +5322,7 @@ function servePlayer(o){
   else if(o.kind==="part"&&TYPE_N[o.ptype]) partPicker(o.ptype,`${nameOf(o.from)} paid ₵${o.offer} for this.`,id=>{ if(!hasItem(id)) return; addItem(id,-1); persist(); fulfillOrder(o,id); });
 }
 async function declineOrder(o){
-  try{ await DB.doc("orders/"+o.id).delete(); await DB.collection("gifts").add({to:o.from,from:myId,kind:"credits",amount:clamp(Math.round(+o.offer||0),0,99999),note:"Order declined, refund",at:Date.now()}); toast("Order declined. They were refunded."); }
+  try{ if(!(await takeDoc("orders/"+o.id))){ toast("That order was already served or cancelled."); return; } await DB.collection("gifts").add({to:o.from,from:myId,kind:"credits",amount:clamp(Math.round(+o.offer||0),0,99999),note:"Order declined, refund",at:Date.now()}); toast("Order declined. They were refunded."); }
   catch(e){ toast("Couldn't decline that order."); } openCounter();
 }
 let barMenuTab="drinks";
@@ -5345,7 +5358,7 @@ async function placeOrder(o,to){
   catch(e){ save.credits+=o.offer; persist(); toast("The order didn't go through. You weren't charged."); }
 }
 async function cancelOrder(o){
-  try{ const s=await DB.doc("orders/"+o.id).get(); if(!s.exists){ toast("Too late, it's already being served."); return; } await DB.doc("orders/"+o.id).delete(); save.credits+=clamp(Math.round(+o.offer||0),0,99999); persist(); toast("Order cancelled. Refunded."); }
+  try{ if(!(await takeDoc("orders/"+o.id))){ toast("Too late, it's already being served."); return; } save.credits+=clamp(Math.round(+o.offer||0),0,99999); persist(); toast("Order cancelled. Refunded."); }
   catch(e){ toast("Couldn't cancel that order."); } if(o.kind==="club") openClubCounter(); else orderMenu();
 }
 function openJobBoard(){
@@ -10012,7 +10025,7 @@ function drawClash(t){ const W=SCENES.clash.w;
   // torches
   for(let x=200;x<W;x+=320){ ctx.fillStyle="#3a2a4a"; ctx.fillRect(x-3,200,6,62); const f=.7+.3*Math.sin(t*12+x); ctx.fillStyle=`rgba(255,${150+60*f|0},60,.95)`; ctx.beginPath(); ctx.ellipse(x,196-f*3,5,9*f,0,0,7); ctx.fill(); ctx.fillStyle="rgba(255,170,80,.12)"; ctx.beginPath(); ctx.arc(x,196,34,0,7); ctx.fill(); }
   // the JRPG stage: a giant stone-framed screen playing an attract demo
-  { const x=CLASH_X.stage; ctx.fillStyle="#3a2e4a"; ctx.fillRect(x-176,96,352,162); ctx.fillStyle="#4a3c5c"; for(let k=0;k<11;k++) for(let j=0;j<5;j++) if((k+j)%2) ctx.fillRect(x-176+k*32,96+j*32.4,32,32.4); ctx.strokeStyle="#ffd36a"; ctx.shadowColor="#ffd36a"; ctx.shadowBlur=12; ctx.lineWidth=3; ctx.strokeRect(x-176,96,352,162); ctx.shadowBlur=0;
+  if(CLASH_X.stage+220>camX&&CLASH_X.stage-220<camX+VW){ const x=CLASH_X.stage; ctx.fillStyle="#3a2e4a"; ctx.fillRect(x-176,96,352,162); ctx.fillStyle="#4a3c5c"; for(let k=0;k<11;k++) for(let j=0;j<5;j++) if((k+j)%2) ctx.fillRect(x-176+k*32,96+j*32.4,32,32.4); ctx.strokeStyle="#ffd36a"; ctx.shadowColor="#ffd36a"; ctx.shadowBlur=12; ctx.lineWidth=3; ctx.strokeRect(x-176,96,352,162); ctx.shadowBlur=0;
     const sx=x-150, sy=108, sw=300, sh=118; ctx.save(); ctx.beginPath(); ctx.rect(sx,sy,sw,sh); ctx.clip(); const sg=ctx.createLinearGradient(0,sy,0,sy+sh); sg.addColorStop(0,"#4a8ae8"); sg.addColorStop(.55,"#bfe4ff"); sg.addColorStop(.56,"#4aaa58"); sg.addColorStop(1,"#2f7a3a"); ctx.fillStyle=sg; ctx.fillRect(sx,sy,sw,sh);
       const ph=(t%6)/6, enemy={col:"#43f0a4",sh:["slime","bat","wolf","golem","wisp","bird"][Math.floor(t/6)%6],x:sx,boss:0}; ctx.save(); if(ph>.8){ ctx.globalAlpha=1-(ph-.8)*5; } cjDrawEnemy(ctx,{...enemy,col:["#43f0a4","#b06bff","#38e8ff","#c0703a","#ff8a2a","#7ce7ff"][Math.floor(t/6)%6]},sx+80,sy+92,.9,t,0); ctx.restore();
       const lunge=Math.sin(Math.min(1,((t*1.5)%2))*Math.PI)*(((t*1.5)%2)<1?30:0); try{ drawStick(ctx,sx+222-lunge,sy+94,.36,{dir:-1,phase:t*8,moving:false,look:save.look},t); }catch(e){} try{ const pn=curPet()||"Neon fox"; if(PETS[pn]) drawPetAt(ctx,sx+258,sy+94,PET_TALL.includes(pn)?.3:.52,pn,validPs(petStyleOf(pn)),-1,t,false); }catch(e){}
@@ -10022,7 +10035,7 @@ function drawClash(t){ const W=SCENES.clash.w;
     neonText("COMPANION CLASH",x,74,18,"#ff3fa8",flick(41,t)); neonText("SHARDS OF THE NEON CROWN",x,88,7,"#38e8ff",flick(42,t)); if(Math.floor(t*2)%2){ ctx.fillStyle="#ffd36a"; ctx.font="700 10px Silkscreen, monospace"; ctx.textAlign="center"; ctx.fillText("PRESS START",x,247); }
     for(const s of [-1,1]){ const bx=x+s*205; ctx.fillStyle="#5a1a3a"; ctx.beginPath(); ctx.moveTo(bx-18,104); ctx.lineTo(bx+18,104); ctx.lineTo(bx+18,194); ctx.lineTo(bx,206); ctx.lineTo(bx-18,194); ctx.fill(); ctx.fillStyle="#ffd36a"; ctx.fillRect(bx-20,100,40,5); ctx.save(); ctx.translate(bx,146); ctx.fillStyle="#ffd36a"; ctx.beginPath(); ctx.moveTo(-10,6); ctx.lineTo(-10,-6); ctx.lineTo(-5,1); ctx.lineTo(0,-10); ctx.lineTo(5,1); ctx.lineTo(10,-6); ctx.lineTo(10,6); ctx.closePath(); ctx.fill(); ctx.restore(); } }
   // save crystal: shows your shards
-  { const x=CLASH_X.crystal, b=Math.sin(t*2)*4, sh=save.ccj&&save.ccj.cls?clamp(+save.ccj.boss||0,0,4):0; ctx.fillStyle="#3a3a5a"; ctx.fillRect(x-30,236,60,26); ctx.fillStyle="#4a4a6a"; ctx.fillRect(x-24,228,48,10); ctx.save(); ctx.shadowColor="#38e8ff"; ctx.shadowBlur=22; ctx.fillStyle="#7ce7ff"; ctx.beginPath(); ctx.moveTo(x,120+b); ctx.lineTo(x+26,168+b); ctx.lineTo(x,214+b); ctx.lineTo(x-26,168+b); ctx.closePath(); ctx.fill(); ctx.restore(); ctx.fillStyle="#e9f6ff"; ctx.fillRect(x-8,140+b,5,30);
+  if(CLASH_X.crystal+120>camX&&CLASH_X.crystal-120<camX+VW){ const x=CLASH_X.crystal, b=Math.sin(t*2)*4, sh=save.ccj&&save.ccj.cls?clamp(+save.ccj.boss||0,0,4):0; ctx.fillStyle="#3a3a5a"; ctx.fillRect(x-30,236,60,26); ctx.fillStyle="#4a4a6a"; ctx.fillRect(x-24,228,48,10); ctx.save(); ctx.shadowColor="#38e8ff"; ctx.shadowBlur=22; ctx.fillStyle="#7ce7ff"; ctx.beginPath(); ctx.moveTo(x,120+b); ctx.lineTo(x+26,168+b); ctx.lineTo(x,214+b); ctx.lineTo(x-26,168+b); ctx.closePath(); ctx.fill(); ctx.restore(); ctx.fillStyle="#e9f6ff"; ctx.fillRect(x-8,140+b,5,30);
     for(let i=0;i<4;i++){ const a=t*1.1+i*Math.PI/2; ctx.save(); ctx.translate(x+Math.cos(a)*44,168+Math.sin(a)*12+b); ctx.rotate(Math.PI/4); ctx.fillStyle=i<sh?["#43f0a4","#ff8a2a","#7ce7ff","#cf72ff"][i]:"#2a2050"; if(i<sh){ ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=10; } ctx.fillRect(-5,-5,10,10); ctx.restore(); } neonText("SAVE CRYSTAL",x,104,9,"#7ce7ff",flick(44,t)); }
   // Companion Customs storefront (kept)
   ctx.fillStyle="#140c24"; ctx.fillRect(200,110,320,152); ctx.strokeStyle="#ffd36a"; ctx.shadowColor="#ffd36a"; ctx.shadowBlur=10; ctx.lineWidth=2; ctx.strokeRect(200,110,320,152); ctx.shadowBlur=0; neonText("COMPANION CUSTOMS",360,100,11,"#ffd36a",flick(43,t));
@@ -10033,7 +10046,7 @@ function drawClash(t){ const W=SCENES.clash.w;
   ctx.save(); ctx.beginPath(); ctx.ellipse(0,0,62,78,0,0,7); ctx.clip(); ctx.rotate(t*.6); for(let k=0;k<6;k++){ ctx.rotate(Math.PI/3); ctx.strokeStyle="rgba(67,240,164,.35)"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(20,0,36,0,2); ctx.stroke(); } ctx.restore(); ctx.fillStyle="#2a1f44"; ctx.fillRect(-80,82,160,10); ctx.restore(); neonText("EXPEDITION GATE",CLASH_X.gate,70,10,"#43f0a4",flick(45,t));
   const rr=save.petRoam; if(rr&&Date.now()<rr.until){ ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillStyle="#cfffe8"; ctx.fillText(`${rr.pet} · ${(ROAM_BY[rr.z]||{}).n||""} · ${roamLeftText()}`,CLASH_X.gate,262); }
   // Hall of Heroes: a stone tablet
-  { const x=CLASH_X.hall; ctx.fillStyle="#4a4a5e"; ctx.beginPath(); ctx.moveTo(x-110,250); ctx.lineTo(x-110,110); ctx.quadraticCurveTo(x,70,x+110,110); ctx.lineTo(x+110,250); ctx.fill(); ctx.strokeStyle="#ffd36a"; ctx.lineWidth=2; ctx.stroke(); ctx.fillStyle="#2e2e40"; ctx.fillRect(x-96,118,192,124); neonText("HALL OF HEROES",x,104,10,"#ffd36a",flick(46,t));
+  if(CLASH_X.hall+260>camX&&CLASH_X.hall-260<camX+VW){ const x=CLASH_X.hall; ctx.fillStyle="#4a4a5e"; ctx.beginPath(); ctx.moveTo(x-110,250); ctx.lineTo(x-110,110); ctx.quadraticCurveTo(x,70,x+110,110); ctx.lineTo(x+110,250); ctx.fill(); ctx.strokeStyle="#ffd36a"; ctx.lineWidth=2; ctx.stroke(); ctx.fillStyle="#2e2e40"; ctx.fillRect(x-96,118,192,124); neonText("HALL OF HEROES",x,104,10,"#ffd36a",flick(46,t));
     const top=cjHall().slice(0,6); ctx.font="9px 'IBM Plex Mono',monospace"; ctx.textAlign="left"; if(!top.length){ ctx.fillStyle="#8d86ab"; ctx.fillText("No heroes yet. Be the first.",x-86,140); }
     top.forEach((f,i)=>{ const y=136+i*18; ctx.fillStyle=i===0?"#ffd36a":"#e9e2ff"; ctx.fillText(`${i+1}. ${String(f.name).slice(0,11)}`,x-88,y); ctx.fillStyle="#8d86ab"; ctx.fillText(`Lv${f.lv}`,x+14,y); for(let k=0;k<4;k++){ ctx.fillStyle=k<f.sh?["#43f0a4","#ff8a2a","#7ce7ff","#cf72ff"][k]:"#22203a"; ctx.save(); ctx.translate(x+52+k*11,y-3); ctx.rotate(Math.PI/4); ctx.fillRect(-3,-3,6,6); ctx.restore(); } }); }
   // plaza floor
@@ -11345,8 +11358,8 @@ function clubConsole(){
     el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Prep & send",onclick:()=>prepItem(o.item,`${nameOf(o.from)} ordered this. It goes straight to their stash.`,()=>clubFulfill(o))}),el("button",{class:"btn",type:"button",text:"Decline",onclick:()=>declineOrder(o)}))));
   body.append(pl,el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Clock out",onclick:async()=>{ await clubClockOut(); closePanel(); }})));
 }
-async function clubFulfill(o){ try{ const sn=await DB.doc("orders/"+o.id).get(); if(!sn.exists){ toast("That order was cancelled."); return clubConsole(); }
-    await DB.doc("orders/"+o.id).delete(); await DB.collection("gifts").add({to:o.from,from:myId,kind:"item",item:o.item,amount:1,note:"Served at The Third Eye",at:Date.now()}); clubPay(clamp(Math.round(+o.offer||0),0,99999),3); }
+async function clubFulfill(o){ try{ if(!(await takeDoc("orders/"+o.id))){ toast("That order was cancelled or already served."); return clubConsole(); }
+    await DB.collection("gifts").add({to:o.from,from:myId,kind:"item",item:o.item,amount:1,note:"Served at The Third Eye",at:Date.now()}); clubPay(clamp(Math.round(+o.offer||0),0,99999),3); }
   catch(e){ toast("Couldn't complete that order. Try again."); } clubConsole(); }
 let clubSig="";
 setInterval(()=>{ if(currentView!=="clubconsole"||$("#overlay").hidden||clubSlot<0) return; const sig=JSON.stringify([patrons.filter(c=>c.arrived&&!c.leaving&&!c.served).map(c=>c.id+":"+Math.ceil(c.left/5)),incomingOrders.filter(o=>o.kind==="club").map(o=>o.id),!!clubHolding,clubShift&&clubShift.served]); if(sig!==clubSig){ clubSig=sig; clubConsole(); } },1000);
@@ -12040,11 +12053,16 @@ function openMobileMenu(){ const body=panel("Menu",`${myName||"Runner"} · ${sce
 
 /* ============================================================ PERSIST */
 let saveTimer=null, lastHomeSig="";
-function persist(){ hud(); try{ bytesPetsSync(); }catch(e){} clearTimeout(saveTimer); saveTimer=setTimeout(flush,500); }
+function persist(){ hud(); try{ bytesPetsSync(); }catch(e){} clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ saveTimer=null; flush(); },500); }
+// Save right away when the page is hidden or closed. Phones often close or freeze apps without warning,
+// so a change made in the last half second used to be lost.
+function flushNow(){ if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; try{ flush(); }catch(e){} } }
+addEventListener("pagehide",flushNow); document.addEventListener("visibilitychange",()=>{ if(document.hidden) flushNow(); });
 async function flush(){
-  const data=JSON.parse(JSON.stringify(save));
-  try{ localStorage.setItem("nh_save",JSON.stringify(data)); localStorage.setItem("nh_save_uid",myId||""); }catch(e){}
-  if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); }catch(e){}
+  save.savedAt=Date.now(); const data=JSON.parse(JSON.stringify(save));
+  try{ localStorage.setItem("nh_save",JSON.stringify(data)); localStorage.setItem("nh_save_uid",myId||""); if(DB&&myId) localStorage.setItem("nh_save_dirty","1"); }catch(e){}
+  // nh_save_dirty stays set until the cloud confirms this save, so an unfinished save can be recovered on the next visit.
+  if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); try{ if(JSON.parse(localStorage.getItem("nh_save")||"{}").savedAt===data.savedAt) localStorage.removeItem("nh_save_dirty"); }catch(e){} }catch(e){}
     const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{},(save.t1211&&save.t1211.beat||[]).length]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},t1211:(save.t1211&&save.t1211.beat||[]).length,at:Date.now()}); }catch(e){} } }
 }
 function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0; o.rp=Math.max(0,+o.rp||0); if(!o.rpDay||typeof o.rpDay!=="object") o.rpDay={d:"",n:0}; o.rpLog=(Array.isArray(s.rpLog)?s.rpLog:[]).filter(e=>e&&isFinite(+e.t)&&isFinite(+e.n)&&+e.n>0).slice(0,40).map(e=>({t:+e.t,n:Math.floor(+e.n),s:String(e.s||"Work").slice(0,40)}));
@@ -12104,7 +12122,10 @@ setInterval(hud,1000);
   ACCESS.mode=!db?"signedout":!myId?"limited":!canWrite?"readonly":room?"full":"full";
   if(db) try{ streamWatch(db); }catch(e){}
   if(db&&myId&&canWrite){ DB=db;
-    try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ save=sanitizeSave(snap.data()); hud(); } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
+    try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ const cloud=snap.data(); let use=cloud;
+        // If this device's last save never reached the cloud (the app was closed mid-save), keep the newer copy from this device.
+        try{ const ls=JSON.parse(localStorage.getItem("nh_save")||"null"); if(localStorage.getItem("nh_save_dirty")==="1"&&localStorage.getItem("nh_save_uid")===myId&&ls&&(+ls.savedAt||0)>(+cloud.savedAt||0)) use=ls; }catch(e){}
+        save=sanitizeSave(use); hud(); if(use!==cloud) persist(); } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
     db.collection("market").orderBy("at","desc").limit(60).onSnapshot(s=>{ market=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>BY[m.item]&&typeof m.seller==="string"&&+m.price>0); const ids=[...new Set(market.map(m=>m.seller))]; resolveNames(ids);  refreshView("trade");},()=>{});
     db.collection("viprooms").onSnapshot(s=>{ const prev=vipRooms; vipRooms={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(!VIP_BY[d.id]) return; vipRooms[d.id]={by:typeof v.by==="string"?v.by:"",until:+v.until||0,open:v.open!==false,invites:Array.isArray(v.invites)?v.invites.filter(x=>typeof x==="string").slice(0,40):[],at:+v.at||0}; });
       resolveNames(Object.values(vipRooms).map(v=>v.by).filter(Boolean));

@@ -134,7 +134,10 @@
   function collRef(path){ const c=fs.collection(path); return Object.assign(query(c),{ doc:id=>docRef(path+"/"+(id||c.doc().id)), add:async d=>{ const r=await c.add(clean(d)); return docRef(path+"/"+r.id); } }); }
   // Atomic multi-document writes (both succeed or neither does). Takes the refs returned by doc().
   function batch(){ const b=fs.batch(); const o={ set:(ref,d)=>{ b.set(fs.doc(ref.path),clean(d)); return o; }, update:(ref,d)=>{ b.update(fs.doc(ref.path),clean(d)); return o; }, delete:ref=>{ b.delete(fs.doc(ref.path)); return o; }, commit:()=>b.commit() }; return o; }
-  const dbNS=Object.freeze({doc:docRef,collection:collRef,batch});
+  // take(path): delete a shared document only if it still exists, in one atomic step.
+  // Returns true for exactly one caller, so two players or devices can never both claim the same order, listing or gift.
+  const take=async path=>fs.runTransaction(async tx=>{ const r=fs.doc(path); const s=await tx.get(r); if(!s.exists) return false; tx.delete(r); return true; });
+  const dbNS=Object.freeze({doc:docRef,collection:collRef,batch,take});
 
   /* ---------- accounts ---------- */
   const profCache={};
