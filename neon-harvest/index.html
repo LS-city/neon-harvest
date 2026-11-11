@@ -3418,11 +3418,12 @@ async function thSetLights(lv){ lv=Math.max(0,Math.min(TH_LV.length-1,Math.floor
   thLights={lv,by:myId||"",at:Date.now()}; if(DB&&myId) try{ await DB.doc("club/theater_lights").set({lv,by:myId,at:Date.now()}); thNudge(); }catch(e){} return true; }
 
 /* ---- Stream Dome Library (owner-curated, shared) + My video shelf (on this device) ---- */
-const THL_MAX=60, THL_UPMB=20, SHELF_MAX=12;
+const THL_MAX=60, THL_PART=19*1048576, THL_MAXGB=4, SHELF_MAX=12;
 let thLib=[], thLibWatched=false;
-function thUrlOk(u){ u=String(u||""); return u.length<=600&&(/^https:\/\/[^\s"'<>]+$/i.test(u)||/^\/_blob\/[0-9a-f]{32}$/.test(u)); }
-function thLibClean(d){ const a=d&&Array.isArray(d.items)?d.items:[]; return a.filter(x=>x&&typeof x==="object"&&/^[a-z0-9]{4,24}$/.test(String(x.id||""))&&thUrlOk(x.u)).slice(0,THL_MAX)
-  .map(x=>({id:String(x.id),t:String(x.t||"").slice(0,60)||"Untitled",u:String(x.u),d:Math.max(0,Math.min(TH_MAXH*3600,Math.floor(+x.d||0))),aid:/^[0-9a-f]{32}$/.test(String(x.aid||""))?String(x.aid):"",at:+x.at||0})); }
+function thUrlOk(u){ u=String(u||""); return u.length<=600&&(/^https:\/\/[^\s"'<>]+$/i.test(u)||/^\/_blob\/[0-9a-f]{32}$/.test(u)||/^lib:[a-z0-9]{4,24}$/.test(u)); }
+function thLibClean(d){ const a=d&&Array.isArray(d.items)?d.items:[]; return a.filter(x=>x&&typeof x==="object"&&/^[a-z0-9]{4,24}$/.test(String(x.id||""))&&(thUrlOk(x.u)&&!/^lib:/.test(String(x.u))||Array.isArray(x.p)&&x.p.length&&x.p.length<=260&&x.p.every(p=>/^[0-9a-f]{32}$/.test(p)))).slice(0,THL_MAX)
+  .map(x=>{ const o={id:String(x.id),t:String(x.t||"").slice(0,60)||"Untitled",d:Math.max(0,Math.min(TH_MAXH*3600,Math.floor(+x.d||0))),at:+x.at||0};
+    if(Array.isArray(x.p)&&x.p.length){ o.p=x.p.map(String); o.sz=Math.max(0,+x.sz||0); o.ty=/^video\/(mp4|webm)$/.test(x.ty)?x.ty:"video/mp4"; o.u="lib:"+o.id; } else { o.u=String(x.u); o.aid=/^[0-9a-f]{32}$/.test(String(x.aid||""))?String(x.aid):""; } return o; }); }
 function thLibWatch(){ const db=TH_DB||DB; if(!db||thLibWatched) return; thLibWatched=true; try{ db.doc("shopinfo/thlib").onSnapshot(s=>{ thLib=thLibClean(s&&s.exists?s.data():null); if(currentView==="thbooth"||currentView==="thlib") thRepaint2(); },()=>{}); }catch(e){} }
 function thRepaint2(){ if(document.activeElement&&["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName)) return; try{ if(currentView==="thbooth") openTheaterBooth(); else if(currentView==="thlib") openTheaterLibrary(); }catch(e){} }
 async function thLibSave(items){ thLib=thLibClean({items}); await DB.doc("shopinfo/thlib").set({items:thLib,at:Date.now()}); }
@@ -3432,12 +3433,33 @@ function thProbe(src){ return new Promise((res,rej)=>{ const v=document.createEl
   v.onloadedmetadata=()=>{ const w=v.videoWidth, d=isFinite(v.duration)?Math.round(v.duration):0; end(()=>w>0?res({d}):rej(new Error("That video has no picture."))); }; v.onerror=()=>end(()=>rej(new Error("That video won't play in this browser. Use a direct link to an MP4 (H.264) file.")));
   setTimeout(()=>end(()=>rej(new Error("The video took too long to load. Check the link."))),20000); v.src=src; }); }
 
+/* movies uploaded in parts: download every part, join them back into the original file, keep it cached on this device */
+const THL_LOAD={}; let thlCacheDB=null;
+function thlDB(){ return thlCacheDB||(thlCacheDB=new Promise((res,rej)=>{ try{ const r=indexedDB.open("nh_movies",1); r.onupgradeneeded=()=>r.result.createObjectStore("m",{keyPath:"id"}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } })); }
+async function thlCacheGet(key){ try{ const db=await thlDB(); return await new Promise(res=>{ const q=db.transaction("m").objectStore("m").get(key); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function thlCachePut(key,blob){ try{ const db=await thlDB(); const all=await new Promise(res=>{ const q=db.transaction("m").objectStore("m").getAll(); q.onsuccess=()=>res(q.result||[]); q.onerror=()=>res([]); });
+    await new Promise(res=>{ const tx=db.transaction("m","readwrite"), st=tx.objectStore("m"); all.sort((a,b)=>b.at-a.at).slice(1).forEach(x=>st.delete(x.id)); st.put({id:key,blob,at:Date.now()}); tx.oncomplete=tx.onerror=tx.onabort=()=>res(); }); }catch(e){} }
+function thLibItem(lib){ const m=/^lib:([a-z0-9]{4,24})$/.exec(String(lib||"")); return m?thLib.find(x=>x.id===m[1])||null:null; }
+// synchronous: the playable URL if ready (starts the download if not)
+function thLibUrl(lib){ if(!/^lib:/.test(String(lib||""))) return lib; const it=thLibItem(lib); if(!it) return null; const L=THL_LOAD[it.id]; if(L&&L.url) return L.url; if(!L||L.err&&Date.now()-L.errAt>15e3) thLibLoad(it).catch(()=>{}); return null; }
+function thLibProg(lib){ const it=thLibItem(lib), L=it&&THL_LOAD[it.id]; if(!L) return 0; return L.total?Math.min(99,Math.floor(L.got/L.total*100)):0; }
+function thLibLoad(it,onProg){ const ex=THL_LOAD[it.id]; if(ex&&ex.url) return Promise.resolve(ex.url); if(ex&&ex.p&&!ex.err){ if(onProg) ex.cbs.push(onProg); return ex.p; }
+  const L=THL_LOAD[it.id]={got:0,total:it.sz||it.p.length*THL_PART,url:"",err:"",cbs:onProg?[onProg]:[]}; const key=it.id+"_"+it.p[0];
+  L.p=(async()=>{ const hit=await thlCacheGet(key); if(hit&&hit.blob&&hit.blob.size>0){ L.got=L.total; return L.url=URL.createObjectURL(hit.blob); }
+    const parts=new Array(it.p.length); let next=0; const tick=()=>L.cbs.forEach(f=>{ try{ f(L.got,L.total); }catch(e){} });
+    const worker=async()=>{ while(next<it.p.length){ const k=next++; let tries=0; for(;;){ try{ const r=await fetch("/_blob/"+it.p[k]); if(!r.ok) throw new Error("http "+r.status); const b=await r.blob(); parts[k]=b; L.got+=b.size; tick(); break; }catch(e){ if(++tries>=4) throw new Error("Couldn't download part "+(k+1)+" of the movie."); await new Promise(r=>setTimeout(r,1500*tries)); } } } };
+    await Promise.all([worker(),worker(),worker()]);
+    const blob=new Blob(parts,{type:it.ty||"video/mp4"}); thlCachePut(key,blob); return L.url=URL.createObjectURL(blob); })();
+  L.p.catch(e=>{ L.err=e.message||"download failed"; L.errAt=Date.now(); }); return L.p; }
+function thMB(b){ return b>=1073741824?(b/1073741824).toFixed(2)+" GB":(b/1048576).toFixed(0)+" MB"; }
+
 /* host a library movie: every viewer plays the same file in sync, so there's no streaming from the host's device */
 function thLibTarget(s){ return s.paused?s.pos:Math.max(0,(Date.now()-s.t0)/1000); }
-async function thStartLib(it){ if(!DB||!myId) throw new Error("Sign in to run the projector.");
+async function thStartLib(it,onProg){ if(!DB||!myId) throw new Error("Sign in to run the projector.");
   const cur=thLive(), swap=!!(thHost&&cur&&cur.by===myId); if(cur&&cur.by!==myId&&!IS_ADMIN) throw new Error("Someone's movie is already playing. Wait for it to finish.");
   if(!swap&&save.chips<TH_FEE) throw new Error(`You need ${TH_FEE} chips.`);
-  const v=thHidden(document.createElement("video")); v.preload="auto"; v.volume=thVol; v.src=it.u;
+  if(!swap&&save.chips<TH_FEE) throw new Error(`You need ${TH_FEE} chips.`); const src=it.p?await thLibLoad(it,onProg):it.u;
+  const v=thHidden(document.createElement("video")); v.preload="auto"; v.volume=thVol; v.src=src;
   const drop=()=>{ try{ v.pause(); }catch(e){} v.remove(); };
   try{ await new Promise((res,rej)=>{ v.onloadedmetadata=res; v.onerror=()=>rej(0); setTimeout(()=>rej(0),20000); }); }catch(e){ drop(); throw new Error("Couldn't load that movie. Try again in a moment."); }
   try{ await v.play(); }catch(e){ v.muted=true; try{ await v.play(); }catch(e2){ drop(); throw new Error("Couldn't start playback. Tap again."); } }
@@ -3456,7 +3478,8 @@ function thLibDoc(H){ const v=H.v, rem=isFinite(v.duration)?Math.max(0,v.duratio
 function thLibPush(){ const H=thHost; if(!H||!H.lib||!DB) return; H.hbT=Date.now(); const d=thLibDoc(H); DB.doc("club/theater").set(d).catch(()=>{}); thShow=thClean(d); thSeen(thShow); }
 // viewers: keep a hidden video on the same file at the same moment
 function thLibSync(s){ if(!thVid){ thVid=thHidden(document.createElement("video")); thVid.autoplay=true; }
-  if(!thView||thView.sid!==s.sid){ thDisconnect(true); thView={sid:s.sid,lib:s.lib,pc:null,state:"live",at:Date.now(),t:Date.now()}; thVid.srcObject=null; thVid.preload="auto"; thVid.src=s.lib; }
+  if(!thView||thView.sid!==s.sid){ thDisconnect(true); thView={sid:s.sid,lib:s.lib,pc:null,state:"live",at:Date.now(),t:Date.now()}; thVid.srcObject=null; thVid.preload="auto"; thVid.removeAttribute("src"); }
+  const src=thLibUrl(s.lib); if(!src) return; if(thVid.getAttribute("src")!==src) thVid.src=src;
   const tg=thLibTarget(s); if(thVid.readyState>=1){ if(isFinite(thVid.duration)&&tg>thVid.duration+1) return; if(Math.abs(thVid.currentTime-tg)>2) try{ thVid.currentTime=tg; }catch(e){} }
   if(s.paused){ if(!thVid.paused) thVid.pause(); } else if(thVid.paused&&!thNeedTap) thPlayVid(); }
 
@@ -3478,8 +3501,8 @@ function thBoothLibrary(body,mine){ thLibWatch();
   box.append(el("span",{class:"sub",text:"Movies kept here by the Stream Dome. Pick one and it plays for everyone straight from the library, so it doesn't use your internet to stream and there's no viewer limit."}));
   if(!thLib.length) box.append(el("div",{class:"empty",text:IS_ADMIN?"The library is empty. Tap Manage library to add your first movie.":"The library is empty right now. Check back soon."}));
   const l=el("div",{class:"list"}); for(const it of thLib){ const b=el("button",{class:"btn hot",type:"button",text:mine?"Swap (free)":`▶ Show it · ${TH_FEE} chips`});
-    const msg=el("span",{class:"sub"}); b.onclick=async()=>{ b.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading…"; try{ await thStartLib(it); toast("You're on the big screen!","#ffb13f"); openTheaterBooth(); }catch(e){ b.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } };
-    l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:#ffd36a;border-color:#ffd36a",text:"🎬"}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${thFmtDur(it.d)} long`}),msg),b)); }
+    const msg=el("span",{class:"sub"}); b.onclick=async()=>{ b.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading…"; try{ await thStartLib(it,(g,t)=>{ msg.textContent=`Downloading the movie… ${Math.min(99,Math.floor(g/t*100))}% (${thMB(g)} of ${thMB(t)}). Only the first time on this device.`; }); toast("You're on the big screen!","#ffb13f"); openTheaterBooth(); }catch(e){ b.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } };
+    l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:#ffd36a;border-color:#ffd36a",text:"🎬"}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${thFmtDur(it.d)} long${it.sz?" · "+thMB(it.sz):""}`}),msg),b)); }
   if(thLib.length) box.append(l); body.append(box); }
 function thBoothShelf(body,mine,onPick){ const box=el("div",{class:"detail",style:"border-color:#43f0a4;flex-direction:column;align-items:stretch"});
   box.append(el("strong",{text:"📼 My video shelf"}),el("span",{class:"sub",text:`Videos you've saved in this browser on this device (up to ${SHELF_MAX}). They never upload. Tap one to show it without picking the file again.`}));
@@ -3489,6 +3512,20 @@ function thBoothShelf(body,mine,onPick){ const box=el("div",{class:"detail",styl
       l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:#43f0a4;border-color:#43f0a4",text:"📼"}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${(it.size/1048576).toFixed(0)} MB · on this device`}),msg),go,
         el("button",{class:"btn",type:"button",text:"✕","aria-label":"Remove "+it.t+" from my shelf",title:"Remove from shelf",onclick:async()=>{ await shelfDel(it.id); toast("Removed from your shelf."); openTheaterBooth(); }}))); } }); }
 
+/* ---- owner: upload a movie of any size by splitting it into parts under the 20 MB per-file limit ---- */
+async function thUploadParts(f,ty,onProg,ctl){ const ids=[]; let pos=0;
+  try{ while(pos<f.size){ let end=Math.min(f.size,pos+THL_PART);
+      // a part must not begin with whitespace or "<": the store refuses video files that look like web pages
+      if(end<f.size) for(let k=0;k<64;k++){ const b=new Uint8Array(await f.slice(end,end+1).arrayBuffer())[0]; if(b===60||b===32||b===9||b===10||b===13||b===12) end--; else break; }
+      const part=f.slice(pos,end,ty); let tries=0, r=null;
+      for(;;){ if(ctl.stop) throw new Error("Upload cancelled.");
+        try{ r=await ASSETS.upload(part,{type:ty}); break; }
+        catch(e){ const c=e&&e.code; if(c==="quota_or_state") throw new Error("The game's storage is full. Remove a movie from the library to make room."); if(++tries>=4||!["store_unavailable","rate_limited","upstream_error","transform_error"].includes(c)) throw new Error(`Part ${ids.length+1} didn't upload (${c||"error"}). Try again.`); await new Promise(z=>setTimeout(z,2500*tries)); } }
+      ids.push(r.id); pos=end; onProg(pos,f.size,ids.length); }
+    return ids; }
+  catch(e){ ids.forEach(id=>ASSETS.delete(id).catch(()=>{})); throw e; } }
+async function thStorageUse(){ try{ const L=await ASSETS.list(); return L&&L.usage||null; }catch(e){ return null; } }
+
 /* ---- owner: manage the library ---- */
 function openTheaterLibrary(){ thLibWatch(); const body=panel("Stream Dome Library","Movies everyone can pick at the projection booth."); currentView="thlib";
   if(!IS_ADMIN){ body.append(el("p",{class:"sub",text:"Only the Stream Dome owner can change the library."}),el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openTheaterBooth()})); return; }
@@ -3497,29 +3534,41 @@ function openTheaterLibrary(){ thLibWatch(); const body=panel("Stream Dome Libra
   const link=el("input",{type:"url",maxlength:"600",placeholder:"https://…/movie.mp4",style:inp});
   const file=ASSETS?el("input",{type:"file",accept:"video/mp4,video/webm,.mp4,.m4v,.webm",style:inp+";border-style:dashed;border-color:#ffd36a"}):null;
   const rights=el("input",{type:"checkbox"}), msg=el("div",{class:"sub",role:"status"});
-  if(file) file.addEventListener("change",()=>{ const f=file.files&&file.files[0]; if(f&&!title.value) title.value=f.name.replace(/\.[^.]+$/,"").slice(0,60); msg.style.color=f&&f.size>THL_UPMB*1048576?"#ff7a7a":"#43f0a4"; msg.textContent=f?`${f.name} · ${(f.size/1048576).toFixed(1)} MB${f.size>THL_UPMB*1048576?` — too big to upload (${THL_UPMB} MB max). Use a link instead.`:""}`:""; });
+  if(file) file.addEventListener("change",()=>{ const f=file.files&&file.files[0]; if(f&&!title.value) title.value=f.name.replace(/\.[^.]+$/,"").slice(0,60); const big=f&&f.size>THL_MAXGB*1073741824; msg.style.color=big?"#ff7a7a":"#43f0a4"; msg.textContent=f?`${f.name} · ${thMB(f.size)}${big?` — too big (${THL_MAXGB} GB max).`:` · uploads in ${Math.ceil(f.size/THL_PART)} part${f.size>THL_PART?"s":""}`}`:""; });
   const add=el("button",{class:"btn hot",type:"button",text:"＋ Add to the library",onclick:async()=>{ msg.style.color="#ff7a7a";
     if(thLib.length>=THL_MAX){ msg.textContent=`The library holds ${THL_MAX} movies. Remove one first.`; return; }
     if(!rights.checked){ msg.textContent="Tick the box to confirm you have the right to show this video."; return; }
     const f=file&&file.files&&file.files[0], u=link.value.trim(); if(!f&&!u){ msg.textContent=file?"Upload a video file or paste a link.":"Paste a direct link to a video file."; return; }
     if(!f&&!thUrlOk(u)){ msg.textContent="Use a direct https:// link to the video file (ending in .mp4 works best)."; return; }
-    if(f&&f.size>THL_UPMB*1048576){ msg.textContent=`Uploads can be up to ${THL_UPMB} MB. For full movies, paste a link instead.`; return; }
+    if(f&&f.size>THL_MAXGB*1073741824){ msg.textContent=`Movies can be up to ${THL_MAXGB} GB. Try a smaller copy (720p or 1080p MP4 is plenty).`; return; }
+    if(f&&!/\.(mp4|m4v|webm)$/i.test(f.name)&&!/^video\/(mp4|webm)$/.test(f.type)){ msg.textContent="Upload an MP4 or WebM file."; return; }
     add.disabled=true; msg.style.color="#ffb13f";
     try{ let url=u, aid="";
-      if(f){ msg.textContent="Checking the video…"; const ou=URL.createObjectURL(f); try{ await thProbe(ou); } finally{ URL.revokeObjectURL(ou); } msg.textContent="Uploading… keep this open."; const r=await ASSETS.upload(f); url=r.url; aid=r.id; }
+      if(f){ msg.textContent="Checking the video…"; const ou=URL.createObjectURL(f); let pr; try{ pr=await thProbe(ou); } finally{ URL.revokeObjectURL(ou); } if(pr.d>TH_MAXH*3600) throw new Error(`Movies can be up to ${TH_MAXH} hours long.`);
+        const N=Math.ceil(f.size/THL_PART), us=await thStorageUse(); if(us&&us.maxBytes&&us.bytes+f.size>us.maxBytes) throw new Error(`Not enough storage: this movie is ${thMB(f.size)} and the game has ${thMB(Math.max(0,us.maxBytes-us.bytes))} free. Remove a movie or use a smaller copy.`);
+        if(us&&us.maxFiles&&us.files+N>us.maxFiles) throw new Error(`Not enough storage slots: this movie needs ${N} parts and ${Math.max(0,us.maxFiles-us.files)} are free.`);
+        const ty=/\.webm$/i.test(f.name)||f.type==="video/webm"?"video/webm":"video/mp4", ctl={stop:false}, t0=Date.now();
+        const stop=el("button",{class:"btn",type:"button",text:"Cancel upload",onclick:()=>{ ctl.stop=true; stop.disabled=true; }}); add.after(stop);
+        msg.textContent=`Uploading part 1 of ${N}… keep this window open.`;
+        let ids; try{ ids=await thUploadParts(f,ty,(done,tot,k)=>{ const sec=(Date.now()-t0)/1000, rate=done/Math.max(1,sec), left=Math.round((tot-done)/Math.max(1,rate)); msg.textContent=`Uploading part ${Math.min(N,k+1)} of ${N} · ${Math.floor(done/tot*100)}% (${thMB(done)} of ${thMB(tot)})${k<N?` · about ${left>90?Math.round(left/60)+" min":left+" s"} left`:""}. Keep this window open.`; },ctl); } finally{ stop.remove(); }
+        const id="l"+Date.now().toString(36), t=title.value.trim().slice(0,60)||f.name.replace(/\.[^.]+$/,"").slice(0,60)||"Untitled";
+        await thLibSave([{id,t,p:ids,sz:f.size,ty,d:pr.d,at:Date.now()},...thLib]);
+        THL_LOAD[id]={got:f.size,total:f.size,url:URL.createObjectURL(f),err:"",cbs:[]}; thlCachePut(id+"_"+ids[0],f);
+        toast(`Added “${t}” to the library (${N} part${N>1?"s":""}).`,"#ffd36a"); openTheaterLibrary(); return; }
       msg.textContent="Checking it plays…"; const p=await thProbe(url); if(p.d>TH_MAXH*3600) throw new Error(`Movies can be up to ${TH_MAXH} hours long.`);
       const t=title.value.trim().slice(0,60)||(f?f.name.replace(/\.[^.]+$/,""):decodeURIComponent(url.split("/").pop().split("?")[0]).replace(/\.[^.]+$/,"")).slice(0,60)||"Untitled";
       await thLibSave([{id:"l"+Date.now().toString(36),t,u:url,d:p.d,aid,at:Date.now()},...thLib]);
       toast(`Added “${t}” to the library.`,"#ffd36a"); openTheaterLibrary(); }
-    catch(e){ add.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&/upload|413|size|large/i.test(String(e.message||e.code||""))?`Upload failed. Files can be up to ${THL_UPMB} MB.`:(e&&e.message)||"Couldn't add that video."; } }});
+    catch(e){ add.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=(e&&e.message)||"Couldn't add that video."; } }});
   body.append(el("div",{class:"detail",style:"border-color:#ffd36a;flex-direction:column;align-items:stretch"},el("strong",{text:"Add a movie"}),
-    el("span",{class:"sub",text:file?`Upload an MP4 (up to ${THL_UPMB} MB, good for clips, trailers and shorts) or paste a direct link to a video file for full-length movies.`:"Paste a direct https:// link to an MP4 or WebM file (for example from your own web storage). The link has to play the video itself, not a YouTube or streaming page."}),
+    el("span",{class:"sub",text:file?`Upload a whole movie as an MP4 or WebM (up to ${THL_MAXGB} GB). Big files upload in 19 MB parts automatically and play back as one movie. Or paste a direct link to a video file.`:"Paste a direct https:// link to an MP4 or WebM file (for example from your own web storage). The link has to play the video itself, not a YouTube or streaming page."}),
     el("label",{class:"fld"},"Title",title),file?el("label",{class:"fld"},"Upload a video",file):null,el("label",{class:"fld"},file?"…or paste a link":"Video link",link),
     el("label",{style:"display:flex;gap:8px;align-items:flex-start;margin:4px 0;cursor:pointer"},rights,el("span",{class:"sub",text:"I made this video or have the right to share it with every player."})),
     el("div",{class:"row"},add),msg));
-  const l=el("div",{class:"list"}); thLib.forEach((it,i)=>{ l.append(el("div",{class:"li"},el("span",{class:"tag",text:String(i+1)}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${thFmtDur(it.d)} · ${it.aid?"uploaded":"link"}`})),
+  if(ASSETS){ const meter=el("div",{class:"sub",text:"Checking storage…"}); body.append(meter); thStorageUse().then(u=>{ meter.textContent=u&&u.maxBytes?`Storage: ${thMB(u.bytes)} of ${thMB(u.maxBytes)} used (${thMB(Math.max(0,u.maxBytes-u.bytes))} free)${u.maxFiles?` · ${u.files}/${u.maxFiles} files`:""}`:u?`Storage used: ${thMB(u.bytes)}`:""; }); }
+  const l=el("div",{class:"list"}); thLib.forEach((it,i)=>{ l.append(el("div",{class:"li"},el("span",{class:"tag",text:String(i+1)}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${thFmtDur(it.d)} · ${it.p?`uploaded · ${thMB(it.sz)} in ${it.p.length} part${it.p.length>1?"s":""}`:it.aid?"uploaded":"link"}`})),
     i>0?el("button",{class:"btn",type:"button",text:"▲","aria-label":"Move up",onclick:async()=>{ const a=[...thLib]; [a[i-1],a[i]]=[a[i],a[i-1]]; try{ await thLibSave(a); }catch(e){ toast("Couldn't save."); } openTheaterLibrary(); }}):null,
-    el("button",{class:"btn",type:"button",text:"Remove",onclick:async()=>{ try{ await thLibSave(thLib.filter(x=>x.id!==it.id)); if(it.aid&&ASSETS) ASSETS.delete(it.aid).catch(()=>{}); toast("Removed from the library."); }catch(e){ toast("Couldn't save. Only the owner can change the library."); } openTheaterLibrary(); }}))); });
+    el("button",{class:"btn",type:"button",text:"Remove",onclick:async()=>{ try{ await thLibSave(thLib.filter(x=>x.id!==it.id)); if(it.aid&&ASSETS) ASSETS.delete(it.aid).catch(()=>{}); if(it.p&&ASSETS) it.p.forEach(id=>ASSETS.delete(id).catch(()=>{})); toast("Removed from the library."); }catch(e){ toast("Couldn't save. Only the owner can change the library."); } openTheaterLibrary(); }}))); });
   body.append(el("strong",{text:`In the library (${thLib.length}/${THL_MAX})`}),thLib.length?l:el("div",{class:"empty",text:"Nothing yet."}),el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back to the booth",onclick:()=>openTheaterBooth()}))); }
 
 /* ---- host: play a file from this device and stream it live ---- */
@@ -3620,7 +3669,7 @@ function thStatus(){ const s=thLive(); if(!s) return "";
   if(thHost) return "You're running the projector.";
   if(!DB||!myId) return "Sign in to watch movies.";
   if(!thView) return "Step into the theater to watch.";
-  if(thView.lib) return thSource()?"":"Loading the movie…";
+  if(thView.lib){ if(thSource()) return ""; const it=thLibItem(thView.lib); return it?`Downloading the movie… ${thLibProg(thView.lib)}% (only the first time on this device)`:"Loading the movie…"; }
   return {connecting:"Connecting to the projector…",live:thSource()?"":"Starting picture…",lost:(thTries[s.sid]||0)>=8?"Can't reach the projectionist. Open the big screen and tap Reconnect.":"Lost the signal — reconnecting…",full:`Theater's full (${TH_MAX} viewers max). You'll get in when a seat opens.`}[thView.state]||""; }
 
 /* ---- hotspots ---- */
@@ -3673,7 +3722,7 @@ function openTheaterWatch(){ const s=thLive(); const body=panel(s?`Big screen �
   const v=el("video",{playsinline:"",autoplay:"",style:"position:absolute;inset:0;width:100%;height:100%;background:#000"}); v.muted=true;
   const note=el("div",{style:"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ffb13f;font:12px monospace;text-align:center;padding:12px"});
   wrap.append(v,note); body.append(wrap);
-  const hook=()=>{ if(s.lib){ if(v.srcObject) v.srcObject=null; if(v.getAttribute("src")!==s.lib) v.src=s.lib; const cs=thLive(); const tg=thHost&&thHost.lib?thHost.v.currentTime:cs&&cs.sid===s.sid?thLibTarget(cs):v.currentTime, pz=thHost&&thHost.lib?thHost.v.paused:!!(cs&&cs.paused); if(v.readyState>=1&&Math.abs(v.currentTime-tg)>1.5) try{ v.currentTime=tg; }catch(e){} if(pz&&!v.paused) v.pause(); else if(!pz&&v.paused) v.play().catch(()=>{}); } else { const src=thHost?thHost.stream:thView&&thView.ms; if(src&&v.srcObject!==src){ v.srcObject=src; v.play().catch(()=>{}); } } const st=thStatus(); note.textContent=st; note.hidden=!st||(!!thSource()&&!/full|lost/.test(st)); if(!$("#overlay").contains(v)) clearInterval(iv); };
+  const hook=()=>{ if(s.lib){ if(v.srcObject) v.srcObject=null; const lsrc=thHost&&thHost.lib?thHost.v.getAttribute("src"):thLibUrl(s.lib); if(lsrc&&v.getAttribute("src")!==lsrc) v.src=lsrc; const cs=thLive(); const tg=thHost&&thHost.lib?thHost.v.currentTime:cs&&cs.sid===s.sid?thLibTarget(cs):v.currentTime, pz=thHost&&thHost.lib?thHost.v.paused:!!(cs&&cs.paused); if(v.readyState>=1&&Math.abs(v.currentTime-tg)>1.5) try{ v.currentTime=tg; }catch(e){} if(pz&&!v.paused) v.pause(); else if(!pz&&v.paused) v.play().catch(()=>{}); } else { const src=thHost?thHost.stream:thView&&thView.ms; if(src&&v.srcObject!==src){ v.srcObject=src; v.play().catch(()=>{}); } } const st=thStatus(); note.textContent=st; note.hidden=!st||(!!thSource()&&!/full|lost/.test(st)); if(!$("#overlay").contains(v)) clearInterval(iv); };
   const iv=setInterval(hook,500); hook();
   const vol=el("input",{type:"range",min:"0",max:"1",step:"0.05",value:String(thVol),style:"flex:1;min-width:120px","aria-label":"Volume"});
   vol.addEventListener("input",()=>{ thVol=+vol.value; try{ localStorage.setItem("nh_thvol",String(thVol)); }catch(e){} if(thVid) thVid.volume=thVol; if(thHost) thHost.v.volume=thVol; });
