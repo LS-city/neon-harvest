@@ -511,7 +511,7 @@ $("m-go").onclick = async () => {
 /* ---------------- VRChat chatbox ---------------- */
 const P = (() => { try { return JSON.parse(localStorage.getItem("bytes_prefs") || "{}"); } catch (e) { return {}; } })();
 const saveP = () => { try { localStorage.setItem("bytes_prefs", JSON.stringify(P)); } catch (e) {} };
-const OPTS = [["name", "My name", true], ["job", "Job + group", true], ["tipme", "“Tip me” line", true], ["bal", "My balance", false]];
+const OPTS = [["name", "My name", true], ["job", "Job + group", true], ["tipme", "“Tip me” line", true], ["bal", "My balance", true]];
 P.on = P.on || Object.fromEntries(OPTS.map(o => [o[0], o[2]]));
 for (const [k, l] of OPTS) { const lab = document.createElement("label"); lab.className = "chk"; const c = document.createElement("input"); c.type = "checkbox"; c.checked = !!P.on[k]; c.onchange = () => { P.on[k] = c.checked; saveP(); renderChat(); }; lab.append(c, document.createTextNode(l)); $("pv-opts").append(lab); }
 $("pv-extra").value = P.extra || ""; $("pv-extra").oninput = () => { P.extra = $("pv-extra").value; saveP(); renderChat(); };
@@ -592,6 +592,8 @@ async function stopChat() {
   if (was) { try { await post("/stop", { host: lastHost }); } catch (e) {} }
 }
 $("pv-go").onclick = () => running ? stopChat() : startChat();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) push(true); });
+window.addEventListener("online", () => push(true));
 $("pv-clear").onclick = async () => { await stopChat(); try { await post("/clear", { host: target() }); say("pv-msg", "Chatbox cleared.", true); } catch (e) { say("pv-msg", "Can't reach the Bytes program.", false); } };
 
 async function incoming(txId) {
