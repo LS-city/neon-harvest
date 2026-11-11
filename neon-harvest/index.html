@@ -3390,7 +3390,8 @@ let TH_DB=null, thWatched=false, thShow=null, thKey="", thLights={lv:0,by:"",at:
 try{ const v=localStorage.getItem("nh_thvol"); if(v!=null) thVol=Math.max(0,Math.min(1,+v||0)); }catch(e){}
 function thClean(d){ if(!d||typeof d!=="object") return null; const sid=String(d.sid||""); if(!/^[a-z0-9]{6,32}$/.test(sid)) return null;
   const until=+d.until, hb=+d.hb; if(!(until>0&&hb>0)) return null;
-  return {by:String(d.by||"").slice(0,80),sid,title:String(d.title||"").slice(0,60)||"Untitled",until,hb,at:+d.at||0,dur:Math.max(0,Math.floor(+d.dur||0))}; }
+  const o={by:String(d.by||"").slice(0,80),sid,title:String(d.title||"").slice(0,60)||"Untitled",until,hb,at:+d.at||0,dur:Math.max(0,Math.floor(+d.dur||0))};
+  if(d.lib&&thUrlOk(d.lib)){ o.lib=String(d.lib); o.t0=+d.t0||hb; o.paused=d.paused===true; o.pos=Math.max(0,+d.pos||0); } return o; }
 let thSeenAt=0, thSeenHb=null, thSeenSid="";
 function thSeen(s){ if(!s){ thSeenHb=null; thSeenSid=""; return; } if(s.sid!==thSeenSid){ thSeenSid=s.sid; thSeenHb=null; }
   if(s.hb!==thSeenHb){ thSeenAt=thSeenHb==null?Date.now()-Math.min(6e4,Math.max(0,Date.now()-s.hb)):Date.now(); thSeenHb=s.hb; } }
@@ -3409,12 +3410,117 @@ function thApply(s){ thShow=s&&s.exists?thClean(s.data()):null; thSeen(thShow); 
   if(k!==thKey){ thKey=k; thRepaint(); } }
 function thApplyLights(s){ const d=s&&s.exists?s.data()||{}:{}; const lv=Math.floor(+d.lv); thLights={lv:lv>=0&&lv<TH_LV.length?lv:0,by:String(d.by||""),at:+d.at||0}; if(currentView==="thlights") thRepaint(); }
 function streamWatch(db){ if(!db) return; TH_DB=TH_DB||db; if(thWatched) return; thWatched=true;
-  try{ db.doc("club/theater").onSnapshot(thApply,()=>{}); }catch(e){} try{ db.doc("club/theater_lights").onSnapshot(thApplyLights,()=>{}); }catch(e){} }
+  try{ db.doc("club/theater").onSnapshot(thApply,()=>{}); }catch(e){} try{ db.doc("club/theater_lights").onSnapshot(thApplyLights,()=>{}); }catch(e){} try{ thLibWatch(); }catch(e){} }
 function thRefresh(){ if(!TH_DB) return; try{ TH_DB.doc("club/theater").get().then(thApply).catch(()=>{}); TH_DB.doc("club/theater_lights").get().then(thApplyLights).catch(()=>{}); }catch(e){} }
 function thNudge(){ if(ROOM) ROOM.emit("role",{k:"sd"}).catch(()=>{}); }
 function thCanLights(){ const s=thLive(); return IS_ADMIN||!s||s.by===myId; }
 async function thSetLights(lv){ lv=Math.max(0,Math.min(TH_LV.length-1,Math.floor(lv))); if(!thCanLights()){ toast("Only the person running the movie can change the lights right now."); return false; }
   thLights={lv,by:myId||"",at:Date.now()}; if(DB&&myId) try{ await DB.doc("club/theater_lights").set({lv,by:myId,at:Date.now()}); thNudge(); }catch(e){} return true; }
+
+/* ---- Stream Dome Library (owner-curated, shared) + My video shelf (on this device) ---- */
+const THL_MAX=60, THL_UPMB=20, SHELF_MAX=12;
+let thLib=[], thLibWatched=false;
+function thUrlOk(u){ u=String(u||""); return u.length<=600&&(/^https:\/\/[^\s"'<>]+$/i.test(u)||/^\/_blob\/[0-9a-f]{32}$/.test(u)); }
+function thLibClean(d){ const a=d&&Array.isArray(d.items)?d.items:[]; return a.filter(x=>x&&typeof x==="object"&&/^[a-z0-9]{4,24}$/.test(String(x.id||""))&&thUrlOk(x.u)).slice(0,THL_MAX)
+  .map(x=>({id:String(x.id),t:String(x.t||"").slice(0,60)||"Untitled",u:String(x.u),d:Math.max(0,Math.min(TH_MAXH*3600,Math.floor(+x.d||0))),aid:/^[0-9a-f]{32}$/.test(String(x.aid||""))?String(x.aid):"",at:+x.at||0})); }
+function thLibWatch(){ const db=TH_DB||DB; if(!db||thLibWatched) return; thLibWatched=true; try{ db.doc("shopinfo/thlib").onSnapshot(s=>{ thLib=thLibClean(s&&s.exists?s.data():null); if(currentView==="thbooth"||currentView==="thlib") thRepaint2(); },()=>{}); }catch(e){} }
+function thRepaint2(){ if(document.activeElement&&["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName)) return; try{ if(currentView==="thbooth") openTheaterBooth(); else if(currentView==="thlib") openTheaterLibrary(); }catch(e){} }
+async function thLibSave(items){ thLib=thLibClean({items}); await DB.doc("shopinfo/thlib").set({items:thLib,at:Date.now()}); }
+function thFmtDur(s){ s=Math.round(+s||0); if(!s) return "?"; const h=Math.floor(s/3600), m=Math.floor(s/60)%60, x=s%60; return h?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`; }
+// load just the header of a video to check it plays here and read its length
+function thProbe(src){ return new Promise((res,rej)=>{ const v=document.createElement("video"); v.preload="metadata"; v.muted=true; let done=false; const end=f=>{ if(done) return; done=true; v.removeAttribute("src"); try{ v.load(); }catch(e){} f(); };
+  v.onloadedmetadata=()=>{ const w=v.videoWidth, d=isFinite(v.duration)?Math.round(v.duration):0; end(()=>w>0?res({d}):rej(new Error("That video has no picture."))); }; v.onerror=()=>end(()=>rej(new Error("That video won't play in this browser. Use a direct link to an MP4 (H.264) file.")));
+  setTimeout(()=>end(()=>rej(new Error("The video took too long to load. Check the link."))),20000); v.src=src; }); }
+
+/* host a library movie: every viewer plays the same file in sync, so there's no streaming from the host's device */
+function thLibTarget(s){ return s.paused?s.pos:Math.max(0,(Date.now()-s.t0)/1000); }
+async function thStartLib(it){ if(!DB||!myId) throw new Error("Sign in to run the projector.");
+  const cur=thLive(), swap=!!(thHost&&cur&&cur.by===myId); if(cur&&cur.by!==myId&&!IS_ADMIN) throw new Error("Someone's movie is already playing. Wait for it to finish.");
+  if(!swap&&save.chips<TH_FEE) throw new Error(`You need ${TH_FEE} chips.`);
+  const v=thHidden(document.createElement("video")); v.preload="auto"; v.volume=thVol; v.src=it.u;
+  const drop=()=>{ try{ v.pause(); }catch(e){} v.remove(); };
+  try{ await new Promise((res,rej)=>{ v.onloadedmetadata=res; v.onerror=()=>rej(0); setTimeout(()=>rej(0),20000); }); }catch(e){ drop(); throw new Error("Couldn't load that movie. Try again in a moment."); }
+  try{ await v.play(); }catch(e){ v.muted=true; try{ await v.play(); }catch(e2){ drop(); throw new Error("Couldn't start playback. Tap again."); } }
+  try{ const s=await DB.doc("club/theater").get(); const c=s.exists?thClean(s.data()):null; if(c&&c.by!==myId&&!IS_ADMIN&&c.until>Date.now()&&c.hb>Date.now()-45e3){ drop(); throw new Error("Someone just started a movie. Wait for it to finish."); } }catch(e){ if(/movie/.test(e.message)) throw e; }
+  if(thHost) thStopHost(true,true);
+  const now=Date.now(), sid=(Math.random().toString(36).slice(2,10)+now.toString(36)).replace(/[^a-z0-9]/g,"").slice(0,24), dur=isFinite(v.duration)?Math.round(v.duration):it.d||0;
+  const doc={by:myId,sid,title:it.t,at:now,hb:now,until:now+(dur||7200)*1000+120e3,dur,lib:it.u,t0:now-v.currentTime*1000,paused:false,pos:0};
+  try{ await DB.doc("club/theater").set(doc); }catch(e){ drop(); throw new Error("Couldn't reach the server. Try again."); }
+  if(!swap){ save.chips-=TH_FEE; persist(); hud(); }
+  thHost={sid,v,url:"",stream:null,title:it.t,at:now,dur,peers:{},handled:{},hbT:now,live:true,unsub:null,lib:it.u};
+  v.onended=()=>{ if(thHost&&thHost.v===v){ thStopHost(); toast("Your movie finished. Thanks for running the projector!"); } };
+  ["pause","play","seeked"].forEach(e=>v.addEventListener(e,()=>{ if(thHost&&thHost.v===v) thLibPush(); }));
+  thApply({exists:true,data:()=>doc}); if(thLights.lv===0) thSetLights(2); thNudge();
+  broadcastSys(`started a movie on the big screen at the Stream Dome: “${it.t}”`); return true; }
+function thLibDoc(H){ const v=H.v, rem=isFinite(v.duration)?Math.max(0,v.duration-v.currentTime):3600; return {by:myId,sid:H.sid,title:H.title,at:H.at,hb:Date.now(),until:Date.now()+rem*1000+120e3,dur:H.dur,lib:H.lib,t0:Date.now()-v.currentTime*1000,paused:!!v.paused,pos:Math.round(v.currentTime*10)/10}; }
+function thLibPush(){ const H=thHost; if(!H||!H.lib||!DB) return; H.hbT=Date.now(); const d=thLibDoc(H); DB.doc("club/theater").set(d).catch(()=>{}); thShow=thClean(d); thSeen(thShow); }
+// viewers: keep a hidden video on the same file at the same moment
+function thLibSync(s){ if(!thVid){ thVid=thHidden(document.createElement("video")); thVid.autoplay=true; }
+  if(!thView||thView.sid!==s.sid){ thDisconnect(true); thView={sid:s.sid,lib:s.lib,pc:null,state:"live",at:Date.now(),t:Date.now()}; thVid.srcObject=null; thVid.preload="auto"; thVid.src=s.lib; }
+  const tg=thLibTarget(s); if(thVid.readyState>=1){ if(isFinite(thVid.duration)&&tg>thVid.duration+1) return; if(Math.abs(thVid.currentTime-tg)>2) try{ thVid.currentTime=tg; }catch(e){} }
+  if(s.paused){ if(!thVid.paused) thVid.pause(); } else if(thVid.paused&&!thNeedTap) thPlayVid(); }
+
+/* my video shelf: videos saved in this browser (IndexedDB), never uploaded */
+function shelfDB(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open("nh_shelf",1); r.onupgradeneeded=()=>r.result.createObjectStore("vids",{keyPath:"id"}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }); }
+async function shelfTx(mode,fn){ const db=await shelfDB(); return new Promise((res,rej)=>{ const tx=db.transaction("vids",mode), st=tx.objectStore("vids"); let out; try{ out=fn(st); }catch(e){ rej(e); return; } tx.oncomplete=()=>{ db.close(); res(out&&"result" in out?out.result:out); }; tx.onerror=tx.onabort=()=>{ db.close(); rej(tx.error); }; }); }
+async function shelfList(){ try{ const all=await shelfTx("readonly",st=>st.getAll()); return (all||[]).sort((a,b)=>b.at-a.at); }catch(e){ return []; } }
+async function shelfAdd(file,title){ const n=(await shelfList()).length; if(n>=SHELF_MAX) throw new Error(`Your shelf holds ${SHELF_MAX} videos. Remove one first.`);
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
+  const it={id:"v"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),t:String(title||"").trim().slice(0,60)||file.name.replace(/\.[^.]+$/,"").slice(0,60)||"Untitled",name:String(file.name||"video.mp4").slice(0,120),size:file.size,type:file.type||"video/mp4",blob:file,at:Date.now()};
+  try{ await shelfTx("readwrite",st=>st.put(it)); }catch(e){ throw new Error("Your browser is out of room for that video. Remove one from your shelf or free up space."); } return it; }
+async function shelfDel(id){ try{ await shelfTx("readwrite",st=>st.delete(id)); }catch(e){} }
+function shelfFile(it){ try{ return new File([it.blob],it.name,{type:it.type}); }catch(e){ const b=it.blob; b.name=it.name; return b; } }
+
+/* ---- booth sections ---- */
+function thBoothLibrary(body,mine){ thLibWatch();
+  const box=el("div",{class:"detail",style:"border-color:#ffd36a;flex-direction:column;align-items:stretch"});
+  box.append(el("div",{class:"row",style:"justify-content:space-between;align-items:center"},el("strong",{text:"🎞 Stream Dome Library"}),IS_ADMIN?el("button",{class:"btn",type:"button",text:"Manage library (owner)",onclick:()=>openTheaterLibrary()}):null));
+  box.append(el("span",{class:"sub",text:"Movies kept here by the Stream Dome. Pick one and it plays for everyone straight from the library, so it doesn't use your internet to stream and there's no viewer limit."}));
+  if(!thLib.length) box.append(el("div",{class:"empty",text:IS_ADMIN?"The library is empty. Tap Manage library to add your first movie.":"The library is empty right now. Check back soon."}));
+  const l=el("div",{class:"list"}); for(const it of thLib){ const b=el("button",{class:"btn hot",type:"button",text:mine?"Swap (free)":`▶ Show it · ${TH_FEE} chips`});
+    const msg=el("span",{class:"sub"}); b.onclick=async()=>{ b.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading…"; try{ await thStartLib(it); toast("You're on the big screen!","#ffb13f"); openTheaterBooth(); }catch(e){ b.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } };
+    l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:#ffd36a;border-color:#ffd36a",text:"🎬"}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${thFmtDur(it.d)} long`}),msg),b)); }
+  if(thLib.length) box.append(l); body.append(box); }
+function thBoothShelf(body,mine,onPick){ const box=el("div",{class:"detail",style:"border-color:#43f0a4;flex-direction:column;align-items:stretch"});
+  box.append(el("strong",{text:"📼 My video shelf"}),el("span",{class:"sub",text:`Videos you've saved in this browser on this device (up to ${SHELF_MAX}). They never upload. Tap one to show it without picking the file again.`}));
+  const l=el("div",{class:"list"},el("div",{class:"sub",text:"Loading your shelf…"})); box.append(l); body.append(box);
+  shelfList().then(items=>{ l.innerHTML=""; if(!items.length){ l.append(el("div",{class:"empty",text:"Nothing saved yet. Pick a video below and keep “Save it to my video shelf” ticked."})); return; }
+    for(const it of items){ const msg=el("span",{class:"sub"}); const go=el("button",{class:"btn hot",type:"button",text:mine?"Swap (free)":`▶ Show · ${TH_FEE} chips`,onclick:async()=>{ go.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading…"; try{ await thStart(shelfFile(it),it.t); toast("You're on the big screen!","#ffb13f"); openTheaterBooth(); }catch(e){ go.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } }});
+      l.append(el("div",{class:"li"},el("span",{class:"tag",style:"color:#43f0a4;border-color:#43f0a4",text:"📼"}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${(it.size/1048576).toFixed(0)} MB · on this device`}),msg),go,
+        el("button",{class:"btn",type:"button",text:"✕","aria-label":"Remove "+it.t+" from my shelf",title:"Remove from shelf",onclick:async()=>{ await shelfDel(it.id); toast("Removed from your shelf."); openTheaterBooth(); }}))); } }); }
+
+/* ---- owner: manage the library ---- */
+function openTheaterLibrary(){ thLibWatch(); const body=panel("Stream Dome Library","Movies everyone can pick at the projection booth."); currentView="thlib";
+  if(!IS_ADMIN){ body.append(el("p",{class:"sub",text:"Only the Stream Dome owner can change the library."}),el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openTheaterBooth()})); return; }
+  const inp="width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit";
+  const title=el("input",{type:"text",maxlength:"60",placeholder:"Movie title",style:inp});
+  const link=el("input",{type:"url",maxlength:"600",placeholder:"https://…/movie.mp4",style:inp});
+  const file=ASSETS?el("input",{type:"file",accept:"video/mp4,video/webm,.mp4,.m4v,.webm",style:inp+";border-style:dashed;border-color:#ffd36a"}):null;
+  const rights=el("input",{type:"checkbox"}), msg=el("div",{class:"sub",role:"status"});
+  if(file) file.addEventListener("change",()=>{ const f=file.files&&file.files[0]; if(f&&!title.value) title.value=f.name.replace(/\.[^.]+$/,"").slice(0,60); msg.style.color=f&&f.size>THL_UPMB*1048576?"#ff7a7a":"#43f0a4"; msg.textContent=f?`${f.name} · ${(f.size/1048576).toFixed(1)} MB${f.size>THL_UPMB*1048576?` — too big to upload (${THL_UPMB} MB max). Use a link instead.`:""}`:""; });
+  const add=el("button",{class:"btn hot",type:"button",text:"＋ Add to the library",onclick:async()=>{ msg.style.color="#ff7a7a";
+    if(thLib.length>=THL_MAX){ msg.textContent=`The library holds ${THL_MAX} movies. Remove one first.`; return; }
+    if(!rights.checked){ msg.textContent="Tick the box to confirm you have the right to show this video."; return; }
+    const f=file&&file.files&&file.files[0], u=link.value.trim(); if(!f&&!u){ msg.textContent=file?"Upload a video file or paste a link.":"Paste a direct link to a video file."; return; }
+    if(!f&&!thUrlOk(u)){ msg.textContent="Use a direct https:// link to the video file (ending in .mp4 works best)."; return; }
+    if(f&&f.size>THL_UPMB*1048576){ msg.textContent=`Uploads can be up to ${THL_UPMB} MB. For full movies, paste a link instead.`; return; }
+    add.disabled=true; msg.style.color="#ffb13f";
+    try{ let url=u, aid="";
+      if(f){ msg.textContent="Checking the video…"; const ou=URL.createObjectURL(f); try{ await thProbe(ou); } finally{ URL.revokeObjectURL(ou); } msg.textContent="Uploading… keep this open."; const r=await ASSETS.upload(f); url=r.url; aid=r.id; }
+      msg.textContent="Checking it plays…"; const p=await thProbe(url); if(p.d>TH_MAXH*3600) throw new Error(`Movies can be up to ${TH_MAXH} hours long.`);
+      const t=title.value.trim().slice(0,60)||(f?f.name.replace(/\.[^.]+$/,""):decodeURIComponent(url.split("/").pop().split("?")[0]).replace(/\.[^.]+$/,"")).slice(0,60)||"Untitled";
+      await thLibSave([{id:"l"+Date.now().toString(36),t,u:url,d:p.d,aid,at:Date.now()},...thLib]);
+      toast(`Added “${t}” to the library.`,"#ffd36a"); openTheaterLibrary(); }
+    catch(e){ add.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&/upload|413|size|large/i.test(String(e.message||e.code||""))?`Upload failed. Files can be up to ${THL_UPMB} MB.`:(e&&e.message)||"Couldn't add that video."; } }});
+  body.append(el("div",{class:"detail",style:"border-color:#ffd36a;flex-direction:column;align-items:stretch"},el("strong",{text:"Add a movie"}),
+    el("span",{class:"sub",text:file?`Upload an MP4 (up to ${THL_UPMB} MB, good for clips, trailers and shorts) or paste a direct link to a video file for full-length movies.`:"Paste a direct https:// link to an MP4 or WebM file (for example from your own web storage). The link has to play the video itself, not a YouTube or streaming page."}),
+    el("label",{class:"fld"},"Title",title),file?el("label",{class:"fld"},"Upload a video",file):null,el("label",{class:"fld"},file?"…or paste a link":"Video link",link),
+    el("label",{style:"display:flex;gap:8px;align-items:flex-start;margin:4px 0;cursor:pointer"},rights,el("span",{class:"sub",text:"I made this video or have the right to share it with every player."})),
+    el("div",{class:"row"},add),msg));
+  const l=el("div",{class:"list"}); thLib.forEach((it,i)=>{ l.append(el("div",{class:"li"},el("span",{class:"tag",text:String(i+1)}),el("div",{class:"grow"},el("div",{text:it.t}),el("div",{class:"sub",text:`${thFmtDur(it.d)} · ${it.aid?"uploaded":"link"}`})),
+    i>0?el("button",{class:"btn",type:"button",text:"▲","aria-label":"Move up",onclick:async()=>{ const a=[...thLib]; [a[i-1],a[i]]=[a[i],a[i-1]]; try{ await thLibSave(a); }catch(e){ toast("Couldn't save."); } openTheaterLibrary(); }}):null,
+    el("button",{class:"btn",type:"button",text:"Remove",onclick:async()=>{ try{ await thLibSave(thLib.filter(x=>x.id!==it.id)); if(it.aid&&ASSETS) ASSETS.delete(it.aid).catch(()=>{}); toast("Removed from the library."); }catch(e){ toast("Couldn't save. Only the owner can change the library."); } openTheaterLibrary(); }}))); });
+  body.append(el("strong",{text:`In the library (${thLib.length}/${THL_MAX})`}),thLib.length?l:el("div",{class:"empty",text:"Nothing yet."}),el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back to the booth",onclick:()=>openTheaterBooth()}))); }
 
 /* ---- host: play a file from this device and stream it live ---- */
 function thCapture(v){ if(v.captureStream) return v.captureStream();
@@ -3488,13 +3594,15 @@ function thPlayVid(){ if(!thVid) return; thVid.volume=thVol; thVid.muted=false;
   // only a real autoplay block (NotAllowedError) means "start muted and wait for a tap"; an interrupted play() just retries
   thVid.play().then(()=>{ thNeedTap=false; }).catch(e=>{ if(e&&e.name==="NotAllowedError"){ thVid.muted=true; thNeedTap=true; thVid.play().catch(()=>{}); } else setTimeout(()=>{ if(thVid&&thVid.paused&&thView) thPlayVid(); },400); }); }
 function thDisconnect(keepDoc){ const V=thView; if(!V) return; thView=null; try{ V.unsub&&V.unsub(); }catch(e){} try{ V.pc.close(); }catch(e){}
-  if(thVid){ try{ thVid.pause(); }catch(e){} thVid.srcObject=null; } thNeedTap=false; if(!keepDoc&&DB&&myId) DB.doc("club/threq_"+myId).delete().catch(()=>{}); }
+  if(thVid){ try{ thVid.pause(); }catch(e){} thVid.srcObject=null; if(V.lib){ thVid.removeAttribute("src"); try{ thVid.load(); }catch(e){} } } thNeedTap=false; if(!keepDoc&&DB&&myId&&!V.lib) DB.doc("club/threq_"+myId).delete().catch(()=>{}); }
 // one tap or key press anywhere turns the sound on if the browser started the movie muted
 for(const ev of ["pointerdown","keydown"]) addEventListener(ev,()=>{ if(thNeedTap&&thVid&&thView){ thVid.muted=false; thVid.volume=thVol; thVid.play().then(()=>{ thNeedTap=false; }).catch(e=>{ if(e&&e.name==="NotAllowedError") thVid.muted=true; }); } if(thHost&&thHost.v._ac&&thHost.v._ac.state==="suspended") thHost.v._ac.resume().catch(()=>{}); },true);
 function thTick(){ const s=thLive();
-  if(thHost&&DB&&Date.now()-thHost.hbT>15e3){ const H=thHost, v=H.v; H.hbT=Date.now(); const rem=isFinite(v.duration)?Math.max(0,v.duration-v.currentTime):3600;
+  if(thHost&&thHost.lib&&DB&&Date.now()-thHost.hbT>15e3) thLibPush();
+  else if(thHost&&DB&&Date.now()-thHost.hbT>15e3){ const H=thHost, v=H.v; H.hbT=Date.now(); const rem=isFinite(v.duration)?Math.max(0,v.duration-v.currentTime):3600;
     const d={by:myId,sid:H.sid,title:H.title,at:H.at,hb:Date.now(),until:Date.now()+rem*1000+120e3,dur:H.dur}; DB.doc("club/theater").set(d).catch(()=>{}); thShow=thClean(d); thSeen(thShow); }
-  if(thWant()){ const V=thView, tries=thTries[s.sid]||0;
+  if(thWant()&&s.lib) thLibSync(s);
+  else if(thWant()){ const V=thView, tries=thTries[s.sid]||0;
     if(!V||V.sid!==s.sid) thConnect(s);
     else if((V.state==="lost"&&Date.now()-V.t>5e3&&tries<8)||(V.state==="connecting"&&Date.now()-V.at>25e3&&tries<8)||(V.state==="full"&&Date.now()-V.t>30e3)||(V.state==="live"&&!thSource()&&Date.now()-V.at>2e4&&tries<8)) thConnect(s);
     else if(V.state==="live"&&thVid&&thVid.paused&&!thNeedTap) thPlayVid(); }
@@ -3512,6 +3620,7 @@ function thStatus(){ const s=thLive(); if(!s) return "";
   if(thHost) return "You're running the projector.";
   if(!DB||!myId) return "Sign in to watch movies.";
   if(!thView) return "Step into the theater to watch.";
+  if(thView.lib) return thSource()?"":"Loading the movie…";
   return {connecting:"Connecting to the projector…",live:thSource()?"":"Starting picture…",lost:(thTries[s.sid]||0)>=8?"Can't reach the projectionist. Open the big screen and tap Reconnect.":"Lost the signal — reconnecting…",full:`Theater's full (${TH_MAX} viewers max). You'll get in when a seat opens.`}[thView.state]||""; }
 
 /* ---- hotspots ---- */
@@ -3525,10 +3634,10 @@ function streamHot(){ const s=thLive(), out=[{x:120,hw:60,label:"Take the metro"
 
 /* ---- panels ---- */
 function openTheaterBooth(){ const s=thLive(), mine=!!thHost;
-  const body=panel("Stream Dome · Projection booth",`Play a video from your own device on the big screen for ${TH_FEE} chips. Everyone in the theater watches it live.`); currentView="thbooth";
+  const body=panel("Stream Dome · Projection booth",`Put a movie on the big screen for ${TH_FEE} chips: pick one from the library, your video shelf, or your device. Everyone in the theater watches it live.`); currentView="thbooth";
   if(s){ const st=mine?Object.values(thHost.peers).map(p=>p.connectionState):[], peers=st.filter(x=>x==="connected").length, joining=st.filter(x=>x==="new"||x==="connecting").length;
     body.append(el("div",{class:"detail",style:"border-color:#ffb13f"},el("div",{class:"info"},el("strong",{text:`🎬 Now showing: ${s.title}`}),
-      el("span",{class:"sub",text:`Playing live from ${mine?"your":nameOf(s.by)+"'s"} device${s.dur?` · about ${thMins(s)} min left`:""}${mine?` · ${peers} watching right now${joining?`, ${joining} connecting`:""}`:""}`})),
+      el("span",{class:"sub",text:`${s.lib?"From the Stream Dome Library, started by "+(mine?"you":nameOf(s.by)):"Playing live from "+(mine?"your":nameOf(s.by)+"'s")+" device"}${s.dur?` · about ${thMins(s)} min left`:""}${mine&&!s.lib?` · ${peers} watching right now${joining?`, ${joining} connecting`:""}`:""}`})),
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Watch fullscreen",onclick:()=>openTheaterWatch()}))));
     if(mine){ const v=thHost.v;
       body.append(el("div",{class:"detail",style:"border-color:var(--amber)"},el("div",{class:"info"},el("strong",{text:"Projector controls"}),el("span",{class:"sub",text:"Pausing or skipping changes it for everyone. Keep this tab open until the movie ends — closing it stops the show."}),
@@ -3538,31 +3647,33 @@ function openTheaterBooth(){ const s=thLive(), mine=!!thHost;
     else if(IS_ADMIN) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"End this movie (owner)",onclick:async()=>{ try{ await DB.doc("club/theater").delete(); }catch(e){} thShow=null; thNudge(); thSetLights(0); toast("Movie ended."); openTheaterBooth(); }}))); }
   if(s&&!mine&&!IS_ADMIN){ body.append(el("p",{class:"sub",text:"The screen is taken. When this movie ends, you can run the projector."})); return; }
   if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to run the projector."})); return; }
+  thBoothLibrary(body,mine); thBoothShelf(body,mine);
   const file=el("input",{type:"file",accept:"video/mp4,video/webm,video/quicktime,.mp4,.m4v,.webm,.mov",style:"width:100%;box-sizing:border-box;padding:8px;background:#0d0818;color:#e9e2ff;border:1px dashed #ffb13f;font:inherit"});
   const title=el("input",{type:"text",maxlength:"60",placeholder:"Movie title (optional)",style:"width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
-  const msg=el("div",{class:"sub",role:"status"}), rights=el("input",{type:"checkbox",id:"thrights"});
+  const msg=el("div",{class:"sub",role:"status"}), rights=el("input",{type:"checkbox",id:"thrights"}); const keep=el("input",{type:"checkbox",checked:true});
   file.addEventListener("change",()=>{ const f=file.files&&file.files[0]; if(f&&!title.value) title.value=f.name.replace(/\.[^.]+$/,"").slice(0,60); msg.textContent=f?`✓ ${f.name} · ${(f.size/1048576).toFixed(0)} MB (stays on your device)`:""; msg.style.color="#43f0a4"; });
   const go=el("button",{class:"btn hot",type:"button",text:mine?"Swap to this movie (free)":`▶ Start the movie (${TH_FEE} chips)`,onclick:async()=>{ const f=file.files&&file.files[0]; msg.style.color="#ff7a7a"; if(!f){ msg.textContent="Pick a video file first."; return; }
     if(!rights.checked){ msg.textContent="Tick the box to confirm you have the right to show this video."; return; }
     if(!(/^video\//.test(f.type)||/\.(mp4|m4v|webm|mov)$/i.test(f.name))){ msg.textContent="That isn't a video file."; return; }
     go.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading your movie…";
+    if(keep.checked){ try{ await shelfAdd(f,title.value); toast("Saved to your video shelf.","#43f0a4"); }catch(e){ toast(e.message||"Couldn't save to your shelf."); } }
     try{ await thStart(f,title.value); toast("You're on the big screen!","#ffb13f"); openTheaterBooth(); }catch(e){ go.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } }});
-  body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:mine?"Swap the movie":"Run the projector"}),
+  body.append(el("div",{class:"detail",style:"border-color:#38e8ff"},el("div",{class:"info"},el("strong",{text:mine?"Swap to a video from your device":"📁 Play a video from your device"}),
     el("span",{class:"sub",text:`Pick an MP4 (best), .webm or .mov from your phone or computer. It never uploads — it plays from your device and streams live to up to ${TH_MAX} viewers. Up to ${TH_MAXH} hours. The house lights dim automatically.`}))),
     el("label",{class:"fld"},"Video file",file),el("label",{class:"fld"},"Title",title),
-    el("label",{style:"display:flex;gap:8px;align-items:flex-start;margin:6px 0;cursor:pointer"},rights,el("span",{class:"sub",text:"I made this video or have the right to share it. No pirated movies or shows, and nothing that breaks the house rules."})),
+    el("label",{style:"display:flex;gap:8px;align-items:flex-start;margin:6px 0;cursor:pointer"},keep,el("span",{class:"sub",text:"Save it to my video shelf on this device, so I can pick it again later without finding the file."})),el("label",{style:"display:flex;gap:8px;align-items:flex-start;margin:6px 0;cursor:pointer"},rights,el("span",{class:"sub",text:"I made this video or have the right to share it. No pirated movies or shows, and nothing that breaks the house rules."})),
     el("div",{class:"row"},go),msg,
     el("p",{class:"sub",text:"Only show videos you have the right to share. The owner can end any movie."})); }
 function openTheaterLights(){ const body=panel("Stream Dome · House lights","Dim the theater for the movie."); currentView="thlights"; const can=thCanLights(), s=thLive();
   const row=el("div",{class:"row"}); TH_LV.forEach((L,i)=>row.append(el("button",{class:"btn"+(thLights.lv===i?" hot":""),type:"button","aria-pressed":String(thLights.lv===i),text:(i===0?"💡 ":i===1?"🔅 ":"🌑 ")+L.n,onclick:async()=>{ if(await thSetLights(i)) openTheaterLights(); }})));
   body.append(row,el("p",{class:"sub",text:can?(s?"You're running the movie, so you control the lights.":"No movie is playing, so anyone can set the lights."):`${nameOf(s.by)} is running the movie, so they control the lights right now.`})); }
-function openTheaterWatch(){ const s=thLive(); const body=panel(s?`Big screen — ${s.title}`:"Big screen",s?`Playing live from ${s.by===myId?"your":nameOf(s.by)+"'s"} device.`:"Nothing is playing right now."); currentView="thwatch";
+function openTheaterWatch(){ const s=thLive(); const body=panel(s?`Big screen — ${s.title}`:"Big screen",s?(s.lib?`From the Stream Dome Library, started by ${s.by===myId?"you":nameOf(s.by)}.`:`Playing live from ${s.by===myId?"your":nameOf(s.by)+"'s"} device.`):"Nothing is playing right now."); currentView="thwatch";
   if(!s){ body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:`Run the projector (${TH_FEE} chips)`,onclick:()=>openTheaterBooth()}))); return; }
   const wrap=el("div",{style:"position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0"});
   const v=el("video",{playsinline:"",autoplay:"",style:"position:absolute;inset:0;width:100%;height:100%;background:#000"}); v.muted=true;
   const note=el("div",{style:"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ffb13f;font:12px monospace;text-align:center;padding:12px"});
   wrap.append(v,note); body.append(wrap);
-  const hook=()=>{ const src=thHost?thHost.stream:thView&&thView.ms; if(src&&v.srcObject!==src){ v.srcObject=src; v.play().catch(()=>{}); } const st=thStatus(); note.textContent=st; note.hidden=!st||(!!thSource()&&!/full|lost/.test(st)); if(!$("#overlay").contains(v)) clearInterval(iv); };
+  const hook=()=>{ if(s.lib){ if(v.srcObject) v.srcObject=null; if(v.getAttribute("src")!==s.lib) v.src=s.lib; const cs=thLive(); const tg=thHost&&thHost.lib?thHost.v.currentTime:cs&&cs.sid===s.sid?thLibTarget(cs):v.currentTime, pz=thHost&&thHost.lib?thHost.v.paused:!!(cs&&cs.paused); if(v.readyState>=1&&Math.abs(v.currentTime-tg)>1.5) try{ v.currentTime=tg; }catch(e){} if(pz&&!v.paused) v.pause(); else if(!pz&&v.paused) v.play().catch(()=>{}); } else { const src=thHost?thHost.stream:thView&&thView.ms; if(src&&v.srcObject!==src){ v.srcObject=src; v.play().catch(()=>{}); } } const st=thStatus(); note.textContent=st; note.hidden=!st||(!!thSource()&&!/full|lost/.test(st)); if(!$("#overlay").contains(v)) clearInterval(iv); };
   const iv=setInterval(hook,500); hook();
   const vol=el("input",{type:"range",min:"0",max:"1",step:"0.05",value:String(thVol),style:"flex:1;min-width:120px","aria-label":"Volume"});
   vol.addEventListener("input",()=>{ thVol=+vol.value; try{ localStorage.setItem("nh_thvol",String(thVol)); }catch(e){} if(thVid) thVid.volume=thVol; if(thHost) thHost.v.volume=thVol; });
@@ -3571,7 +3682,7 @@ function openTheaterWatch(){ const s=thLive(); const body=panel(s?`Big screen �
     s.by!==myId&&msgOK()?el("button",{class:"btn",type:"button",text:"🚩 Report",onclick:()=>openReport("movie",s.by,s.title,{sid:s.sid})}):null,
     s.by!==myId?el("button",{class:"btn",type:"button",text:"↻ Reconnect",onclick:()=>{ thTries={}; thDisconnect(); toast("Reconnecting to the projector…"); }}):null,
     el("button",{class:"btn",type:"button",text:"Back",onclick:()=>closePanel()})),
-    el("p",{class:"sub",text:(me.scene!=="streamdome"?"You can watch from anywhere, or walk into the Stream Dome and see it on the big screen with everyone. ":"")+"The picture streams live from the projectionist's device, so it can stutter if their internet is slow. No sound? Tap anywhere or raise the volume."})); }
+    el("p",{class:"sub",text:(me.scene!=="streamdome"?"You can watch from anywhere, or walk into the Stream Dome and see it on the big screen with everyone. ":"")+(s.lib?"This movie plays from the Stream Dome Library, in sync with everyone. ":"The picture streams live from the projectionist's device, so it can stutter if their internet is slow. ")+"No sound? Tap anywhere or raise the volume."})); }
 
 /* ---- drawing ---- */
 function thDrawSeat(s){ const x=s.x, y=s.y; ctx.fillStyle="#2a1420"; ctx.fillRect(x-19,y-18,4,14); ctx.fillRect(x+15,y-18,4,14); ctx.fillRect(x-12,y-4,3,6); ctx.fillRect(x+9,y-4,3,6);
@@ -4513,7 +4624,7 @@ const HELP=[
     ["Pay",["Each Data Box pays ₵150 and 5 chips, or ₵300 and 10 chips when most of it is LIVE data, up to 6 boxes a day."]],
     ["SIM or LIVE data",["Switch between SIM (game-made numbers) and LIVE (real data) in the game's top bar."]],
     ["Neon Row store owners",["Your store shows in the NEON ROW STORE panel. Hire a Neon Row Store scout to collect your real visits and top rewards, or tap Store report."]]],rel:["neonrow_owner"]},
-  {id:"stream",icon:"🎬",n:"Stream Dome theater",sub:"Watch movies together",where:"Metro → Stream Dome",steps:["To host: at the projection booth, pay 40 chips and pick an MP4 (or .webm/.mov) on your phone or computer.","Keep your tab open until it ends. You control pause/skip and the house lights.","To watch: walk in, take a seat and watch the big screen, or open the fullscreen view by the far wall."],secs:[
+  {id:"stream",icon:"🎬",n:"Stream Dome theater",sub:"Watch movies together",where:"Metro → Stream Dome",steps:["To host: at the projection booth, pay 40 chips and pick a movie from the Stream Dome Library, your video shelf, or an MP4 (or .webm/.mov) on your phone or computer.","Library movies play for everyone in sync straight from the library: no viewer limit and it doesn't use your internet to stream.","Your video shelf keeps up to 12 videos saved in this browser on this device (never uploaded), so you can show them again without finding the file.","Keep your tab open until it ends. You control pause/skip and the house lights.","To watch: walk in, take a seat and watch the big screen, or open the fullscreen view by the far wall."],secs:[
     ["Good to know",["The video never uploads: it plays from the host's device and streams live to everyone in the theater (up to 12 viewers).","Tap or press any key if the sound starts muted. Only play videos you have the right to share. The owner can end any movie."]]]},
   {id:"clash",icon:"🐾",n:"Companion Clash",sub:"A JRPG adventure, expeditions and customs",where:"Metro → Companion Clash",secs:[
     ["Companion Clash: the JRPG",["Walk up to the big screen and press E (or tap ▶ Play) to start. Pick a class: ⚔ Blade (tough sword fighter), ✦ Arcanist (fire, ice and lightning) or ✚ Medic (healer). Your companion fights beside you with a skill based on its trait.","Own more than one companion? Bring a team of up to 3 into battle. Pick them in the game menu (M → Team) or on the Save Crystal panel. Each companion levels up on its own, and your team follows you around the map.","Explore Lumen Village and the Pixel Plains. Monsters jump out of grass and forests; roads are safe. Battles are turn-based: pick Attack, Skill, Item, Guard or Run for each party member, then watch the round play out.","Win to earn XP, gold and levels. Use weak spots: slimes hate fire, bats hate lightning, and so on.","Beat the four guardians (Glitchwood, Rust Caverns, Sky Spire, Null Citadel) to win back the shards of the Neon Crown. Kiri and Bolt join your party along the way.","Controls: arrows or WASD move, Z or Enter confirm, X go back, M menu. On phones, use the on-screen D-pad and A/B buttons."]],
