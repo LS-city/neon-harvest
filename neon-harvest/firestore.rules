@@ -22,7 +22,12 @@ service cloud.firestore {
     // Gifts and bounties: you can only send as yourself; the sender or receiver can remove one.
     match /gifts/{id} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.from == me();
+      // Gifts go to someone else. The only gift you can send yourself is an NRC carryover (NRC has its own
+      // daily cap in its own rules), so nobody can create credits, chips or items for themselves.
+      allow create: if signedIn() && request.resource.data.from == me()
+        && request.resource.data.kind in ['credits', 'chips', 'item', 'nrc']
+        && request.resource.data.amount is number && request.resource.data.amount >= 0 && request.resource.data.amount <= 10000000
+        && (request.resource.data.to != me() || request.resource.data.kind == 'nrc');
       allow delete: if signedIn() && (resource.data.to == me() || resource.data.from == me());
     }
 

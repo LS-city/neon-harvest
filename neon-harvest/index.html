@@ -3846,12 +3846,15 @@ function applyMobileLayout(){ const g=$("#game"); if(!g) return; g.classList.tog
     $("#chatin").placeholder="Say something…"; const bb=$("#btnBlock"), ba=$("#btnAtk"); if(bb) bb.textContent="Block"; if(ba) ba.textContent="Attack"; } }
 /* Auto smooth mode: if the game runs below ~40 fps for 8 seconds straight, it lowers the glow and the screen resolution
    one step at a time (up to 2 steps). The level is remembered on this device, and players can reset it in How to Play → Smooth mode. */
-var PERF={lvl:0,fr:[],last:0,t0:0}; try{ PERF.lvl=Math.max(0,Math.min(2,+localStorage.getItem("nh_perf")||0)); }catch(e){}
+var PERF={lvl:0,fr:[],last:0,t0:0}; try{ PERF.lvl=Math.max(0,Math.min(2,+localStorage.getItem("nh_perf")||0));
+  // Smooth mode used to stay on forever after one slow moment. Each new visit now tries one level better,
+  // unless the player picked the level themselves; if the device is still slow, it steps back down by itself.
+  if(PERF.lvl>0&&localStorage.getItem("nh_perf_manual")!=="1") PERF.lvl--; }catch(e){}
 function perfFrame(now){ if(document.hidden||!PERF.last){ PERF.last=now; return; } const d=now-PERF.last; PERF.last=now; if(d>250){ PERF.fr.length=0; PERF.t0=now; return; } PERF.fr.push(d); if(!PERF.t0) PERF.t0=now;
   if(now-PERF.t0<4000) return; const avg=PERF.fr.reduce((a,b)=>a+b,0)/PERF.fr.length, fps=1000/avg; PERF.fr.length=0; PERF.t0=now;
   PERF.slow=fps<40?(PERF.slow||0)+1:0;
   if(PERF.slow>=2&&PERF.lvl<2&&now>12000){ PERF.slow=0; setPerf(PERF.lvl+1); try{ toast(PERF.lvl>=2?"Smooth mode: max (lower glow and resolution)":"Smooth mode on: lighter glow for a smoother game","#38e8ff"); }catch(e){} } }
-function setPerf(l){ PERF.lvl=Math.max(0,Math.min(2,l|0)); try{ localStorage.setItem("nh_perf",String(PERF.lvl)); }catch(e){} PERF.fr.length=0; PERF.t0=0; resize(); }
+function setPerf(l,manual){ PERF.lvl=Math.max(0,Math.min(2,l|0)); try{ localStorage.setItem("nh_perf",String(PERF.lvl)); if(manual) localStorage.setItem("nh_perf_manual",PERF.lvl?"1":"0"); }catch(e){} PERF.fr.length=0; PERF.t0=0; resize(); }
 function resize(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(PERF.lvl>=2?1:(MOBILE||PERF.lvl>=1)?1.5:2,window.devicePixelRatio||1); cv.width=Math.max(2,Math.round(r.width*dpr)); cv.height=Math.max(2,Math.round(r.height*dpr)); scale=cv.height/H; VW=Math.min(4000,cv.width/scale); }
 if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cv);
 applyMobileLayout(); addEventListener("resize",()=>{ applyMobileLayout(); resize(); }); addEventListener("orientationchange",()=>setTimeout(()=>{ applyMobileLayout(); resize(); },250));
@@ -4535,7 +4538,7 @@ function openGuide(tab){ if(tab!==undefined) guideTab=HELP_T[tab]?tab:""; try{ l
     for(const c of HELP) jump.append(el("button",{class:"btn",type:"button",text:`${c.icon} ${c.n}`,onclick:()=>{ const h=document.getElementById("hcat_"+c.id); if(h) h.scrollIntoView({behavior:"smooth",block:"start"}); }}));
     q.addEventListener("input",()=>{ guideQ=q.value; draw(); });
     const names=["Off (full glow)","Light (softer glow)","Max (no glow, lower resolution)"];
-    body.append(q,jump,list,el("div",{class:"row",style:"align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;border-top:1px solid var(--line);padding-top:10px"},el("span",{class:"sub",text:`⚙ Smooth mode: ${names[PERF.lvl]}. It turns on by itself if the game runs slowly.`}),el("button",{class:"btn",type:"button",text:"Change",onclick:()=>{ setPerf((PERF.lvl+1)%3); toast("Smooth mode: "+names[PERF.lvl],"#38e8ff"); openGuide(""); }})),
+    body.append(q,jump,list,el("div",{class:"row",style:"align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;border-top:1px solid var(--line);padding-top:10px"},el("span",{class:"sub",text:`⚙ Smooth mode: ${names[PERF.lvl]}. It turns on by itself if the game runs slowly and tries better quality again on your next visit, unless you pick a level here.`}),el("button",{class:"btn",type:"button",text:"Change",onclick:()=>{ setPerf((PERF.lvl+1)%3,true); toast("Smooth mode: "+names[PERF.lvl],"#38e8ff"); openGuide(""); }})),
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Start playing",onclick:closePanel})));
     draw(); if(!MOBILE&&!guideQ) setTimeout(()=>{ try{ q.focus({preventScroll:true}); }catch(e){} },50); else if(guideQ) setTimeout(()=>q.focus(),50); return; }
   const body=panel(`${t.icon} ${t.n}`,t.sub||""); currentView="guide";
