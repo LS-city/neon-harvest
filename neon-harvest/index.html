@@ -3615,7 +3615,7 @@ const SCENES={
   racers:{w:7000, spawn:200},
 };
 // hotspots: x center, half-width, label, act
-function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
+function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc),...bytesHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
 /* ============================================================ RP EXCHANGE MACHINES: trade credits for Reward Points */
 const RPM_COST=4000, RPM_GET=50, RPM_MAX=10;
 const RPM_SPOTS={street:{x:2150,n:"Sector 9"},byte:{x:2170,n:"Byte Market"},grid:{x:2000,n:"The Grid"},smacked:{x:1185,n:"Smacked Shop"}};
@@ -3649,6 +3649,23 @@ function drawRPMachine(c,x,y,s,t){ c.save(); c.translate(x,y); c.scale(s,s);
   c.fillStyle="#0b0716"; c.fillRect(-14,-28,28,12); c.strokeStyle="#43f0a4"; c.lineWidth=1; c.strokeRect(-14,-28,28,12); c.fillStyle="#43f0a4"; c.globalAlpha=.4+.3*Math.sin(t*3); c.fillRect(-12,-26,24,8); c.globalAlpha=1;
   c.restore(); }
 function drawRPMachines(t){ const m=RPM_SPOTS[me.scene]; if(!m) return; drawRPMachine(ctx,m.x,262,1,t); }
+/* ============================================================ BYTES TERMINAL: the Bytes roleplay wallet inside the game (play money, no real-world value) */
+const BYTES_SPOTS={bar:{x:195,hw:45},home:{x:155,hw:30}};
+function bytesHot(sc){ const m=BYTES_SPOTS[sc]; if(!m||(sc==="home"&&viewHome)) return []; return [{x:m.x,hw:m.hw,label:"Bytes terminal: your VRChat wallet",act:()=>openBytes()}]; }
+function openBytes(){ const body=panel("Bytes Terminal","Your Bytes wallet: send, tip, pay, groups and the Top groups board. Bytes are roleplay money with no real-world value."); currentView="bytes";
+  const fr=el("iframe",{src:"../bytes/?embed=1",title:"Bytes wallet",allow:"clipboard-write",style:"width:100%;height:min(68vh,620px);border:1px solid var(--line);background:#06080c;display:block"});
+  body.append(fr,el("p",{class:"sub",text:"Bytes don't mix with credits, NRC or Reward Points. Sign in once and the terminal remembers you."}),
+    el("div",{class:"row"},el("a",{class:"btn",href:"../bytes/",target:"_blank",rel:"noopener",text:"Open Bytes in a new tab"}))); beep(660,.06,"square",.04); }
+function drawBytesTerminal(c,x,t){ c.save(); c.translate(x,262);
+  c.fillStyle="rgba(0,0,0,.45)"; c.beginPath(); c.ellipse(0,0,22,5,0,0,7); c.fill();
+  c.fillStyle="#0a1218"; c.fillRect(-18,-96,36,96); c.strokeStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=10; c.lineWidth=2; c.strokeRect(-17,-95,34,94); c.shadowBlur=0;
+  c.fillStyle="#38e8ff"; c.fillRect(-18,-106,36,11); c.fillStyle="#06080c"; c.font="bold 7px Silkscreen, monospace"; c.textAlign="center"; c.fillText("BYTES",0,-98);
+  c.fillStyle="#020406"; c.fillRect(-13,-86,26,24); c.fillStyle="#38e8ff"; c.font="bold 13px 'IBM Plex Mono',monospace"; c.globalAlpha=.7+.3*Math.sin(t*3); c.fillText("฿",0,-69); c.globalAlpha=1;
+  c.fillStyle="rgba(56,232,255,.07)"; for(let k=-86;k<-62;k+=2) c.fillRect(-13,k,26,1);
+  for(let r=0;r<3;r++) for(let k=0;k<3;k++){ c.fillStyle=(r*3+k)%4===0?"#ff3fa8":"#1f3340"; c.fillRect(-10+k*7,-54+r*6,5,4); }
+  c.fillStyle="#1f3340"; c.fillRect(-11,-28,22,4); c.fillStyle=Math.sin(t*5)>0?"#43f0a4":"#1a4a38"; c.fillRect(-4,-27,8,2);
+  c.restore(); }
+function drawBytesTerminals(t){ const m=BYTES_SPOTS[me.scene]; if(!m||(me.scene==="home"&&viewHome)) return; drawBytesTerminal(ctx,m.x,t); }
 
 function hotspotsBase(sc){
   if(sc==="civic"||sc==="prison") return cityHot(sc);
@@ -4021,6 +4038,7 @@ function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
   if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
+  drawBytesTerminals(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
