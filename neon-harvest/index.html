@@ -4455,7 +4455,12 @@ const HELP=[
     ["Private messages",["Tap a player (or use Who's online) and choose Message."]],
     ["Group chats",["Up to 8 people: name it, invite more later, or leave anytime. Only members can read a chat. Block anyone to stop seeing their messages."]]]},
   {id:"compete",icon:"🏆",n:"Trade & compete",sub:"Gifts, trades and leaderboards",secs:[
-    ["How",["Gift parts by tapping a player, sell on the Trade Board, challenge players in The Grid, and climb the Top Duelists and Top Fraggers boards."]]],rel:["grid","selling"]}]},
+    ["How",["Gift parts by tapping a player, sell on the Trade Board, challenge players in The Grid, and climb the Top Duelists and Top Fraggers boards."]]],rel:["grid","selling"]},
+  {id:"bytes",icon:"฿",n:"Bytes terminal",sub:"Your VRChat roleplay wallet",where:"The Glitch (by the door) or your apartment (by the door)",steps:["Walk up to the glowing blue BYTES kiosk and press E, or tap it.","Sign in once. The terminal remembers you, and it's the same wallet as the Bytes app and website.","Send, tip or pay players by their Bytes name, and check your History."],secs:[
+    ["Groups and jobs",["Bytes Pro owners can make groups, hire staff, give them roles and pay wages. My jobs shows the groups you work for."]],
+    ["Profit box and Top groups",["Owners can move Bytes into their group's profit box. The Top groups board ranks groups by it, and the top 1% get the 🏆 TOP 1% emblem."]],
+    ["In VRChat",["Get the PC app from the terminal to show your name, job and tips above your head in VRChat."]],
+    ["Play money only",["Bytes are roleplay money with no real-world value. They're separate from credits, chips, NRC and RP, and can't be traded for any of them or for Smacked Shop rewards."]]]}]},
 
  {id:"mydex",icon:"📇",n:"MyDex",topics:[
   {id:"mydex_about",icon:"📇",n:"What MyDex is",sub:"Your player card for meeting real people",where:"MyDex box (PC), DEX (phone), the Menu, or Metro → MyDex Hub",secs:[
@@ -5897,6 +5902,7 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"UPLOAD arcade",d:"Snake-style hacking levels at The Grid",s:"grid",x:()=>UPL_X},
   {g:"Hot spots",n:"Story Mode · Ramblings of a Mad Man",d:"The book by Edwin C. Reyes as a 2D pixel-art story game",s:"story",x:()=>STORY_X.door},
   {g:"Hot spots",n:"RP Exchange machine",d:"Members: trade ₵4,000 for 50 RP (Sector 9)",s:"street",x:2150},
+  {g:"Hot spots",n:"Bytes terminal",d:"Your VRChat roleplay wallet (The Glitch)",s:"bar",x:195},
   {g:"Hot spots",n:"Car Display",d:"Dealership, garage and player car plots",s:"racers",x:()=>CD_DEAL[0]},
   {g:"Hot spots",n:"Your Car Display plot",d:"Show off your cars and trucks",s:"racers",x:()=>cdMine()>=0?cdX(cdMine()):CD_X0,need:()=>cdMine()>=0},
   {g:"Hot spots",n:"MyDex Hub",d:"Open MyDex and forge items into badges",s:"dexhub",x:()=>DEX_X.term},
