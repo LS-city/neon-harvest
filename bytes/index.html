@@ -533,6 +533,7 @@ function renderChat() {
   $("pv-job").innerHTML = jobs.length ? jobs.map(j => `<option value="${esc(j.id)}">${esc(j.role)} @ ${esc(j.gname)}</option>`).join("") : "<option value=''>No jobs yet</option>";
   if (P.job && jobs.some(j => j.id === P.job)) $("pv-job").value = P.job;
   const t = line(); $("pv").textContent = t || " "; $("pv-len").textContent = t.length + " / 144 characters";
+  if (running) push(false);
 }
 const LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
 // On the web wallet, talk to the Bytes PC app if it's running on this computer.
@@ -540,12 +541,16 @@ const BASE = LOCAL ? "" : "http://127.0.0.1:7778";
 let linked = LOCAL;
 function showLinked() { $("pv-local").hidden = !linked; $("pv-web").hidden = linked; $("dl-top").hidden = LOCAL || linked; }
 async function findApp(quiet) {
-  if (LOCAL) return true;
+  if (LOCAL) {
+    try { const j = await (await fetch("/ping", { cache: "no-store" })).json(); if (j.showing && !running) startChat(); } catch (e) {}
+    return true;
+  }
   if (!quiet) say("pv-msg", "Looking for the Bytes PC app…");
   try {
     const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 2500);
     const r = await fetch(BASE + "/ping", { cache: "no-store", signal: ctl.signal }); clearTimeout(tm);
-    const j = await r.json(); linked = !!(j && j.app === "bytes" && j.v >= 2);
+    const j = await r.json(); linked = !!(j && j.app === "bytes" && j.v >= 3);
+    if (linked && j.showing && !running) startChat();
     if (!linked && !quiet) say("pv-msg", "Found an old version of the PC app. Download it again from this page.", false);
   } catch (e) { linked = false; if (!quiet) say("pv-msg", "PC app not found. Is the black Bytes window open on this computer?", false); }
   if (linked && !quiet) say("pv-msg", "✓ Connected to the Bytes PC app", true);
@@ -553,12 +558,14 @@ async function findApp(quiet) {
 }
 showLinked();
 $("pv-find").onclick = () => findApp(false);
+setTimeout(() => findApp(true), 1500);
 document.querySelector('[data-t=chat]').addEventListener("click", () => { if (!linked) findApp(true); });
 const IP_RE = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})$/;
 $("pv-where").value = P.where === "hmd" ? "hmd" : "pc"; $("pv-ip").value = P.ip || "";
 const whereUI = () => { $("pv-hmd").hidden = $("pv-where").value !== "hmd"; };
-$("pv-where").onchange = () => { P.where = $("pv-where").value; saveP(); whereUI(); lastSent = ""; };
-$("pv-ip").oninput = () => { P.ip = $("pv-ip").value.trim(); saveP(); lastSent = ""; };
+$("pv-where").onchange = () => { P.where = $("pv-where").value; saveP(); whereUI(); push(false); };
+$("pv-ip").oninput = () => { P.ip = $("pv-ip").value.trim(); saveP(); };
+$("pv-ip").onchange = () => push(false);
 whereUI();
 function target() {
   if ($("pv-where").value !== "hmd") return "";
@@ -568,26 +575,31 @@ function target() {
 }
 $("pv-copy").onclick = async () => { try { await navigator.clipboard.writeText(line()); say("pv-msg", "✓ Copied. Paste it into your VRChat chatbox.", true); } catch (e) { say("pv-msg", "Couldn't copy. Select the text in the bubble and copy it by hand.", false); } };
 async function post(url, body) { if (!linked) throw new Error("web"); const r = await fetch(BASE + url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); if (!r.ok) throw new Error("bad"); }
-let running = false, timer = null, lastSent = "", lastAt = 0, popUntil = 0;
-async function tick() {
-  if (Date.now() < popUntil) return;
+// The Bytes program keeps your line up by itself. This page only tells it what to show,
+// and checks in every few seconds in case the program was restarted.
+let running = false, timer = null, lastSent = "", lastHost = "";
+async function push(force) {
+  if (!running) return;
   const t = line(); if (!t) return;
-  if (t === lastSent && Date.now() - lastAt < 20000) return;
   let host; try { host = target(); } catch (e) { return say("pv-msg", "Enter your headset's IP address, like 192.168.1.42.", false); }
-  try { await post("/chatbox", { text: t, host }); lastSent = t; lastAt = Date.now(); say("pv-msg", "● Sending to " + (host ? "your headset at " + host : "VRChat on this PC"), true); }
+  if (!force && t === lastSent && host === lastHost) return;
+  try { await post("/show", { text: t, host }); lastSent = t; lastHost = host; say("pv-msg", "● Showing in VRChat" + (host ? " on your headset at " + host : "") + ". It stays up while the black Bytes window is open.", true); }
   catch (e) { say("pv-msg", "Can't reach the Bytes program. Is its black window open?", false); }
 }
-function startChat() { running = true; lastSent = ""; $("pv-go").textContent = "■ Stop showing in VRChat"; tick(); timer = setInterval(tick, 4000); }
-function stopChat() { running = false; clearInterval(timer); $("pv-go").textContent = "▶ Start showing in VRChat"; say("pv-msg", ""); }
+function startChat() { running = true; lastSent = ""; $("pv-go").textContent = "■ Stop showing in VRChat"; clearInterval(timer); push(true); timer = setInterval(() => push(true), 5000); }
+async function stopChat() {
+  const was = running; running = false; clearInterval(timer); $("pv-go").textContent = "▶ Start showing in VRChat"; say("pv-msg", "");
+  if (was) { try { await post("/stop", { host: lastHost }); } catch (e) {} }
+}
 $("pv-go").onclick = () => running ? stopChat() : startChat();
-$("pv-clear").onclick = async () => { try { await post("/clear", { host: target() }); say("pv-msg", "Chatbox cleared.", true); } catch (e) { say("pv-msg", "Can't reach the Bytes program.", false); } };
+$("pv-clear").onclick = async () => { await stopChat(); try { await post("/clear", { host: target() }); say("pv-msg", "Chatbox cleared.", true); } catch (e) { say("pv-msg", "Can't reach the Bytes program.", false); } };
 
 async function incoming(txId) {
   try {
     const s = await db.doc("bytes_tx/" + txId).get(); if (!s.exists) return; const t = s.data();
     const who = t.from === "mint" ? "Bytes admin" : t.fromH;
     const msg = (t.kind === "wage" ? "💼 Wage +" : t.kind === "tip" ? "💸 Tip +" : "💸 +") + fmt(t.amt) + " Bytes from " + who + (t.note && t.kind !== "wage" ? " · “" + t.note + "”" : "");
-    if (running && P.pop !== false) { popUntil = Date.now() + 8000; await post("/chatbox", { text: msg.slice(0, 144), sound: true, host: target() }); lastSent = ""; }
+    if (running && P.pop !== false) await post("/chatbox", { text: msg.slice(0, 144), sound: true, host: target() });
   } catch (e) {}
 }
 
