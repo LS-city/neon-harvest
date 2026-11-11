@@ -190,6 +190,7 @@ a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(
       <div class="nhbox" id="nh-box" hidden>
         <b>⚡ NEON HARVEST</b>
         <div class="grid2" id="nh-opts"></div>
+        <span class="note" id="nh-pets"></span>
         <span class="note">From your NEON HARVEST save. Updates live while you play.</span>
         <a class="nhgo" href="https://ls-city.github.io/neon-harvest/" target="_blank" rel="noopener" style="align-self:flex-start">⚡ Open NEON HARVEST</a>
       </div>
@@ -208,6 +209,7 @@ a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(
           <b>🎮 Discord status</b>
           <label class="chk"><input type="checkbox" id="dc-on" checked> Show Bytes on my Discord profile</label>
           <label class="chk"><input type="checkbox" id="dc-bal"> Include my balance</label>
+          <label class="chk"><input type="checkbox" id="dc-pet" checked> Show my #1 companion</label>
           <div class="dcprev" id="dc-prev"></div>
           <span class="note" id="dc-note">Needs the Discord app open on this PC. Your friends see it under your name, with buttons to open Bytes and NEON HARVEST.</span>
         </div>
@@ -633,7 +635,7 @@ const P = (() => { try { return JSON.parse(localStorage.getItem("bytes_prefs") |
 const saveP = () => { try { localStorage.setItem("bytes_prefs", JSON.stringify(P)); } catch (e) {} };
 const OPTS = [["name", "My name", true], ["job", "Job + group", true], ["tipme", "“Tip me” line", true], ["bal", "My balance", true]];
 P.on = P.on || Object.fromEntries(OPTS.map(o => [o[0], o[2]]));
-const NH_OPTS = [["nh_rigs", "Mining rigs", true], ["nh_nrc", "NRC balance", true], ["nh_chips", "Chips", false], ["nh_cred", "Credits", false]];
+const NH_OPTS = [["nh_pet", "Companion #1", true], ["nh_rigs", "Mining rigs", true], ["nh_nrc", "NRC balance", true], ["nh_chips", "Chips", false], ["nh_cred", "Credits", false]];
 for (const [k, , def] of NH_OPTS) if (!(k in P.on)) P.on[k] = def;
 for (const [k, l] of NH_OPTS) { const lab = document.createElement("label"); lab.className = "chk"; const c = document.createElement("input"); c.type = "checkbox"; c.checked = !!P.on[k]; c.onchange = () => { P.on[k] = c.checked; saveP(); renderChat(); }; lab.append(c, document.createTextNode(l)); $("nh-opts").append(lab); }
 for (const [k, l] of OPTS) { const lab = document.createElement("label"); lab.className = "chk"; const c = document.createElement("input"); c.type = "checkbox"; c.checked = !!P.on[k]; c.onchange = () => { P.on[k] = c.checked; saveP(); renderChat(); }; lab.append(c, document.createTextNode(l)); $("pv-opts").append(lab); }
@@ -641,11 +643,19 @@ $("pv-extra").value = P.extra || ""; $("pv-extra").oninput = () => { P.extra = $
 $("pv-pop").checked = P.pop !== false; $("pv-pop").onchange = () => { P.pop = $("pv-pop").checked; saveP(); };
 $("pv-job").onchange = () => { P.job = $("pv-job").value; saveP(); renderChat(); };
 
+// Companions the player picked in NEON HARVEST (Bytes terminal or Companion screen). #1 is the partner.
+// Looks and personality only: they never change anyone's Bytes.
+function showPets() { const l = nhSave && nhSave.bytesPets; return Array.isArray(l) ? l.filter(x => x && typeof x.n === "string").slice(0, 3) : []; }
+function partner() { return showPets()[0] || null; }
+function petCheer(p) { const say = Array.isArray(p.say) && p.say.length ? p.say[Math.floor(Math.random() * p.say.length)] : "Nice!"; const nick = p.n.split(" ").pop(); return p.e + " " + nick.charAt(0).toUpperCase() + nick.slice(1) + ": " + say; }
+function renderPets() { const el2 = $("nh-pets"); if (!el2) return; const l = showPets();
+  el2.textContent = l.length ? "🐾 Showing off: " + l.map((p, i) => p.e + " " + p.n + (i === 0 ? " (#1)" : "")).join(", ") : "🐾 No companions picked. Pick up to 3 at the Bytes terminal in NEON HARVEST."; }
 function line() {
   const parts = [];
   if (P.on.name && myHandle) parts.push("💾 " + myHandle + (isPro() ? " ⭐" : ""));
   const jobs = myJobs.filter(j => j.ok); const j = jobs.find(x => x.id === P.job) || jobs[0];
   if (P.on.job && j) parts.push("🏷 " + j.role + " @ " + j.gname + (topIds.has(j.gid) ? " 🏆" : ""));
+  const petAt = parts.length;
   if (nhSave) {
     const nh = [];
     if (P.on.nh_rigs) nh.push("⛏ " + (nhSave.rack || []).length + "/4 rigs");
@@ -654,6 +664,7 @@ function line() {
     if (P.on.nh_cred) nh.push("₵" + fmt(nhSave.credits));
     if (nh.length) parts.push("⚡ " + nh.join(" "));
   }
+  const pal = partner(); if (P.on.nh_pet && pal) parts.splice(petAt, 0, pal.e + " " + pal.n);
   if (P.on.bal && wallet) parts.push("💰 " + fmt(wallet.bal) + " Bytes");
   const ex = ($("pv-extra").value || "").trim(); if (ex) parts.push(ex);
   if (P.on.tipme && myHandle) parts.push("💸 Tip me Bytes: " + myHandle);
@@ -663,7 +674,7 @@ function renderChat() {
   const jobs = myJobs.filter(j => j.ok);
   $("pv-job").innerHTML = jobs.length ? jobs.map(j => `<option value="${esc(j.id)}">${esc(j.role)} @ ${esc(j.gname)}</option>`).join("") : "<option value=''>No jobs yet</option>";
   if (P.job && jobs.some(j => j.id === P.job)) $("pv-job").value = P.job;
-  const t = line(); $("pv").textContent = t || " "; $("pv-len").textContent = t.length + " / 144 characters";
+  const t = line(); $("pv").textContent = t || " "; $("pv-len").textContent = t.length + " / 144 characters"; renderPets();
   if (running) push(false);
   dcPush(false);
 }
@@ -716,6 +727,7 @@ var dcCap = false, dcState = "", dcLast = "";
 $("dc-on").checked = P.dc !== false; $("dc-bal").checked = !!P.dcbal;
 $("dc-on").onchange = () => { P.dc = $("dc-on").checked; saveP(); dcPush(true); };
 $("dc-bal").onchange = () => { P.dcbal = $("dc-bal").checked; saveP(); dcPush(true); };
+$("dc-pet").checked = P.dcpet !== false; $("dc-pet").onchange = () => { P.dcpet = $("dc-pet").checked; saveP(); dcPush(true); };
 function dcData() {
   if (!myHandle || !wallet) return null;
   const jobs = myJobs.filter(j => j.ok); const j = jobs.find(x => x.id === P.job) || jobs[0];
@@ -723,12 +735,14 @@ function dcData() {
   let state = "💾 " + myHandle + (isPro() ? " ⭐" : "");
   if ($("dc-bal").checked) state += " · 💰 " + fmt(wallet.bal) + " Bytes";
   if (nhSave) state += " · ⚡ NEON HARVEST";
-  return { details: details.slice(0, 128), state: state.slice(0, 128) };
+  const pal = partner(), out = { details: details.slice(0, 128), state: state.slice(0, 128) };
+  if (pal && $("dc-pet").checked && /^[a-z0-9-]{1,40}$/.test(pal.img || "")) out.pet = { img: "https://ls-city.github.io/neon-harvest/bytes/pets/" + pal.img + ".png", text: ("With " + pal.n + (pal.t ? " · " + pal.t : "")).slice(0, 128) };
+  return out;
 }
 async function dcPush(force) {
   const d = dcData(), on = $("dc-on").checked && !!d;
-  $("dc-prev").textContent = d ? "Playing Bytes\n" + d.details + "\n" + d.state : "Sign in to see your Discord status.";
-  $("dc-bal").disabled = !$("dc-on").checked;
+  $("dc-prev").textContent = d ? "Playing Bytes\n" + d.details + "\n" + d.state + (d.pet ? "\n🐾 " + d.pet.text : "") : "Sign in to see your Discord status.";
+  $("dc-bal").disabled = $("dc-pet").disabled = !$("dc-on").checked;
   if (!linked) return;
   if (!dcCap) { $("dc-note").textContent = "Your Bytes PC app is an older version. Download it again to get Discord status."; return; }
   const body = on ? { on: true, ...d } : { on: false }; const key = JSON.stringify(body);
@@ -764,7 +778,8 @@ async function incoming(txId) {
     const s = await db.doc("bytes_tx/" + txId).get(); if (!s.exists) return; const t = s.data();
     if (t.kind === "withdraw") return;
     const who = t.from === "mint" ? "Bytes admin" : t.fromH;
-    const msg = (t.kind === "wage" ? "💼 Wage +" : t.kind === "tip" ? "💸 Tip +" : "💸 +") + fmt(t.amt) + " Bytes from " + who + (t.note && t.kind !== "wage" ? " · “" + t.note + "”" : "");
+    let msg = (t.kind === "wage" ? "💼 Wage +" : t.kind === "tip" ? "💸 Tip +" : "💸 +") + fmt(t.amt) + " Bytes from " + who + (t.note && t.kind !== "wage" ? " · “" + t.note + "”" : "");
+    const pal = partner(); if (pal && P.on.nh_pet) msg = petCheer(pal) + " " + msg;
     if (running && P.pop !== false) await post("/chatbox", { text: msg.slice(0, 144), sound: true, host: target() });
   } catch (e) {}
 }
