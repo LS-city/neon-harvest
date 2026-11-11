@@ -45,6 +45,8 @@ label.chk{display:flex;align-items:center;gap:8px;cursor:pointer} label.chk inpu
 .pro{border:1px solid var(--warn);padding:12px;display:flex;flex-direction:column;gap:8px}
 .pro b{color:var(--warn)} .pro ul{margin:0;padding-left:18px}
 header .dl{margin-left:auto;font-size:12px;color:var(--acc);text-decoration:none;border:1px solid var(--acc);padding:5px 9px}
+.nhbox{border:1px solid #ff3fa8;padding:10px;display:flex;flex-direction:column;gap:8px}
+.nhbox>b{color:#ff3fa8}
 .pcapp{border:1px solid var(--acc);padding:12px;display:flex;flex-direction:column;gap:8px}
 .pcapp b{color:var(--ink)} .pcapp>b{color:var(--acc)} .pcapp ol{margin:0;padding-left:20px}
 .pcapp a.btn{border-color:var(--acc);color:var(--acc);flex:2}
@@ -167,6 +169,11 @@ a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(
       <div class="bubble" id="pv"></div>
       <div class="note" id="pv-len"></div>
       <div class="grid2" id="pv-opts"></div>
+      <div class="nhbox" id="nh-box" hidden>
+        <b>⚡ NEON HARVEST</b>
+        <div class="grid2" id="nh-opts"></div>
+        <span class="note">From your NEON HARVEST save. Updates live while you play.</span>
+      </div>
       <label class="chk">Show job <select id="pv-job" style="flex:1"></select></label>
       <input id="pv-extra" maxlength="60" placeholder="Your own message (optional)">
       <div id="pv-local" style="display:flex;flex-direction:column;gap:10px">
@@ -240,6 +247,9 @@ const say = (el, t, ok) => { $(el).textContent = t; $(el).className = "msg" + (o
 const ruleErr = e => (e && e.code === "permission-denied") ? "Not allowed. Check the amount and your balance." : ((e && e.message) || "Something went wrong.");
 
 let isAdmin = false, proUntil = 0, proList = [];
+// NEON HARVEST stats (same account): your game save and NRC balance.
+let nhSave = null, nhNrc = null;
+const nhDec = v => Array.isArray(v) ? v.map(nhDec) : (v && typeof v === "object") ? (Object.keys(v).length === 1 && Array.isArray(v._a_) ? v._a_.map(nhDec) : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, nhDec(x)]))) : v;
 const isPro = () => isAdmin || proUntil > Date.now();
 let user = null, wallet = null, myHandle = "", txIn = [], txOut = [], myJobs = [], myGroups = [], openGid = null, openStaff = [];
 let subs = [], gsubs = [];
@@ -279,6 +289,9 @@ auth.onAuthStateChanged(async u => {
   subs.push(db.collection("bytes_tx").where("to", "==", u.uid).onSnapshot(q => { txIn = q.docs.map(d => ({ id: d.id, ...d.data() })); renderHist(); }, () => {}));
   subs.push(db.collection("bytes_tx").where("from", "==", u.uid).onSnapshot(q => { txOut = q.docs.map(d => ({ id: d.id, ...d.data() })); renderHist(); }, () => {}));
   subs.push(db.collection("bytes_staff").where("uid", "==", u.uid).onSnapshot(q => { myJobs = q.docs.map(d => ({ id: d.id, ...d.data() })); renderJobs(); renderChat(); }, () => {}));
+  nhSave = null; nhNrc = null;
+  subs.push(db.doc("data/users/" + u.uid + "/save").onSnapshot(s => { nhSave = s.exists ? nhDec(s.data()) : null; $("nh-box").hidden = !nhSave; renderChat(); }, () => {}));
+  subs.push(db.doc("nrc/" + u.uid).onSnapshot(s => { nhNrc = s.exists ? Math.floor(+s.data().bal || 0) : null; renderChat(); }, () => {}));
   subs.push(db.collection("bytes_groups").where("owner", "==", u.uid).onSnapshot(q => { myGroups = q.docs.map(d => ({ id: d.id, ...d.data() })); renderGroups(); if (openGid) renderGroup(); }, () => {}));
 });
 
@@ -513,6 +526,9 @@ const P = (() => { try { return JSON.parse(localStorage.getItem("bytes_prefs") |
 const saveP = () => { try { localStorage.setItem("bytes_prefs", JSON.stringify(P)); } catch (e) {} };
 const OPTS = [["name", "My name", true], ["job", "Job + group", true], ["tipme", "“Tip me” line", true], ["bal", "My balance", true]];
 P.on = P.on || Object.fromEntries(OPTS.map(o => [o[0], o[2]]));
+const NH_OPTS = [["nh_rigs", "Mining rigs", true], ["nh_nrc", "NRC balance", true], ["nh_chips", "Chips", false], ["nh_cred", "Credits", false]];
+for (const [k, , def] of NH_OPTS) if (!(k in P.on)) P.on[k] = def;
+for (const [k, l] of NH_OPTS) { const lab = document.createElement("label"); lab.className = "chk"; const c = document.createElement("input"); c.type = "checkbox"; c.checked = !!P.on[k]; c.onchange = () => { P.on[k] = c.checked; saveP(); renderChat(); }; lab.append(c, document.createTextNode(l)); $("nh-opts").append(lab); }
 for (const [k, l] of OPTS) { const lab = document.createElement("label"); lab.className = "chk"; const c = document.createElement("input"); c.type = "checkbox"; c.checked = !!P.on[k]; c.onchange = () => { P.on[k] = c.checked; saveP(); renderChat(); }; lab.append(c, document.createTextNode(l)); $("pv-opts").append(lab); }
 $("pv-extra").value = P.extra || ""; $("pv-extra").oninput = () => { P.extra = $("pv-extra").value; saveP(); renderChat(); };
 $("pv-pop").checked = P.pop !== false; $("pv-pop").onchange = () => { P.pop = $("pv-pop").checked; saveP(); };
@@ -523,6 +539,14 @@ function line() {
   if (P.on.name && myHandle) parts.push("💾 " + myHandle + (isPro() ? " ⭐" : ""));
   const jobs = myJobs.filter(j => j.ok); const j = jobs.find(x => x.id === P.job) || jobs[0];
   if (P.on.job && j) parts.push("🏷 " + j.role + " @ " + j.gname);
+  if (nhSave) {
+    const nh = [];
+    if (P.on.nh_rigs) nh.push("⛏ " + (nhSave.rack || []).length + "/4 rigs");
+    if (P.on.nh_nrc && nhNrc !== null) nh.push("💠 " + fmt(nhNrc) + " NRC");
+    if (P.on.nh_chips) nh.push("🔲 " + fmt(nhSave.chips) + " chips");
+    if (P.on.nh_cred) nh.push("₵" + fmt(nhSave.credits));
+    if (nh.length) parts.push("⚡ " + nh.join(" "));
+  }
   if (P.on.bal && wallet) parts.push("💰 " + fmt(wallet.bal) + " Bytes");
   const ex = ($("pv-extra").value || "").trim(); if (ex) parts.push(ex);
   if (P.on.tipme && myHandle) parts.push("💸 Tip me Bytes: " + myHandle);
