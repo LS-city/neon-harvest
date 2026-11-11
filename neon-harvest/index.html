@@ -1897,6 +1897,8 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   const sy=o.sit?9:0, hip=-26-bob+sy, sh=-46-bob+sy, head=-56-bob+sy;
   if(o.dk) drinkFxLayer(c,o.dk,"behind",dir,head,t); if(FX) fxBehind(c,FX,head,t); if(FX==="acid"||FX==="kaleido") ghostTrail(c,dir,hip,sh,head,o.moving,t); if(FX==="drift"||FX==="lightspeed") ghostTrail2(c,dir,hip,sh,head,t,FX==="drift"?"168,232,255":"255,255,255");
   c.lineCap="round"; c.lineJoin="round";
+  const MECH=MECH_BY[style]; let mechTop=0;
+  if(MECH){ try{ mechTop=drawMech(c,MECH,o,t,dir,em).top; }catch(e){} } else {
   // ---- aura (behind)
   if(aura==="Floor ring"){ c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=10; c.lineWidth=2; c.beginPath(); c.ellipse(0,0,17+Math.sin(t*4)*2,5,0,0,7); c.stroke(); c.shadowBlur=0; }
   if(aura==="Flames"){ for(let i=0;i<6;i++){ const fx=-12+i*5, fh=10+Math.abs(Math.sin(t*12+i*1.7))*12; c.fillStyle=i%2?"#ffb84a":"#ff5a4a"; c.globalAlpha=.75; c.beginPath(); c.moveTo(fx-3,0); c.quadraticCurveTo(fx+Math.sin(t*9+i)*3,-fh,fx+3,0); c.fill(); } c.globalAlpha=1; }
@@ -2085,6 +2087,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   wx2("hat",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
   // ---- rain cloud aura
   if(aura==="Rain cloud"){ c.fillStyle="#4a4466"; for(const [cx,r] of [[-6,6],[0,8],[7,6]]){ c.beginPath(); c.arc(cx,head-30,r,0,7); c.fill(); } c.strokeStyle="rgba(150,190,255,.7)"; c.lineWidth=1; c.beginPath(); for(let i=0;i<5;i++){ const ry=head-22+((t*40+i*7)%22); c.moveTo(-8+i*4,ry); c.lineTo(-9+i*4,ry+4); } c.stroke(); }
+  } // end of the normal body (mech suits draw their own)
   // ---- companion
   const pf=o.petFetch, pfu=pf?t-pf.t0:-1, pfOn=pf&&pfu>=0&&pfu<pf.dur, pfAway=pfOn&&pfu>.7&&pfu<pf.dur-.8;
   const TALL=PET_TALL.includes(pet), PS=L.ps||null, PJC=PS&&PS.g&&PET_TINTS[PS.g]?tintCol(PET_TINTS[PS.g]):JC;
@@ -2120,7 +2123,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   c.restore();
   // ---- labels (unscaled)
   c.save(); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace";
-  const top=(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Prism crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
+  const top=MECH?mechTop+4:(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Prism crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
   if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; if(o.dcc>=0){ c.shadowColor=DCC_SYMS[o.dcc]?DCC_SYMS[o.dcc].c:c.fillStyle; c.shadowBlur=8+3*Math.sin(t*3); c.globalAlpha=1; } c.fillText(o.name,x,y-(top+bob)*s); c.shadowBlur=0; c.globalAlpha=1;
     if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }
     if(o.role||o.rk){ try{ drawRoleTag(c,x,y-(top+bob)*s,o.role||{rk:o.rk,cu:o.cu||null},t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }catch(e){} } }
@@ -4467,7 +4470,7 @@ const HELP=[
     ["The consoles",["14 retro, 13 modern, 13 future-tech and 20 Living Room Legends, each with its own play effect. Members redeem them with RP.","Every console has 7 games. The first comes free; buy the rest with credits in its Game library."]],
     ["Play",["Hold a console in your hand, insert a game and tap 🎮 Play for a 12-second session: a holo screen floats over your head for everyone to see. The first session every 20 minutes pays 2–5 chips.","Show them on your shelves. Find them all in ☰ → Game consoles or Stash → Game consoles. Consoles can't be sold, gifted, staked or traded."]]]},
   {id:"animedrop",icon:"🌸",n:"Neo Anime Drop",sub:"Animated clothes, companions and effects",where:"Smacked Shop → Digital",secs:[
-    ["The sets",["The Legends pack (20 skins inspired by games, movies and anime: outfits, hats, masks, weapons and items, all animated), the Neo Anime Drop (10 clothes, 10 companions, 10 effects), the 10 Spirit-Bound companions, each with a bond effect and a matching outfit, and the 8 Cyber Bears: Circuit panda, Cryo polar, Iron grizzly, Beat cub, Holo teddy, Volt sun bear, Lunar moon bear and Rocket cub."]],
+    ["The sets",["35 wearable Mech Suits (wear one in your Top slot and you walk around as that mech, with its own weapons and animations), the Legends pack (20 skins inspired by games, movies and anime: outfits, hats, masks, weapons and items, all animated), the Neo Anime Drop (10 clothes, 10 companions, 10 effects), the 10 Spirit-Bound companions, each with a bond effect and a matching outfit, and the 8 Cyber Bears: Circuit panda, Cryo polar, Iron grizzly, Beat cub, Holo teddy, Volt sun bear, Lunar moon bear and Rocket cub."]],
     ["Get them",["Members redeem them with RP and get them instantly, with no pickup code and nothing counted toward the monthly limit. Try them on in Character first. They can't be bought with credits and never drop as loot."]]]}]},
 
  {id:"social",icon:"👥",n:"Friends & chat",topics:[
@@ -8685,6 +8688,159 @@ function joinPending(){ return Object.values(dccReqs).filter(r=>r.status==="pend
 /* ============================================================ SMACKED DIGITAL: Neo Anime Drop */
 // 30 original anime-style cosmetics that members redeem with RP at Smacked Shop (no pickup, no real-life cost).
 // They live in the normal wardrobe slots, can't be bought with credits, and never drop as loot.
+/* ============================================================ MECH SUITS: 35 wearable mechs (digital RP items, "Top" slot).
+   Wearing one swaps your character for a walking mech. Original designs inspired by game, movie and anime genres. */
+// leg: biped heavy bird tread hover · body: box round vee slim barrel · head: visor mono horns dome crest skull jaw antenna cat bear hat
+// sh: pads missiles cannon shield radar spikes none · arm: fist blade gatling drill claw beam hammer saw hook shield mic
+// back: thrusters wings reactor fins stack banner tank cape halo none · fx: none steam sparks lightning bubbles snow petals glitch fire hearts runes leaves stars music siren speed
+const MECHS=[
+ {n:"Vanguard Striker",rp:9000,c:["#e8ecf4","#5a6478","#38a8ff"],g:"#38e8ff",leg:"biped",body:"vee",head:"visor",sh:"pads",arm:"beam",back:"thrusters",fx:"none",d:"A sleek real-robot anime frame with a beam rifle and boosters that flare when you move."},
+ {n:"Titan Gaia",rp:14000,c:["#c8282a","#1a1420","#ffd23a"],g:"#ffd23a",leg:"heavy",body:"vee",head:"horns",sh:"spikes",arm:"fist",back:"reactor",fx:"fire",d:"A towering super-robot with golden horns, rocket fists and a spinning power reactor wrapped in flames."},
+ {n:"Kaiju Breaker",rp:13000,c:["#7a8494","#3a4250","#f5c23a"],g:"#f5c23a",leg:"heavy",body:"barrel",head:"antenna",sh:"cannon",arm:"claw",back:"stack",fx:"steam",d:"A monster-fighting walker from giant-monster films. Shoulder cannon, grabber claw and a smokestack venting steam."},
+ {n:"Ironclad Sentinel",rp:11000,c:["#5a6a3a","#2a3420","#c8a040"],g:"#ff8a2a",leg:"biped",body:"box",head:"mono",sh:"missiles",arm:"gatling",back:"fins",fx:"sparks",d:"A battle-game walker with a sweeping mono-eye, a spinning gatling arm and a missile pod that launches now and then."},
+ {n:"Ronin Frame",rp:12000,c:["#a81e2a","#1a1014","#d8b040"],g:"#ff3a5a",leg:"biped",body:"slim",head:"crest",sh:"pads",arm:"blade",back:"banner",fx:"petals",d:"A samurai-anime mech with a crescent crest, a glowing katana arm and a war banner, trailing cherry petals."},
+ {n:"Shadow Wraith",rp:12000,c:["#1e1a28","#0b0812","#7c5cff"],g:"#b06bff",leg:"bird",body:"slim",head:"mono",sh:"none",arm:"claw",back:"cape",fx:"glitch",d:"A ninja-game stealth frame on bird legs with a tattered cape. It glitches in and out of sight."},
+ {n:"Seraph Unit",rp:15000,c:["#f4f0ff","#a8a4c0","#ffd36a"],g:"#ffe9a8",leg:"hover",body:"slim",head:"dome",sh:"shield",arm:"beam",back:"wings",fx:"stars",d:"An angel-type mecha from space-opera anime. Hovers on light, spreads mechanical wings and sheds stardust."},
+ {n:"Hellfire Juggernaut",rp:14000,c:["#5a1414","#1a0808","#ff6a1a"],g:"#ff6a1a",leg:"heavy",body:"vee",head:"skull",sh:"spikes",arm:"saw",back:"stack",fx:"fire",d:"A demon war machine with a skull face, a screaming buzzsaw arm and exhaust that spits fire."},
+ {n:"Coral Diver",rp:9000,c:["#e8b83a","#7a5a1a","#c87a2a"],g:"#38e8ff",leg:"heavy",body:"round",head:"dome",sh:"none",arm:"hook",back:"tank",fx:"bubbles",d:"An old deep-sea diving suit from ocean-adventure films, with a brass dome, an air tank and rising bubbles."},
+ {n:"Frost Warden",rp:10000,c:["#e8f6ff","#7a9ab8","#38c8ff"],g:"#a8e6ff",leg:"biped",body:"box",head:"visor",sh:"shield",arm:"drill",back:"reactor",fx:"snow",d:"An arctic expedition mech with an ice drill and a cold reactor, walking through its own snowfall."},
+ {n:"Desert Scorpion",rp:10000,c:["#c8a46a","#6a5030","#ff8a2a"],g:"#ff8a2a",leg:"bird",body:"barrel",head:"jaw",sh:"cannon",arm:"claw",back:"none",fx:"sparks",d:"A desert-war walker with a pincer claw and a tail cannon over its shoulder."},
+ {n:"Rex Hunter",rp:11000,c:["#3a8a4a","#1a3a20","#ff8a2a"],g:"#a6ff3a",leg:"bird",body:"round",head:"jaw",sh:"spikes",arm:"claw",back:"fins",fx:"leaves",d:"A dinosaur mech from monster-battle anime. Its jaws snap open and its back fins glow."},
+ {n:"Cargo Loader",rp:7000,c:["#f5c23a","#2a2a2a","#16121f"],g:"#ffb84a",leg:"biped",body:"box",head:"dome",sh:"none",arm:"claw",back:"stack",fx:"sparks",d:"A heavy cargo exo-loader from sci-fi movies. Hazard paint, grabber claws and a warning beacon."},
+ {n:"Patrol Enforcer",rp:9000,c:["#2a3a6a","#c9d3e0","#16121f"],g:"#38a8ff",leg:"biped",body:"vee",head:"visor",sh:"radar",arm:"beam",back:"none",fx:"siren",d:"A future-cop patrol frame from cyber-crime films, with a scanning radar dish and flashing police lights."},
+ {n:"Blaze Responder",rp:8000,c:["#d8282a","#f4f0ff","#f5c23a"],g:"#ffd36a",leg:"heavy",body:"box",head:"visor",sh:"none",arm:"hammer",back:"tank",fx:"steam",d:"A rescue mech for disaster movies, with a breaching hammer and a water tank that vents steam."},
+ {n:"Neon Racer",rp:9000,c:["#ff3fa8","#16121f","#38e8ff"],g:"#ff3fa8",leg:"tread",body:"slim",head:"mono",sh:"none",arm:"fist",back:"thrusters",fx:"speed",d:"A street-racing game mech that rolls on glowing treads and leaves speed lines behind."},
+ {n:"Pop Idol Frame",rp:10000,c:["#ffb3dc","#f4f0ff","#ff3fa8"],g:"#ff8ad8",leg:"hover",body:"round",head:"cat",sh:"none",arm:"mic",back:"wings",fx:"hearts",d:"A pop-idol anime mech with a glowing mic, little wings and hearts that float out while it hovers."},
+ {n:"Steam Colossus",rp:11000,c:["#b8803a","#5a3a1a","#e8c070"],g:"#ffb84a",leg:"heavy",body:"barrel",head:"antenna",sh:"pads",arm:"hammer",back:"stack",fx:"steam",d:"A brass steampunk giant with riveted plates, a steam hammer and a puffing smokestack."},
+ {n:"Grizzly Guardian",rp:10000,c:["#7a4a2a","#3a2414","#9aa4b8"],g:"#ff5a3a",leg:"heavy",body:"round",head:"bear",sh:"pads",arm:"claw",back:"reactor",fx:"sparks",d:"A bear-shaped guardian mech with steel claws and a glowing reactor. Pairs well with the Cyber Bears."},
+ {n:"Panda Pilot",rp:8000,c:["#f4f0ff","#16121f","#43f0a4"],g:"#43f0a4",leg:"biped",body:"round",head:"bear",sh:"none",arm:"fist",back:"fins",fx:"leaves",d:"A chubby panda mech with big black paws and glowing bamboo-green fins."},
+ {n:"Tidal Shark",rp:11000,c:["#3a6aa8","#e8f0f8","#1a2a4a"],g:"#38e8ff",leg:"hover",body:"slim",head:"jaw",sh:"spikes",arm:"saw",back:"fins",fx:"bubbles",d:"A shark mech that swims through the air, snapping its jaws with a spinning saw arm."},
+ {n:"Titan Ape",rp:13000,c:["#3a3a44","#1e1e24","#ff3a3a"],g:"#ff3a3a",leg:"heavy",body:"vee",head:"skull",sh:"pads",arm:"fist",back:"none",fx:"steam",d:"A giant-ape battle mech from monster movies with huge fists and a furious red stare."},
+ {n:"Dragon Lord",rp:15000,c:["#1a7a4a","#0a2a1a","#ffd23a"],g:"#ff8a2a",leg:"bird",body:"vee",head:"jaw",sh:"spikes",arm:"blade",back:"wings",fx:"fire",d:"A fantasy-anime dragon mech with flapping wings, a blade arm and a fiery breath."},
+ {n:"Arcane Knight",rp:13000,c:["#c9d3e0","#4a3a7a","#b06bff"],g:"#b06bff",leg:"biped",body:"vee",head:"crest",sh:"shield",arm:"blade",back:"cape",fx:"runes",d:"A magic-knight mech with a runed sword, a tower shield and a cape, circled by spell runes."},
+ {n:"Star Pirate",rp:12000,c:["#1e1624","#a81e2a","#d8b040"],g:"#ffd36a",leg:"biped",body:"box",head:"skull",sh:"cannon",arm:"hook",back:"banner",fx:"stars",d:"A space-pirate anime mech with a hook arm, a shoulder cannon and a skull flag flying behind it."},
+ {n:"Gunslinger",rp:9000,c:["#a8805a","#5a3a22","#d8b040"],g:"#ffb84a",leg:"biped",body:"slim",head:"hat",sh:"none",arm:"beam",back:"cape",fx:"sparks",d:"A western-movie robot cowboy with a wide hat, a long poncho and a six-shooter blaster."},
+ {n:"Glitch Ghost",rp:10000,c:["#16222a","#0a1014","#38e8ff"],g:"#38e8ff",leg:"hover",body:"slim",head:"mono",sh:"none",arm:"claw",back:"none",fx:"glitch",d:"A cyberpunk-film hacker frame that floats and keeps glitching in and out."},
+ {n:"Solar Paladin",rp:14000,c:["#ffd23a","#f4f0ff","#ff8a2a"],g:"#fff2a8",leg:"biped",body:"vee",head:"horns",sh:"shield",arm:"hammer",back:"halo",fx:"stars",d:"A holy-knight super robot in gold and white, with a sun hammer and a glowing halo."},
+ {n:"Bio Hornet",rp:11000,c:["#f5c23a","#16121f","#a6ff3a"],g:"#a6ff3a",leg:"bird",body:"slim",head:"mono",sh:"missiles",arm:"blade",back:"wings",fx:"sparks",d:"An insect mech from sci-fi bug-war films, with buzzing wings, a stinger blade and a missile pod."},
+ {n:"Thunder Rhino",rp:13000,c:["#5a6478","#2a2e38","#f5e663"],g:"#f5e663",leg:"tread",body:"barrel",head:"antenna",sh:"cannon",arm:"drill",back:"stack",fx:"lightning",d:"A heavy assault tank-mech with a drill arm and a big cannon, crackling with lightning."},
+ {n:"Ember Fox",rp:12000,c:["#ff8a2a","#f4f0ff","#ff3a1a"],g:"#ffb84a",leg:"bird",body:"slim",head:"cat",sh:"none",arm:"blade",back:"fins",fx:"fire",d:"A fox spirit mech from action anime, quick on bird legs, with flaming fins and a fire blade."},
+ {n:"Lunar Sentry",rp:10000,c:["#e8e4f4","#5a4a8a","#b98cff"],g:"#b98cff",leg:"hover",body:"round",head:"dome",sh:"radar",arm:"beam",back:"reactor",fx:"stars",d:"A moon-base defense mech from space movies. Hovers quietly with a turning radar dish."},
+ {n:"Jungle Ranger",rp:9000,c:["#4a6a3a","#2a3a1e","#8a6a3a"],g:"#a6ff3a",leg:"biped",body:"box",head:"mono",sh:"missiles",arm:"gatling",back:"tank",fx:"leaves",d:"A camo jungle-war walker from action games, with a gatling arm and a missile pod."},
+ {n:"Medic Frame",rp:8000,c:["#f4f0ff","#1ad1b0","#ff5a6a"],g:"#43f0a4",leg:"hover",body:"round",head:"visor",sh:"none",arm:"shield",back:"halo",fx:"hearts",d:"A rescue-medic mech from sci-fi hospital dramas. Hovers gently and gives off healing hearts."},
+ {n:"Omega Titan",rp:15000,c:["#16121f","#d8b040","#c8282a"],g:"#ff3a5a",leg:"heavy",body:"vee",head:"horns",sh:"cannon",arm:"blade",back:"wings",fx:"lightning",d:"The final-boss mech of every game: black and gold, huge wings, a giant blade and lightning everywhere."},
+];
+const MECH_BY=Object.fromEntries(MECHS.map(m=>[m.n,m]));
+function mechNoise(i){ const v=Math.sin(i*127.1)*43758.5; return v-Math.floor(v); }
+function drawMech(c,M,o,t,dir,em){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!o.sit, ph=(o.phase||0)*2, heavy=M.leg==="heavy";
+  const R=(x,y,w,h,f)=>{ if(f) c.fillStyle=f; c.fillRect(dir>0?x:-x-w,y,w,h); }, X=x=>dir*x, glow=(b)=>{ c.shadowColor=G; c.shadowBlur=b; }, noglow=()=>{ c.shadowBlur=0; };
+  const atk=em==="atk"?Math.sin(Math.min(1,(t-(o.emote?o.emote.t:t))/.3)*Math.PI):0;
+  let lift=0, bob=0;
+  if(M.leg==="hover"){ lift=14+Math.sin(t*2.2)*2.5; } else if(M.leg==="tread"){ lift=6; bob=mv?Math.sin(t*20)*.4:0; } else bob=mv?Math.abs(Math.sin(ph))*(heavy?2.6:1.8):Math.sin(t*1.6)*.5;
+  const hipY=-30-lift+bob+(o.sit?8:0), tTop=hipY-30, headY=tTop-8;
+  const sw=mv?Math.sin(ph):0;
+  // ---------- back unit (behind everything)
+  c.save(); const bx=X(-11), by=tTop+8;
+  if(M.back==="thrusters"){ for(const k of [-3,3]){ R(-15,by-2+k,6,8,C1); const fl=(mv?10:4)+Math.random()*4; c.fillStyle=G; glow(12); c.beginPath(); c.moveTo(X(-17),by+k); c.lineTo(X(-17-fl),by+3+k); c.lineTo(X(-17),by+6+k); c.fill(); noglow(); } }
+  else if(M.back==="wings"){ const f=Math.sin(t*(M.n==="Bio Hornet"?30:2.4))*(M.n==="Bio Hornet"?.25:.18); for(let k=0;k<3;k++){ c.save(); c.translate(bx,by-4); c.rotate(-dir*(.9-k*.35)+f*(k+1)*.5); c.fillStyle=k%2?C2:C0; c.fillRect(-2,-30+k*4,4,30-k*4); c.fillStyle=G; glow(8); c.fillRect(-1,-30+k*4,2,4); noglow(); c.restore(); } }
+  else if(M.back==="reactor"){ c.save(); c.translate(bx,by); c.strokeStyle=G; glow(10); c.lineWidth=2; c.beginPath(); c.ellipse(0,0,9,9*Math.abs(Math.cos(t*2))+1,0,0,7); c.stroke(); noglow(); c.fillStyle=C2; c.beginPath(); c.arc(0,0,3+Math.sin(t*5)*.6,0,7); c.fill(); c.restore(); }
+  else if(M.back==="fins"){ for(let k=0;k<3;k++){ const on=Math.floor(t*3)%3===k; c.fillStyle=on?G:C2; if(on) glow(10); c.beginPath(); c.moveTo(bx,by-6+k*7); c.lineTo(bx-X(10+k*2),by-14+k*7); c.lineTo(bx,by-2+k*7); c.fill(); noglow(); } }
+  else if(M.back==="stack"){ R(-15,by-22,6,22,C1); R(-16,by-24,8,3,C2); for(let k=0;k<4;k++){ const u=(t*.6+k/4)%1; c.globalAlpha=(1-u)*.5; c.fillStyle=M.n==="Hellfire Juggernaut"?"#ff6a1a":"#c8c4d0"; c.beginPath(); c.arc(X(-12)-X(u*6),by-26-u*26,2+u*5,0,7); c.fill(); } c.globalAlpha=1; }
+  else if(M.back==="banner"){ R(-13,by-34,2,40,C1); const w=Math.sin(t*3); c.fillStyle=G; c.beginPath(); c.moveTo(X(-11),by-34); for(let k=0;k<=5;k++) c.lineTo(X(-11-k*3.4),by-34+Math.sin(t*4-k*.8)*1.6*k*.4); for(let k=5;k>=0;k--) c.lineTo(X(-11-k*3.4),by-20+Math.sin(t*4-k*.8)*1.6*k*.4); c.fill(); c.fillStyle=C1; c.beginPath(); c.arc(X(-19),by-27+w*.5,2.6,0,7); c.fill(); }
+  else if(M.back==="tank"){ R(-17,by-6,7,20,C2); R(-16,by-8,5,3,C1); }
+  else if(M.back==="cape"){ const fl=mv?-dir*10:Math.sin(t*1.5)*2; c.fillStyle=C2; c.beginPath(); c.moveTo(X(-8),tTop+2); c.lineTo(X(8),tTop+2); c.quadraticCurveTo(X(-4)+fl*.4,hipY,X(-10)+fl,hipY+20); for(let k=0;k<5;k++) c.lineTo(X(-10+k*4)+fl,hipY+20-(k%2?4:0)); c.closePath(); c.fill(); }
+  else if(M.back==="halo"){ c.strokeStyle=G; glow(12); c.lineWidth=2; c.beginPath(); c.ellipse(0,headY-14+Math.sin(t*2),11,3.4,0,0,7); c.stroke(); noglow(); }
+  c.restore();
+  // ---------- legs
+  const leg=(side,col)=>{ const a=sw*side*.5, hx=X(side*5); c.strokeStyle=col; c.lineCap="round";
+    if(M.leg==="tread"){ return; }
+    if(M.leg==="hover"){ return; }
+    if(M.leg==="bird"){ const kx=hx+X(5)+Math.sin(a)*6, ky=hipY+12, ax=hx-X(3)+Math.sin(a)*10, ay=-6-(mv&&Math.sin(ph*1+side)>0?Math.sin(ph+side*1.5)*2:0)+bob*0;
+      c.lineWidth=5; c.beginPath(); c.moveTo(hx,hipY); c.lineTo(kx,ky); c.lineTo(ax,ay); c.stroke(); c.lineWidth=3; c.beginPath(); c.moveTo(ax,ay); c.lineTo(ax+X(1),0); c.stroke(); c.fillStyle=col; c.fillRect(ax-4,-2,8,2.4); c.fillStyle=C2; c.beginPath(); c.arc(kx,ky,2.2,0,7); c.fill(); return; }
+    const th=a, kx=hx+Math.sin(th)*14*dir, ky=hipY+Math.cos(th)*14, sa=th*.25-(mv&&Math.sin(ph+(side>0?0:Math.PI))<0?.4:0), fx=kx+Math.sin(sa)*15*dir, fy=Math.min(0,ky+Math.cos(sa)*15);
+    c.lineWidth=heavy?9:6.5; c.beginPath(); c.moveTo(hx,hipY); c.lineTo(kx,ky); c.stroke(); c.lineWidth=heavy?8:5.5; c.beginPath(); c.moveTo(kx,ky); c.lineTo(fx,fy-2); c.stroke();
+    c.fillStyle=col; c.fillRect(fx-(heavy?7:5)+X(1),fy-3,heavy?14:10,3.4); c.fillStyle=C2; c.beginPath(); c.arc(kx,ky,heavy?3.4:2.6,0,7); c.fill(); };
+  leg(-1,C1);
+  if(M.leg==="tread"){ R(-14,-10,28,10,C1); c.fillStyle="#16121f"; for(let k=0;k<4;k++){ const wx=-10+k*6.6; c.beginPath(); c.arc(wx,-5,3,0,7); c.fill(); c.save(); c.translate(wx,-5); c.rotate((mv?t*14:0)*dir); c.fillStyle=C2; c.fillRect(-.6,-3,1.2,6); c.restore(); c.fillStyle="#16121f"; }
+    c.fillStyle=G; glow(6); const off=mv?(t*40)%6:0; for(let x=-14+off;x<14;x+=6) c.fillRect(x,-11,3,1.4); noglow(); R(-5,hipY,10,-hipY-10,C1); R(-7,-13,14,3,C2); }
+  if(M.leg==="hover"){ c.fillStyle=C1; c.beginPath(); c.ellipse(0,hipY+6,10,4,0,0,7); c.fill(); for(const k of [-6,0,6]){ const fl=6+Math.sin(t*20+k)*2; c.fillStyle=G; glow(10); c.globalAlpha=.85; c.beginPath(); c.moveTo(k-2,hipY+9); c.lineTo(k,hipY+9+fl); c.lineTo(k+2,hipY+9); c.fill(); c.globalAlpha=1; noglow(); } }
+  // back arm
+  const arm=(side,front)=>{ const swing=(front?-sw:sw)*.45, sx=X(side*12), sy=tTop+5; let ex, ey;
+    const a=front&&atk>0?-1.4*atk:swing; ex=sx+Math.sin(a)*dir*10*(front&&atk?1.4:1); ey=sy+Math.cos(a)*10; const wx=ex+Math.sin(a*1.2)*dir*10*(front&&atk?1.3:1), wy=ey+Math.cos(a*1.2)*10;
+    c.strokeStyle=front?C0:C1; c.lineCap="round"; c.lineWidth=heavy?7:5.5; c.beginPath(); c.moveTo(sx,sy); c.lineTo(ex,ey); c.lineTo(wx,wy); c.stroke(); c.fillStyle=C2; c.beginPath(); c.arc(ex,ey,2.4,0,7); c.fill();
+    if(!front){ c.fillStyle=C1; c.fillRect(wx-3.5,wy-3,7,7); return; }
+    weapon(wx,wy,a); };
+  const weapon=(x,y,a)=>{ c.save(); c.translate(x,y); c.rotate(-a*dir*.9); const W=M.arm;
+    if(W==="fist"){ const s=heavy?1.4:1.1; R(-4*s,-3*s,9*s,8*s,C0); R(-4*s,-3*s,9*s,2,C2); if(atk>.5){ c.fillStyle=G; glow(14); c.beginPath(); c.arc(X(8),2,4*atk,0,7); c.fill(); noglow(); } }
+    else if(W==="blade"){ R(-2.5,-2,5,6,C1); const p=.75+.25*Math.sin(t*6); c.fillStyle=G; glow(12*p); c.beginPath(); c.moveTo(X(-1.6),2); c.lineTo(X(1.6),2); c.lineTo(X(1),26); c.lineTo(0,30); c.lineTo(X(-1),26); c.fill(); noglow(); c.fillStyle="#fff"; c.fillRect(dir>0?-.4:-.4,4,.8,22); }
+    else if(W==="gatling"){ R(-4,-2,8,6,C1); const spin=(t*(atk>0?40:8))%3; for(let k=0;k<3;k++){ R(-3+k*2,4,1.6,12,(Math.floor(spin)===k)?C2:C0); } if(atk>0||Math.sin(t*3)>.95){ c.fillStyle="#ffd36a"; glow(10); c.beginPath(); c.arc(0,18,3,0,7); c.fill(); noglow(); } }
+    else if(W==="drill"){ R(-4,-2,8,5,C1); c.fillStyle=C2; c.beginPath(); c.moveTo(-5,3); c.lineTo(5,3); c.lineTo(0,20); c.fill(); c.strokeStyle=C1; c.lineWidth=1; const off=(t*(atk>0?30:10))%4; for(let k=0;k<5;k++){ const y=4+k*3.4+off; if(y>19) continue; const w=5*(1-(y-3)/17); c.beginPath(); c.moveTo(-w,y); c.lineTo(w,y+2); c.stroke(); } }
+    else if(W==="claw"){ R(-4,-2,8,5,C1); const op=.3+.3*Math.abs(Math.sin(t*2.4))+atk*.4; for(const s of [-1,0,1]){ c.save(); c.translate(s*2.4,3); c.rotate(s*op); c.fillStyle=C2; c.beginPath(); c.moveTo(-1.2,0); c.lineTo(1.2,0); c.lineTo(0,9); c.fill(); c.restore(); } }
+    else if(W==="beam"){ R(-2,-2,4,5,C1); c.save(); c.rotate(-dir*1.2); R(-2,-2,16,4,C0); R(4,-4,6,2,C1); const ch=(t*.7)%1; c.fillStyle=G; glow(6+ch*10); c.beginPath(); c.arc(X(15),0,1+ch*2.4+atk*3,0,7); c.fill(); noglow(); c.restore(); }
+    else if(W==="hammer"){ R(-1.2,-2,2.4,16,C1); R(-6,12,12,8,C0); R(-6,12,12,2,C2); if(atk>.5){ c.strokeStyle=G; glow(10); c.beginPath(); c.arc(0,16,8+atk*6,0,7); c.stroke(); noglow(); } }
+    else if(W==="saw"){ R(-2,-2,4,8,C1); c.save(); c.translate(0,10); c.rotate(t*(atk>0?30:12)); c.fillStyle=C2; c.beginPath(); for(let k=0;k<16;k++){ const r=k%2?6:8; c.lineTo(Math.cos(k*Math.PI/8)*r,Math.sin(k*Math.PI/8)*r); } c.fill(); c.fillStyle=C1; c.beginPath(); c.arc(0,0,2.4,0,7); c.fill(); c.restore(); if(Math.sin(t*9)>.6){ c.fillStyle="#ffd36a"; c.fillRect(X(6),12,1.6,1.6); } }
+    else if(W==="hook"){ R(-2,-2,4,8,C1); c.strokeStyle=C2; c.lineWidth=2.4; c.beginPath(); c.moveTo(0,6); c.lineTo(0,12); c.arc(X(-4),12,4,0,Math.PI,dir<0); c.stroke(); }
+    else if(W==="shield"){ R(-6,-6,12,18,C0); R(-6,-6,12,2,C2); c.fillStyle=G; glow(8+4*Math.sin(t*3)); c.fillRect(-1,-1,2,8); c.fillRect(-4,2,8,2); noglow(); }
+    else if(W==="mic"){ R(-1.4,-2,2.8,10,C1); c.fillStyle=G; glow(10+4*Math.sin(t*5)); c.beginPath(); c.arc(0,10,3.6,0,7); c.fill(); noglow(); }
+    c.restore(); };
+  arm(-1,false);
+  // ---------- front leg, hips, torso
+  leg(1,C0);
+  R(-9,hipY-4,18,7,C1);
+  const B=M.body; c.fillStyle=C0;
+  if(B==="box"){ R(-11,tTop,22,28,C0); R(-11,tTop,22,3,C2); R(-9,tTop+20,18,2,C1); }
+  else if(B==="round"){ c.beginPath(); c.ellipse(0,tTop+14,13,15,0,0,7); c.fill(); c.fillStyle=C1; c.beginPath(); c.ellipse(0,tTop+22,8,5,0,0,7); c.fill(); }
+  else if(B==="vee"){ c.beginPath(); c.moveTo(-15,tTop); c.lineTo(15,tTop); c.lineTo(8,tTop+28); c.lineTo(-8,tTop+28); c.fill(); c.fillStyle=C2; c.beginPath(); c.moveTo(-15,tTop); c.lineTo(15,tTop); c.lineTo(13,tTop+4); c.lineTo(-13,tTop+4); c.fill(); }
+  else if(B==="slim"){ R(-8,tTop,16,16,C0); R(-6,tTop+16,12,12,C0); R(-8,tTop+15,16,2,C2); }
+  else if(B==="barrel"){ c.beginPath(); c.ellipse(0,tTop+14,15,14,0,0,7); c.fill(); c.fillStyle=C2; for(const y of [6,14,22]) c.fillRect(-14,tTop+y,28,1.4); }
+  // chest core
+  const cp=.5+.5*Math.sin(t*3); c.fillStyle=G; glow(6+cp*10); c.beginPath(); c.moveTo(X(2),tTop+8); c.lineTo(X(6),tTop+12); c.lineTo(X(2),tTop+16); c.lineTo(X(-2),tTop+12); c.closePath(); c.fill(); noglow();
+  if(M.n==="Medic Frame"){ c.fillStyle="#ff5a6a"; R(-1,tTop+18,2,7); R(-4.5,tTop+20.5,9,2); }
+  if(M.n==="Cargo Loader"){ for(let x=-11;x<11;x+=4){ c.fillStyle=(x/4)%2?"#f5c23a":"#16121f"; c.fillRect(x,tTop+24,4,4); } }
+  // ---------- shoulders
+  const S=M.sh, sx=X(13), sy=tTop+2;
+  if(S==="pads"||S==="spikes"||S==="shield"){ c.fillStyle=C2; c.beginPath(); c.ellipse(sx,sy+2,7,5,0,Math.PI,0); c.fill(); c.fillStyle=C0; c.fillRect(sx-7,sy+2,14,3);
+    if(S==="spikes"){ c.fillStyle=C2; for(const k of [-4,0,4]){ c.beginPath(); c.moveTo(sx+k-1.6,sy-2); c.lineTo(sx+k,sy-9-(k===0?3:0)); c.lineTo(sx+k+1.6,sy-2); c.fill(); } } }
+  if(S==="shield"){ R(-22,tTop-2,8,22,C2); c.fillStyle=G; glow(6); R(-19,tTop+6,2,6); noglow(); }
+  if(S==="missiles"){ R(-20,tTop-8,12,9,C1); for(let k=0;k<4;k++) R(-19+(k%2)*5,tTop-7+Math.floor(k/2)*4,3,3,"#16121f"); const u=(t*.4)%1; if(u<.4){ const mx=X(-14)+X(u*18), my=tTop-10-u*70; c.fillStyle=C0; c.fillRect(mx-1,my,2,5); c.fillStyle="#ffb84a"; glow(8); c.fillRect(mx-1,my+5,2,3); noglow(); for(let k=0;k<4;k++){ c.globalAlpha=.3*(1-k/4); c.fillStyle="#c8c4d0"; c.beginPath(); c.arc(mx,my+8+k*5,1.6+k,0,7); c.fill(); } c.globalAlpha=1; } }
+  if(S==="cannon"){ const rc=((t*.5)%1<.08)?-3:0; c.fillStyle=C1; c.fillRect(X(-14)-4,tTop-6,8,6); c.save(); c.translate(X(-12),tTop-5); c.rotate(dir>0?-.12:Math.PI+.12); c.fillStyle=C0; c.fillRect(rc,-2.4,28,4.8); c.fillStyle=C2; c.fillRect(rc+24,-3,4,6); if(rc){ c.fillStyle="#ffd36a"; glow(14); c.beginPath(); c.arc(31,0,5,0,7); c.fill(); noglow(); } c.restore(); }
+  if(S==="radar"){ R(-14,tTop-8,2,8,C1); c.save(); c.translate(X(-13),tTop-12); c.scale(Math.cos(t*2),1); c.fillStyle=C2; c.beginPath(); c.ellipse(0,0,7,4,0,0,7); c.fill(); c.fillStyle=G; c.fillRect(-.6,-4,1.2,4); c.restore(); }
+  // ---------- head
+  const H=M.head, hy=headY; c.save();
+  if(H==="visor"||H==="antenna"||H==="hat"){ R(-6,hy-8,12,11,C0); R(-5,hy-4,10,3,"#0b0716"); c.fillStyle=G; glow(8); R(-4+((t*10)%6),hy-3.6,3,2.2); noglow();
+    if(H==="antenna"){ R(-1,hy-16,1.6,8,C1); c.fillStyle=Math.sin(t*5)>0?G:C1; c.beginPath(); c.arc(0,hy-17,2,0,7); c.fill(); }
+    if(H==="hat"){ R(-12,hy-9,24,2.4,C1); R(-6,hy-15,12,7,C1); R(-6,hy-10,12,1.4,C2); } }
+  else if(H==="mono"){ c.fillStyle=C0; c.beginPath(); c.arc(0,hy-2,7,Math.PI,0); c.fill(); R(-7,hy-2,14,5,C0); R(-6,hy-3,12,3,"#0b0716"); const ex=Math.sin(t*1.6)*4.4; c.fillStyle=G; glow(12); c.beginPath(); c.arc(ex,hy-1.5,1.8,0,7); c.fill(); noglow(); }
+  else if(H==="horns"){ R(-6,hy-8,12,11,C0); c.fillStyle=C2; glow(6); for(const s of [-1,1]){ c.beginPath(); c.moveTo(s*2,hy-7); c.lineTo(s*12,hy-16); c.lineTo(s*4,hy-4); c.fill(); } noglow(); R(-1.6,hy-11,3.2,4,G); c.fillStyle=G; glow(8); R(X(1),hy-4,3,1.8); R(X(-4),hy-4,3,1.8); noglow(); R(-3,hy,6,2,C1); }
+  else if(H==="dome"){ c.fillStyle=C1; c.fillRect(-8,hy-1,16,4); const g2=c.createLinearGradient(0,hy-12,0,hy); g2.addColorStop(0,"#5a7aa8"); g2.addColorStop(1,"#1a2a4a"); c.fillStyle=g2; c.beginPath(); c.arc(0,hy-1,8,Math.PI,0); c.fill(); c.fillStyle="rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(X(-3),hy-6,2,1.2,-.5,0,7); c.fill(); c.fillStyle="#1a1420"; c.beginPath(); c.arc(X(1),hy-3,2.6,0,7); c.fill(); }
+  else if(H==="crest"){ R(-6,hy-8,12,11,C1); R(-7,hy-8,14,3,C0); c.strokeStyle=C2; glow(6); c.lineWidth=2; c.beginPath(); c.arc(0,hy-12,8,Math.PI*.15,Math.PI*.85,true); c.stroke(); noglow(); c.fillStyle=G; glow(8); R(-4,hy-3,8,1.6); noglow(); }
+  else if(H==="skull"){ R(-6,hy-9,12,9,C0); R(-4,hy,8,4,C0); for(let k=0;k<4;k++) R(-3.6+k*2,hy+1,1,3,"#0b0716"); c.fillStyle=G; glow(10); R(-4.5,hy-6,3,3); R(1.5,hy-6,3,3); noglow(); }
+  else if(H==="jaw"){ const op=Math.max(0,Math.sin(t*1.8))*.5+atk*.4; R(-5,hy-9,14,8,C0); c.save(); c.translate(X(-3),hy-1); c.rotate(dir*op*.5); R(-2,0,13,3.4,C1); for(let k=0;k<4;k++) R(1+k*3,-1,1.4,1.6,"#f4f0ff"); c.restore(); for(let k=0;k<4;k++) R(2+k*3,hy-2,1.4,1.6,"#f4f0ff"); c.fillStyle=G; glow(10); R(3,hy-7,2.4,2); noglow();
+    if(M.n==="Dragon Lord"&&op>.35){ for(let k=0;k<6;k++){ c.fillStyle=k%2?"#ffd36a":"#ff6a1a"; c.globalAlpha=1-k/6; c.beginPath(); c.arc(X(12+k*4),hy+k*.6+Math.sin(t*20+k),2+k*.8,0,7); c.fill(); } c.globalAlpha=1; } }
+  else if(H==="cat"||H==="bear"){ R(-6,hy-8,12,11,C0); if(H==="cat"){ c.fillStyle=C0; for(const s of [-1,1]){ c.beginPath(); c.moveTo(s*2,hy-8); c.lineTo(s*6,hy-15); c.lineTo(s*6,hy-8); c.fill(); } c.fillStyle=C2; for(const s of [-1,1]){ c.beginPath(); c.moveTo(s*3.6,hy-8); c.lineTo(s*5.4,hy-12.5); c.lineTo(s*5.4,hy-8); c.fill(); } }
+    else { c.fillStyle=C1; for(const s of [-1,1]){ c.beginPath(); c.arc(s*5.4,hy-8,3,0,7); c.fill(); } if(M.n==="Panda Pilot"){ R(-5,hy-5,4,4,"#16121f"); R(1,hy-5,4,4,"#16121f"); } }
+    const blink=(t%3.4)<.12; c.fillStyle=G; glow(8); R(-4,hy-4,2.4,blink?.6:2.4); R(1.6,hy-4,2.4,blink?.6:2.4); noglow(); R(-1,hy,2,1.4,C2); }
+  c.restore();
+  // ---------- front arm with weapon
+  arm(1,true);
+  // ---------- effects
+  const F=M.fx, rnd=mechNoise;
+  if(F==="steam"){ for(let k=0;k<4;k++){ const u=(t*.7+k/4)%1; c.globalAlpha=(1-u)*.45; c.fillStyle="#e8e4ee"; c.beginPath(); c.arc((k%2?-1:1)*(10+u*6),hipY-u*20,2+u*5,0,7); c.fill(); } c.globalAlpha=1; }
+  if(F==="sparks"){ for(let k=0;k<5;k++){ const i=Math.floor(t*8)+k*13, a=rnd(i)*6.28, d=8+rnd(i+3)*16; c.fillStyle=k%2?"#ffd36a":"#ffffff"; c.fillRect(Math.cos(a)*d,hipY-10+Math.sin(a)*d*.7,1.4,1.4); } }
+  if(F==="lightning"&&Math.sin(t*4)>.2){ c.strokeStyle=G; glow(12); c.lineWidth=1.2; for(let k=0;k<2;k++){ let x=(rnd(Math.floor(t*10)+k)-.5)*30, y=tTop-10; c.beginPath(); c.moveTo(x,y); for(let j=0;j<5;j++){ x+=(rnd(Math.floor(t*10)+j*7+k)-.5)*10; y+=8; c.lineTo(x,y); } c.stroke(); } noglow(); }
+  if(F==="bubbles"){ for(let k=0;k<6;k++){ const u=(t*.4+k/6)%1; c.globalAlpha=1-u; c.strokeStyle="#c8f0ff"; c.lineWidth=1; c.beginPath(); c.arc((k-2.5)*5+Math.sin(t*2+k)*3,headY-4-u*40,1.4+k%3*.6,0,7); c.stroke(); } c.globalAlpha=1; }
+  if(F==="snow"){ for(let k=0;k<8;k++){ const u=(t*.2+k/8)%1; c.globalAlpha=Math.sin(u*Math.PI); c.fillStyle="#ffffff"; c.fillRect(-26+k*7+Math.sin(t+k)*3,headY-20+u*90,1.6,1.6); } c.globalAlpha=1; }
+  if(F==="petals"){ for(let k=0;k<6;k++){ const u=(t*.25+k/6)%1; c.save(); c.translate(-dir*(u*40)+(k-3)*6,headY-10+u*70+Math.sin(t*2+k)*3); c.rotate(t*3+k); c.globalAlpha=1-u; c.fillStyle="#ffb3dc"; c.beginPath(); c.ellipse(0,0,2.6,1.4,0,0,7); c.fill(); c.restore(); } }
+  if(F==="glitch"&&(t%2.6)<.35){ for(let k=0;k<4;k++){ const y=headY+rnd(Math.floor(t*30)+k)*80; c.fillStyle=k%2?G:"#ff3fa8"; c.globalAlpha=.7; c.fillRect(-16+(rnd(k+Math.floor(t*30))-.5)*10,y,32,1.6); } c.globalAlpha=1; }
+  if(F==="fire"){ for(let k=0;k<6;k++){ const u=(t*.8+k/6)%1; c.globalAlpha=(1-u)*.8; c.fillStyle=k%2?"#ffb84a":"#ff5a1a"; c.beginPath(); c.arc((rnd(k)-.5)*24+Math.sin(t*4+k)*2,-2-u*30,2.4*(1-u)+.6,0,7); c.fill(); } c.globalAlpha=1; }
+  if(F==="hearts"){ for(let k=0;k<3;k++){ const u=(t*.4+k/3)%1; c.save(); c.translate((k-1)*10+Math.sin(t*2+k)*3,headY-6-u*30); c.scale(1-u*.4,1-u*.4); c.globalAlpha=1-u; c.fillStyle=k===1?G:"#ff3fa8"; c.beginPath(); c.moveTo(0,2.5); c.bezierCurveTo(-4,-.5,-2.5,-4,0,-1.6); c.bezierCurveTo(2.5,-4,4,-.5,0,2.5); c.fill(); c.restore(); } }
+  if(F==="runes"){ c.fillStyle=G; glow(8); c.font="7px monospace"; c.textAlign="center"; for(let k=0;k<6;k++){ const an=t*1.2+k*1.047, back=Math.sin(an)<0; c.globalAlpha=back?.35:.9; c.fillText("ᚠᚢᚦᚨᚱᚲ"[k],Math.cos(an)*22,tTop+10+Math.sin(an)*6); } c.globalAlpha=1; noglow(); }
+  if(F==="leaves"){ for(let k=0;k<5;k++){ const u=(t*.22+k/5)%1; c.save(); c.translate((k-2)*10+Math.sin(t+k)*6,headY-10+u*80); c.rotate(t*2+k); c.globalAlpha=1-u; c.fillStyle=k%2?"#43c06a":"#a6d84a"; c.beginPath(); c.ellipse(0,0,3,1.4,0,0,7); c.fill(); c.restore(); } }
+  if(F==="stars"){ for(let k=0;k<6;k++){ const tw=Math.max(0,Math.sin(t*2.4+k*1.7)); c.globalAlpha=tw; c.fillStyle=k%2?G:"#ffffff"; const x=Math.sin(k*2.3)*24, y=headY-4+Math.cos(k*1.9)*30+20; c.fillRect(x-.6,y-2.4,1.2,4.8); c.fillRect(x-2.4,y-.6,4.8,1.2); } c.globalAlpha=1; }
+  if(F==="siren"){ const on=Math.floor(t*6)%2; R(-5,headY-12,4,3,on?"#ff3a3a":"#5a1a1a"); R(1,headY-12,4,3,on?"#2a3a6a":"#38a8ff"); c.fillStyle=on?"rgba(255,58,58,.25)":"rgba(56,168,255,.25)"; c.beginPath(); c.arc(0,headY-10,16,0,7); c.fill(); }
+  if(F==="speed"&&mv){ c.strokeStyle=G; c.lineWidth=1; for(let k=0;k<5;k++){ const u=(t*3+k/5)%1; c.globalAlpha=1-u; c.beginPath(); const y=hipY-20+k*8; c.moveTo(X(-16-u*30),y); c.lineTo(X(-26-u*30),y); c.stroke(); } c.globalAlpha=1; }
+  return {top:-(headY-16)};
+}
 const DIGI=[
   // clothes
   {k:"style",n:"Flame-trim longcoat",rp:3500,g:"Clothes",d:"A long battle coat whose hem burns with living flame. Tints with your Accent color."},
@@ -8771,6 +8927,8 @@ const DIGI=[
   {k:"back",n:"Shoulder boombox",rp:3000,g:"Legends",d:"An 80s movie boombox riding on your shoulder. The speakers pump and music notes float out."},
   {k:"aura",n:"Floating grimoire",rp:4500,g:"Legends",d:"A spellbook from a fantasy anime that floats beside you, flipping pages while runes circle it."},
 ];
+// Mech Suits go in the Top slot: wearing one turns your character into that walking mech.
+DIGI.push(...MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Mech Suits",d:m.d+" Wear it and you walk around as this mech."})));
 const DIGI_PETS={
   "Wisp guardian":{p:"Small, brave and always watching your back.",trait:{k:"guard",v:10,short:"10% less Void damage"},ab:{k:"buff",b:"guard",n:"Guardian Ward",cd:45,d:"Void armor for 10 min"},say:["I've got you!","*sparkle*","Stay close."]},
   "Ember kit":{p:"Mischievous and warm. Loves shiny scrap.",trait:{k:"luck",v:10,short:"Luckier Scrap finds"},ab:{k:"fetch",n:"Ember Dig",cd:120,d:"Finds a random part"},say:["kyu!","*tails flare*","Fetch, fetch!"]},
@@ -9115,7 +9273,7 @@ function bearBody(B,st,C,lift){ const R=B.R, h=lift||0;
 // --- Smacked Shop: the Digital tab
 function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
     el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.${save.digiFree!==monthKey()?" Your free monthly item is ready: open any item to claim it.":" You've claimed this month's free item."}`:"Members redeem digital rewards with RP and get one free each month. You can try anything on in Character first."}))));
-  for(const grp of ["Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
+  for(const grp of ["Mech Suits","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
     const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
       const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${digiPrice(d).toLocaleString()} RP`}),!digiOn(d)?el("span",{class:"r-epic",text:"Hidden"}):null));
       g.append(c); } body.append(g); } consoleShopView(body); }
@@ -9135,7 +9293,7 @@ function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(
 // Owner tools → Digital items: price and show/hide every item.
 function digiAdmin(body){ body.append(el("p",{class:"sub",text:"Set the RP price for each digital item and choose which ones are in the shop. Digital items cost you nothing to hand out, so every RP spent on them is profit. Players who already own an item keep it even if you hide it."}));
   const rows=[]; const l=el("div",{class:"list"});
-  for(const grp of ["Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
+  for(const grp of ["Mech Suits","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
     for(const d of DIGI.filter(x=>x.g===grp)){ const cv=lookCanvas({...fullLook(save.look),[d.k]:digiIndex(d)},44); cv.style.cssText+=";width:48px;height:48px;flex:none";
       const rp=el("input",{class:"num",type:"number",min:"1",step:"100",value:String(digiPrice(d)),style:"width:110px","aria-label":`RP price for ${d.n}`});
       const on=el("input",{type:"checkbox","aria-label":`${d.n} is in the shop`}); on.checked=digiOn(d); rows.push([d,rp,on]);
