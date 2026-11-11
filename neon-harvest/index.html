@@ -4104,6 +4104,19 @@ const IDLE_TASKS=[
   {k:"rp",ic:"💠",n:"Earn RP",d:"Works the Harvest Assembly line. Club members earn RP from every credit of work.",earn:"RP for members · credits · NRC"},
   {k:"nrc",ic:"🔷",n:"Earn NRC",d:"Works the Gamers Den crew. Work pay turns into NRC.",earn:"NRC · credits · RP for members"},
   {k:"all",ic:"🔄",n:"Do a bit of everything",d:"Rotates through every job, digging for parts and partying.",earn:"A bit of everything"},
+  {k:"life",ic:"🌆",n:"Live a day in the city",d:"Lives like a real person: walks everywhere, rides the metro, works, eats and drinks, plays 12/11, reads, parties, builds rigs, shops and hangs out with their companion.",earn:"A bit of everything"},
+];
+// Specific things to do. Your runner walks and rides the metro there, and you watch every game and menu they use.
+const IDLE_LIFETASKS=[
+  {k:"play1211",ic:"🎮",n:"Play 12/11",d:"Rides to The Line and plays 12/11 on the cabinet. You watch the game."},
+  {k:"read",ic:"📖",n:"Read Ramblings of a Mad Man",d:"Goes to Story Mode and reads the book page by page."},
+  {k:"ccj",ic:"⚔️",n:"Play Companion Clash",d:"Plays the Companion Clash JRPG with your companion."},
+  {k:"clubtrip",ic:"💊",n:"Club items & party",d:"Buys a club item at The Third Eye, takes it and hits the dance floor."},
+  {k:"drinks",ic:"🍸",n:"Drinks at The Glitch",d:"Orders drinks and food at The Glitch and hangs out at the bar."},
+  {k:"build",ic:"🔧",n:"Build rigs",d:"Goes home and builds rigs on the workbench. Digs Scrap Alley for parts when it runs out."},
+  {k:"pet",ic:"🐾",n:"Hang out with my companion",d:"Goes home to pet, play with and train your companion."},
+  {k:"rigs",ic:"⛏",n:"Check on my rigs",d:"Collects chips from the mining rack and admires the display shelves."},
+  {k:"shop",ic:"🛍",n:"Window shopping",d:"Browses stores all over the city. Looks only, never buys."},
 ];
 const IDLE_JOBTASKS=[
   {k:"bar",ic:"🍸",n:"Bartend at The Glitch",d:"Serves drinks and food at the bar."},
@@ -4124,27 +4137,134 @@ const IDLE_JOBS={
 };
 const IDLE_SCRAP=[2980,3140,3300,3460,3600];
 let IDLE=null, idleDockEl=null;
-function idleTask(k){ return IDLE_TASKS.find(t=>t.k===k)||IDLE_JOBTASKS.find(t=>t.k===k); }
+function idleTask(k){ return IDLE_TASKS.find(t=>t.k===k)||IDLE_JOBTASKS.find(t=>t.k===k)||IDLE_LIFETASKS.find(t=>t.k===k); }
 function idleNrc(){ try{ return nrcBal()+(+nrcPend||0); }catch(e){ return 0; } }
 function idleStart(k){ const T0=idleTask(k); if(!T0) return; closePanel(); if(me.dead||(typeof jailed==="function"&&jailed())){ toast("Your runner can't go idle right now."); return; } if(me.scene==="ascend"||me.scene==="void"){ toast("Leave this place first, then go idle."); return; }
   me.seat=null; me.homeSit=null; me.dancing=false; target=null; IDLE={k,t0:Date.now(),cur:null,phase:"go",spot:null,next:0,wage:0,rot:0,rotAt:0,log:[],fl:[],act:"Getting ready…",st:{cr:0,parts:0,chips:0,rp0:+save.rp||0,nrc0:idleNrc()}};
   idleLog(`${T0.ic} ${T0.n}`); beep(660,.06); setTimeout(()=>beep(990,.08),80); idleDockUpd(true); try{ stTrack("act","Idle: "+T0.n); }catch(e){} }
-function idleStop(why){ if(!IDLE) return; const S=idleStats(); IDLE=null; target=null; me.dancing=false; if(idleDockEl) idleDockEl.hidden=true; toast(`${why?why+" ":""}Idle stopped · ${S}`,"#43f0a4"); }
+function idleStop(why){ if(!IDLE) return; const S=idleStats(); try{ idleEndActivity(); }catch(e){} IDLE=null; target=null; me.dancing=false; if(idleDockEl) idleDockEl.hidden=true; toast(`${why?why+" ":""}Idle stopped · ${S}`,"#43f0a4"); }
 function idleStats(){ if(!IDLE) return ""; const s=IDLE.st, rp=Math.max(0,(+save.rp||0)-s.rp0), nrcG=Math.max(0,idleNrc()-s.nrc0), m=Math.floor((Date.now()-IDLE.t0)/60e3), sec=Math.floor((Date.now()-IDLE.t0)/1000)%60;
   return [`₵+${s.cr}`,rp?`RP +${rp}`:"",nrcG?`NRC +${nrcG}`:"",s.parts?`🔧 ${s.parts}`:"",s.chips?`chips +${s.chips}`:"",`⏱ ${m}:${String(sec).padStart(2,"0")}`].filter(Boolean).join(" · "); }
 function idleLog(t){ if(!IDLE) return; IDLE.log.unshift(t); IDLE.log.length=Math.min(IDLE.log.length,30); idleDockUpd(); }
 function idleAct(t){ if(IDLE&&IDLE.act!==t){ IDLE.act=t; idleDockUpd(); } }
 function idleFloat(t,col){ if(IDLE){ IDLE.fl.push({t,col:col||"#ffd36a",t0:performance.now()}); if(IDLE.fl.length>6) IDLE.fl.shift(); } }
-function idleGoTo(scene,x){ if(me.scene!==scene){ if(IDLE.travelAt&&Date.now()-IDLE.travelAt<2500) return false; IDLE.travelAt=Date.now(); idleLog(`🚇 Heads to ${sceneName(scene)}`); idleAct(`Traveling to ${sceneName(scene)}`); go(scene,clamp(x-200,SCENES[scene].spawn,SCENES[scene].w-100)); return false; }
-  if(Math.abs(me.x-x)>10){ if(!target||Math.abs(target.x-x)>2) target={x,y:me.y}; return false; } target=null; return true; }
+/* ---------- Idle Life: getting around like a real person, and watchable activities ---------- */
+// Buildings you walk into from the street. Everything else is reached by walking to the metro and riding it.
+const IDLE_DOORS={bar:{to:"street",x:1760,exit:70,ent:120},club:{to:"street",x:3960,exit:70,ent:120},cyberbuys:{to:"street",x:1370,exit:70,ent:120},home:{to:"street",x:300,exit:70,ent:120}};
+const idleRoot=sc=>IDLE_DOORS[sc]?IDLE_DOORS[sc].to:sc;
+function idleWalk(x){ if(Math.abs(me.x-x)>10){ if(!target||Math.abs(target.x-x)>2) target={x,y:me.y}; return false; } target=null; return true; }
+function idleHop(ms,msg,fn,log,expect){ IDLE.hop={at:Date.now()+ms,msg,fn,expect}; idleAct(msg); if(log) idleLog(log); target=null; }
+// Walk (and ride) one step closer to scene/x. Returns true once standing at the spot.
+function idleGoTo(scene,x){ const now=Date.now();
+  if(IDLE.hop){ if(now<IDLE.hop.at){ idleAct(IDLE.hop.msg); return false; } const H=IDLE.hop; IDLE.hop=null; IDLE.expect={sc:H.expect,at:now}; try{ H.fn(); }catch(e){ console.error(e); } return false; }
+  if(IDLE.expect){ if(me.scene!==IDLE.expect.sc&&now-IDLE.expect.at<5000) return false; IDLE.expect=null; IDLE.arriveAt=now; }
+  if(IDLE.arriveAt&&now-IDLE.arriveAt<700) return false;
+  const cur=me.scene;
+  if(cur===scene){ if(!idleWalk(x)) return false; return true; }
+  if(IDLE_DOORS[cur]){ const D=IDLE_DOORS[cur]; if(!idleWalk(D.exit)){ idleAct(`Walking to the door of ${sceneName(cur)}`); return false; }
+    idleHop(600,`Stepping outside`,()=>{ if(cur==="home"){ viewHome=null; me.visiting=null; } go(D.to,D.x); },`🚪 Steps out onto ${sceneName(D.to)}`,D.to); return false; }
+  const root=idleRoot(scene);
+  if(cur===root&&IDLE_DOORS[scene]){ const D=IDLE_DOORS[scene]; if(!idleWalk(D.x)){ idleAct(`Walking to ${sceneName(scene)}`); return false; }
+    idleHop(600,`Going inside ${sceneName(scene)}`,()=>{ if(scene==="home"){ viewHome=null; me.visiting=null; } go(scene,D.ent); },`🚪 Walks into ${sceneName(scene)}`,scene); return false; }
+  if(METRO[cur]&&METRO[root]){ if(!idleWalk(METRO[cur].x)){ idleAct(`Walking to the metro (${METRO[root].n} next)`); return false; }
+    if(!IDLE.waitTrain){ IDLE.waitTrain=1; me.emote={e:idlePick(["wave","pose"]),t:T}; }
+    idleHop(idleR(2200,3400),`🚇 Waiting on the platform for the train to ${METRO[root].n}`,()=>{ IDLE.waitTrain=0; ride(root,METRO[root].x); },`🚇 Rides the metro to ${METRO[root].n}`,root); return false; }
+  idleHop(400,`Heading to ${sceneName(root)}`,()=>go(root,METRO[root]?METRO[root].x:SCENES[root].spawn),`Travels to ${sceneName(root)}`,root); return false; }
+
+// Press keys inside a game that runs in its own frame (12/11)
+function idleKey(win,code,up){ try{ win.dispatchEvent(new win.KeyboardEvent(up?"keyup":"keydown",{code,key:code,bubbles:true})); }catch(e){} }
+function idleFrameBot(S,now,win,keys){ // wander, talk and advance dialog like a casual player
+  if(!win) return; if(S.hold&&now>=S.hold.until){ idleKey(win,S.hold.code,true); S.hold=null; }
+  if(S.hold||now<(S.nk||0)) return;
+  if(Math.random()<.38){ idleKey(win,keys.a); setTimeout(()=>idleKey(win,keys.a,true),90); S.nk=now+idleR(300,700); return; }
+  if(Math.random()<.04){ idleKey(win,keys.b); setTimeout(()=>idleKey(win,keys.b,true),90); S.nk=now+500; return; }
+  const code=idlePick(keys.dirs); idleKey(win,code); S.hold={code,until:now+idleR(350,1500)}; }
+function idleCcjBot(S,now){ if(!CJ) return; if(S.hold&&now>=S.hold.until){ CJ.held[S.hold.k]=false; S.hold=null; } if(S.hold||now<(S.nk||0)) return;
+  if(Math.random()<.4){ cjPress("a"); S.nk=now+idleR(300,700); return; }
+  const k=idlePick(["u","d","l","r","r","l"]); CJ.held[k]=true; cjPress(k); S.hold={k,until:now+idleR(300,1300)}; }
+function idleOpenPanel(fn){ try{ fn(); IDLE.ui="panel"; }catch(e){ console.error(e); } }
+function idleClosePanel(){ if(IDLE&&IDLE.ui==="panel"){ closePanel(); IDLE.ui=null; } }
+
+// Activities: where to go, then start/step (step returns true when finished).
+const IDLE_ACTS={
+  play1211:{n:"Playing 12/11",where:()=>["line",LINE_X.cab],
+    start(S,now){ open1211(); IDLE.ui="g1211"; S.until=now+idleR(150,240)*1000; S.nk=now+1800; idleLog("🎮 Sits down at the 12/11 cabinet and starts playing"); },
+    step(S,now){ if(!$("#g1211")) return true; const win=g1211Frame&&g1211Frame.contentWindow; idleFrameBot(S,now,win,{a:"KeyZ",b:"KeyX",dirs:["ArrowRight","ArrowRight","ArrowLeft","ArrowUp","ArrowDown"]}); idleAct(`Playing 12/11 · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
+    end(S){ if(S.hold) idleKey(g1211Frame&&g1211Frame.contentWindow,S.hold.code,true); if($("#g1211")) close1211(); idleLog("🎮 Saved and left 12/11"); }},
+  read:{n:"Reading Ramblings of a Mad Man",where:()=>["story",STORY_X.door],
+    start(S,now){ openBook(); IDLE.ui="gbook"; S.until=now+idleR(150,240)*1000; S.next=now+3500; S.pages=0; idleLog("📖 Opens Ramblings of a Mad Man"); },
+    step(S,now){ if(!$("#gbook")||!BK) return true; if(now>=S.next){ if(BK.mode==="end"){ idleLog(`📖 Finished a chapter after ${S.pages} pages`); return true; } bkPress("n"); S.pages++; S.next=now+idleR(7,11)*1000; } idleAct(`Reading · page ${S.pages}`); return now>=S.until; },
+    end(S){ if($("#gbook")) closeBook(); idleLog(`📖 Closed the book (${S.pages} pages read)`); }},
+  ccj:{n:"Playing Companion Clash",where:()=>["clash",CLASH_X.stage],
+    start(S,now){ openCCJ(); IDLE.ui="gccj"; S.until=now+idleR(150,240)*1000; S.nk=now+1500; idleLog("⚔️ Boots up Companion Clash"); },
+    step(S,now){ if(!$("#gccj")||!CJ) return true; idleCcjBot(S,now); idleAct(`Playing Companion Clash · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
+    end(S){ if(S.hold&&CJ) CJ.held[S.hold.k]=false; if($("#gccj")) closeCCJ(); idleLog("⚔️ Saved and left Companion Clash"); }},
+  clubtrip:{n:"Club items & partying",where:()=>["club",390],
+    start(S,now){ idleOpenPanel(()=>openClubCounter("menu")); S.stage=0; S.next=now+3500; idleAct("Looking over the club menu"); },
+    step(S,now){
+      if(S.stage===0){ if(now<S.next) return false; idleClosePanel(); const pool=CAT.filter(i=>i.t==="trip"&&TRIPS[i.id]&&i.id!=="trip_god").map(i=>({i,p:housePrice(i.id)})).filter(o=>o.p.cur==="credits"&&o.p.price<=Math.max(60,save.credits*.25));
+        if(pool.length){ const o=idlePick(pool); save.credits-=o.p.price; addItem(o.i.id); persist(); hud(); idleLog(`💊 Bought ${o.i.n} for ₵${o.p.price}`); useTrip(o.i.id); idleFloat(o.i.n,RAR[o.i.r].c); } else idleLog("💊 Skipped club items (saving credits)");
+        S.stage=1; S.next=now+2500; return false; }
+      if(S.stage===1){ if(now<S.next) return false; if(!idleWalk(1590)){ idleAct("Heading to the dance floor"); return false; } me.dancing=true; me.danceNext=0; S.stage=2; S.until=now+idleR(60,100)*1000; S.next=now+5000; idleLog("🪩 Hits the dance floor"); return false; }
+      if(now>=S.next){ S.next=now+idleR(5,9)*1000; if(Math.random()<.4) emote("cheer"); idleFloat(idlePick(["♪","♫","✦","🎉"]),idlePick(["#ff3fa8","#38e8ff","#ffd36a"])); }
+      idleAct("Dancing at The Third Eye"); if(now>=S.until){ me.dancing=false; return true; } return false; }},
+  drinks:{n:"Drinks at The Glitch",where:()=>["bar",380],
+    start(S,now){ idleOpenPanel(()=>{ barMenuTab="drinks"; openCounter(); }); S.stage=0; S.n=0; S.next=now+3500; idleAct("Reading the drinks menu"); },
+    step(S,now){
+      if(S.stage===0){ if(now<S.next) return false; idleClosePanel(); const pool=[...DRINKS,...FOODS].filter(d=>Math.round(d.v*1.5)<=Math.max(30,save.credits*.1));
+        if(pool.length){ const d=idlePick(pool), p=Math.round(d.v*1.5); save.credits-=p; addItem(d.id); persist(); hud(); try{ consumeItem(d.id); }catch(e){} idleLog(`🍸 Ordered ${d.n} (₵${p})`); idleFloat(d.n,d.col||"#ffd36a"); } else idleLog("🍸 Just water tonight");
+        S.n++; S.stage=1; S.until=now+idleR(40,70)*1000; S.next=now+3000; return false; }
+      if(!idleWalk(S.n%2?900:640)){ idleAct("Finding a spot at the bar"); return false; }
+      if(now>=S.next){ S.next=now+idleR(6,10)*1000; me.emote={e:idlePick(["cheer","wave","pose","dance"]),t:T}; }
+      idleAct("Hanging out at The Glitch"); if(now>=S.until){ if(S.n<2){ S.stage=0; S.next=now; idleOpenPanel(()=>{ barMenuTab="drinks"; openCounter(); }); S.next=now+2500; return false; } return true; } return false; }},
+  build:{n:"Building rigs",where:()=>["home",1110],
+    start(S,now){ idleOpenPanel(()=>openWorkbench("build")); S.next=now+2500; S.built=0; idleAct("Laying out parts on the workbench"); },
+    step(S,now){ if(now<S.next) return false;
+      const rec=RECIPES.find(r=>Object.entries(r.need).every(([t,q])=>countType(t)>=q)&&pickParts(r,"cheap"));
+      if(!rec||S.built>=3){ if(!rec&&!S.built) idleLog("🔧 Not enough parts to build anything. Off to Scrap Alley."); IDLE.needParts=!rec; return true; }
+      if($("#overlay").hidden) idleOpenPanel(()=>openWorkbench("build")); const stage=document.querySelector("#overlay .panel .body > .detail");
+      if(!stage){ S.next=now+800; return false; } doBuild(rec,"cheap",stage); S.built++; idleLog(`🔧 Building a ${rec.n}`); idleAct(`Assembling ${rec.n}…`); S.next=now+4200;
+      setTimeout(()=>{ if(IDLE&&IDLE.ui==="panel") idleOpenPanel(()=>openWorkbench("build")); },3600); return false; },
+    end(S){ idleClosePanel(); if(S.built) idleLog(`🔧 Built ${S.built} rig${S.built===1?"":"s"}`); }},
+  pet:{n:"Hanging out with my companion",where:()=>["home",560],
+    start(S,now){ const n=curPet(); if(!n){ S.none=1; idleLog("🐾 No companion yet. Skipping."); return; } idleOpenPanel(()=>openCompanion()); S.until=now+idleR(70,110)*1000; S.next=now+3000; idleLog(`🐾 Spends time with ${n}`); },
+    step(S,now){ if(S.none) return true; if(now>=S.next){ S.next=now+idleR(7,11)*1000; const a=idlePick(["pat","play","pat","ability"]); try{ petAct(a); IDLE.ui="panel"; }catch(e){} idleFloat(a==="pat"?"🤚":a==="play"?"🎾":"✨","#ff8ad8"); }
+      idleAct(`Playing with ${curPet()}`); return now>=S.until; },
+    end(){ idleClosePanel(); }},
+  rigs:{n:"Checking on my rigs",where:()=>["home",1320],
+    start(S,now){ idleOpenPanel(()=>openRack()); S.stage=0; S.next=now+4000; idleAct("Checking the mining rack"); },
+    step(S,now){ if(now<S.next) return false;
+      if(S.stage===0){ const got=collectRack(); idleLog(got?`⛏ Collected ${got} chips from the mining rack`:"⛏ The rack is still mining"); if(got) idleFloat(`+${got} chips`,"#38e8ff"); idleOpenPanel(()=>openRack()); S.stage=1; S.next=now+3500; return false; }
+      if(S.stage===1){ idleClosePanel(); if(!idleWalk(560)) return false; idleOpenPanel(()=>openShelves()); idleAct("Admiring the display shelves"); S.stage=2; S.next=now+5000; return false; }
+      return true; },
+    end(){ idleClosePanel(); }},
+  shop:{n:"Window shopping",where:()=>{ const s=IDLE.shopStop||(IDLE.shopStop=idlePick(IDLE_SHOPS)); return [s.sc,s.x]; },
+    start(S,now){ const s=IDLE.shopStop; idleOpenPanel(s.open); S.next=now+idleR(5,8)*1000; idleLog(`🛍 Browses ${s.n}`); idleAct(`Browsing ${s.n}`); },
+    step(S,now){ if(now<S.next) return false; idleClosePanel(); IDLE.shopStop=null; IDLE.shopN=(IDLE.shopN||0)+1; return true; }},
+};
+const IDLE_SHOPS=[{sc:"byte",x:520,n:"Chip Shack",open:()=>openStall(0,"buy")},{sc:"byte",x:1960,n:"GPU Garage",open:()=>openStall(4,"buy")},{sc:"byte",x:4600,n:"Gemix",open:()=>openGemix("shop")},{sc:"byte",x:4240,n:"Volt Armory",open:()=>openStall(10,"buy")},
+  {sc:"smacked",x:800,n:"Smacked Shop",open:()=>openSmacked("shop")},{sc:"cyberbuys",x:600,n:"Cyber Buys & More",open:()=>openCbSection(0)},{sc:"street",x:960,n:"PARTS DEPOT",open:()=>openShop()}];
+const IDLE_LIFE_POOL=["bar","bowl","cb","asm","den","club","dig","party","play1211","read","ccj","clubtrip","drinks","build","pet","rigs","shop","shop"];
+function idleLifePick(){ const last=IDLE.lifeCur; let k; do{ k=idlePick(IDLE_LIFE_POOL); }while(k===last&&IDLE_LIFE_POOL.length>1); if(IDLE.needParts){ IDLE.needParts=false; k="dig"; } return k; }
+function idleActivity(a,now){ const A=IDLE_ACTS[a];
+  if(IDLE.phase==="go"){ const [sc,x]=A.where(); if(!idleGoTo(sc,x)){ return; } IDLE.phase="do"; IDLE.aS={}; try{ A.start(IDLE.aS,now); }catch(e){ console.error("idle start",a,e); IDLE.phase="rest"; IDLE.restUntil=now+3000; } return; }
+  if(IDLE.phase==="rest"){ if(now<IDLE.restUntil) return; IDLE.phase="go"; return; }
+  let fin=false; try{ fin=A.step(IDLE.aS,now); }catch(e){ console.error("idle step",a,e); fin=true; }
+  if(fin){ try{ A.end&&A.end(IDLE.aS); }catch(e){} IDLE.ui=null; IDLE.aS=null; if(IDLE.k==="life"){ IDLE.lifeNext=true; return; }
+    if(IDLE.k==="build"&&IDLE.needParts){ IDLE.digUntil=now+idleR(150,240)*1000; IDLE.needParts=false; }
+    IDLE.phase="rest"; IDLE.restUntil=now+idleR(4,8)*1000; idleAct("Taking a short break"); me.emote={e:idlePick(["wave","pose","cheer"]),t:T}; } }
+function idleEndActivity(){ if(!IDLE) return; const A=IDLE_ACTS[IDLE.cur]; if(A&&IDLE.phase==="do"&&IDLE.aS){ try{ A.end&&A.end(IDLE.aS); }catch(e){} } IDLE.ui=null; IDLE.aS=null; IDLE.hop=null; IDLE.expect=null; me.dancing=false; }
 function idleSub(){ const k=IDLE.k, now=Date.now(); const rot=(list,mins)=>{ if(!IDLE.rotAt){ IDLE.rot=0; IDLE.rotAt=now+mins*60e3; } else if(now>IDLE.rotAt){ IDLE.rot=(IDLE.rot+1)%list.length; IDLE.rotAt=now+mins*60e3; } return list[IDLE.rot]; };
-  if(k==="credits") return rot(["bar","bowl","cb"],4); if(k==="rp") return "asm"; if(k==="nrc") return "den"; if(k==="parts") return "dig"; if(k==="party") return "party"; if(k==="all") return rot(["bar","dig","asm","party","bowl","den","cb","club"],3); return k; }
+  if(k==="credits") return rot(["bar","bowl","cb"],4); if(k==="rp") return "asm"; if(k==="nrc") return "den"; if(k==="parts") return "dig"; if(k==="party") return "party"; if(k==="all") return rot(["bar","dig","asm","party","bowl","den","cb","club"],3);
+  if(k==="life"){ if(!IDLE.lifeCur||IDLE.lifeNext||(!IDLE_ACTS[IDLE.lifeCur]&&now>IDLE.lifeEnd)){ IDLE.lifeNext=false; IDLE.lifeCur=idleLifePick(); IDLE.lifeEnd=now+idleR(180,300)*1000; } return IDLE.lifeCur; }
+  if(k==="build"&&IDLE.digUntil){ if(now<IDLE.digUntil&&!RECIPES.some(r=>Object.entries(r.need).every(([t,q])=>countType(t)>=q))) return "dig"; IDLE.digUntil=0; }
+  return k; }
 function idleTick(){ if(!IDLE) return; if(!save||me.dead){ idleStop("Your runner got knocked out."); return; } if(typeof jailed==="function"&&jailed()){ idleStop("Your runner got locked up."); return; }
   if(keys.a||keys.d||keys.w||keys.s||keys.arrowleft||keys.arrowright||keys.arrowup||keys.arrowdown||keys.padleft||keys.padright||keys.padup||keys.paddown){ idleStop("You took control."); return; }
-  const busy=!$("#overlay").hidden||$("#g1211")||$("#gccj")||$("#gdsim")||$("#gmydex")||document.visibilityState!=="visible"||($("#title")&&!$("#title").hidden);
+  const own=id=>IDLE.ui===id, busy=(!$("#overlay").hidden&&!own("panel"))||($("#g1211")&&!own("g1211"))||($("#gccj")&&!own("gccj"))||($("#gbook")&&!own("gbook"))||$("#gdsim")||$("#gmydex")||document.visibilityState!=="visible"||($("#title")&&!$("#title").hidden);
   if(busy){ if(!IDLE.paused){ IDLE.paused=true; target=null; idleDockUpd(); } IDLE.pauseMs=(IDLE.pauseMs||0)+250; if(IDLE.next) IDLE.next+=250; if(IDLE.wage) IDLE.wage+=250; return; } if(IDLE.paused){ IDLE.paused=false; idleDockUpd(); }
-  const now=Date.now(), sub=idleSub(); if(sub!==IDLE.cur){ IDLE.cur=sub; IDLE.phase="go"; IDLE.spot=null; IDLE.next=0; IDLE.digStart=0; me.dancing=false; me.homeSit=null; if(IDLE.log.length) idleLog(`↻ Switching to ${sub==="dig"?"digging for parts":sub==="party"?"partying":IDLE_JOBS[sub].n}`); }
-  if(sub==="dig") return idleDig(now); if(sub==="party") return idleParty(now); return idleWork(sub,now); }
+  const now=Date.now(), sub=idleSub(); if(sub!==IDLE.cur){ idleEndActivity(); IDLE.cur=sub; IDLE.phase="go"; IDLE.spot=null; IDLE.next=0; IDLE.digStart=0; me.dancing=false; me.homeSit=null; if(IDLE.log.length) idleLog(`↻ Next: ${sub==="dig"?"digging for parts":sub==="party"?"partying":IDLE_ACTS[sub]?IDLE_ACTS[sub].n:IDLE_JOBS[sub].n}`); }
+  if(IDLE_ACTS[sub]) return idleActivity(sub,now); if(sub==="dig") return idleDig(now); if(sub==="party") return idleParty(now); return idleWork(sub,now); }
 function idleWork(j,now){ const J=IDLE_JOBS[j];
   if(IDLE.phase==="go"){ if(IDLE.spot==null) IDLE.spot=idlePick(J.spots); if(!idleGoTo(J.scene,IDLE.spot)){ if(me.scene===J.scene) idleAct(`Walking to work at ${J.n}`); return; } IDLE.phase="work"; if(!IDLE.next) IDLE.next=now+idleR(3,5)*1000; if(!IDLE.wage) IDLE.wage=now+60e3; idleAct(`Working at ${J.n}`); return; }
   if(now>=IDLE.next){ const o=J.pay(), base=Math.max(1,Math.round(o.v)), tip=Math.round(idleR(J.tip[0],J.tip[1])*tipMult()); save.credits+=base+tip; earnRP(base+tip,J.src); IDLE.st.cr+=base+tip; persist(); hud();
@@ -4182,14 +4302,20 @@ function idleDockUpd(force){ if(!IDLE){ if(idleDockEl) idleDockEl.hidden=true; r
     ...IDLE.log.slice(0,mob?2:4).map((l,i)=>el("div",{class:"idlog",style:`opacity:${1-i*.18}`,text:l})),
     el("div",{class:"ids",text:idleStats()}),
     el("div",{class:"row",style:"gap:6px;margin-top:4px"},el("button",{class:"btn",type:"button",text:"Change",onclick:()=>openIdle()}),el("button",{class:"btn",type:"button",text:"Log",onclick:()=>openIdleLog()}),el("button",{class:"btn hot",type:"button",text:"■ Stop",onclick:()=>idleStop("")}))); }
+// While your runner is inside a game, a small pill floats over it so you can always take control back.
+setInterval(()=>{ let pill=document.getElementById("idlepill"); const inGame=IDLE&&["g1211","gccj","gbook"].includes(IDLE.ui)&&$("#"+IDLE.ui);
+  if(!inGame){ if(pill) pill.remove(); return; }
+  if(!pill){ pill=el("button",{id:"idlepill",type:"button",style:"position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:rgba(10,6,22,.92);color:#43f0a4;border:1px solid #43f0a4;border-radius:20px;padding:8px 14px;font:700 11px Silkscreen,monospace;letter-spacing:.04em;cursor:pointer;box-shadow:0 0 14px rgba(67,240,164,.35)",onclick:()=>idleStop("You took control.")}); document.body.appendChild(pill); }
+  pill.textContent=`🤖 IDLE · ${IDLE.act||"Playing"} · tap to take control`; },700);
 setInterval(()=>{ if(IDLE&&idleDockEl&&!idleDockEl.hidden){ const s=idleDockEl.querySelector(".ids"); if(s) s.textContent=idleStats(); const show=$("#overlay").hidden&&!$("#gccj")&&!$("#gbook")&&!$("#g1211"); idleDockEl.style.display=show?"":"none"; idlePlace(); } },1000);
 function openIdleLog(){ if(!IDLE) return; const body=panel("Idle log",`Everything your runner did this session. ${idleStats()}`); currentView="idlelog"; const l=el("div",{class:"list"}); IDLE.log.forEach(t=>l.append(el("div",{class:"li"},el("div",{class:"grow",text:t})))); body.append(l,el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"▶ Back to watching",onclick:()=>closePanel()}),el("button",{class:"btn",type:"button",text:"■ Stop idle",onclick:()=>{ closePanel(); idleStop(""); }}))); }
 function openIdle(){ const body=panel("Idle","Send your runner off to do things on their own. Watch everything they do live on screen. Press any move key, or Stop, to take control back."); currentView="idle";
   if(IDLE){ const T0=idleTask(IDLE.k); body.append(el("div",{class:"detail",style:"border-color:#43f0a4"},el("div",{class:"info"},el("strong",{style:"color:#43f0a4",text:`Now: ${T0.ic} ${T0.n}`}),el("span",{class:"sub",text:idleStats()}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"▶ Keep watching",onclick:()=>closePanel()}),el("button",{class:"btn",type:"button",text:"■ Stop",onclick:()=>{ closePanel(); idleStop(""); }}))))); }
   const row=t=>el("div",{class:"li"},el("span",{style:"font-size:22px;width:30px;text-align:center",text:t.ic}),el("div",{class:"grow"},el("div",{text:t.n}),el("div",{class:"sub",text:t.d}),t.earn?el("div",{class:"sub",style:"color:#ffd36a",text:`Earns: ${t.earn}`}):""),el("button",{class:"btn hot",type:"button",text:IDLE&&IDLE.k===t.k?"Running":"Start",...(IDLE&&IDLE.k===t.k?{disabled:true}:{}),onclick:()=>idleStart(t.k)}));
   const l=el("div",{class:"list"}); IDLE_TASKS.forEach(t=>l.append(row(t))); body.append(el("strong",{text:"What should your runner do?"}),l);
+  const l3=el("div",{class:"list"}); IDLE_LIFETASKS.forEach(t=>l3.append(row(t))); body.append(el("strong",{text:"Or do something specific (watch it live)"}),l3);
   const l2=el("div",{class:"list"}); IDLE_JOBTASKS.forEach(t=>l2.append(row({...t,earn:"Credits · RP for members · NRC"}))); body.append(el("strong",{text:"Or work one job"}),l2);
-  const mem=myId&&typeof dccActive==="function"&&dccActive(myId); body.append(el("p",{class:"sub",text:`Idle work pays the same as working yourself, and the same daily RP and NRC limits apply. ${mem?"You're a Data Collectors Club member, so work also earns RP.":"RP only comes from work for Data Collectors Club members."} Your runner only works while the game is open on screen. Opening a menu pauses it.`})); }
+  const mem=myId&&typeof dccActive==="function"&&dccActive(myId); body.append(el("p",{class:"sub",text:`Idle work pays the same as working yourself, and the same daily RP and NRC limits apply. ${mem?"You're a Data Collectors Club member, so work also earns RP.":"RP only comes from work for Data Collectors Club members."} Your runner only works while the game is open on screen. Opening a menu yourself pauses it (menus and games your runner opens keep playing so you can watch). Your runner walks everywhere and rides the metro like a real player.`})); }
 
 function nameOf(by){ if(!by) return "Runner"; if(by===myId) return myName||"Runner"; const h=homes[by]; if(h&&typeof h.name==="string"){ const n=cleanName(h.name); if(n&&!nameProblem(n)) return n; } return names[by]||"Runner"; }
 
