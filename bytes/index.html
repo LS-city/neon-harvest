@@ -45,6 +45,9 @@ label.chk{display:flex;align-items:center;gap:8px;cursor:pointer} label.chk inpu
 .pro{border:1px solid var(--warn);padding:12px;display:flex;flex-direction:column;gap:8px}
 .pro b{color:var(--warn)} .pro ul{margin:0;padding-left:18px}
 header .dl{margin-left:auto;font-size:12px;color:var(--acc);text-decoration:none;border:1px solid var(--acc);padding:5px 9px}
+.emb{border:1px solid var(--warn);color:var(--warn);padding:1px 6px;font-size:11px;white-space:nowrap}
+.boxline{display:flex;gap:10px;align-items:center;flex-wrap:wrap} .boxline b{color:var(--acc);font-size:18px}
+.rank{min-width:34px;color:var(--dim)}
 .nhbox{border:1px solid #ff3fa8;padding:10px;display:flex;flex-direction:column;gap:8px}
 .nhbox>b{color:#ff3fa8}
 .pcapp{border:1px solid var(--acc);padding:12px;display:flex;flex-direction:column;gap:8px}
@@ -89,6 +92,7 @@ a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(
         <button role="tab" data-t="hist">History</button>
         <button role="tab" data-t="jobs">My jobs</button>
         <button role="tab" data-t="biz">My groups</button>
+        <button role="tab" data-t="board">🏆 Top groups</button>
         <button role="tab" data-t="chat">Chatbox</button>
         <button role="tab" data-t="admin" id="tab-admin" hidden>Admin</button>
       </div>
@@ -160,6 +164,14 @@ a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(
       </div>
       <h2 style="margin-top:6px">Payroll</h2>
       <div class="row"><span id="pay-sum" style="flex:2"></span><button class="hot" id="pay-all" style="flex:1">Pay everyone</button></div>
+      <h2 style="margin-top:6px">Profit box</h2>
+      <div class="boxline"><span>In the box: <b id="box-amt">0</b> Bytes</span><span class="emb" id="box-emb" hidden>🏆 TOP 1%</span><span class="note" id="box-rank"></span></div>
+      <div class="row">
+        <input id="box-in" type="number" min="1" step="1" placeholder="Amount">
+        <button class="hot" id="box-dep" style="flex:none">Put in box</button>
+        <button id="box-wd" style="flex:none">Take out</button>
+      </div>
+      <span class="note">After paying wages, put your profit here. Your box total is your group's score on the 🏆 Top groups leaderboard, and the top 1% get an emblem. Taking Bytes out lowers your rank.</span>
       <div class="msg" id="gp-msg"></div>
       <button class="small" id="gp-del" style="align-self:flex-start;color:var(--bad)">Delete this group</button>
     </section>
@@ -206,12 +218,22 @@ a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(
       <div class="msg" id="pv-msg"></div>
     </section>
 
+    <section class="card tab" id="t-board" hidden>
+      <h2>Top groups</h2>
+      <span class="note">Ranked by Bytes in each group's profit box. The top 1% earn the 🏆 TOP 1% emblem. Updates live.</span>
+      <div class="list" id="board"></div>
+    </section>
+
     <section class="card tab" id="t-admin" hidden>
       <h2>Admin: create Bytes</h2>
       <div class="row"><input id="m-to" placeholder="Bytes name"><input id="m-amt" type="number" min="1" step="1" placeholder="Amount" style="max-width:140px"></div>
       <input id="m-note" maxlength="80" placeholder="Reason, like event prize">
       <button class="hot" id="m-go">Create and send</button>
       <div class="msg" id="m-msg"></div>
+      <h2 style="margin-top:6px">Admin: reward every player</h2>
+      <div class="row"><input id="all-amt" type="number" min="1" step="1" placeholder="Bytes each" style="max-width:150px"><input id="all-note" maxlength="80" placeholder="Reason, like launch party"></div>
+      <button class="hot" id="all-go">Send to everyone</button>
+      <div class="msg" id="all-msg"></div>
       <h2 style="margin-top:6px">Admin: Bytes Pro supporters</h2>
       <div class="row"><input id="p-to" placeholder="Bytes name"><input id="p-mo" type="number" min="1" max="24" step="1" value="1" style="max-width:90px" aria-label="Months"><button class="hot" id="p-go" style="flex:none">Give Pro (months)</button></div>
       <div class="list" id="pro-list"></div>
@@ -242,11 +264,14 @@ const $ = id => document.getElementById(id);
 const fmt = n => Math.floor(+n || 0).toLocaleString("en-US");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const HANDLE_RE = /^[A-Za-z0-9_.-]{3,20}$/;
-const KIND = { tip: "tipped", pay: "paid", send: "sent", wage: "wage", mint: "created" };
+const KIND = { tip: "tipped", pay: "paid", send: "sent", wage: "wage", mint: "created", deposit: "put in profit box", withdraw: "taken out of profit box" };
 const say = (el, t, ok) => { $(el).textContent = t; $(el).className = "msg" + (ok === true ? " ok" : ok === false ? " bad" : ""); };
 const ruleErr = e => (e && e.code === "permission-denied") ? "Not allowed. Check the amount and your balance." : ((e && e.message) || "Something went wrong.");
 
 let isAdmin = false, proUntil = 0, proList = [];
+// Leaderboard: groups with Bytes in their profit box, highest first. Top 1% get an emblem.
+let board = [], topIds = new Set();
+const EMB = '<span class="emb">🏆 TOP 1%</span>';
 // NEON HARVEST stats (same account): your game save and NRC balance.
 let nhSave = null, nhNrc = null;
 const nhDec = v => Array.isArray(v) ? v.map(nhDec) : (v && typeof v === "object") ? (Object.keys(v).length === 1 && Array.isArray(v._a_) ? v._a_.map(nhDec) : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, nhDec(x)]))) : v;
@@ -293,6 +318,12 @@ auth.onAuthStateChanged(async u => {
   subs.push(db.doc("data/users/" + u.uid + "/save").onSnapshot(s => { nhSave = s.exists ? nhDec(s.data()) : null; $("nh-box").hidden = !nhSave; renderChat(); }, () => {}));
   subs.push(db.doc("nrc/" + u.uid).onSnapshot(s => { nhNrc = s.exists ? Math.floor(+s.data().bal || 0) : null; renderChat(); }, () => {}));
   subs.push(db.collection("bytes_groups").where("owner", "==", u.uid).onSnapshot(q => { myGroups = q.docs.map(d => ({ id: d.id, ...d.data() })); renderGroups(); if (openGid) renderGroup(); }, () => {}));
+  subs.push(db.collection("bytes_groups").where("box", ">", 0).orderBy("box", "desc").limit(500).onSnapshot(q => {
+    board = q.docs.map(d => ({ id: d.id, ...d.data() }));
+    topIds = new Set(board.slice(0, Math.max(1, Math.ceil(board.length * 0.01))).map(g => g.id));
+    if (!board.length) topIds = new Set();
+    renderBoard(); renderGroups(); renderJobs(); if (openGid) renderGroup(); renderChat();
+  }, () => {}));
 });
 
 /* ---------------- handle + wallet ---------------- */
@@ -354,7 +385,8 @@ $("s-go").onclick = async () => {
 function renderHist() {
   const all = [...txIn.map(t => ({ ...t, dir: "in" })), ...txOut.map(t => ({ ...t, dir: "out" }))].sort((a, b) => b.at - a.at).slice(0, 60);
   $("hist").innerHTML = all.length ? all.map(t => {
-    const who = t.dir === "in" ? (t.from === "mint" ? "Bytes admin" : "@" + t.fromH) : "@" + t.toH;
+    const who = t.kind === "deposit" ? "profit box · " + t.toH : t.kind === "withdraw" ? "profit box · " + t.fromH
+      : t.dir === "in" ? (t.from === "mint" ? "Bytes admin" : "@" + t.fromH) : "@" + t.toH;
     const verb = t.dir === "in" ? (t.kind === "wage" ? "Wage from" : t.kind === "mint" ? "Created by" : "From") : (t.kind === "wage" ? "Wage to" : "To");
     return `<div class="item"><div class="l"><b>${verb} ${esc(who)}</b><span>${esc(KIND[t.kind] || t.kind)}${t.note ? " · “" + esc(t.note) + "”" : ""} · ${new Date(t.at).toLocaleString()}</span></div><b class="${t.dir === "in" ? "plus" : "minus"}">${t.dir === "in" ? "+" : "−"}${fmt(t.amt)}</b></div>`;
   }).join("") : '<div class="note">No Bytes moved yet.</div>';
@@ -365,7 +397,7 @@ function renderJobs() {
   $("jobs").innerHTML = myJobs.length ? "" : '<div class="note">You don\'t work for any groups yet. A group owner can hire you by your Bytes name.</div>';
   for (const j of myJobs) {
     const d = document.createElement("div"); d.className = "item";
-    d.innerHTML = `<div class="l"><b>${esc(j.role)} @ ${esc(j.gname)}</b><span>${fmt(j.wage)} Bytes per ${esc(j.per)}${j.ok ? "" : ' · <span class="pill">job offer</span>'}</span></div>`;
+    d.innerHTML = `<div class="l"><b>${esc(j.role)} @ ${esc(j.gname)} ${topIds.has(j.gid) ? EMB : ""}</b><span>${fmt(j.wage)} Bytes per ${esc(j.per)}${j.ok ? "" : ' · <span class="pill">job offer</span>'}</span></div>`;
     const btns = document.createElement("div"); btns.className = "row"; btns.style.flex = "none";
     if (!j.ok) { const a = document.createElement("button"); a.className = "small hot"; a.textContent = "Accept"; a.onclick = () => db.doc("bytes_staff/" + j.id).update({ ok: true }).catch(e => alert(ruleErr(e))); btns.append(a); }
     const q = document.createElement("button"); q.className = "small"; q.textContent = j.ok ? "Quit" : "Decline";
@@ -403,7 +435,7 @@ function renderGroups() {
   $("groups").innerHTML = myGroups.length ? "" : '<div class="note">You don\'t own any groups yet.</div>';
   for (const g of myGroups) {
     const d = document.createElement("div"); d.className = "item";
-    d.innerHTML = `<div class="l"><b>${esc(g.name)}</b><span>${esc(g.tag || "")}${g.tag ? " · " : ""}${(g.roles || []).length} roles</span></div>`;
+    d.innerHTML = `<div class="l"><b>${esc(g.name)} ${topIds.has(g.id) ? EMB : ""}</b><span>${esc(g.tag || "")}${g.tag ? " · " : ""}${(g.roles || []).length} roles · ${fmt(g.box || 0)} in profit box</span></div>`;
     const b = document.createElement("button"); b.className = "small hot"; b.textContent = isPro() ? "Manage" : "Needs Pro"; b.disabled = !isPro(); b.style.flex = "none";
     b.onclick = () => openGroup(g.id); d.append(b); $("groups").append(d);
   }
@@ -427,6 +459,10 @@ const curGroup = () => myGroups.find(g => g.id === openGid);
 function renderGroup() {
   const g = curGroup(); if (!g) return;
   $("gp-title").textContent = g.name + (g.tag ? " · " + g.tag : "");
+  $("box-amt").textContent = fmt(g.box || 0);
+  $("box-emb").hidden = !topIds.has(g.id);
+  const r = board.findIndex(x => x.id === g.id);
+  $("box-rank").textContent = r >= 0 ? "#" + (r + 1) + " of " + board.length + " groups" : "Not on the leaderboard yet";
   const roles = g.roles || [];
   $("gp-roles").innerHTML = roles.length ? "" : '<div class="note">Add roles like Bartender, DJ, Security, Manager.</div>';
   roles.forEach((r, i) => {
@@ -492,13 +528,70 @@ $("pay-all").onclick = async () => {
   for (const s of due) { if (await payOne(s)) n++; }
   $("pay-all").disabled = false; if (n === due.length) say("gp-msg", "✓ Paid all " + n + " staff (" + fmt(total) + " Bytes)", true);
 };
+async function boxMove(kind) {
+  const g = curGroup(); if (!g) return;
+  const amt = Math.floor(+$("box-in").value);
+  if (!(amt > 0 && amt <= 1000000)) return say("gp-msg", "Enter an amount from 1 to 1,000,000.", false);
+  if (kind === "deposit" && (!wallet || amt > wallet.bal)) return say("gp-msg", "Not enough Bytes. You have " + fmt(wallet && wallet.bal) + ".", false);
+  if (kind === "withdraw" && amt > (g.box || 0)) return say("gp-msg", "The box only has " + fmt(g.box || 0) + " Bytes.", false);
+  const gname = g.name.slice(0, 20), ref = db.collection("bytes_tx").doc(), b = db.batch(), at = Date.now();
+  if (kind === "deposit") {
+    b.set(ref, { from: user.uid, to: "box", amt, kind, at, fromH: myHandle, toH: gname, grp: g.id });
+    b.update(db.doc("bytes_wallets/" + user.uid), { bal: inc(-amt), tx: ref.id });
+    b.update(db.doc("bytes_groups/" + g.id), { box: inc(amt), boxTx: ref.id });
+  } else {
+    b.set(ref, { from: "box", to: user.uid, amt, kind, at, fromH: gname, toH: myHandle, grp: g.id });
+    b.update(db.doc("bytes_wallets/" + user.uid), { bal: inc(amt), rx: ref.id });
+    b.update(db.doc("bytes_groups/" + g.id), { box: inc(-amt), boxTx: ref.id });
+  }
+  $("box-dep").disabled = $("box-wd").disabled = true;
+  try { await b.commit(); $("box-in").value = ""; say("gp-msg", kind === "deposit" ? "✓ Put " + fmt(amt) + " Bytes in the profit box" : "✓ Took " + fmt(amt) + " Bytes out of the profit box", true); }
+  catch (e) { say("gp-msg", ruleErr(e), false); }
+  $("box-dep").disabled = $("box-wd").disabled = false;
+}
+$("box-dep").onclick = () => boxMove("deposit");
+$("box-wd").onclick = () => boxMove("withdraw");
+
+/* ---------------- leaderboard ---------------- */
+function renderBoard() {
+  $("board").innerHTML = board.length ? board.slice(0, 100).map((g, i) => `<div class="item"><div class="row" style="flex:1;min-width:0"><span class="rank" style="flex:none">#${i + 1}</span><div class="l"><b>${esc(g.name)} ${topIds.has(g.id) ? EMB : ""}</b><span>${esc(g.tag || "")}${g.tag ? " · " : ""}owner @${esc(g.ownerH || "")}</span></div></div><b class="plus">${fmt(g.box)}</b></div>`).join("")
+    : '<div class="note">No groups on the board yet. Owners: put profit in your group\'s profit box to get ranked.</div>';
+}
+
 $("gp-del").onclick = async () => {
-  const g = curGroup(); if (!g || !confirm("Delete " + g.name + "? Staff will be removed from it.")) return;
+  const g = curGroup(); if (!g) return;
+  if ((g.box || 0) > 0) return say("gp-msg", "Take the " + fmt(g.box) + " Bytes out of the profit box before deleting this group.", false);
+  if (!confirm("Delete " + g.name + "? Staff will be removed from it.")) return;
   try { for (const s of openStaff) await db.doc("bytes_staff/" + s.id).delete(); await db.doc("bytes_groups/" + g.id).delete(); openGid = null; off(gsubs); tab("biz"); }
   catch (e) { say("gp-msg", ruleErr(e), false); }
 };
 
 /* ---------------- admin ---------------- */
+$("all-go").onclick = async () => {
+  say("all-msg", "");
+  const amt = Math.floor(+$("all-amt").value), note = $("all-note").value.trim().slice(0, 80);
+  if (!(amt > 0 && amt <= 1000000)) return say("all-msg", "Enter 1 to 1,000,000 Bytes each.", false);
+  let list;
+  try { list = (await db.collection("bytes_wallets").get()).docs.map(d => ({ uid: d.id, handle: String(d.data().handle || "") })); }
+  catch (e) { return say("all-msg", "Couldn't load the player list: " + ruleErr(e), false); }
+  if (!list.length) return say("all-msg", "No players yet.", false);
+  if (!confirm("Send " + fmt(amt) + " Bytes to each of " + list.length + " players? That's " + fmt(amt * list.length) + " Bytes in total.")) return;
+  $("all-go").disabled = true; let done = 0; const failed = [];
+  const one = async w => {
+    const ref = db.collection("bytes_tx").doc(), b = db.batch();
+    const rec = { from: "mint", to: w.uid, amt, kind: "mint", at: Date.now(), fromH: "admin", toH: w.handle.slice(0, 20) };
+    if (note) rec.note = note;
+    b.set(ref, rec); b.update(db.doc("bytes_wallets/" + w.uid), { bal: inc(amt), rx: ref.id });
+    await b.commit();
+  };
+  for (let i = 0; i < list.length; i += 5) {
+    await Promise.all(list.slice(i, i + 5).map(w => one(w).then(() => done++).catch(() => failed.push("@" + w.handle))));
+    say("all-msg", "Sending… " + (done + failed.length) + " of " + list.length);
+  }
+  $("all-go").disabled = false;
+  if (!failed.length) { say("all-msg", "✓ Sent " + fmt(amt) + " Bytes to all " + done + " players", true); $("all-amt").value = ""; $("all-note").value = ""; }
+  else say("all-msg", "Sent to " + done + ". Failed for " + failed.length + ": " + failed.slice(0, 10).join(", ") + (failed.length > 10 ? "…" : "") + ". Don't click Send to everyone again (the others would get paid twice). Use Create and send above for just those players.", false);
+};
 $("p-go").onclick = async () => {
   say("p-msg", "");
   try {
@@ -538,7 +631,7 @@ function line() {
   const parts = [];
   if (P.on.name && myHandle) parts.push("💾 " + myHandle + (isPro() ? " ⭐" : ""));
   const jobs = myJobs.filter(j => j.ok); const j = jobs.find(x => x.id === P.job) || jobs[0];
-  if (P.on.job && j) parts.push("🏷 " + j.role + " @ " + j.gname);
+  if (P.on.job && j) parts.push("🏷 " + j.role + " @ " + j.gname + (topIds.has(j.gid) ? " 🏆" : ""));
   if (nhSave) {
     const nh = [];
     if (P.on.nh_rigs) nh.push("⛏ " + (nhSave.rack || []).length + "/4 rigs");
@@ -623,6 +716,7 @@ $("pv-clear").onclick = async () => { await stopChat(); try { await post("/clear
 async function incoming(txId) {
   try {
     const s = await db.doc("bytes_tx/" + txId).get(); if (!s.exists) return; const t = s.data();
+    if (t.kind === "withdraw") return;
     const who = t.from === "mint" ? "Bytes admin" : t.fromH;
     const msg = (t.kind === "wage" ? "💼 Wage +" : t.kind === "tip" ? "💸 Tip +" : "💸 +") + fmt(t.amt) + " Bytes from " + who + (t.note && t.kind !== "wage" ? " · “" + t.note + "”" : "");
     if (running && P.pop !== false) await post("/chatbox", { text: msg.slice(0, 144), sound: true, host: target() });
