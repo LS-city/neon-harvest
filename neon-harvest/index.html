@@ -1319,7 +1319,7 @@ function wardIsNew(k,i){ return WARD_BASE_LEN[k]!=null&&i>=WARD_BASE_LEN[k]; }
 function glowOn(c,col,b){ c.shadowColor=col; c.shadowBlur=b||8; }
 function wx2(layer,c,X){ const {L,dir,t,head,sh,hip,AC,JC}=X; const W2=k=>WARD[k].opts[L[k]][0]; c.save();
  try{
-  wxAnime(layer,c,X);
+  wxAnime(layer,c,X); wxLegend(layer,c,X);
   if(layer==="aura"){ const a=W2("aura");
     if(a==="Hex grid"){ c.strokeStyle=AC; c.globalAlpha=.45+.2*Math.sin(t*3); c.lineWidth=.8; for(let r=0;r<3;r++) for(let q=-2;q<=2;q++){ const hx=q*9+(r%2)*4.5, hy=-14-r*14; c.beginPath(); for(let k=0;k<6;k++){ const an=k*1.047; c.lineTo(hx+Math.cos(an)*5,hy+Math.sin(an)*5); } c.closePath(); c.stroke(); } }
     if(a==="Code orbit"){ c.fillStyle=AC; c.font="5px monospace"; c.textAlign="center"; glowOn(c,AC,6); for(let k=0;k<10;k++){ const an=t*1.6+k*.628; c.globalAlpha=.4+.6*((Math.sin(an)+1)/2); c.fillText((k*7+Math.floor(t*4))%2?"1":"0",Math.cos(an)*20,-30+Math.sin(an)*6); } }
@@ -4467,7 +4467,7 @@ const HELP=[
     ["The consoles",["14 retro, 13 modern, 13 future-tech and 20 Living Room Legends, each with its own play effect. Members redeem them with RP.","Every console has 7 games. The first comes free; buy the rest with credits in its Game library."]],
     ["Play",["Hold a console in your hand, insert a game and tap 🎮 Play for a 12-second session: a holo screen floats over your head for everyone to see. The first session every 20 minutes pays 2–5 chips.","Show them on your shelves. Find them all in ☰ → Game consoles or Stash → Game consoles. Consoles can't be sold, gifted, staked or traded."]]]},
   {id:"animedrop",icon:"🌸",n:"Neo Anime Drop",sub:"Animated clothes, companions and effects",where:"Smacked Shop → Digital",secs:[
-    ["The sets",["The Neo Anime Drop (10 clothes, 10 companions, 10 effects), the 10 Spirit-Bound companions, each with a bond effect and a matching outfit, and the 8 Cyber Bears: Circuit panda, Cryo polar, Iron grizzly, Beat cub, Holo teddy, Volt sun bear, Lunar moon bear and Rocket cub."]],
+    ["The sets",["The Legends pack (20 skins inspired by games, movies and anime: outfits, hats, masks, weapons and items, all animated), the Neo Anime Drop (10 clothes, 10 companions, 10 effects), the 10 Spirit-Bound companions, each with a bond effect and a matching outfit, and the 8 Cyber Bears: Circuit panda, Cryo polar, Iron grizzly, Beat cub, Holo teddy, Volt sun bear, Lunar moon bear and Rocket cub."]],
     ["Get them",["Members redeem them with RP and get them instantly, with no pickup code and nothing counted toward the monthly limit. Try them on in Character first. They can't be bought with credits and never drop as loot."]]]}]},
 
  {id:"social",icon:"👥",n:"Friends & chat",topics:[
@@ -8749,6 +8749,27 @@ const DIGI=[
   {k:"pet",n:"Volt sun bear",rp:5500,g:"Cyber Bears",d:"A sun bear whose chest crescent charges up like a battery, then bursts into sparks."},
   {k:"pet",n:"Lunar moon bear",rp:6000,g:"Cyber Bears",d:"A night-black moon bear with a glowing crescent. A tiny moon circles its head under twinkling stars."},
   {k:"pet",n:"Rocket cub",rp:7000,g:"Cyber Bears",d:"A goggled cub with a jetpack. Flies after you on a flickering flame and leans into every turn."},
+  // Legends: solid skins inspired by game, movie and anime genres (original designs)
+  {k:"style",n:"Void marine armor",rp:4500,g:"Legends",d:"Heavy sci-fi shooter armor with big shoulder plates and a chest light that pulses. Lights tint with your Accent color."},
+  {k:"style",n:"Magical idol dress",rp:4000,g:"Legends",d:"A frilly magical-girl dress whose skirt sways while sparkles rise around you. The bow beats like a heart."},
+  {k:"style",n:"Noir detective coat",rp:3500,g:"Legends",d:"A long belted trench coat from an old detective movie. It flaps when you walk and the badge glints now and then."},
+  {k:"style",n:"Fighter's gi",rp:3000,g:"Legends",d:"A martial-arts training gi with a black belt whose tails swing. Power steam rises off your shoulders."},
+  {k:"style",n:"Wasteland duster",rp:3500,g:"Legends",d:"A torn road-warrior duster with a ragged hem. Kicks up dust behind you as you walk."},
+  {k:"style",n:"Stealth suit",rp:4000,g:"Legends",d:"A sleek infiltration suit from a stealth game. A scan line sweeps down it nonstop."},
+  {k:"hat",n:"Pirate captain hat",rp:3000,g:"Legends",d:"A captain's tricorn with gold trim, a skull badge and a feather that sways in the sea breeze."},
+  {k:"hat",n:"Ronin straw hat",rp:2500,g:"Legends",d:"A wide straw hat from samurai films, with tassels that swing as you move."},
+  {k:"hat",n:"Pixel crown",rp:3500,g:"Legends",d:"A blocky 8-bit crown with a spinning coin that bounces above it, straight out of a retro platformer."},
+  {k:"visor",n:"Targeting lens",rp:2500,g:"Legends",d:"A one-eye sci-fi targeting display with a crosshair and numbers that never stop counting."},
+  {k:"visor",n:"Cyber ninja mask",rp:3000,g:"Legends",d:"A ninja face mask with a glowing eye slit that scans side to side and a tail that whips behind you."},
+  {k:"hair",n:"Flame hair",rp:4500,g:"Legends",d:"Anime hero hair made of real flickering flames."},
+  {k:"neck",n:"Spirit beads",rp:2000,g:"Legends",d:"Exorcist prayer beads from a supernatural anime. Each bead lights up in turn."},
+  {k:"back",n:"Plasma blade",rp:5000,g:"Legends",d:"A sci-fi energy sword worn on your back. The blade hums and throws sparks. Glows in your Accent color."},
+  {k:"back",n:"Buster sword",rp:5000,g:"Legends",d:"A huge JRPG slab sword whose runes light up one after another."},
+  {k:"back",n:"Rail rifle",rp:4500,g:"Legends",d:"A long shooter-game rail rifle. Its coils charge up one by one, then flash at the muzzle."},
+  {k:"back",n:"Spirit bow",rp:4000,g:"Legends",d:"A fantasy longbow whose string trembles while an arrow of light forms and fades."},
+  {k:"back",n:"Thunder maul",rp:5000,g:"Legends",d:"A two-handed war hammer from fantasy films, crackling with lightning."},
+  {k:"back",n:"Shoulder boombox",rp:3000,g:"Legends",d:"An 80s movie boombox riding on your shoulder. The speakers pump and music notes float out."},
+  {k:"aura",n:"Floating grimoire",rp:4500,g:"Legends",d:"A spellbook from a fantasy anime that floats beside you, flipping pages while runes circle it."},
 ];
 const DIGI_PETS={
   "Wisp guardian":{p:"Small, brave and always watching your back.",trait:{k:"guard",v:10,short:"10% less Void damage"},ab:{k:"buff",b:"guard",n:"Guardian Ward",cd:45,d:"Void armor for 10 min"},say:["I've got you!","*sparkle*","Stay close."]},
@@ -8881,6 +8902,72 @@ function wxAnime(layer,c,X){ const {L,dir,t,head,sh,hip,AC,JC,HC}=X; const W=k=>
         c.fillStyle=X.AC; glowOn(c,X.AC,8); c.beginPath(); c.moveTo(sd*7,head-8); c.lineTo(sd*12,head-12+Math.sin(t*5)*1); c.lineTo(sd*12,head-5); c.closePath(); c.moveTo(sd*7,head-8); c.lineTo(sd*2,head-12-Math.sin(t*5)); c.lineTo(sd*3,head-5); c.fill(); c.shadowBlur=0; c.fillStyle=HC; } } }
  }catch(e){}
  c.restore(); }
+
+// ---- Legends: 20 solid (non-see-through) digital skins inspired by game, movie and anime genres
+const LEG_SLEEVE=["Void marine armor","Magical idol dress","Noir detective coat","Fighter's gi","Wasteland duster","Stealth suit"];
+const LEG_TW={"Void marine armor":11,"Magical idol dress":7,"Noir detective coat":8,"Fighter's gi":8,"Wasteland duster":8,"Stealth suit":6};
+NEW_SLEEVE.push(...LEG_SLEEVE); Object.assign(NEW_TW,LEG_TW); HAT_TOPPERS.push("Pixel crown");
+function wxLegend(layer,c,X){ const {L,dir,t,head,sh,hip,AC,JC,HC}=X; const W=k=>WARD[k]&&WARD[k].opts[L[k]]&&WARD[k].opts[L[k]][0]; const mv=X.moving; const R=(x,y,w,h,f)=>{ if(f) c.fillStyle=f; c.fillRect(x,y,w,h); };
+ c.save(); try{
+  if(layer==="aura"&&W("aura")==="Floating grimoire"){ const bx=dir*15, by=-44+Math.sin(t*2)*3; // a spellbook that floats beside you
+    for(let k=0;k<5;k++){ const an=t*1.5+k*1.256; c.fillStyle=AC; glowOn(c,AC,8); c.globalAlpha=.5+.5*Math.sin(an*2); c.font="6px monospace"; c.textAlign="center"; c.fillText("ᚠᚢᚦᚨᚱ"[k],bx+Math.cos(an)*13,by+Math.sin(an)*5); }
+    c.shadowBlur=0; c.globalAlpha=1; R(bx-9,by-6,18,12,"#5a2a1a"); R(bx-8,by-5,16,10,"#f0e6c8"); R(bx-.6,by-6,1.2,12,"#3a1a10");
+    const fl=(t*1.4)%1; c.save(); c.translate(bx,by); c.scale(Math.cos(fl*Math.PI),1); R(0,-5,8,10,"#fff8e0"); c.restore();
+    c.strokeStyle="#9a8a6a"; c.lineWidth=.5; for(let k=0;k<3;k++){ c.beginPath(); c.moveTo(bx-7,by-3+k*3); c.lineTo(bx-2,by-3+k*3); c.stroke(); }
+    R(bx-9,by-7,18,1.4,"#c8a040"); c.fillStyle=AC; glowOn(c,AC,10); c.beginPath(); c.arc(bx,by-9,1.6+Math.sin(t*4)*.4,0,7); c.fill(); }
+  if(layer==="back"){ const b=W("back"), wv=Math.sin(t*3);
+    if(b==="Plasma blade"){ c.save(); c.translate(-dir*6,sh+4); c.rotate(dir*-.75); R(-1.6,-2,3.2,10,"#3a3448"); R(-3.4,-3,6.8,2,"#c9d3e0"); const hum=.8+.2*Math.sin(t*20);
+      c.fillStyle=AC; glowOn(c,AC,12*hum); c.beginPath(); c.moveTo(-1.8,-3); c.lineTo(1.8,-3); c.lineTo(1.2,-30); c.lineTo(0,-33); c.lineTo(-1.2,-30); c.fill(); c.fillStyle="#ffffff"; c.fillRect(-.5,-30,1,27);
+      if(Math.sin(t*7)>.85){ c.fillStyle="#fff"; c.fillRect(1.6,-12-Math.random()*14,1.4,1.4); } c.restore(); }
+    if(b==="Buster sword"){ c.save(); c.translate(-dir*5,sh); c.rotate(dir*-.35); R(-4,-6,8,44,"#8a94a8"); R(-4,-6,1.4,44,"#c9d3e0"); R(-5.5,-9,11,3,"#3a3448"); R(-1.4,-17,2.8,8,"#2a2030"); R(-2.4,-19,4.8,2,"#c8a040");
+      for(let k=0;k<4;k++){ const on=Math.floor(t*3)%4===k; c.fillStyle=on?AC:"#5a6478"; if(on) glowOn(c,AC,8); R(-1.4,0+k*9,2.8,4); c.shadowBlur=0; } c.restore(); }
+    if(b==="Rail rifle"){ c.save(); c.translate(-dir*4,sh+8); c.rotate(dir*-1.05); R(-2,-30,4,40,"#3a3448"); R(-3,0,6,10,"#2a2030"); R(-1,-38,2,9,"#5a6478"); const ch=(t*.6)%1;
+      for(let k=0;k<5;k++){ const lit=ch>k/5; c.fillStyle=lit?AC:"#1e1a28"; if(lit) glowOn(c,AC,6); R(-3,-26+k*5,6,2); c.shadowBlur=0; }
+      if(ch>.92){ c.fillStyle="#ffffff"; glowOn(c,AC,14); c.beginPath(); c.arc(0,-39,3,0,7); c.fill(); } c.restore(); }
+    if(b==="Spirit bow"){ c.save(); c.translate(-dir*6,sh+6); c.rotate(dir*.2); c.strokeStyle="#c8a040"; c.lineWidth=2; c.beginPath(); c.arc(dir*-6,0,18,-1.2,1.2); c.stroke();
+      const vib=Math.sin(t*30)*(Math.sin(t*2)>.6?1:0); c.strokeStyle="#f4f0ff"; c.lineWidth=.6; c.beginPath(); c.moveTo(dir*-6+Math.cos(-1.2)*18,Math.sin(-1.2)*18); c.lineTo(dir*-6+vib,0); c.lineTo(dir*-6+Math.cos(1.2)*18,Math.sin(1.2)*18); c.stroke();
+      const ar=.5+.5*Math.sin(t*1.5); c.globalAlpha=ar; c.strokeStyle=AC; glowOn(c,AC,10); c.lineWidth=1.4; c.beginPath(); c.moveTo(dir*-6,0); c.lineTo(dir*14,0); c.stroke(); c.fillStyle=AC; c.beginPath(); c.moveTo(dir*16,0); c.lineTo(dir*12,-2.4); c.lineTo(dir*12,2.4); c.fill(); c.restore(); }
+    if(b==="Thunder maul"){ c.save(); c.translate(-dir*5,sh+2); c.rotate(dir*-.4); R(-1.2,-4,2.4,40,"#5a3a22"); c.fillStyle="#6a7488"; c.beginPath(); c.ellipse(0,-8,9,6,0,0,7); c.fill(); R(-9,-9,18,2,"#9aa4b8"); R(-1.6,-14,3.2,12,"#c8a040");
+      if(Math.sin(t*5)>.3){ c.strokeStyle=AC; glowOn(c,AC,10); c.lineWidth=1; for(let k=0;k<3;k++){ const a=t*9+k*2.1; c.beginPath(); let x=Math.cos(a)*8, y=-8+Math.sin(a)*5; c.moveTo(x,y); for(let j=0;j<3;j++){ x+=Math.cos(a)*4+(j%2?2:-2); y+=Math.sin(a)*3+(j%2?-2:2); c.lineTo(x,y); } c.stroke(); } } c.restore(); }
+    if(b==="Shoulder boombox"){ const bx=-dir*9, by=sh-12+Math.sin(t*8)*.6; R(bx-11,by-6,22,12,"#2a2a34"); R(bx-11,by-8,22,2,"#c9d3e0"); R(bx-3,by-5,6,3,AC);
+      for(const sx of [-6,6]){ const p=1+.18*Math.abs(Math.sin(t*8)); c.fillStyle="#0b0716"; c.beginPath(); c.arc(bx+sx,by+1,3.8*p,0,7); c.fill(); c.fillStyle="#5a6478"; c.beginPath(); c.arc(bx+sx,by+1,1.6*p,0,7); c.fill(); }
+      for(let k=0;k<3;k++){ const u=(t*.6+k/3)%1; c.globalAlpha=Math.sin(u*Math.PI); c.fillStyle=k%2?AC:"#ffd36a"; c.font="bold 7px monospace"; c.textAlign="center"; c.fillText(k%2?"♫":"♪",bx-dir*(4+u*10)+k*3,by-8-u*16); } c.globalAlpha=1; } }
+  if(layer==="torso"){ const s=W("style");
+    if(s==="Void marine armor"){ R(-7,sh-1,14,hip-sh+3,"#3a4a3a"); R(-6,sh+1,12,8,"#4a5e48"); R(-12,sh-4,8,7,"#4a5e48"); R(4,sh-4,8,7,"#4a5e48"); R(-12,sh-4,8,1.4,"#6a8266"); R(4,sh-4,8,1.4,"#6a8266"); R(-7,hip-3,14,4,"#2a3428");
+      const p=.5+.5*Math.sin(t*3); c.fillStyle=AC; glowOn(c,AC,6+p*8); R(-4,sh+4,8,2); c.shadowBlur=0; for(let k=0;k<3;k++) R(-5+k*4,hip-7,2,2,Math.floor(t*4)%3===k?AC:"#1e2a1e"); }
+    if(s==="Magical idol dress"){ R(-5,sh,10,hip-sh,JC); const fl=Math.sin(t*4)*1.2+(mv?-dir*2:0); c.fillStyle=JC; c.beginPath(); c.moveTo(-5,hip-2); c.lineTo(5,hip-2); c.lineTo(11+fl,hip+10); c.lineTo(-11+fl,hip+10); c.fill();
+      c.fillStyle="#ffffff"; for(let k=0;k<7;k++){ c.beginPath(); c.arc(-10+fl+k*3.4,hip+10,1.8,0,Math.PI); c.fill(); } const bp=1+.12*Math.sin(t*5); c.save(); c.translate(0,sh+3); c.scale(bp,bp); c.fillStyle=AC; c.beginPath(); c.moveTo(0,0); c.lineTo(-5,-3); c.lineTo(-5,3); c.closePath(); c.moveTo(0,0); c.lineTo(5,-3); c.lineTo(5,3); c.fill(); c.restore();
+      for(let k=0;k<4;k++){ const u=(t*.7+k/4)%1; c.globalAlpha=Math.sin(u*Math.PI); c.fillStyle=k%2?"#ffffff":AC; glowOn(c,AC,6); const x=Math.sin(k*2.3+t)*12, y=hip+8-u*30; c.fillRect(x-.7,y-2,1.4,4); c.fillRect(x-2,y-.7,4,1.4); } c.globalAlpha=1; }
+    if(s==="Noir detective coat"){ const fl=mv?-dir*4:Math.sin(t*1.5)*1; R(-6,sh,12,hip-sh+2,"#6a5a44"); c.fillStyle="#6a5a44"; c.beginPath(); c.moveTo(-6,hip); c.lineTo(6,hip); c.lineTo(8+fl,hip+18); c.lineTo(-8+fl,hip+18); c.fill();
+      R(-7,hip-2,14,2.6,"#3a2e22"); R(-1,hip-2.4,2,3.4,"#c8a040"); c.strokeStyle="#4a3e2e"; c.lineWidth=1.2; c.beginPath(); c.moveTo(-4,sh); c.lineTo(-1,sh+8); c.moveTo(4,sh); c.lineTo(1,sh+8); c.stroke();
+      if((t%4)<.3){ c.fillStyle="#ffffff"; glowOn(c,"#ffd36a",10); R(dir*3-1,sh+5,2,2); } }
+    if(s==="Fighter's gi"){ R(-6,sh,12,hip-sh+2,JC); c.strokeStyle="#f4f0ff"; c.lineWidth=1.4; c.beginPath(); c.moveTo(-4,sh); c.lineTo(2,sh+9); c.moveTo(4,sh); c.lineTo(-1,sh+7); c.stroke(); R(-6.5,hip-3,13,3,"#16121f");
+      const sw=Math.sin(t*5)*1.4+(mv?-dir*3:0); R(-dir*4-1+sw*.3,hip,2,7,"#16121f"); R(-dir*6-1+sw,hip,2,6,"#16121f");
+      for(let k=0;k<4;k++){ const u=(t*.9+k/4)%1; c.globalAlpha=(1-u)*.6; c.fillStyle=AC; glowOn(c,AC,8); c.beginPath(); c.arc((k%2?-7:7)+Math.sin(t*3+k)*2,sh-u*16,1.6+u*2,0,7); c.fill(); } c.globalAlpha=1; }
+    if(s==="Wasteland duster"){ const fl=mv?-dir*5:Math.sin(t*1.2); R(-6,sh,12,hip-sh+2,"#8a6a44"); c.fillStyle="#8a6a44"; c.beginPath(); c.moveTo(-6,hip); c.lineTo(6,hip); for(let k=0;k<6;k++) c.lineTo(7+fl-k*2.8,hip+16+(k%2?-3:0)); c.lineTo(-7+fl,hip+16); c.fill();
+      R(-6,sh+6,12,1.6,"#5a4228"); R(dir*2,sh+2,3,4,"#5a4228");
+      if(mv) for(let k=0;k<4;k++){ const u=(t*1.6+k/4)%1; c.globalAlpha=(1-u)*.45; c.fillStyle="#c8a878"; c.beginPath(); c.arc(-dir*(6+u*18),-2-u*6,2+u*4,0,7); c.fill(); } c.globalAlpha=1; }
+    if(s==="Stealth suit"){ R(-4.5,sh,9,hip-sh+2,"#1e2428"); c.strokeStyle="#3a4650"; c.lineWidth=.8; c.beginPath(); c.moveTo(-4,sh+4); c.lineTo(4,sh+4); c.moveTo(-4,hip-4); c.lineTo(4,hip-4); c.stroke();
+      const sy=sh+((t*12)%(hip-sh)); c.fillStyle=AC; glowOn(c,AC,6); c.globalAlpha=.8; R(-4.5,sy,9,1); c.globalAlpha=1; c.shadowBlur=0; R(-6,sh-1,3,3,"#2a3238"); R(3,sh-1,3,3,"#2a3238"); } }
+  if(layer==="neck"&&W("neck")==="Spirit beads"){ for(let k=0;k<9;k++){ const a=Math.PI*.1+k*(Math.PI*.8/8), x=Math.cos(a)*6.4, y=sh-3+Math.sin(a)*6; const on=Math.floor(t*6)%9===k; c.fillStyle=on?AC:"#5a3a22"; if(on) glowOn(c,AC,8); c.beginPath(); c.arc(x,y,1.5,0,7); c.fill(); c.shadowBlur=0; }
+    c.fillStyle="#c8a040"; c.beginPath(); c.arc(0,sh+4.2,2.2,0,7); c.fill(); }
+  if(layer==="hair"&&W("hair")==="Flame hair"){ const cols=["#ff5a1a","#ffb84a",HC]; c.fillStyle=HC; c.beginPath(); c.arc(0,head-1,9,Math.PI,0); c.fill();
+    for(let k=0;k<7;k++){ const x=-9+k*3, h=8+Math.abs(Math.sin(t*9+k*1.7))*8+(k===3?5:0); c.fillStyle=cols[k%3]; glowOn(c,"#ff8a3a",8); c.beginPath(); c.moveTo(x-2.4,head-5); c.quadraticCurveTo(x-dir*2+Math.sin(t*12+k)*1.5,head-5-h,x+2.4,head-5); c.fill(); } c.shadowBlur=0; }
+  if(layer==="visor"){ const v=W("visor");
+    if(v==="Targeting lens"){ const ex=dir*3.6; R(ex-2.6,head-3.4,5.2,4.4,"#2a2030"); c.fillStyle=AC; glowOn(c,AC,8); c.globalAlpha=.85; R(ex-2,head-2.8,4,3.2); c.globalAlpha=1; c.shadowBlur=0; R(-dir*4-1,head-2,dir>0?ex+1:-ex+5,1,"#2a2030");
+      c.fillStyle="#0b0716"; R(ex-.3,head-2.8,.6,3.2); R(ex-2,head-1.4,4,.6); const u=(t*1.5)%1; c.fillStyle="#ffffff"; R(ex-2+u*3.4,head-2.6,.6,.6);
+      c.fillStyle=AC; c.font="3px monospace"; c.textAlign="center"; c.globalAlpha=.8; c.fillText(String(Math.floor(t*37)%100).padStart(2,"0"),ex+dir*6,head-4); c.globalAlpha=1; }
+    if(v==="Cyber ninja mask"){ R(-7.5,head+1,15,6,"#1e1a24"); R(-7.5,head-4,15,3.4,"#1e1a24"); const sx=Math.sin(t*2)*3; c.fillStyle=AC; glowOn(c,AC,10); R(-6+sx,head-2.2,12-Math.abs(sx)*2,1.2); c.shadowBlur=0;
+      const tl=Math.sin(t*6)*1.5+(mv?-dir*3:0); c.fillStyle="#1e1a24"; c.beginPath(); c.moveTo(-dir*7,head-3.4); c.lineTo(-dir*14+tl,head-5); c.lineTo(-dir*13+tl,head-1); c.closePath(); c.fill(); } }
+  if(layer==="hat"){ const h=W("hat");
+    if(h==="Pirate captain hat"){ c.fillStyle="#1e1624"; c.beginPath(); c.moveTo(-13,head-6); c.quadraticCurveTo(0,head-14,13,head-6); c.lineTo(9,head-13); c.quadraticCurveTo(0,head-20,-9,head-13); c.closePath(); c.fill();
+      c.strokeStyle="#c8a040"; c.lineWidth=.8; c.beginPath(); c.moveTo(-13,head-6); c.quadraticCurveTo(0,head-14,13,head-6); c.stroke(); R(-1.6,head-14,3.2,3,"#f4f0ff");
+      const sw=Math.sin(t*2.4)*.25+(mv?dir*.3:0); c.save(); c.translate(-dir*6,head-14); c.rotate(-dir*.6+sw); c.fillStyle=AC; c.beginPath(); c.ellipse(0,-7,2.4,8,0,0,7); c.fill(); c.strokeStyle="rgba(0,0,0,.3)"; c.beginPath(); c.moveTo(0,1); c.lineTo(0,-14); c.stroke(); c.restore(); }
+    if(h==="Ronin straw hat"){ c.fillStyle="#c8a868"; c.beginPath(); c.moveTo(-16,head-5); c.lineTo(0,head-16); c.lineTo(16,head-5); c.closePath(); c.fill(); c.strokeStyle="#9a7a48"; c.lineWidth=.6; for(let k=1;k<4;k++){ c.beginPath(); c.moveTo(-16+k*4,head-5-k*2.75); c.lineTo(16-k*4,head-5-k*2.75); c.stroke(); }
+      const sw=Math.sin(t*2)*1.6+(mv?-dir*3:0); c.strokeStyle=AC; c.lineWidth=1; for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sd*12,head-5); c.quadraticCurveTo(sd*12+sw*.5,head+3,sd*11+sw,head+9); c.stroke(); c.fillStyle=AC; c.beginPath(); c.arc(sd*11+sw,head+10,1.4,0,7); c.fill(); } }
+    if(h==="Pixel crown"){ const by=head-12+Math.sin(t*3)*.6; c.fillStyle="#ffd23a"; R(-7,by,14,4); for(const x of [-7,-1.5,4]) R(x,by-4,3,4); R(-7,by+3,14,1,"#c89a1a"); R(-4,by+1,2,2,"#ff3a5a"); R(2,by+1,2,2,"#38e8ff");
+      const cy=by-12-Math.abs(Math.sin(t*2.5))*4, sp=Math.abs(Math.cos(t*4)); c.fillStyle="#ffd23a"; glowOn(c,"#ffd23a",8); c.beginPath(); c.ellipse(0,cy,3.4*sp+.4,3.4,0,0,7); c.fill(); c.shadowBlur=0; if(sp>.4){ R(-.5,cy-2,1,4,"#c89a1a"); } } }
+ }catch(e){} c.restore(); }
 
 // --- companion art
 function digiPetArt(){
@@ -9028,14 +9115,14 @@ function bearBody(B,st,C,lift){ const R=B.R, h=lift||0;
 // --- Smacked Shop: the Digital tab
 function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
     el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.${save.digiFree!==monthKey()?" Your free monthly item is ready: open any item to claim it.":" You've claimed this month's free item."}`:"Members redeem digital rewards with RP and get one free each month. You can try anything on in Character first."}))));
-  for(const grp of ["Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
+  for(const grp of ["Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
     const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
       const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${digiPrice(d).toLocaleString()} RP`}),!digiOn(d)?el("span",{class:"r-epic",text:"Hidden"}):null));
       g.append(c); } body.append(g); } consoleShopView(body); }
 function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(+save.rp||0), ok=canRedeem(), price=digiPrice(d), live=digiOn(d)||IS_ADMIN; const body=panel(d.n,"Neo Anime Drop · digital reward"); currentView=null;
   const pv=lookCanvas({...fullLook(save.look),[d.k]:i},110); pv.style.cssText="width:150px;height:150px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
   const extra=d.k==="pet"&&PETS[d.n]?el("span",{class:"r-uncommon",text:`${PETS[d.n].trait.short} · ${PETS[d.n].ab.n}: ${PETS[d.n].ab.d}`}):null;
-  body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:d.n}),el("span",{text:d.d}),extra,el("span",{class:"sub",text:`${({style:"Top",neck:"Neck",hat:"Head",hair:"Hairstyle",back:"Back",pet:"Companion",aura:"Aura"})[d.k]} slot · ${own?"You own this.":`${price.toLocaleString()} RP · you have ${bal.toLocaleString()} RP`}`}))));
+  body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:d.n}),el("span",{text:d.d}),extra,el("span",{class:"sub",text:`${({style:"Top",neck:"Neck",hat:"Head",hair:"Hairstyle",back:"Back",pet:"Companion",aura:"Aura",visor:"Eyes"})[d.k]} slot · ${own?"You own this.":`${price.toLocaleString()} RP · you have ${bal.toLocaleString()} RP`}`}))));
   const wear=()=>{ save.look={...fullLook(save.look),[d.k]:i}; persist(); pushPresence(true); emote("cheer"); toast(`Now wearing ${d.n}.`,"#cf72ff"); closePanel(); };
   const row=el("div",{class:"row"});
   if(own) row.append(el("button",{class:"btn hot",type:"button",text:"Wear it now",onclick:wear}));
@@ -9048,7 +9135,7 @@ function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(
 // Owner tools → Digital items: price and show/hide every item.
 function digiAdmin(body){ body.append(el("p",{class:"sub",text:"Set the RP price for each digital item and choose which ones are in the shop. Digital items cost you nothing to hand out, so every RP spent on them is profit. Players who already own an item keep it even if you hide it."}));
   const rows=[]; const l=el("div",{class:"list"});
-  for(const grp of ["Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
+  for(const grp of ["Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
     for(const d of DIGI.filter(x=>x.g===grp)){ const cv=lookCanvas({...fullLook(save.look),[d.k]:digiIndex(d)},44); cv.style.cssText+=";width:48px;height:48px;flex:none";
       const rp=el("input",{class:"num",type:"number",min:"1",step:"100",value:String(digiPrice(d)),style:"width:110px","aria-label":`RP price for ${d.n}`});
       const on=el("input",{type:"checkbox","aria-label":`${d.n} is in the shop`}); on.checked=digiOn(d); rows.push([d,rp,on]);
