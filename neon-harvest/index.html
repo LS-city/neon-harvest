@@ -3662,7 +3662,7 @@ function openBytes(){ const body=panel("Bytes Terminal","Your Bytes wallet: send
     el("div",{class:"row"},el("a",{class:"btn",href:"../bytes/",target:"_blank",rel:"noopener",text:"Open Bytes in a new tab"}))); beep(660,.06,"square",.04); }
 /* Bytes companions: pick up to 3 companions to show off in Bytes (VRChat chatbox, tip reactions, Discord, share cards).
    Looks and personality only: companion traits never create or change Bytes. */
-const PET_EMO={"Mini drone":"🛸","Pixel cat":"🐱","Plasma orb":"🔮","Neon koi":"🐟","Pixel slime":"🟢","Ghost":"👻","Cyber owl":"🦉","Robo dog":"🐶","Data jellyfish":"🪼","Mini dragon":"🐉","Pixel bird":"🐦","Bat":"🦇","Snake bot":"🐍","Fire spirit":"🔥","Mini UFO":"🛸","Neon fox":"🦊","Glitch bunny":"🐰","Robo penguin":"🐧","Byte hamster":"🐹","Mech spider":"🕷","Circuit monkey":"🐒","Rock golem":"🪨","Hover turtle":"🐢","Neon butterfly":"🦋","Star sprite":"✨","Cyber axolotl":"🦎","Holo whale":"🐋","Pocket phoenix":"🔥","Neon panda":"🐼","Cyber shark":"🦈","Holo unicorn":"🦄","Robo crab":"🦀","Pixel frog":"🐸","Volt eel":"⚡","Glow moth":"🦋","Mecha raccoon":"🦝","Data dolphin":"🐬","Mini mech":"🤖","Shadow wolf":"🐺","Quantum cat":"🐈","Cyber centaur":"🐎","Mecha minotaur":"🐂","Kitsune knight":"🦊","Owl sentinel":"🦉","Shark brute":"🦈","Dragon knight":"🐲","Raven ninja":"🐦","Panther runner":"🐆","Moth oracle":"🌙","Stag guardian":"🦌","Wisp guardian":"✨","Ember kit":"🦊","Thunder pup":"🐕","Moon rabbit":"🐇","Paper crane":"🕊","Pocket titan":"🗿","Ink sprite":"🖋","Cloud dragon":"🐉","Lantern spirit":"🏮","Chibi oni":"👹","Storm heron":"🌩","Glass serpent":"🐍","Molten boar":"🐗","Static moth":"🦋","Tide koi":"🐟","Frost owl":"🦉","Gravel tortoise":"🐢","Void jackal":"🐺","Bloom stag":"🦌","Solar lynx":"🐆"};
+const PET_EMO={"Mini drone":"🛸","Pixel cat":"🐱","Plasma orb":"🔮","Neon koi":"🐟","Pixel slime":"🟢","Ghost":"👻","Cyber owl":"🦉","Robo dog":"🐶","Data jellyfish":"🪼","Mini dragon":"🐉","Pixel bird":"🐦","Bat":"🦇","Snake bot":"🐍","Fire spirit":"🔥","Mini UFO":"🛸","Neon fox":"🦊","Glitch bunny":"🐰","Robo penguin":"🐧","Byte hamster":"🐹","Mech spider":"🕷","Circuit monkey":"🐒","Rock golem":"🪨","Hover turtle":"🐢","Neon butterfly":"🦋","Star sprite":"✨","Cyber axolotl":"🦎","Holo whale":"🐋","Pocket phoenix":"🔥","Neon panda":"🐼","Cyber shark":"🦈","Holo unicorn":"🦄","Robo crab":"🦀","Pixel frog":"🐸","Volt eel":"⚡","Glow moth":"🦋","Mecha raccoon":"🦝","Data dolphin":"🐬","Mini mech":"🤖","Shadow wolf":"🐺","Quantum cat":"🐈","Cyber centaur":"🐎","Mecha minotaur":"🐂","Kitsune knight":"🦊","Owl sentinel":"🦉","Shark brute":"🦈","Dragon knight":"🐲","Raven ninja":"🐦","Panther runner":"🐆","Moth oracle":"🌙","Stag guardian":"🦌","Wisp guardian":"✨","Ember kit":"🦊","Thunder pup":"🐕","Moon rabbit":"🐇","Paper crane":"🕊","Pocket titan":"🗿","Ink sprite":"🖋","Cloud dragon":"🐉","Lantern spirit":"🏮","Chibi oni":"👹","Storm heron":"🌩","Glass serpent":"🐍","Molten boar":"🐗","Static moth":"🦋","Tide koi":"🐟","Frost owl":"🦉","Gravel tortoise":"🐢","Void jackal":"🐺","Bloom stag":"🦌","Solar lynx":"🐆","Circuit panda":"🐼","Cryo polar":"🐻","Iron grizzly":"🐻","Beat cub":"🐻","Holo teddy":"🧸","Volt sun bear":"🐻","Lunar moon bear":"🐻","Rocket cub":"🚀"};
 const BYTES_PET_MAX=3;
 const petSlug=n=>String(n).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 function ownedPets(){ const out=[]; WARD.pet.opts.forEach((o,i)=>{ if(i>0&&PETS[o[0]]&&isOwned("pet",i)&&!out.includes(o[0])) out.push(o[0]); }); return out; }
@@ -4467,7 +4467,7 @@ const HELP=[
     ["The consoles",["14 retro, 13 modern, 13 future-tech and 20 Living Room Legends, each with its own play effect. Members redeem them with RP.","Every console has 7 games. The first comes free; buy the rest with credits in its Game library."]],
     ["Play",["Hold a console in your hand, insert a game and tap 🎮 Play for a 12-second session: a holo screen floats over your head for everyone to see. The first session every 20 minutes pays 2–5 chips.","Show them on your shelves. Find them all in ☰ → Game consoles or Stash → Game consoles. Consoles can't be sold, gifted, staked or traded."]]]},
   {id:"animedrop",icon:"🌸",n:"Neo Anime Drop",sub:"Animated clothes, companions and effects",where:"Smacked Shop → Digital",secs:[
-    ["The sets",["The Neo Anime Drop (10 clothes, 10 companions, 10 effects) and the 10 Spirit-Bound companions, each with a bond effect and a matching outfit."]],
+    ["The sets",["The Neo Anime Drop (10 clothes, 10 companions, 10 effects), the 10 Spirit-Bound companions, each with a bond effect and a matching outfit, and the 8 Cyber Bears: Circuit panda, Cryo polar, Iron grizzly, Beat cub, Holo teddy, Volt sun bear, Lunar moon bear and Rocket cub."]],
     ["Get them",["Members redeem them with RP and get them instantly, with no pickup code and nothing counted toward the monthly limit. Try them on in Character first. They can't be bought with credits and never drop as loot."]]]}]},
 
  {id:"social",icon:"👥",n:"Friends & chat",topics:[
@@ -8388,7 +8388,9 @@ const _petAnc={};
 var PET_ANC_FIX={"Storm heron":{hx:4,top:-11,nx:3.4,ny:-6,bx:-1,by:-1,sz:4},"Glass serpent":{hx:7.5,top:-2.6,nx:6,ny:1.6,bx:-2,by:-1,sz:4.4},"Molten boar":{hx:6,top:-9.6,nx:4.6,ny:-4.6,bx:-1,by:-9,sz:5},"Static moth":{hx:0,top:-6,nx:0,ny:-2,bx:0,by:0,sz:4},"Tide koi":{hx:2,top:-3,nx:2,ny:1,bx:-2,by:0,sz:4},"Frost owl":{hx:0,top:-6.6,nx:0,ny:2,bx:-3,by:0,sz:5},"Gravel tortoise":{hx:7,top:-5.6,nx:6,ny:-2.4,bx:-1,by:-8,sz:4.4},"Void jackal":{hx:7,top:-14,nx:5,ny:-9,bx:-1,by:-10,sz:4.6},"Bloom stag":{hx:5,top:-16.6,nx:4,ny:-12,bx:-1,by:-11,sz:4.4},"Solar lynx":{hx:5,top:-14,nx:4,ny:-8.4,bx:-1,by:-9,sz:4.6},"Cloud dragon":{hx:8,top:-3.6,nx:6.8,ny:1.6,bx:-2,by:-2.4,sz:5},"Wisp guardian":{hx:0,top:-4.4,nx:0,ny:2.6,bx:-3,by:-.5,sz:5},"Paper crane":{hx:8.4,top:-4,nx:6.4,ny:-.6,bx:-1.5,by:-1,sz:4.6},
   "Moon rabbit":{hx:2,top:-6.9,nx:1.4,ny:-2.4,bx:-2.2,by:-1.4,sz:4.4},"Ember kit":{hx:5,top:-13,nx:4,ny:-8.4,bx:-1.5,by:-9,sz:5},"Thunder pup":{hx:6,top:-14,nx:5,ny:-8.4,bx:-1,by:-10,sz:5},
   "Pocket titan":{hx:0,top:-21,nx:0,ny:-15,bx:-4,by:-13,sz:5},"Ink sprite":{hx:0,top:-5.6,nx:0,ny:3,bx:-3.4,by:-1,sz:5},"Lantern spirit":{hx:0,top:-9,nx:0,ny:4.6,bx:-4.4,by:-1,sz:5},"Chibi oni":{hx:0,top:-11,nx:0,ny:-2.4,bx:-4.2,by:-6,sz:5},
-  "Robo crab":{hx:0,top:-7.6,nx:0,ny:-3.6,bx:-3,by:-5,sz:5},"Holo unicorn":{hx:4.6,top:-15,nx:3.6,ny:-9.4,bx:-2,by:-9,sz:5},"Shadow wolf":{hx:6,top:-12,nx:4.2,ny:-7,bx:-2,by:-9,sz:5}};
+  "Robo crab":{hx:0,top:-7.6,nx:0,ny:-3.6,bx:-3,by:-5,sz:5},"Holo unicorn":{hx:4.6,top:-15,nx:3.6,ny:-9.4,bx:-2,by:-9,sz:5},"Shadow wolf":{hx:6,top:-12,nx:4.2,ny:-7,bx:-2,by:-9,sz:5},
+  "Circuit panda":{hx:7.6,top:-15.4,nx:6,ny:-7.6,bx:-1,by:-11.8,sz:5},"Cryo polar":{hx:7.6,top:-15.4,nx:6,ny:-7.6,bx:-1,by:-11.8,sz:5},"Iron grizzly":{hx:7.6,top:-15.4,nx:6,ny:-7.6,bx:-1,by:-12.4,sz:5},"Beat cub":{hx:6.2,top:-12.6,nx:5,ny:-6.2,bx:-1,by:-9.6,sz:4.4},
+  "Volt sun bear":{hx:7.6,top:-15.4,nx:6,ny:-7.6,bx:-1,by:-11.8,sz:5},"Lunar moon bear":{hx:7.6,top:-15.4,nx:6,ny:-7.6,bx:-1,by:-11.8,sz:5},"Holo teddy":{hx:0,top:-11.4,nx:0,ny:-2.4,bx:-4,by:0,sz:4.6},"Rocket cub":{hx:1.4,top:-11.6,nx:1,ny:-3,bx:-4,by:-1,sz:4.4}};
 // Companions that hop or sway inside their own art: gear moves with them.
 var PET_MOVE={"Pixel frog":(c,t,o)=>c.translate(0,-(o.moving?Math.abs(Math.sin(t*6))*6:Math.max(0,Math.sin(t*1.5)-.9)*30)),"Glitch bunny":(c,t,o)=>c.translate(0,-Math.abs(Math.sin(t*5))*(o.moving?5:2)),
   "Chibi oni":(c,t,o)=>c.translate(0,-Math.abs(Math.sin(t*(o.moving?7:3)))*(o.moving?3:1.5)),"Robo penguin":(c,t,o)=>c.rotate(o.moving?Math.sin(t*10)*.15:0),"Cloud dragon":(c,t,o)=>c.translate(0,Math.sin(t*4)*3)};
@@ -8609,6 +8611,15 @@ const DIGI=[
   {k:"aura",n:"Dramatic wind",rp:2500,g:"Effects",d:"Leaves and wind streaks blow past you like a big moment just happened."},
   {k:"aura",n:"Ascension beam",rp:5000,g:"Effects",d:"A column of light falls on you, with motes rising into it."},
   {k:"aura",n:"Battle spikes",rp:4000,g:"Effects",d:"A jagged battle aura of spikes that pulses around you."},
+  // Cyber Bears: 8 animated bear companions (added last so saved companion numbers never shift)
+  {k:"pet",n:"Circuit panda",rp:5500,g:"Cyber Bears",d:"A chubby panda with glowing circuit lines in its eye patches. Chews a light-up bamboo stick all day."},
+  {k:"pet",n:"Cryo polar",rp:6000,g:"Cyber Bears",d:"A polar bear with an ice-blue visor. Puffs frosty breath, and snow drifts down around it."},
+  {k:"pet",n:"Iron grizzly",rp:6500,g:"Cyber Bears",d:"A grizzly in riveted back armor. Its exhaust pipe puffs smoke rings and the ground shakes when it walks."},
+  {k:"pet",n:"Beat cub",rp:4500,g:"Cyber Bears",d:"A tiny cub in giant headphones. Bobs its head to the beat while music notes float up."},
+  {k:"pet",n:"Holo teddy",rp:5000,g:"Cyber Bears",d:"A teddy bear made of light, beamed from a little projector. It flickers and glitches now and then."},
+  {k:"pet",n:"Volt sun bear",rp:5500,g:"Cyber Bears",d:"A sun bear whose chest crescent charges up like a battery, then bursts into sparks."},
+  {k:"pet",n:"Lunar moon bear",rp:6000,g:"Cyber Bears",d:"A night-black moon bear with a glowing crescent. A tiny moon circles its head under twinkling stars."},
+  {k:"pet",n:"Rocket cub",rp:7000,g:"Cyber Bears",d:"A goggled cub with a jetpack. Flies after you on a flickering flame and leans into every turn."},
 ];
 const DIGI_PETS={
   "Wisp guardian":{p:"Small, brave and always watching your back.",trait:{k:"guard",v:10,short:"10% less Void damage"},ab:{k:"buff",b:"guard",n:"Guardian Ward",cd:45,d:"Void armor for 10 min"},say:["I've got you!","*sparkle*","Stay close."]},
@@ -8631,8 +8642,16 @@ const DIGI_PETS={
   "Bloom stag":{p:"Kind and shy. Plants grow faster when it's near.",trait:{k:"luck",v:10,short:"Luckier Scrap finds"},ab:{k:"heal",v:50,n:"Spring Bloom",cd:6,d:"Heals 50 HP in The Void"},say:["*soft bleat*","Let it grow.","🌸"]},
   "Solar lynx":{p:"Bold and bright. Wants to be the center of attention.",trait:{k:"tips",v:15,short:"+15% shift tips"},ab:{k:"buff",b:"print",n:"Solar Flare",cd:60,d:"2× print chips for 10 min"},say:["RAWR!","*purr*","Shine on!"]},
   "Chibi oni":{p:"Small, horned and full of attitude.",trait:{k:"bot",v:3,short:"+3 chips per bot deleted"},ab:{k:"buff",b:"guard",n:"Oni Roar",cd:45,d:"Void armor for 10 min"},say:["RAAH!","Fight me!","*bonk*"]},
+  "Circuit panda":{p:"Lazy, round and always snacking. Secretly a genius.",trait:{k:"mine",v:10,short:"+10% Mining Rack chips"},ab:{k:"chips",lo:5,hi:12,n:"Bamboo Byte",cd:60,d:"Finds 5–12 chips"},say:["*munch munch*","Bamboo.exe loaded.","…nap time?"]},
+  "Cryo polar":{p:"Calm and cool. Nothing rattles it.",trait:{k:"guard",v:12,short:"12% less Void damage"},ab:{k:"buff",b:"guard",n:"Ice Wall",cd:45,d:"Void armor for 10 min"},say:["*frosty huff*","Stay chill.","Brrr-rawr."]},
+  "Iron grizzly":{p:"Huge, loud and loyal. Built like a tank.",trait:{k:"bot",v:5,short:"+5 chips per bot deleted"},ab:{k:"heal",v:60,n:"Steel Hug",cd:6,d:"Heals 60 HP in The Void"},say:["GRRROAR!","*clank clank*","Nobody touches my pilot."]},
+  "Beat cub":{p:"Tiny, bouncy and always vibing.",trait:{k:"tips",v:12,short:"+12% shift tips"},ab:{k:"credits",lo:30,hi:70,n:"Drop the Beat",cd:60,d:"Brings ₵30–70"},say:["♪ boop boop ♪","Turn it up!","*head bob*"]},
+  "Holo teddy":{p:"Sweet and a little glitchy. Wants hugs it can't feel.",trait:{k:"regen",v:3,short:"+3 HP/s regen in The Void"},ab:{k:"heal",v:50,n:"Hug.exe",cd:6,d:"Heals 50 HP in The Void"},say:["*bzzt* hug?","I'm real enough!","*flicker*"]},
+  "Volt sun bear":{p:"Hyper and bright. Can't sit still for a second.",trait:{k:"print",v:3,short:"+3 chips per CHIP PRINT"},ab:{k:"buff",b:"print",n:"Full Charge",cd:60,d:"2× print chips for 10 min"},say:["CHARGING…","*zzzap*","100%!"]},
+  "Lunar moon bear":{p:"Quiet and mysterious. Comes alive at night.",trait:{k:"luck",v:12,short:"Luckier Scrap finds"},ab:{k:"fetch",n:"Moonlight Dig",cd:120,d:"Finds a random part"},say:["*soft growl*","The moon sees all.","Hm."]},
+  "Rocket cub":{p:"Fearless and fast. Always one turn ahead.",trait:{k:"speed",v:10,short:"+10% walk speed"},ab:{k:"fetch",n:"Air Drop",cd:90,d:"Fetches a random part"},say:["3… 2… 1… go!","WHOOSH!","Buckle up!"]},
 };
-const DIGI_GROUND=["Ember kit","Thunder pup","Pocket titan","Chibi oni","Molten boar","Gravel tortoise","Void jackal","Bloom stag","Solar lynx"];
+const DIGI_GROUND=["Ember kit","Thunder pup","Pocket titan","Chibi oni","Molten boar","Gravel tortoise","Void jackal","Bloom stag","Solar lynx","Circuit panda","Cryo polar","Iron grizzly","Beat cub","Volt sun bear","Lunar moon bear"];
 const DIGI_BASE_LEN={};
 for(const it of DIGI){ if(DIGI_BASE_LEN[it.k]==null) DIGI_BASE_LEN[it.k]=WARD[it.k].opts.length; WARD[it.k].opts.push([it.n,it.k==="pet"?500:Math.round(it.rp/10),"smk"]); }
 function isExcl(k,i){ return !!(WARD[k]&&!WARD[k].color&&WARD[k].opts[i]&&WARD[k].opts[i][2]==="smk"); }
@@ -8815,12 +8834,72 @@ function digiPetArt(){
     c.fillStyle="#f4f0ff"; c.beginPath(); c.moveTo(-3,-10); c.lineTo(-4.2,-14.5); c.lineTo(-1.6,-10.5); c.moveTo(3,-10); c.lineTo(4.2,-14.5); c.lineTo(1.6,-10.5); c.fill(); c.fillStyle="#ffd36a"; c.fillRect(-4.5,-4,9,2);
     c.fillStyle="#0b0716"; c.fillRect(dir*2-.7,-8,1.4,1.4); c.fillRect(dir*-.6-.7,-8,1.4,1.4); c.fillStyle="#fff"; c.fillRect(-1.4+dir,-5.4,.8,1); c.fillRect(.6+dir,-5.4,.8,1);
     c.save(); c.translate(dir*6,-6); c.rotate(dir*(.4+Math.sin(t*4)*.3)); c.fillStyle="#7a4a2a"; c.fillRect(-1,-8,2.4,9); c.fillStyle="#c9d3e0"; for(let k=0;k<3;k++) c.fillRect(-1.8,-7+k*2.6,.8,.8); c.restore(); },
+
+  // ---- Cyber Bears
+  "Circuit panda":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0, chew=Math.max(0,Math.sin(t*5))*.8, B=bearKit(c,dir);
+    bearBody(B,st,{fur:"#f4f0ff",leg:"#16121f",ear:"#16121f",belly:"#ffffff",snout:"#ffffff",nose:"#16121f",tail:"#f4f0ff"},chew*.4);
+    B.R(-3.6,-11.8,4.8,9,"#16121f"); const pu=(t*1.6)%1; c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=6; B.R(-3.6+pu*3.6,-7.4,1.2,1.2,JC); c.shadowBlur=0;
+    B.R(7.2,-12.8+chew*.4,3,2.6,"#16121f"); c.fillStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=6+Math.sin(t*4)*3; B.R(8.2,-12.2+chew*.4,1.2,1.2,"#38e8ff"); B.R(7.2,-9.9+chew*.4,3,.5,"#38e8ff"); c.shadowBlur=0;
+    c.save(); c.translate(dir*11.8,-7.6+chew*.4); c.rotate(dir*(.5+Math.sin(t*5)*.1)); c.fillStyle="#43f0a4"; c.shadowColor="#43f0a4"; c.shadowBlur=8; c.fillRect(-.9,-7,1.8,9); c.shadowBlur=0; c.fillStyle="#1a7a50"; c.fillRect(-.9,-4,1.8,.6); c.fillRect(-.9,-1,1.8,.6);
+    c.fillStyle="#43f0a4"; c.globalAlpha=.5+.5*Math.sin(t*3); c.beginPath(); c.ellipse(dir*2.2,-6.5,2.2,.9,dir*.6,0,7); c.fill(); c.globalAlpha=1; c.restore(); },
+  "Cryo polar":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0, B=bearKit(c,dir);
+    for(let k=0;k<6;k++){ const u=(t*.35+k/6)%1; c.globalAlpha=Math.sin(u*Math.PI)*.9; c.fillStyle="#e8f6ff"; const x=Math.sin(k*2.3+t*.7)*12, y=-24+u*24; c.fillRect(x-.6,y-.6,1.2,1.2); c.fillRect(x-1.4,y-.2,2.8,.4); c.fillRect(x-.2,y-1.4,.4,2.8); } c.globalAlpha=1;
+    bearBody(B,st,{fur:"#eaf6ff",leg:"#d4e8f5",ear:"#d4e8f5",belly:"#ffffff",snout:"#ffffff",nose:"#2a3550",tail:"#eaf6ff"},0);
+    c.fillStyle="#38c8ff"; c.shadowColor="#38c8ff"; c.shadowBlur=8; B.R(5.8,-12.6,5.8,1.8,"#38c8ff"); c.shadowBlur=0; c.fillStyle="#ffffff"; B.R(9.8,-12.4,.9,.8,"#ffffff");
+    const u=(t*.55)%1; if(u<.7){ c.globalAlpha=(1-u/.7)*.75; c.fillStyle="#d8f3ff"; for(let k=0;k<3;k++){ c.beginPath(); c.arc(dir*(13.4+u*8+k*1.4),-9-u*3+k*.6,1+u*2.4-k*.3,0,7); c.fill(); } c.globalAlpha=1; } },
+  "Iron grizzly":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0, thud=o.moving?Math.abs(Math.sin(o.phase*3))*.8:0, B=bearKit(c,dir);
+    bearBody(B,st,{fur:"#7a4a2a",leg:"#5a3418",ear:"#5a3418",belly:"#9a6a44",snout:"#b0805a",nose:"#16121f",tail:"#7a4a2a"},-thud);
+    B.R(-7,-12.4-thud,11,4,"#8a94a8"); B.R(-7,-12.4-thud,11,1,"#c9d3e0"); for(const x of [-6,-3,0,2.4]) B.R(x,-10.4-thud,.8,.8,"#3d3456");
+    B.R(-6,-16-thud,2,4,"#5a6478"); B.R(-6.4,-16.6-thud,2.8,1,"#3d3456");
+    for(let k=0;k<3;k++){ const u=(t*.7+k/3)%1; c.globalAlpha=(1-u)*.55; c.strokeStyle="#9a9aaa"; c.lineWidth=.8; c.beginPath(); c.arc(dir*(-5-u*3),-17.4-thud-u*10,1+u*3,0,7); c.stroke(); } c.globalAlpha=1;
+    c.fillStyle="#ff3a3a"; c.shadowColor="#ff3a3a"; c.shadowBlur=8+Math.sin(t*6)*3; B.R(8.2,-12.4-thud,1.6,1.3,"#ff3a3a"); c.shadowBlur=0; },
+  "Beat cub":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0, bop=Math.abs(Math.sin(t*6))*1.2; c.save(); c.scale(.82,.82); const B=bearKit(c,dir);
+    bearBody(B,st,{fur:"#c8925a",leg:"#a8743e",ear:"#a8743e",belly:"#ecc89a",snout:"#ecc89a",nose:"#16121f",tail:"#c8925a"},bop);
+    c.strokeStyle="#ff3fa8"; c.lineWidth=1.3; c.beginPath(); c.moveTo(dir*3.6,-11.6+bop); c.quadraticCurveTo(dir*7.6,-19+bop,dir*11,-11.6+bop); c.stroke();
+    c.fillStyle="#ff3fa8"; c.shadowColor="#ff3fa8"; c.shadowBlur=6; B.R(2.6,-12.6+bop,2.4,3.8,"#ff3fa8"); B.R(10.4,-12.6+bop,1.8,3.8,"#ff3fa8"); c.shadowBlur=0; B.R(3.2,-11.6+bop,1.2,1.8,"#38e8ff"); c.restore();
+    for(let k=0;k<3;k++){ const u=(t*.5+k/3)%1; c.globalAlpha=Math.sin(u*Math.PI); c.fillStyle=k%2?"#38e8ff":"#ff3fa8"; c.font="bold 6px monospace"; c.textAlign="center"; c.fillText(k%2?"♫":"♪",dir*(-2+k*4)+Math.sin(t*3+k)*2,-16-u*14); } c.globalAlpha=1; },
+  "Holo teddy":(c,dir,t,o,JC)=>{ const gl=(t%3.2)<.18, off=gl?Math.sin(t*90)*2:0, fl=.65+.25*Math.sin(t*13)*Math.sin(t*3.1);
+    c.fillStyle="rgba(56,232,255,.12)"; c.beginPath(); c.moveTo(-2,12); c.lineTo(2,12); c.lineTo(8,-2); c.lineTo(-8,-2); c.fill(); c.fillStyle="#3d3456"; c.fillRect(-3,11,6,2.2); c.fillStyle="#38e8ff"; c.fillRect(-1,11.4,2,.8);
+    c.save(); c.globalAlpha=fl; c.fillStyle="#ff8ad8"; c.shadowColor="#ff8ad8"; c.shadowBlur=10;
+    c.beginPath(); c.ellipse(off,1,5.4,5,0,0,7); c.fill(); c.beginPath(); c.arc(off,-6.5,4.4,0,7); c.fill(); c.beginPath(); c.arc(off-3.6,-9.6,1.8,0,7); c.arc(off+3.6,-9.6,1.8,0,7); c.fill();
+    c.beginPath(); c.arc(off-5.4,-1+Math.sin(t*2)*1.2,1.8,0,7); c.arc(off+5.4,-1-Math.sin(t*2)*1.2,1.8,0,7); c.arc(off-2.8,5.4,2,0,7); c.arc(off+2.8,5.4,2,0,7); c.fill(); c.shadowBlur=0;
+    c.fillStyle="#ffd6f2"; c.beginPath(); c.ellipse(off,1.6,3,3,0,0,7); c.fill(); c.beginPath(); c.ellipse(off+dir*.6,-5.2,2,1.5,0,0,7); c.fill();
+    c.fillStyle="#2a1030"; c.fillRect(off+dir*.4-.6,-6,1.2,.9); c.fillRect(off-2.2+dir*.6,-8,1,1); c.fillRect(off+1.4+dir*.6,-8,1,1); c.fillStyle="#ff3fa8"; c.fillRect(off-.3,.2,.6,3);
+    c.globalAlpha=fl*.35; c.fillStyle="#0b0716"; for(let y=-12;y<8;y+=1.6) c.fillRect(-7+off,y+((t*6)%1.6),14,.5); c.restore();
+    if(gl){ c.fillStyle="#38e8ff"; c.globalAlpha=.7; c.fillRect(-6+off*2,-4,12,1); c.globalAlpha=1; } },
+  "Volt sun bear":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0, B=bearKit(c,dir), cyc=(t*.35)%1, lvl=Math.min(1,cyc/.8), burst=cyc>.8;
+    bearBody(B,st,{fur:"#2a2433",leg:"#1a1622",ear:"#1a1622",belly:"#363042",snout:"#c8925a",nose:"#16121f",tail:"#2a2433",rim:"#ffd36a"},0);
+    B.R(2.6,-8.4,4.4,3,"#3d3456"); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=burst?14:6; B.R(3,-8,3.6*lvl,2.2,"#ffd36a"); c.shadowBlur=0; B.R(7,-7.4,.6,1,"#3d3456");
+    B.R(8.4,-12.2,1.2,1.2,"#ffd36a");
+    if(burst){ c.strokeStyle="#f5e663"; c.shadowColor="#f5e663"; c.shadowBlur=8; c.lineWidth=.9; for(let k=0;k<5;k++){ const an=k*1.26+t*3, r0=6, r1=11+Math.sin(t*40+k)*2; c.beginPath(); c.moveTo(dir*4.8+Math.cos(an)*r0,-7+Math.sin(an)*r0*.7); c.lineTo(dir*4.8+Math.cos(an+.2)*(r0+r1)/2,-7+Math.sin(an-.2)*(r0+r1)/2*.7); c.lineTo(dir*4.8+Math.cos(an)*r1,-7+Math.sin(an)*r1*.7); c.stroke(); } c.shadowBlur=0; } },
+  "Lunar moon bear":(c,dir,t,o,JC)=>{ const st=o.moving?Math.sin(o.phase*3):0, B=bearKit(c,dir);
+    for(let k=0;k<5;k++){ const tw=Math.max(0,Math.sin(t*2+k*1.9)); c.globalAlpha=tw; c.fillStyle="#e8e0ff"; const x=-12+k*6, y=-22+Math.sin(k*3.1)*4; c.fillRect(x-.5,y-.5,1,1); c.fillRect(x-1.5,y-.15,3,.3); c.fillRect(x-.15,y-1.5,.3,3); } c.globalAlpha=1;
+    bearBody(B,st,{fur:"#262440",leg:"#1a1830",ear:"#1a1830",belly:"#302c4c",snout:"#4a4470",nose:"#0b0716",tail:"#262440",rim:"#b98cff"},0);
+    c.fillStyle="#e8d8ff"; c.shadowColor="#b98cff"; c.shadowBlur=8+Math.sin(t*2)*4; c.beginPath(); c.arc(dir*4.8,-7.4,3,Math.PI*.15,Math.PI*.85); c.arc(dir*4.8,-8.8,2.6,Math.PI*.8,Math.PI*.2,true); c.fill(); c.shadowBlur=0;
+    B.R(8.4,-12.2,1.1,1.1,"#b98cff");
+    const an=t*1.4, mx=dir*7.4+Math.cos(an)*9, my=-15+Math.sin(an)*2.6; if(Math.sin(an)<0) c.globalAlpha=.55; c.fillStyle="#fff6d8"; c.shadowColor="#fff6d8"; c.shadowBlur=8; c.beginPath(); c.arc(mx,my,1.8,0,7); c.fill(); c.shadowBlur=0; c.fillStyle="#d8ccaa"; c.fillRect(mx-.6,my-.4,.6,.6); c.globalAlpha=1; },
+  "Rocket cub":(c,dir,t,o,JC)=>{ const tilt=o.moving?dir*.22:Math.sin(t*1.5)*.05; c.save(); c.rotate(tilt);
+    const fl=3+Math.random()*2.2; c.fillStyle="#ffb84a"; c.shadowColor="#ff8a3a"; c.shadowBlur=10; c.beginPath(); c.moveTo(-dir*5-1.4,4); c.lineTo(-dir*5,4+fl+2); c.lineTo(-dir*5+1.4,4); c.fill(); c.fillStyle="#fff2c8"; c.beginPath(); c.moveTo(-dir*5-.7,4); c.lineTo(-dir*5,4+fl*.6); c.lineTo(-dir*5+.7,4); c.fill(); c.shadowBlur=0;
+    c.fillStyle="#c9d3e0"; c.fillRect(-dir*5-2.2,-6,4.4,10); c.fillStyle="#ff3fa8"; c.fillRect(-dir*5-2.2,-6,4.4,1.6); c.fillStyle="#3d3456"; c.fillRect(-dir*5-1.6,3,3.2,1.4);
+    c.fillStyle="#b07a48"; c.beginPath(); c.ellipse(0,0,5,5.4,0,0,7); c.fill(); c.fillStyle="#e2b886"; c.beginPath(); c.ellipse(dir*.8,1.2,3,3.4,0,0,7); c.fill();
+    c.fillStyle="#b07a48"; c.beginPath(); c.arc(dir*1.4,-7,4.4,0,7); c.fill(); c.beginPath(); c.arc(dir*1.4-3.4,-10.4,1.6,0,7); c.arc(dir*1.4+3.4,-10.4,1.6,0,7); c.fill();
+    c.fillStyle="#e2b886"; c.beginPath(); c.ellipse(dir*4.4,-6,1.8,1.4,0,0,7); c.fill(); c.fillStyle="#16121f"; c.fillRect(dir*5.4-.6,-6.8,1.2,.9);
+    c.fillStyle="#3d3456"; c.fillRect(dir*1.4-4.6,-9.4,9.2,1); c.fillStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=6; c.beginPath(); c.arc(dir*1.4+dir*1.6,-8.9,1.6,0,7); c.arc(dir*1.4-dir*1.6,-8.9,1.6,0,7); c.fill(); c.shadowBlur=0;
+    c.fillStyle="#b07a48"; c.fillRect(-3.4,4,2,2.4+Math.sin(t*6)*.6); c.fillRect(1.4,4,2,2.4-Math.sin(t*6)*.6); c.restore(); },
   }; }
+// Shared bear shape for the Cyber Bears: x is mirrored for the facing direction, feet at y=0.
+function bearKit(c,dir){ return {c,dir,R:(x,y,w,h,col)=>{ if(col) c.fillStyle=col; c.fillRect(dir>0?x:-x-w,y,w,h); }}; }
+function bearBody(B,st,C,lift){ const R=B.R, h=lift||0;
+  R(-6.2,-3.2,2.6,3.2+st*.8,C.leg); R(-3,-3.2,2.6,3.2-st*.8,C.leg); R(1.4,-3.2,2.6,3.2-st*.8,C.leg); R(4.4,-3.2,2.6,3.2+st*.8,C.leg);
+  R(-8.6,-8.8+h,1.6,1.6,C.tail); R(-7.4,-9.4+h,1,5.6,C.fur); R(-6.8,-10.4+h,12.4,7.6,C.fur); R(-2.4,-11.8+h,6.4,1.6,C.fur); R(-5,-3.8+h,8.4,1,C.belly);
+  R(4.2,-13.6+h,7,6.4,C.fur); R(3.8,-15.2+h,2.4,2.2,C.ear); R(9.2,-15.2+h,2.4,2.2,C.ear); R(4.5,-14.6+h,1,1,C.belly); R(9.9,-14.6+h,1,1,C.belly);
+  R(9.4,-10.8+h,3.2,2.8,C.snout); R(11.5,-10.8+h,1.3,1.1,C.nose); R(8.4,-12.2+h,1.1,1.1,"#16121f");
+  if(C.rim){ B.c.globalAlpha=.8; R(-6.8,-10.4+h,4.4,.6,C.rim); R(-2.4,-11.8+h,6.4,.6,C.rim); R(4.2,-13.6+h,7,.6,C.rim); R(3.8,-15.2+h,2.4,.5,C.rim); R(9.2,-15.2+h,2.4,.5,C.rim); R(-7.4,-9.4+h,.5,5.6,C.rim); B.c.globalAlpha=1; } }
 
 // --- Smacked Shop: the Digital tab
 function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
     el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.${save.digiFree!==monthKey()?" Your free monthly item is ready: open any item to claim it.":" You've claimed this month's free item."}`:"Members redeem digital rewards with RP and get one free each month. You can try anything on in Character first."}))));
-  for(const grp of ["Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
+  for(const grp of ["Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
     const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
       const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${digiPrice(d).toLocaleString()} RP`}),!digiOn(d)?el("span",{class:"r-epic",text:"Hidden"}):null));
       g.append(c); } body.append(g); } consoleShopView(body); }
@@ -8840,7 +8919,7 @@ function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(
 // Owner tools → Digital items: price and show/hide every item.
 function digiAdmin(body){ body.append(el("p",{class:"sub",text:"Set the RP price for each digital item and choose which ones are in the shop. Digital items cost you nothing to hand out, so every RP spent on them is profit. Players who already own an item keep it even if you hide it."}));
   const rows=[]; const l=el("div",{class:"list"});
-  for(const grp of ["Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
+  for(const grp of ["Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
     for(const d of DIGI.filter(x=>x.g===grp)){ const cv=lookCanvas({...fullLook(save.look),[d.k]:digiIndex(d)},44); cv.style.cssText+=";width:48px;height:48px;flex:none";
       const rp=el("input",{class:"num",type:"number",min:"1",step:"100",value:String(digiPrice(d)),style:"width:110px","aria-label":`RP price for ${d.n}`});
       const on=el("input",{type:"checkbox","aria-label":`${d.n} is in the shop`}); on.checked=digiOn(d); rows.push([d,rp,on]);
