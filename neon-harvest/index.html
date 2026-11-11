@@ -1381,7 +1381,7 @@ const DEFAULT_LOOK={skin:0,style:0,jacket:0,pants:7,feet:0,neck:0,visor:1,hair:0
 function slotLen(k){ return WARD[k].color?COLORS.length:WARD[k].opts.length; }
 function optName(k,i){ return WARD[k].color?COLOR_N[i]:WARD[k].opts[i][0]; }
 function optCost(k,i){ return WARD[k].color?COLOR_COST(i):WARD[k].opts[i][1]; }
-function fullLook(l){ const o={}; for(const k of SLOTS){ const v=Math.floor(+((l||{})[k])); o[k]=Number.isFinite(v)&&v>=0?v%slotLen(k):DEFAULT_LOOK[k]; } o.hand=validHand(l&&l.hand); if(o.hand&&CON_BY[o.hand]){ const g=Math.floor(+(l&&l.cg)); if(g>=0&&g<7) o.cg=g; } const ps=validPs(l&&l.ps); if(ps) o.ps=ps; return o; }
+function fullLook(l){ const o={}; for(const k of SLOTS){ const v=Math.floor(+((l||{})[k])); o[k]=Number.isFinite(v)&&v>=0?v%slotLen(k):DEFAULT_LOOK[k]; } o.hand=validHand(l&&l.hand); if(o.hand&&CON_BY[o.hand]){ const g=Math.floor(+(l&&l.cg)); if(g>=0&&g<7) o.cg=g; } const ps=validPs(l&&l.ps); if(ps) o.ps=ps; const mg=validMg(l&&l.mg); if(mg) o.mg=mg; return o; }
 function validPs(p){ if(!p||typeof p!=="object") return null; const n=(v,m)=>{ v=Math.floor(+v); return Number.isFinite(v)&&v>=0&&v<m?v:0; }; const o={t:n(p.t,40),g:n(p.g,40),h:n(p.h,40),n:n(p.n,40),b:n(p.b,40)}; if(p.a) o.a=1; return (o.t||o.g||o.h||o.n||o.b||o.a)?o:null; }
 const LOOK={jacket:COLORS}; // legacy color lookup
 /* names */
@@ -1903,7 +1903,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   if(o.dk) drinkFxLayer(c,o.dk,"behind",dir,head,t); if(FX) fxBehind(c,FX,head,t); if(FX==="acid"||FX==="kaleido") ghostTrail(c,dir,hip,sh,head,o.moving,t); if(FX==="drift"||FX==="lightspeed") ghostTrail2(c,dir,hip,sh,head,t,FX==="drift"?"168,232,255":"255,255,255");
   c.lineCap="round"; c.lineJoin="round";
   const MECH=MECH_BY[style]; let mechTop=0;
-  if(MECH){ try{ mechTop=drawMech(c,MECH,o,t,dir,em,{SK,HC,AC}).top; }catch(e){} } else {
+  if(MECH){ try{ mechTop=drawMech(c,applyGems(MECH,L.mg,t),o,t,dir,em,{SK,HC,AC}).top; }catch(e){} } else {
   // ---- aura (behind)
   if(aura==="Floor ring"){ c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=10; c.lineWidth=2; c.beginPath(); c.ellipse(0,0,17+Math.sin(t*4)*2,5,0,0,7); c.stroke(); c.shadowBlur=0; }
   if(aura==="Flames"){ for(let i=0;i<6;i++){ const fx=-12+i*5, fh=10+Math.abs(Math.sin(t*12+i*1.7))*12; c.fillStyle=i%2?"#ffb84a":"#ff5a4a"; c.globalAlpha=.75; c.beginPath(); c.moveTo(fx-3,0); c.quadraticCurveTo(fx+Math.sin(t*9+i)*3,-fh,fx+3,0); c.fill(); } c.globalAlpha=1; }
@@ -3609,7 +3609,7 @@ const SCENES={
   bar:{w:1800, spawn:120},
   home:{w:2900, spawn:120},
   cyberbuys:{w:2200, spawn:120},
-  byte:{w:4500, spawn:140},
+  byte:{w:4900, spawn:140},
   grid:{w:4480, spawn:140},
   smacked:{w:1600, spawn:140},
   neonrow:{w:2400, spawn:140},
@@ -4416,6 +4416,9 @@ const HELP=[
     ["What they can do",["Visitors see your decor, room style, lights and plants, and can sit on your couches and play your music. Only you can water plants, raid the fridge or flip switches."]]]}]},
 
  {id:"items",icon:"🎒",n:"Items & style",topics:[
+  {id:"mechgems",icon:"💎",n:"Mech Gems",sub:"Repaint, upgrade or rebuild your mech",where:"Byte Market → Gemix (the last stand, or Fast Travel → Gemix)",steps:["Wear a Mech Suit or Tiny Mech (Character → Top).","Buy gems at Gemix with credits or chips.","Open Gemix → My mech and tap Socket. Your mech has 3 sockets."],secs:[
+    ["The 3 kinds",["Color gems (14) repaint the whole mech, some with shimmering, flickering or rainbow colors. Upgrade gems (14) bolt on boosters, wings, a halo, missile pods, cannons, a shield bubble, new arm weapons, orbiting gems and effects. Form gems (12) rebuild the whole frame: titan, phantom, beast, tank, seraph, samurai, spring, bear, kitsune, abyss, shinobi or colossus."]],
+    ["Rules",["Up to 3 gems at once, with at most one Color gem and one Form gem. Remove a gem any time and it goes back to your gem case. Socketed gems stay on for any mech you wear, and everyone can see them. Tiny Mechs keep their cockpit with any Form gem."]]]},
   {id:"workbench",icon:"🔧",n:"Building rigs",sub:"PCs, miners and phones at your Workbench",where:"Your apartment → Workbench",steps:["Pick a recipe and tap Assemble.","Tap each part in the tray (or drag it onto the build) to install it, motherboard first.","Hit ⏻ Power it on to boot it and get your rig. ⚡ Auto-assemble finishes it for you."],secs:[
     ["What you can build",["48 rigs filtered by PCs, Miners, Phones and Other, each with its own animated look: 12 PCs, 12 miners for your rack and 12 phones you can hold in your hand.","Better parts make a higher Mk. The Recipe Book tab shows what every recipe needs and where to find each part."]],
     ["Good to know",["Cancel anytime and you keep your parts. Rigs can be displayed, gifted, traded, installed or taken apart again."]]],rel:["parts","mining"]},
@@ -5389,6 +5392,7 @@ const STALLS=[
   {id:"ice",     n:"Black ICE",        vendor:"Glitch",  x:3520, col:"#43f0a4", types:["hack","floppy","enc"],always:["enc_flop"],disc:1,buyMult:1.1,line:"Tools for curious minds. Encrypted floppies, cheap. No refunds on secrets."},
   {id:"mobile",  n:"Ring Ring Mobile", vendor:"Dial",    x:3880, col:"#4aa8ff", types:["phone"],             disc:1,   buyMult:1.1, line:"Phones so new they haven't rung yet."},
   {id:"armory",  n:"Volt Armory",      vendor:"Kade",    x:4240, col:"#ff5a4a", types:["weapon"],            disc:1,   buyMult:1.1, line:"Built for The Void. Damage and reach are on every tag."},
+  {id:"gemix",   n:"Gemix",            vendor:"Prism",   x:4600, col:"#ff8ad8", gems:true,                   line:"Mech Gems: repaint it, upgrade it, or rebuild it from the frame up."},
 ];
 const STALL_BY=Object.fromEntries(STALLS.map((s,i)=>[s.id,i]));
 const hourSeed=()=>Math.floor(Date.now()/36e5);
@@ -5410,7 +5414,7 @@ function sellPrice(i,id){ const st=STALLS[i], it=BY[id]; if(!it) return 0;
 const JOB_MAX=3, COURIER_TIME=90e3;
 const jobWindow=()=>Math.floor(Date.now()/12e5);
 function jobOffers(){
-  const w=jobWindow(), r=seeded(w*7919+3), out=[]; const vendors=STALLS.map((s,i)=>i).filter(i=>!STALLS[i].jobs);
+  const w=jobWindow(), r=seeded(w*7919+3), out=[]; const vendors=STALLS.map((s,i)=>i).filter(i=>!STALLS[i].jobs&&!STALLS[i].gems);
   for(let n=0;n<5;n++){ const kind=n<2?"courier":n<4?"supply":"build"; const id=`${w}-${n}`;
     if(kind==="courier"){ let a=vendors[(r()*vendors.length)|0], b=a; while(b===a) b=vendors[(r()*vendors.length)|0]; const dist=Math.abs(STALLS[a].x-STALLS[b].x);
       out.push({id,kind,from:a,to:b,reward:Math.round(30+dist/25),chips:3+((dist/400)|0),label:`Carry a sealed package from ${STALLS[a].n} to ${STALLS[b].n} in ${COURIER_TIME/1000}s`}); }
@@ -5463,7 +5467,7 @@ function openJobs(){
 
 /* --- stall panel */
 function openStall(i,tab){
-  const st=STALLS[i]; if(st.jobs) return openJobs();
+  const st=STALLS[i]; if(st.jobs) return openJobs(); if(st.gems) return openGemix("shop");
   if(st.drinks&&bbShift&&!tab) return bbConsole();
   const jobsHere=jobsAtStall(i); tab=tab||(jobsHere.length?"jobs":"buy");
   const body=panel(st.n,`${st.vendor}: "${st.line}"`);
@@ -5879,6 +5883,7 @@ function drawByte(t){
     else if(st.id==="noodle"){ ctx.fillStyle="#ff5a4a"; ctx.fillRect(x-60,206,28,18); ctx.fillStyle="#e9e2ff"; for(let k=0;k<4;k++){ const sy=200-((t*20+k*9)%30); ctx.globalAlpha=.35; ctx.beginPath(); ctx.arc(x-46+Math.sin(t*2+k)*4,sy,4+k,0,7); ctx.fill(); } ctx.globalAlpha=1;
       drawItem(ctx,"bb_classic",x-8,238,26,t); drawItem(ctx,"bb_bao",x+20,240,24,t+1); drawItem(ctx,"drink_mule",x+46,238,22,t+2);
       const bn=bbActive().length; ctx.fillStyle="#0b0716"; ctx.fillRect(x+64,168,40,30); ctx.strokeStyle="#ff5a4a"; ctx.strokeRect(x+64.5,168.5,39,29); ctx.fillStyle="#ff5a4a"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText(bn>=STAFF_MAX?"FULL":"HIRING",x+84,180); ctx.fillText(`STAFF ${bn}/${STAFF_MAX}`,x+84,191); }
+    else if(st.gems) drawGemixStall(ctx,x,t);
     else { const stock=stallStock(i).slice(0,3); stock.forEach((s,k)=>drawItem(ctx,s.id,x-70+k*36,240,30,t+k)); }
     if(jobsAtStall(i).length){ ctx.fillStyle="#f5e663"; ctx.globalAlpha=.7+.3*Math.sin(t*6); ctx.beginPath(); ctx.moveTo(x-8,top-34); ctx.lineTo(x+8,top-34); ctx.lineTo(x,top-24); ctx.fill(); ctx.globalAlpha=1; }
   });
@@ -5943,6 +5948,7 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"Story Mode · Ramblings of a Mad Man",d:"The book by Edwin C. Reyes as a 2D pixel-art story game",s:"story",x:()=>STORY_X.door},
   {g:"Hot spots",n:"RP Exchange machine",d:"Members: trade ₵4,000 for 50 RP (Sector 9)",s:"street",x:2150},
   {g:"Hot spots",n:"Bytes terminal",d:"Your VRChat roleplay wallet (The Glitch)",s:"bar",x:195},
+  {g:"Hot spots",n:"Gemix (Mech Gems)",d:"Color, upgrade and form gems for your mech (Byte Market)",s:"byte",x:4600},
   {g:"Hot spots",n:"Car Display",d:"Dealership, garage and player car plots",s:"racers",x:()=>CD_DEAL[0]},
   {g:"Hot spots",n:"Your Car Display plot",d:"Show off your cars and trucks",s:"racers",x:()=>cdMine()>=0?cdX(cdMine()):CD_X0,need:()=>cdMine()>=0},
   {g:"Hot spots",n:"MyDex Hub",d:"Open MyDex and forge items into badges",s:"dexhub",x:()=>DEX_X.term},
@@ -8769,8 +8775,136 @@ const TINY_MECHS=[
 ];
 TINY_MECHS.forEach(m=>{ m.tiny=1; m.head="pilot"; });
 const MECH_BY=Object.fromEntries([...MECHS,...TINY_MECHS].map(m=>[m.n,m]));
+/* ============================================================ MECH GEMS: 40 attachments for Mech Suits and Tiny Mechs, sold at Gemix (Byte Market).
+   Socket up to 3 into your mech rig: at most one Color gem and one Form gem, the rest are Upgrades.
+   Color gems repaint the mech, Upgrade gems bolt on parts and effects, Form gems rebuild the whole frame.
+   Socketed gems are part of your look, so everyone sees them, and they stay on for any mech you wear. */
+var MECH_GEMS=[
+ // ---- Color gems: c = [body, trim, accent], g = glow; anim: still | cycle | pulse | sheen | flicker
+ {id:"g_ruby",n:"Ruby Core",k:"color",cr:2500,ch:60,col:"#ff3a5a",c:["#c8202e","#3a0a12","#ffb0b8"],g:"#ff5a6a",anim:"pulse",d:"Repaints your mech deep ruby red with a slow heartbeat glow."},
+ {id:"g_sapphire",n:"Sapphire Core",k:"color",cr:2500,ch:60,col:"#3a7aff",c:["#2a4ab8","#0e1640","#a8c8ff"],g:"#5aa0ff",anim:"pulse",d:"Ocean-blue armor with a cool pulsing glow."},
+ {id:"g_emerald",n:"Emerald Core",k:"color",cr:2500,ch:60,col:"#2ad87a",c:["#1a8a4a","#0a2a18","#a8ffcc"],g:"#43f0a4",anim:"pulse",d:"Emerald plating with bright green power lines."},
+ {id:"g_amethyst",n:"Amethyst Core",k:"color",cr:2500,ch:60,col:"#a86bff",c:["#6a3ab8","#1e0e3a","#d8b8ff"],g:"#b06bff",anim:"pulse",d:"Royal purple armor with a violet glow."},
+ {id:"g_topaz",n:"Topaz Core",k:"color",cr:2800,ch:65,col:"#ffb030",c:["#e08a1a","#3a2008","#ffe0a0"],g:"#ffc84a",anim:"pulse",d:"Warm amber-gold plating that glows like sunset."},
+ {id:"g_onyx",n:"Onyx Core",k:"color",cr:3200,ch:75,col:"#3a3444",c:["#1a1620","#08060c","#ff3a3a"],g:"#ff3a3a",anim:"flicker",d:"Stealth-black armor with a menacing red glow that flickers."},
+ {id:"g_pearl",n:"Pearl Core",k:"color",cr:3200,ch:75,col:"#f4e8f0",c:["#f4eef4","#b8a8c0","#ffb8d8"],g:"#ffd0e8",anim:"sheen",d:"Shining pearl-white armor with a soft pink sheen sliding across it."},
+ {id:"g_chrome",n:"Chrome Core",k:"color",cr:3500,ch:80,col:"#c9d3e0",c:["#b8c4d4","#4a5468","#ffffff"],g:"#e8f4ff",anim:"sheen",d:"Mirror chrome plating. A bright shine sweeps across it."},
+ {id:"g_neonpink",n:"Neon Candy Core",k:"color",cr:3000,ch:70,col:"#ff3fa8",c:["#ff3fa8","#16121f","#38e8ff"],g:"#38e8ff",anim:"pulse",d:"Hot pink and cyan, straight off a NEON HARVEST sign."},
+ {id:"g_toxic",n:"Toxic Core",k:"color",cr:3000,ch:70,col:"#a6ff3a",c:["#1e2414","#0a0e06","#a6ff3a"],g:"#a6ff3a",anim:"pulse",d:"Black armor with radioactive lime glowing through every seam."},
+ {id:"g_prism",n:"Prism Core",k:"color",cr:6000,ch:140,col:"#ff8ad8",c:null,g:null,anim:"cycle",d:"Rainbow armor whose colors flow and change every second. The rarest color gem."},
+ {id:"g_inferno",n:"Inferno Core",k:"color",cr:4000,ch:95,col:"#ff6a1a",c:["#3a1408","#1a0804","#ff8a2a"],g:"#ff6a1a",anim:"flicker",d:"Charred armor with molten orange cracks that flicker like fire."},
+ {id:"g_glacier",n:"Glacier Core",k:"color",cr:3500,ch:80,col:"#a8e6ff",c:["#d8f4ff","#4a7aa8","#38c8ff"],g:"#a8e6ff",anim:"pulse",d:"Frosted ice-blue armor with a cold, slow shimmer."},
+ {id:"g_goldplate",n:"Gold Plate Core",k:"color",cr:6000,ch:140,col:"#ffd23a",c:["#e8b830","#6a4a10","#fff2a8"],g:"#fff2a8",anim:"sheen",d:"Solid gold plating with a golden shine rolling across it. Show-off tier."},
+ // ---- Upgrade gems: bolt on parts or effects
+ {id:"g_boost",n:"Booster Gem",k:"up",cr:4000,ch:90,col:"#38e8ff",up:{back:"thrusters"},fx2:"jets",d:"Adds rocket boosters and ankle jets that fire as you walk."},
+ {id:"g_wing",n:"Wing Gem",k:"up",cr:5000,ch:110,col:"#ffe9a8",up:{back:"wings"},d:"Adds a pair of mechanical wings that slowly flap."},
+ {id:"g_halo",n:"Halo Gem",k:"up",cr:4500,ch:100,col:"#fff2a8",up:{back:"halo"},d:"A glowing halo floats above your mech."},
+ {id:"g_missile",n:"Missile Gem",k:"up",cr:4500,ch:100,col:"#ff8a2a",up:{sh:"missiles"},d:"Mounts a missile pod that fires a missile every few seconds."},
+ {id:"g_cannon",n:"Cannon Gem",k:"up",cr:5000,ch:110,col:"#ffb84a",up:{sh:"cannon"},d:"Mounts a shoulder cannon that recoils and flashes."},
+ {id:"g_shield",n:"Shield Gem",k:"up",cr:5500,ch:120,col:"#43f0a4",fx2:"bubble",d:"Wraps your mech in a hex energy shield that ripples."},
+ {id:"g_blade",n:"Blade Gem",k:"up",cr:4500,ch:100,col:"#ff3fa8",up:{arm:"blade"},d:"Swaps your arm weapon for a glowing energy blade."},
+ {id:"g_drill",n:"Drill Gem",k:"up",cr:4000,ch:90,col:"#c9d3e0",up:{arm:"drill"},d:"Swaps your arm weapon for a spinning drill."},
+ {id:"g_gatling",n:"Gatling Gem",k:"up",cr:4500,ch:100,col:"#ffd36a",up:{arm:"gatling"},d:"Swaps your arm weapon for a spinning gatling gun."},
+ {id:"g_spark",n:"Storm Gem",k:"up",cr:4000,ch:90,col:"#f5e663",up:{fx:"lightning"},d:"Lightning crackles all over your mech."},
+ {id:"g_frost",n:"Frost Gem",k:"up",cr:4000,ch:90,col:"#bfe8ff",up:{fx:"snow"},fx2:"frost",d:"Snow falls around you and frost spreads on the ground."},
+ {id:"g_flame",n:"Flame Gem",k:"up",cr:4000,ch:90,col:"#ff6a1a",up:{fx:"fire"},d:"Embers and flames rise off your mech."},
+ {id:"g_orbit",n:"Orbit Gem",k:"up",cr:5000,ch:110,col:"#b06bff",fx2:"orbit",d:"Three mini gems circle your mech like satellites."},
+ {id:"g_radar",n:"Radar Gem",k:"up",cr:3500,ch:80,col:"#38a8ff",up:{sh:"radar"},fx2:"ping",d:"Mounts a radar dish and sends scan pings across the ground."},
+ // ---- Form gems: rebuild the whole frame (Tiny Mechs keep their cockpit)
+ {id:"g_titan",n:"Titan Form",k:"form",cr:9000,ch:200,col:"#ffd23a",form:{leg:"heavy",body:"vee",head:"horns",back:"reactor",sc:1.08},d:"Rebuilds your mech as a towering super-robot with horns and a power reactor."},
+ {id:"g_phantom",n:"Phantom Form",k:"form",cr:9000,ch:200,col:"#7c5cff",form:{leg:"hover",body:"slim",head:"mono",back:"cape",fx:"glitch"},d:"Turns your mech into a floating phantom that glitches in and out."},
+ {id:"g_beast",n:"Beast Form",k:"form",cr:9000,ch:200,col:"#a6ff3a",form:{leg:"bird",body:"round",head:"jaw",back:"fins"},d:"Rebuilds your mech as a snapping beast on raptor legs."},
+ {id:"g_tank",n:"Tank Form",k:"form",cr:10000,ch:220,col:"#9aa4b8",form:{leg:"tread",body:"barrel",head:"antenna",back:"stack",sh:"cannon"},d:"Turns your mech into a rolling tank on glowing treads with a cannon."},
+ {id:"g_seraph",n:"Seraph Form",k:"form",cr:12000,ch:260,col:"#fff2a8",form:{leg:"hover",body:"slim",head:"dome",back:"wings",fx:"stars"},d:"Rebuilds your mech as a hovering angel with wings and stardust."},
+ {id:"g_samurai",n:"Samurai Form",k:"form",cr:9000,ch:200,col:"#ff3a5a",form:{leg:"biped",body:"slim",head:"crest",back:"banner",arm:"blade",fx:"petals"},d:"Rebuilds your mech as a samurai with a crest, katana and war banner."},
+ {id:"g_spring",n:"Spring Form",k:"form",cr:7000,ch:160,col:"#43f0a4",form:{leg:"spring",body:"box",head:"visor"},d:"Puts your mech on a pogo spring so it bounces everywhere."},
+ {id:"g_bear",n:"Bear Form",k:"form",cr:9000,ch:200,col:"#c8925a",form:{leg:"heavy",body:"round",head:"bear",arm:"claw"},d:"Rebuilds your mech as a big bear with steel claws."},
+ {id:"g_kitsune",n:"Kitsune Form",k:"form",cr:10000,ch:220,col:"#ff8a2a",form:{leg:"bird",body:"slim",head:"cat",back:"fins",fx:"fire"},d:"Rebuilds your mech as a quick fox spirit with flaming fins."},
+ {id:"g_diver",n:"Abyss Form",k:"form",cr:8000,ch:180,col:"#38c8ff",form:{leg:"heavy",body:"round",head:"dome",back:"tank",arm:"hook",fx:"bubbles"},d:"Rebuilds your mech as a deep-sea diving suit that blows bubbles."},
+ {id:"g_ninja",n:"Shinobi Form",k:"form",cr:10000,ch:220,col:"#3a3444",form:{leg:"bird",body:"slim",head:"mono",back:"cape",arm:"claw"},d:"Rebuilds your mech as a light-footed ninja frame with a cape."},
+ {id:"g_colossus",n:"Colossus Form",k:"form",cr:15000,ch:320,col:"#ff3a3a",form:{leg:"heavy",body:"barrel",head:"skull",back:"stack",sh:"spikes",sc:1.14},d:"The biggest form: a skull-faced colossus with spikes and a smokestack. The rarest gem."},
+];
+var GEM_BY=Object.fromEntries(MECH_GEMS.map(g=>[g.id,g]));
+const GEM_KIND={color:"Color gem",up:"Upgrade gem",form:"Form gem"}, GEM_MAX=3;
+function validMg(v){ if(!Array.isArray(v)||!GEM_BY) return null; const out=[]; let col=0, form=0; for(const id of v){ const g=typeof id==="string"&&GEM_BY[id]; if(!g||out.includes(id)) continue; if(g.k==="color"&&col++) continue; if(g.k==="form"&&form++) continue; out.push(id); if(out.length>=GEM_MAX) break; } return out.length?out:null; }
+function hsl(h,s,l){ return `hsl(${Math.round(h)%360},${s}%,${l}%)`; }
+// Apply socketed gems to a mech design. Returns a new design object for drawing.
+function applyGems(M,mg,t){ if(!mg||!mg.length) return M; const N={...M,c:M.c.slice(),gfx:[]};
+  for(const id of mg){ const g=GEM_BY[id]; if(!g) continue;
+    if(g.k==="form"){ const f={...g.form}; if(M.tiny){ delete f.head; } Object.assign(N,f); }
+  }
+  for(const id of mg){ const g=GEM_BY[id]; if(!g) continue;
+    if(g.k==="up"){ if(g.up) Object.assign(N,g.up); if(g.fx2) N.gfx.push(g.fx2); }
+    if(g.k==="color"){ if(g.anim==="cycle"){ const h=(t*60)%360; N.c=[hsl(h,85,58),hsl(h+180,40,18),hsl(h+90,95,75)]; N.g=hsl(h+40,100,65); }
+      else { N.c=g.c.slice(); N.g=g.g; if(g.anim==="flicker") N.g=Math.sin(t*23)*Math.sin(t*7.3)>.35?g.c[2]:g.g; if(g.anim==="sheen") N.gfx.push("sheen"); if(g.anim==="pulse") N.pulse=1; } }
+  }
+  N.gems=mg.slice(); return N; }
+// Extra gem effects, drawn in mech space (feet at 0) after the mech.
+function drawGemFx(c,M,t,dir,hipY,tTop,headY,mv){ const G=M.g;
+  for(const fx of M.gfx||[]){
+    if(fx==="sheen"){ const u=((t*.5)%1.6)-.3; c.save(); c.globalCompositeOperation="lighter"; c.globalAlpha=.35; c.fillStyle="#ffffff"; c.beginPath(); c.moveTo(-16+u*40,tTop); c.lineTo(-10+u*40,tTop); c.lineTo(-18+u*40,hipY+4); c.lineTo(-24+u*40,hipY+4); c.fill(); c.restore(); }
+    if(fx==="jets"&&mv){ for(const s of [-1,1]){ const fl=4+Math.random()*4; c.fillStyle=G; c.shadowColor=G; c.shadowBlur=10; c.beginPath(); c.moveTo(s*6-dir*2-2,-2); c.lineTo(s*6-dir*(6+fl),2); c.lineTo(s*6-dir*2+2,-2); c.fill(); c.shadowBlur=0; } }
+    if(fx==="bubble"){ c.save(); const p=.5+.5*Math.sin(t*3); c.strokeStyle=G; c.globalAlpha=.35+.25*p; c.lineWidth=1.4; c.beginPath(); c.ellipse(0,(headY+0)/2,28,-headY/2+10,0,0,7); c.stroke(); c.globalAlpha=.18; for(let k=0;k<8;k++){ const a=k*.785+t*.4; const x=Math.cos(a)*22, y=(headY/2)+Math.sin(a)*(-headY/2)*.8; c.beginPath(); for(let j=0;j<6;j++){ const b=j*1.047; c.lineTo(x+Math.cos(b)*5,y+Math.sin(b)*5); } c.closePath(); c.stroke(); } const hit=(t%3)<.25; if(hit){ c.globalAlpha=.5*(1-(t%3)/.25); c.fillStyle=G; c.beginPath(); c.ellipse(0,headY/2,28,-headY/2+10,0,0,7); c.fill(); } c.restore(); }
+    if(fx==="orbit"){ for(let k=0;k<3;k++){ const a=t*1.8+k*2.094, x=Math.cos(a)*24, y=tTop+8+Math.sin(a)*7, back=Math.sin(a)<0; c.save(); c.globalAlpha=back?.5:1; c.translate(x,y); c.rotate(t*3+k); c.fillStyle=["#ff3fa8","#38e8ff","#ffd36a"][k]; c.shadowColor=c.fillStyle; c.shadowBlur=8; c.beginPath(); c.moveTo(0,-4); c.lineTo(3,0); c.lineTo(0,4); c.lineTo(-3,0); c.closePath(); c.fill(); c.restore(); } }
+    if(fx==="ping"){ const u=(t*.6)%1; c.strokeStyle=G; c.globalAlpha=(1-u)*.7; c.lineWidth=1.2; c.beginPath(); c.ellipse(0,0,8+u*44,2+u*9,0,0,7); c.stroke(); c.globalAlpha=1; }
+    if(fx==="frost"){ c.fillStyle="rgba(200,240,255,.35)"; c.beginPath(); c.ellipse(0,0,22+Math.sin(t)*2,4,0,0,7); c.fill(); c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=.6; for(let k=0;k<6;k++){ const a=k*1.047+.3; c.beginPath(); c.moveTo(0,0); c.lineTo(Math.cos(a)*18,Math.sin(a)*3.4); c.stroke(); } }
+  }
+  // socket lights: each socketed gem glows on the hip plate
+  (M.gems||[]).forEach((id,i)=>{ const g=GEM_BY[id]; if(!g) return; const x=(i-(M.gems.length-1)/2)*5; c.fillStyle=g.col; c.shadowColor=g.col; c.shadowBlur=6+3*Math.sin(t*4+i); c.beginPath(); c.moveTo(x,hipY-3); c.lineTo(x+2,hipY-1); c.lineTo(x,hipY+1); c.lineTo(x-2,hipY-1); c.closePath(); c.fill(); c.shadowBlur=0; });
+}
+// Animated gem icon. Shape depends on the gem; Color gems shimmer, Upgrade gems have a turning gear ring, Form gems a rune ring.
+function drawGemIcon(c,x,y,s,g,t){ const i=MECH_GEMS.indexOf(g), shape=i%5, col=g.anim==="cycle"?hsl(t*90,90,62):g.col; c.save(); c.translate(x,y); c.scale(s/40,s/40);
+  c.fillStyle="rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(0,17,12,3,0,0,7); c.fill();
+  const bob=Math.sin(t*2+i)*1.5; c.translate(0,bob);
+  if(g.k==="up"){ c.save(); c.rotate(t*.8); c.strokeStyle="#9aa4b8"; c.lineWidth=2; c.beginPath(); c.arc(0,0,16,0,7); c.stroke(); for(let k=0;k<8;k++){ c.rotate(Math.PI/4); c.fillStyle="#9aa4b8"; c.fillRect(-1.6,-19,3.2,4); } c.restore(); }
+  if(g.k==="form"){ c.save(); c.rotate(-t*.6); c.strokeStyle=col; c.globalAlpha=.6; c.lineWidth=1; c.beginPath(); c.arc(0,0,18,0,7); c.stroke(); c.fillStyle=col; c.font="6px monospace"; c.textAlign="center"; for(let k=0;k<6;k++){ c.rotate(Math.PI/3); c.fillText("ᚠᚢᚦᚨᚱᚲ"[k],0,-15); } c.restore(); c.globalAlpha=1; }
+  const pts=[[[0,-13],[11,-4],[7,12],[-7,12],[-11,-4]],[[0,-14],[10,0],[0,14],[-10,0]],[[-8,-12],[8,-12],[13,0],[8,12],[-8,12],[-13,0]],[[0,-14],[12,-2],[0,14],[-12,-2]],[[0,-12],[12,10],[-12,10]]][shape];
+  c.fillStyle=col; c.shadowColor=col; c.shadowBlur=10+4*Math.sin(t*3+i); c.beginPath(); pts.forEach(([a,b],k)=>k?c.lineTo(a,b):c.moveTo(a,b)); c.closePath(); c.fill(); c.shadowBlur=0;
+  c.fillStyle="rgba(255,255,255,.35)"; c.beginPath(); c.moveTo(0,0); pts.slice(0,2).forEach(([a,b])=>c.lineTo(a,b)); c.closePath(); c.fill(); c.fillStyle="rgba(0,0,0,.22)"; c.beginPath(); c.moveTo(0,0); pts.slice(-2).forEach(([a,b])=>c.lineTo(a,b)); c.closePath(); c.fill();
+  c.strokeStyle="rgba(255,255,255,.5)"; c.lineWidth=.8; c.beginPath(); pts.forEach(([a,b],k)=>k?c.lineTo(a,b):c.moveTo(a,b)); c.closePath(); c.stroke();
+  const sp=(t*1.3+i*.37)%2; if(sp<.5){ const a=sp/.5; c.fillStyle="#ffffff"; c.globalAlpha=Math.sin(a*Math.PI); const sx=-5+a*10, sy=-8+a*6; c.fillRect(sx-.5,sy-3,1,6); c.fillRect(sx-3,sy-.5,6,1); c.globalAlpha=1; }
+  c.restore(); }
+function gemCanvas(g,size){ const cv=document.createElement("canvas"); cv.width=size*2; cv.height=size*2; cv.style.cssText=`width:${size}px;height:${size}px;flex:none;background:radial-gradient(circle at 50% 55%,#2a1a48,#0d0818 75%)`;
+  const c=cv.getContext("2d"); const draw=()=>{ if(!cv.isConnected){ if(cv._s) return; } else cv._s=1; c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,cv.width,cv.height); drawGemIcon(c,cv.width/2,cv.height/2,cv.width*.8,g,performance.now()/1000); requestAnimationFrame(draw); }; requestAnimationFrame(draw); return cv; }
+// --- Gemix stand
+function gemCount(id){ return Math.max(0,Math.floor(+((save.gems||{})[id])||0)); }
+function gemsOn(){ return validMg(fullLook(save.look).mg)||[]; }
+function buyGem(g,cur){ const price=cur==="chips"?g.ch:g.cr, bal=cur==="chips"?save.chips:save.credits;
+  if(bal<price){ toast(`You need ${cur==="chips"?(price-Math.floor(bal))+" more chips":"₵"+(price-Math.floor(bal)).toLocaleString()+" more"}.`); beep(150,.15); return; }
+  if(cur==="chips") save.chips-=price; else save.credits-=price; save.gems=save.gems||{}; save.gems[g.id]=gemCount(g.id)+1; persist(); hud(); beep(1200,.08); setTimeout(()=>beep(1600,.1),90); toast(`${g.n} added to your gem case!`,g.col); openGemix("shop"); }
+function socketGem(id){ const g=GEM_BY[id]; if(!g||gemCount(id)<1) return; const on=gemsOn();
+  if(on.length>=GEM_MAX){ toast(`Your mech has ${GEM_MAX} sockets. Remove a gem first.`); beep(150,.15); return; }
+  if(g.k!=="up"&&on.some(x=>GEM_BY[x].k===g.k)){ toast(`Only one ${GEM_KIND[g.k]} at a time. Remove the other one first.`); beep(150,.15); return; }
+  save.gems[id]=gemCount(id)-1; save.look={...save.look,mg:[...on,id]}; persist(); pushPresence(true); beep(900,.06); setTimeout(()=>beep(1400,.08),70); toast(`${g.n} socketed!`,g.col); openGemix("mech"); }
+function unsocketGem(id){ const on=gemsOn(); if(!on.includes(id)) return; save.gems=save.gems||{}; save.gems[id]=gemCount(id)+1; const rest=on.filter(x=>x!==id); save.look={...save.look,mg:rest.length?rest:undefined}; if(!rest.length) delete save.look.mg; persist(); pushPresence(true); beep(500,.06); toast(`${GEM_BY[id].n} back in your gem case.`); openGemix("mech"); }
+let gemTab="shop";
+function openGemix(tab){ gemTab=tab||gemTab; const body=panel("Gemix · Mech Gems","Attachments for your Mech Suit or Tiny Mech. Buy with credits or chips, then socket up to 3."); currentView="gemix";
+  const tabs=el("div",{class:"tabs"}); for(const [k,l] of [["shop","💎 Gem shop"],["mech","🤖 My mech"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":gemTab===k?"true":"false",text:l,onclick:()=>openGemix(k)})); body.append(tabs);
+  body.append(el("p",{class:"sub",text:`You have ₵${Math.floor(save.credits).toLocaleString()} and ${Math.floor(save.chips).toLocaleString()} chips.`}));
+  if(gemTab==="shop"){ for(const [k,h,sub] of [["color","🎨 Color gems","Repaint your whole mech. One at a time."],["up","⚙ Upgrade gems","Bolt on parts and effects. Stack them."],["form","🔮 Form gems","Rebuild the whole frame. One at a time. Tiny Mechs keep their cockpit."]]){
+      body.append(el("strong",{text:h}),el("span",{class:"sub",text:sub})); const l=el("div",{class:"list"});
+      for(const g of MECH_GEMS.filter(x=>x.k===k)){ const n=gemCount(g.id);
+        l.append(el("div",{class:"li"},gemCanvas(g,44),el("div",{class:"grow"},el("div",{text:g.n+(n?` · ×${n} owned`:"")}),el("div",{class:"sub",text:g.d})),
+          el("div",{class:"row",style:"flex-direction:column;gap:4px"},el("button",{class:"btn hot",type:"button",text:`₵${g.cr.toLocaleString()}`,onclick:()=>buyGem(g,"credits")}),el("button",{class:"btn",type:"button",text:`${g.ch} chips`,onclick:()=>buyGem(g,"chips")})))); }
+      body.append(l); } return; }
+  // My mech
+  const L=fullLook(save.look), wearing=!!MECH_BY[WARD.style.opts[L.style][0]], on=gemsOn();
+  const pv=lookCanvas(save.look,110); pv._walk=true; pv.style.cssText="width:140px;height:140px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
+  body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:wearing?`Wearing ${WARD.style.opts[L.style][0]}`:"No mech on right now"}),
+    el("span",{class:"sub",text:wearing?"Your gems show on this mech and everyone sees them.":"Wear a Mech Suit or Tiny Mech (Character → Top) to see your gems. Socketed gems stay on for any mech you wear."}),
+    el("span",{text:`Sockets: ${on.length} / ${GEM_MAX} · max one Color gem and one Form gem`}))));
+  const sl=el("div",{class:"row",style:"flex-wrap:wrap;gap:8px"}); for(let k=0;k<GEM_MAX;k++){ const id=on[k], g=id&&GEM_BY[id];
+    sl.append(g?el("div",{class:"li",style:"flex:1;min-width:150px"},gemCanvas(g,36),el("div",{class:"grow"},el("div",{text:g.n}),el("div",{class:"sub",text:GEM_KIND[g.k]})),el("button",{class:"btn",type:"button",text:"Remove",onclick:()=>unsocketGem(id)}))
+      :el("div",{class:"li",style:"flex:1;min-width:150px;opacity:.6"},el("div",{class:"grow",text:"Empty socket"}))); }
+  body.append(el("strong",{text:"Sockets"}),sl,el("strong",{text:"Your gem case"}));
+  const own=MECH_GEMS.filter(g=>gemCount(g.id)>0); if(!own.length){ body.append(el("div",{class:"empty",text:"No gems yet. Buy some in the Gem shop tab."})); return; }
+  const l=el("div",{class:"list"}); for(const g of own) l.append(el("div",{class:"li"},gemCanvas(g,40),el("div",{class:"grow"},el("div",{text:`${g.n} ×${gemCount(g.id)}`}),el("div",{class:"sub",text:GEM_KIND[g.k]+" · "+g.d})),el("button",{class:"btn hot",type:"button",text:"Socket",onclick:()=>socketGem(g.id)})));
+  body.append(l); }
+function drawGemixStall(ctx,x,t){ for(let k=0;k<5;k++){ const g=MECH_GEMS[(Math.floor(t/2)+k*8)%MECH_GEMS.length]; drawGemIcon(ctx,x-80+k*34,236,26,g,t+k); }
+  ctx.fillStyle="#0b0716"; ctx.fillRect(x-100,168,58,44); ctx.strokeStyle="#ff8ad8"; ctx.strokeRect(x-99.5,168.5,57,43); ctx.fillStyle="#ff8ad8"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("MECH",x-71,182); ctx.fillText("GEMS",x-71,192); ctx.fillStyle="#38e8ff"; ctx.fillText("40 KINDS",x-71,204); }
+
 function mechNoise(i){ const v=Math.sin(i*127.1)*43758.5; return v-Math.floor(v); }
-function drawMech(c,M,o,t,dir,em,P){ const SC=M.tiny?.8:1; c.save(); c.scale(SC,SC); const out=drawMech1(c,M,o,t,dir,em,P||{}); c.restore(); return {top:out.top*SC}; }
+function drawMech(c,M,o,t,dir,em,P){ const SC=(M.tiny?.8:1)*(M.sc||1); c.save(); c.scale(SC,SC); const out=drawMech1(c,M,o,t,dir,em,P||{}); c.restore(); return {top:out.top*SC}; }
 function drawMech1(c,M,o,t,dir,em,P){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!o.sit, ph=(o.phase||0)*2, heavy=M.leg==="heavy";
   const R=(x,y,w,h,f)=>{ if(f) c.fillStyle=f; c.fillRect(dir>0?x:-x-w,y,w,h); }, X=x=>dir*x, glow=(b)=>{ c.shadowColor=G; c.shadowBlur=b; }, noglow=()=>{ c.shadowBlur=0; };
   const atk=em==="atk"?Math.sin(Math.min(1,(t-(o.emote?o.emote.t:t))/.3)*Math.PI):0;
@@ -8889,6 +9023,7 @@ function drawMech1(c,M,o,t,dir,em,P){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving
   if(F==="confetti"){ for(let k=0;k<10;k++){ const u=(t*.45+k/10)%1, x=(mechNoise(k)-.5)*44+Math.sin(t*2+k)*3, y=headY-20+u*90; c.save(); c.translate(x,y); c.rotate(t*4+k); c.globalAlpha=1-u*.6; c.fillStyle=["#ff3fa8","#38e8ff","#ffd36a","#43f0a4","#b06bff"][k%5]; c.fillRect(-1.6,-.8,3.2,1.6); c.restore(); } }
   if(F==="music"){ for(let k=0;k<3;k++){ const u=(t*.5+k/3)%1; c.globalAlpha=Math.sin(u*Math.PI); c.fillStyle=k%2?G:"#ffd36a"; c.font="bold 9px monospace"; c.textAlign="center"; c.fillText(k%2?"♫":"♪",(k-1)*12+Math.sin(t*3+k)*3,headY-8-u*24); } c.globalAlpha=1; }
   if(F==="speed"&&mv){ c.strokeStyle=G; c.lineWidth=1; for(let k=0;k<5;k++){ const u=(t*3+k/5)%1; c.globalAlpha=1-u; c.beginPath(); const y=hipY-20+k*8; c.moveTo(X(-16-u*30),y); c.lineTo(X(-26-u*30),y); c.stroke(); } c.globalAlpha=1; }
+  if(M.gfx||M.gems) drawGemFx(c,M,t,dir,hipY,tTop,headY,mv);
   return {top:-(headY-16)};
 }
 const DIGI=[
@@ -8980,6 +9115,7 @@ const DIGI=[
 // Mech Suits go in the Top slot: wearing one turns your character into that walking mech.
 DIGI.push(...MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Mech Suits",d:m.d+" Wear it and you walk around as this mech."})));
 DIGI.push(...TINY_MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Tiny Mechs",d:m.d+" Sized to fit you: your own face sits in the cockpit."})));
+setTimeout(()=>{ try{ const V=VENDOR_LOOKS[STALL_BY.gemix]; V.style=digiIndex(DIGI.find(d=>d.n==="Idol Pod")); V.mg=["g_prism","g_orbit"]; }catch(e){} },0); // Gemix's vendor pilots a gem-loaded Tiny Mech
 const DIGI_PETS={
   "Wisp guardian":{p:"Small, brave and always watching your back.",trait:{k:"guard",v:10,short:"10% less Void damage"},ab:{k:"buff",b:"guard",n:"Guardian Ward",cd:45,d:"Void armor for 10 min"},say:["I've got you!","*sparkle*","Stay close."]},
   "Ember kit":{p:"Mischievous and warm. Loves shiny scrap.",trait:{k:"luck",v:10,short:"Luckier Scrap finds"},ab:{k:"fetch",n:"Ember Dig",cd:120,d:"Finds a random part"},say:["kyu!","*tails flare*","Fetch, fetch!"]},
@@ -12068,7 +12204,7 @@ async function flush(){
 function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0; o.rp=Math.max(0,+o.rp||0); if(!o.rpDay||typeof o.rpDay!=="object") o.rpDay={d:"",n:0}; o.rpLog=(Array.isArray(s.rpLog)?s.rpLog:[]).filter(e=>e&&isFinite(+e.t)&&isFinite(+e.n)&&+e.n>0).slice(0,40).map(e=>({t:+e.t,n:Math.floor(+e.n),s:String(e.s||"Work").slice(0,40)}));
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
   o.look=fullLook({...DEFAULT_LOOK,...(s.look||{})}); o.owned=Array.isArray(s.owned)?s.owned.filter(x=>typeof x==="string").slice(0,300):[]; o.name=cleanName(s.name||""); if(nameProblem(o.name)) o.name=""; o.handleKey=typeof s.handleKey==="string"?s.handleKey.slice(0,200):""; o.scrap=Object.fromEntries(Object.entries(s.scrap&&typeof s.scrap==="object"?s.scrap:{}).filter(([k])=>/^[0-4]$/.test(k)).map(([k,v])=>[k,Math.min(Date.now(),+v||0)])); o.quest=s.quest&&TYPE_N[s.quest.type]?{type:s.quest.type,qty:clamp(Math.floor(+s.quest.qty)||1,1,3),reward:clamp(Math.floor(+s.quest.reward)||50,1,500),done:false}:null; o.rack=(Array.isArray(s.rack)?s.rack:[]).filter(r=>r&&BY[r.id]).slice(0,4).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())})); o.jobs=(Array.isArray(s.jobs)?s.jobs:[]).filter(j=>j&&["courier","supply","build"].includes(j.kind)&&STALLS[j.to]&&(j.kind!=="courier"||STALLS[j.from])&&(j.kind!=="supply"||TYPE_N[j.t])&&(j.kind!=="build"||RECIPES.some(r=>r.k===j.k))).slice(0,JOB_MAX).map(j=>({...j,reward:clamp(Math.floor(+j.reward)||0,0,5000),chips:clamp(Math.floor(+j.chips)||0,0,200),qty:clamp(Math.floor(+j.qty)||1,1,5),minTier:clamp(Math.floor(+j.minTier)||0,0,3),label:String(j.label||"Job").slice(0,140)})); o.taken=Array.isArray(s.taken)?s.taken.filter(x=>typeof x==="string").slice(-30):[]; o.jobsDone=Math.max(0,Math.floor(+s.jobsDone)||0); o.duelWins=Math.max(0,Math.floor(+s.duelWins)||0); for(const k of ["voidKills","voidDeaths","botKills"]) o[k]=Math.max(0,Math.floor(+s[k])||0); o.decor=cleanDecor(s.decor); o.room=cleanRoom(s.room); o.roomOwned=Array.isArray(s.roomOwned)?s.roomOwned.filter(x=>typeof x==="string").slice(0,60):[]; for(const k of ["wall","floor","light"]) if(!roomOwnedIn(o.roomOwned,k,o.room[k])) o.room[k]=0; o.home=cleanHomeState(s.home); o.settled=Array.isArray(s.settled)?s.settled.filter(x=>typeof x==="string").slice(-80):[];
-  o.botMode=["off","easy","normal","hard"].includes(s.botMode)?s.botMode:"normal"; if(Array.isArray(s.bytesShow)) o.bytesShow=s.bytesShow.filter(x=>typeof x==="string"&&PETS[x]).slice(0,3); else delete o.bytesShow; if(!Array.isArray(o.bytesPets)) delete o.bytesPets;
+  o.botMode=["off","easy","normal","hard"].includes(s.botMode)?s.botMode:"normal"; if(s.gems&&typeof s.gems==="object") o.gems=Object.fromEntries(Object.entries(s.gems).filter(([k,v])=>(!GEM_BY||GEM_BY[k])&&+v>0).map(([k,v])=>[k,Math.min(999,Math.floor(+v))])); else delete o.gems; if(Array.isArray(s.bytesShow)) o.bytesShow=s.bytesShow.filter(x=>typeof x==="string"&&PETS[x]).slice(0,3); else delete o.bytesShow; if(!Array.isArray(o.bytesPets)) delete o.bytesPets;
   o.land=s.land&&Number.isInteger(s.land.plot)&&s.land.plot>=0&&s.land.plot<1000?{plot:s.land.plot,at:+s.land.at||0}:null;
   o.landRigs=(Array.isArray(s.landRigs)?s.landRigs:[]).filter(r=>r&&BY[r.id]&&BY[r.id].k==="cminer").slice(0,6).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())}));
   { const bo=s.book&&typeof s.book==="object"?s.book:{}; const NB=BOOK.length; const ci=v=>Number.isInteger(v)&&v>=0&&v<NB; const at=Array.isArray(bo.at)?bo.at:[0,0]; const c0=ci(at[0])?at[0]:0;
