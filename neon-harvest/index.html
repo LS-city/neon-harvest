@@ -1898,7 +1898,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   if(o.dk) drinkFxLayer(c,o.dk,"behind",dir,head,t); if(FX) fxBehind(c,FX,head,t); if(FX==="acid"||FX==="kaleido") ghostTrail(c,dir,hip,sh,head,o.moving,t); if(FX==="drift"||FX==="lightspeed") ghostTrail2(c,dir,hip,sh,head,t,FX==="drift"?"168,232,255":"255,255,255");
   c.lineCap="round"; c.lineJoin="round";
   const MECH=MECH_BY[style]; let mechTop=0;
-  if(MECH){ try{ mechTop=drawMech(c,MECH,o,t,dir,em).top; }catch(e){} } else {
+  if(MECH){ try{ mechTop=drawMech(c,MECH,o,t,dir,em,{SK,HC,AC}).top; }catch(e){} } else {
   // ---- aura (behind)
   if(aura==="Floor ring"){ c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=10; c.lineWidth=2; c.beginPath(); c.ellipse(0,0,17+Math.sin(t*4)*2,5,0,0,7); c.stroke(); c.shadowBlur=0; }
   if(aura==="Flames"){ for(let i=0;i<6;i++){ const fx=-12+i*5, fh=10+Math.abs(Math.sin(t*12+i*1.7))*12; c.fillStyle=i%2?"#ffb84a":"#ff5a4a"; c.globalAlpha=.75; c.beginPath(); c.moveTo(fx-3,0); c.quadraticCurveTo(fx+Math.sin(t*9+i)*3,-fh,fx+3,0); c.fill(); } c.globalAlpha=1; }
@@ -4470,7 +4470,7 @@ const HELP=[
     ["The consoles",["14 retro, 13 modern, 13 future-tech and 20 Living Room Legends, each with its own play effect. Members redeem them with RP.","Every console has 7 games. The first comes free; buy the rest with credits in its Game library."]],
     ["Play",["Hold a console in your hand, insert a game and tap 🎮 Play for a 12-second session: a holo screen floats over your head for everyone to see. The first session every 20 minutes pays 2–5 chips.","Show them on your shelves. Find them all in ☰ → Game consoles or Stash → Game consoles. Consoles can't be sold, gifted, staked or traded."]]]},
   {id:"animedrop",icon:"🌸",n:"Neo Anime Drop",sub:"Animated clothes, companions and effects",where:"Smacked Shop → Digital",secs:[
-    ["The sets",["35 wearable Mech Suits (wear one in your Top slot and you walk around as that mech, with its own weapons and animations), the Legends pack (20 skins inspired by games, movies and anime: outfits, hats, masks, weapons and items, all animated), the Neo Anime Drop (10 clothes, 10 companions, 10 effects), the 10 Spirit-Bound companions, each with a bond effect and a matching outfit, and the 8 Cyber Bears: Circuit panda, Cryo polar, Iron grizzly, Beat cub, Holo teddy, Volt sun bear, Lunar moon bear and Rocket cub."]],
+    ["The sets",["35 wearable Mech Suits (wear one in your Top slot and you walk around as that mech, with its own weapons and animations), 20 Tiny Mechs (player-sized suits with your own face in the cockpit), the Legends pack (20 skins inspired by games, movies and anime: outfits, hats, masks, weapons and items, all animated), the Neo Anime Drop (10 clothes, 10 companions, 10 effects), the 10 Spirit-Bound companions, each with a bond effect and a matching outfit, and the 8 Cyber Bears: Circuit panda, Cryo polar, Iron grizzly, Beat cub, Holo teddy, Volt sun bear, Lunar moon bear and Rocket cub."]],
     ["Get them",["Members redeem them with RP and get them instantly, with no pickup code and nothing counted toward the monthly limit. Try them on in Character first. They can't be bought with credits and never drop as loot."]]]}]},
 
  {id:"social",icon:"👥",n:"Friends & chat",topics:[
@@ -8730,13 +8730,39 @@ const MECHS=[
  {n:"Medic Frame",rp:8000,c:["#f4f0ff","#1ad1b0","#ff5a6a"],g:"#43f0a4",leg:"hover",body:"round",head:"visor",sh:"none",arm:"shield",back:"halo",fx:"hearts",d:"A rescue-medic mech from sci-fi hospital dramas. Hovers gently and gives off healing hearts."},
  {n:"Omega Titan",rp:15000,c:["#16121f","#d8b040","#c8282a"],g:"#ff3a5a",leg:"heavy",body:"vee",head:"horns",sh:"cannon",arm:"blade",back:"wings",fx:"lightning",d:"The final-boss mech of every game: black and gold, huge wings, a giant blade and lightning everywhere."},
 ];
-const MECH_BY=Object.fromEntries(MECHS.map(m=>[m.n,m]));
+// Tiny Mechs: player-sized suits. Your own head sits in the cockpit (pilot: bubble, cage or hood) so you fit inside perfectly.
+// Extra tiny-only parts: leg "spring" (pogo bounce), back "propeller", fx "confetti".
+const TINY_MECHS=[
+ {n:"Pocket Striker",rp:4000,c:["#e8ecf4","#5a6478","#38a8ff"],g:"#38e8ff",leg:"biped",body:"vee",pilot:"bubble",sh:"pads",arm:"beam",back:"thrusters",fx:"none",d:"A pocket-size real-robot anime suit with a beam blaster and little boosters."},
+ {n:"Mini Titan",rp:5000,c:["#c8282a","#1a1420","#ffd23a"],g:"#ffd23a",leg:"heavy",body:"vee",pilot:"hood",sh:"spikes",arm:"fist",back:"reactor",fx:"fire",d:"A chibi super-robot with a golden hood, rocket fist and a spinning reactor."},
+ {n:"Sprocket",rp:3000,c:["#b8803a","#5a3a1a","#e8c070"],g:"#ffb84a",leg:"spring",body:"barrel",pilot:"cage",sh:"none",arm:"hammer",back:"stack",fx:"steam",d:"A wind-up steampunk toy suit that bounces on a spring and puffs steam."},
+ {n:"Bolt Buddy",rp:3000,c:["#9aa4b8","#3a4250","#f5c23a"],g:"#f5e663",leg:"biped",body:"box",pilot:"bubble",sh:"radar",arm:"claw",back:"none",fx:"sparks",d:"A cute cartoon-movie helper bot with a grabber claw and a tiny radar dish."},
+ {n:"Tin Ronin",rp:4500,c:["#a81e2a","#1a1014","#d8b040"],g:"#ff3a5a",leg:"biped",body:"slim",pilot:"hood",sh:"pads",arm:"blade",back:"banner",fx:"petals",d:"A little samurai-anime suit with a glowing katana and a war banner, trailing petals."},
+ {n:"Chibi Kaiju",rp:5000,c:["#3a8a4a","#1a3a20","#ffd36a"],g:"#a6ff3a",leg:"bird",body:"round",pilot:"hood",sh:"spikes",arm:"claw",back:"fins",fx:"leaves",d:"A tiny monster-movie dino suit with glowing back fins and snapping claws."},
+ {n:"Scrap Scout",rp:2500,c:["#7a6a5a","#3a3028","#ff8a2a"],g:"#ff8a2a",leg:"bird",body:"slim",pilot:"cage",sh:"missiles",arm:"gatling",back:"none",fx:"sparks",d:"A junkyard scout from post-apocalyptic games, made of scrap with a mini gatling."},
+ {n:"Tiny Diver",rp:3500,c:["#e8b83a","#7a5a1a","#c87a2a"],g:"#38e8ff",leg:"heavy",body:"round",pilot:"bubble",sh:"none",arm:"hook",back:"tank",fx:"bubbles",d:"A little brass diving suit from undersea adventure films, blowing bubbles."},
+ {n:"Snow Pup",rp:3000,c:["#e8f6ff","#7a9ab8","#38c8ff"],g:"#a8e6ff",leg:"biped",body:"round",pilot:"hood",sh:"none",arm:"drill",back:"propeller",fx:"snow",d:"An arctic pup suit with an ice drill and a propeller hat, walking in its own snow."},
+ {n:"Mini Medic",rp:3000,c:["#f4f0ff","#1ad1b0","#ff5a6a"],g:"#43f0a4",leg:"hover",body:"round",pilot:"bubble",sh:"none",arm:"shield",back:"halo",fx:"hearts",d:"A floating mini medic suit from sci-fi hospital shows that gives off healing hearts."},
+ {n:"Pip Racer",rp:3500,c:["#ff3fa8","#16121f","#38e8ff"],g:"#ff3fa8",leg:"tread",body:"slim",pilot:"bubble",sh:"none",arm:"fist",back:"thrusters",fx:"speed",d:"A go-kart racing game suit on glowing treads that leaves speed lines behind."},
+ {n:"Idol Pod",rp:4000,c:["#ffb3dc","#f4f0ff","#ff3fa8"],g:"#ff8ad8",leg:"hover",body:"round",pilot:"bubble",sh:"none",arm:"mic",back:"wings",fx:"music",d:"A pop-idol anime stage pod with a glowing mic, little wings and floating music notes."},
+ {n:"Copter Cub",rp:3500,c:["#7a4a2a","#3a2414","#ffd36a"],g:"#ffb84a",leg:"hover",body:"round",pilot:"hood",sh:"none",arm:"fist",back:"propeller",fx:"none",d:"A bear-cub suit that flies on a spinning propeller. Pairs with the Cyber Bears."},
+ {n:"Glitch Sprite",rp:4000,c:["#16222a","#0a1014","#38e8ff"],g:"#38e8ff",leg:"hover",body:"slim",pilot:"cage",sh:"none",arm:"claw",back:"none",fx:"glitch",d:"A cyberpunk-film hacker sprite that floats and glitches in and out."},
+ {n:"Party Bot",rp:3000,c:["#f5e663","#7c5cff","#ff3fa8"],g:"#43f0a4",leg:"spring",body:"box",pilot:"bubble",sh:"none",arm:"mic",back:"banner",fx:"confetti",d:"A party-game robot that bounces on a spring and throws confetti everywhere."},
+ {n:"Rune Squire",rp:4500,c:["#c9d3e0","#4a3a7a","#b06bff"],g:"#b06bff",leg:"biped",body:"vee",pilot:"hood",sh:"shield",arm:"blade",back:"cape",fx:"runes",d:"A little magic-knight suit from fantasy anime with a runed blade and a cape."},
+ {n:"Hornet Jr",rp:4000,c:["#f5c23a","#16121f","#a6ff3a"],g:"#a6ff3a",leg:"bird",body:"slim",pilot:"cage",sh:"none",arm:"blade",back:"wings",fx:"none",d:"A bug-war movie mini suit with buzzing wings and a stinger blade."},
+ {n:"Lil Rhino",rp:4500,c:["#5a6478","#2a2e38","#f5e663"],g:"#f5e663",leg:"tread",body:"barrel",pilot:"hood",sh:"cannon",arm:"drill",back:"stack",fx:"lightning",d:"A tiny assault tank suit with a drill, a little cannon and crackling lightning."},
+ {n:"Star Cadet",rp:3500,c:["#e8e4f4","#5a4a8a","#b98cff"],g:"#b98cff",leg:"spring",body:"slim",pilot:"bubble",sh:"radar",arm:"beam",back:"thrusters",fx:"stars",d:"A space-cadet suit from retro sci-fi cartoons that boings around on a spring with a ray gun."},
+ {n:"Ember Kit Frame",rp:4500,c:["#ff8a2a","#f4f0ff","#ff3a1a"],g:"#ffb84a",leg:"bird",body:"slim",pilot:"hood",sh:"none",arm:"blade",back:"fins",fx:"fire",d:"A fox-spirit action-anime mini suit with flaming fins and a fire blade."},
+];
+TINY_MECHS.forEach(m=>{ m.tiny=1; m.head="pilot"; });
+const MECH_BY=Object.fromEntries([...MECHS,...TINY_MECHS].map(m=>[m.n,m]));
 function mechNoise(i){ const v=Math.sin(i*127.1)*43758.5; return v-Math.floor(v); }
-function drawMech(c,M,o,t,dir,em){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!o.sit, ph=(o.phase||0)*2, heavy=M.leg==="heavy";
+function drawMech(c,M,o,t,dir,em,P){ const SC=M.tiny?.8:1; c.save(); c.scale(SC,SC); const out=drawMech1(c,M,o,t,dir,em,P||{}); c.restore(); return {top:out.top*SC}; }
+function drawMech1(c,M,o,t,dir,em,P){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!o.sit, ph=(o.phase||0)*2, heavy=M.leg==="heavy";
   const R=(x,y,w,h,f)=>{ if(f) c.fillStyle=f; c.fillRect(dir>0?x:-x-w,y,w,h); }, X=x=>dir*x, glow=(b)=>{ c.shadowColor=G; c.shadowBlur=b; }, noglow=()=>{ c.shadowBlur=0; };
   const atk=em==="atk"?Math.sin(Math.min(1,(t-(o.emote?o.emote.t:t))/.3)*Math.PI):0;
   let lift=0, bob=0;
-  if(M.leg==="hover"){ lift=14+Math.sin(t*2.2)*2.5; } else if(M.leg==="tread"){ lift=6; bob=mv?Math.sin(t*20)*.4:0; } else bob=mv?Math.abs(Math.sin(ph))*(heavy?2.6:1.8):Math.sin(t*1.6)*.5;
+  if(M.leg==="hover"){ lift=14+Math.sin(t*2.2)*2.5; } else if(M.leg==="tread"){ lift=6; bob=mv?Math.sin(t*20)*.4:0; } else if(M.leg==="spring"){ lift=14+Math.abs(Math.sin(t*(mv?7:3.4)))*(mv?9:4); } else bob=mv?Math.abs(Math.sin(ph))*(heavy?2.6:1.8):Math.sin(t*1.6)*.5;
   const hipY=-30-lift+bob+(o.sit?8:0), tTop=hipY-30, headY=tTop-8;
   const sw=mv?Math.sin(ph):0;
   // ---------- back unit (behind everything)
@@ -8749,6 +8775,7 @@ function drawMech(c,M,o,t,dir,em){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!
   else if(M.back==="banner"){ R(-13,by-34,2,40,C1); const w=Math.sin(t*3); c.fillStyle=G; c.beginPath(); c.moveTo(X(-11),by-34); for(let k=0;k<=5;k++) c.lineTo(X(-11-k*3.4),by-34+Math.sin(t*4-k*.8)*1.6*k*.4); for(let k=5;k>=0;k--) c.lineTo(X(-11-k*3.4),by-20+Math.sin(t*4-k*.8)*1.6*k*.4); c.fill(); c.fillStyle=C1; c.beginPath(); c.arc(X(-19),by-27+w*.5,2.6,0,7); c.fill(); }
   else if(M.back==="tank"){ R(-17,by-6,7,20,C2); R(-16,by-8,5,3,C1); }
   else if(M.back==="cape"){ const fl=mv?-dir*10:Math.sin(t*1.5)*2; c.fillStyle=C2; c.beginPath(); c.moveTo(X(-8),tTop+2); c.lineTo(X(8),tTop+2); c.quadraticCurveTo(X(-4)+fl*.4,hipY,X(-10)+fl,hipY+20); for(let k=0;k<5;k++) c.lineTo(X(-10+k*4)+fl,hipY+20-(k%2?4:0)); c.closePath(); c.fill(); }
+  else if(M.back==="propeller"){ const py=headY-14; R(-1,py,2,8,C1); c.save(); c.translate(0,py); c.scale(Math.cos(t*30),1); c.fillStyle=C2; c.fillRect(-14,-1.4,28,2.8); c.restore(); c.fillStyle=G; c.beginPath(); c.arc(0,py,2,0,7); c.fill(); }
   else if(M.back==="halo"){ c.strokeStyle=G; glow(12); c.lineWidth=2; c.beginPath(); c.ellipse(0,headY-14+Math.sin(t*2),11,3.4,0,0,7); c.stroke(); noglow(); }
   c.restore();
   // ---------- legs
@@ -8763,6 +8790,7 @@ function drawMech(c,M,o,t,dir,em){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!
   leg(-1,C1);
   if(M.leg==="tread"){ R(-14,-10,28,10,C1); c.fillStyle="#16121f"; for(let k=0;k<4;k++){ const wx=-10+k*6.6; c.beginPath(); c.arc(wx,-5,3,0,7); c.fill(); c.save(); c.translate(wx,-5); c.rotate((mv?t*14:0)*dir); c.fillStyle=C2; c.fillRect(-.6,-3,1.2,6); c.restore(); c.fillStyle="#16121f"; }
     c.fillStyle=G; glow(6); const off=mv?(t*40)%6:0; for(let x=-14+off;x<14;x+=6) c.fillRect(x,-11,3,1.4); noglow(); R(-5,hipY,10,-hipY-10,C1); R(-7,-13,14,3,C2); }
+  if(M.leg==="spring"){ const top2=hipY+4, n=7, h=-top2-4; c.strokeStyle=C2; c.lineWidth=2.4; c.beginPath(); for(let k=0;k<=n;k++){ const y=top2+k*h/n; c.lineTo(k%2?6:-6,y); } c.stroke(); R(-8,-4,16,4,C1); R(-6,top2-2,12,3,C1); }
   if(M.leg==="hover"){ c.fillStyle=C1; c.beginPath(); c.ellipse(0,hipY+6,10,4,0,0,7); c.fill(); for(const k of [-6,0,6]){ const fl=6+Math.sin(t*20+k)*2; c.fillStyle=G; glow(10); c.globalAlpha=.85; c.beginPath(); c.moveTo(k-2,hipY+9); c.lineTo(k,hipY+9+fl); c.lineTo(k+2,hipY+9); c.fill(); c.globalAlpha=1; noglow(); } }
   // back arm
   const arm=(side,front)=>{ const swing=(front?-sw:sw)*.45, sx=X(side*12), sy=tTop+5; let ex, ey;
@@ -8807,7 +8835,14 @@ function drawMech(c,M,o,t,dir,em){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!
   if(S==="radar"){ R(-14,tTop-8,2,8,C1); c.save(); c.translate(X(-13),tTop-12); c.scale(Math.cos(t*2),1); c.fillStyle=C2; c.beginPath(); c.ellipse(0,0,7,4,0,0,7); c.fill(); c.fillStyle=G; c.fillRect(-.6,-4,1.2,4); c.restore(); }
   // ---------- head
   const H=M.head, hy=headY; c.save();
-  if(H==="visor"||H==="antenna"||H==="hat"){ R(-6,hy-8,12,11,C0); R(-5,hy-4,10,3,"#0b0716"); c.fillStyle=G; glow(8); R(-4+((t*10)%6),hy-3.6,3,2.2); noglow();
+  if(H==="pilot"){ const SK=P.SK||"#ece6ff", HC=P.HC||"#38e8ff", AC=P.AC||G, pt=M.pilot;
+    if(pt==="hood"){ c.fillStyle=C0; c.beginPath(); c.arc(0,hy-2,10.5,Math.PI,0); c.fill(); R(-10.5,hy-2,4,9,C0); R(6.5,hy-2,4,9,C0); }
+    c.fillStyle=SK; c.beginPath(); c.arc(0,hy,7,0,7); c.fill(); if(pt!=="hood"){ c.fillStyle=HC; c.beginPath(); c.arc(0,hy-1.4,7.2,Math.PI*1.05,Math.PI*1.95); c.fill(); }
+    c.fillStyle=AC; glow(6); R(X(.6)-(dir>0?0:4),hy-1.4,5,2.2); noglow(); c.fillStyle="#0b0716"; R(-1,hy+3.6,3,.9);
+    if(pt==="bubble"){ c.strokeStyle=C2; c.lineWidth=2; c.beginPath(); c.arc(0,hy,10.5,Math.PI*.9,Math.PI*2.1); c.stroke(); c.fillStyle="rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(X(-5),hy-6,2.2,1.2,-.6,0,7); c.fill(); R(-11,hy+6,22,3,C1); }
+    else if(pt==="cage"){ c.strokeStyle=C2; c.lineWidth=1.6; c.beginPath(); c.arc(0,hy,10.5,Math.PI,0); c.moveTo(-10.5,hy); c.lineTo(-10.5,hy+7); c.moveTo(10.5,hy); c.lineTo(10.5,hy+7); for(const a of [1.25,1.5,1.75]){ c.moveTo(0,hy); } c.stroke(); for(const x of [-5,0,5]){ c.beginPath(); c.moveTo(x,hy-Math.sqrt(110-x*x)); c.lineTo(x,hy-8.4+Math.abs(x)*.2); c.stroke(); } R(-11,hy+6,22,3,C1); c.fillStyle=Math.sin(t*5)>0?G:C1; c.beginPath(); c.arc(0,hy-11.5,1.6,0,7); c.fill(); }
+    else { R(-10.5,hy+5,21,3,C1); c.fillStyle=G; glow(6); R(-10,hy-3,1.6,4); R(8.4,hy-3,1.6,4); noglow(); } }
+  else if(H==="visor"||H==="antenna"||H==="hat"){ R(-6,hy-8,12,11,C0); R(-5,hy-4,10,3,"#0b0716"); c.fillStyle=G; glow(8); R(-4+((t*10)%6),hy-3.6,3,2.2); noglow();
     if(H==="antenna"){ R(-1,hy-16,1.6,8,C1); c.fillStyle=Math.sin(t*5)>0?G:C1; c.beginPath(); c.arc(0,hy-17,2,0,7); c.fill(); }
     if(H==="hat"){ R(-12,hy-9,24,2.4,C1); R(-6,hy-15,12,7,C1); R(-6,hy-10,12,1.4,C2); } }
   else if(H==="mono"){ c.fillStyle=C0; c.beginPath(); c.arc(0,hy-2,7,Math.PI,0); c.fill(); R(-7,hy-2,14,5,C0); R(-6,hy-3,12,3,"#0b0716"); const ex=Math.sin(t*1.6)*4.4; c.fillStyle=G; glow(12); c.beginPath(); c.arc(ex,hy-1.5,1.8,0,7); c.fill(); noglow(); }
@@ -8838,6 +8873,8 @@ function drawMech(c,M,o,t,dir,em){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!
   if(F==="leaves"){ for(let k=0;k<5;k++){ const u=(t*.22+k/5)%1; c.save(); c.translate((k-2)*10+Math.sin(t+k)*6,headY-10+u*80); c.rotate(t*2+k); c.globalAlpha=1-u; c.fillStyle=k%2?"#43c06a":"#a6d84a"; c.beginPath(); c.ellipse(0,0,3,1.4,0,0,7); c.fill(); c.restore(); } }
   if(F==="stars"){ for(let k=0;k<6;k++){ const tw=Math.max(0,Math.sin(t*2.4+k*1.7)); c.globalAlpha=tw; c.fillStyle=k%2?G:"#ffffff"; const x=Math.sin(k*2.3)*24, y=headY-4+Math.cos(k*1.9)*30+20; c.fillRect(x-.6,y-2.4,1.2,4.8); c.fillRect(x-2.4,y-.6,4.8,1.2); } c.globalAlpha=1; }
   if(F==="siren"){ const on=Math.floor(t*6)%2; R(-5,headY-12,4,3,on?"#ff3a3a":"#5a1a1a"); R(1,headY-12,4,3,on?"#2a3a6a":"#38a8ff"); c.fillStyle=on?"rgba(255,58,58,.25)":"rgba(56,168,255,.25)"; c.beginPath(); c.arc(0,headY-10,16,0,7); c.fill(); }
+  if(F==="confetti"){ for(let k=0;k<10;k++){ const u=(t*.45+k/10)%1, x=(mechNoise(k)-.5)*44+Math.sin(t*2+k)*3, y=headY-20+u*90; c.save(); c.translate(x,y); c.rotate(t*4+k); c.globalAlpha=1-u*.6; c.fillStyle=["#ff3fa8","#38e8ff","#ffd36a","#43f0a4","#b06bff"][k%5]; c.fillRect(-1.6,-.8,3.2,1.6); c.restore(); } }
+  if(F==="music"){ for(let k=0;k<3;k++){ const u=(t*.5+k/3)%1; c.globalAlpha=Math.sin(u*Math.PI); c.fillStyle=k%2?G:"#ffd36a"; c.font="bold 9px monospace"; c.textAlign="center"; c.fillText(k%2?"♫":"♪",(k-1)*12+Math.sin(t*3+k)*3,headY-8-u*24); } c.globalAlpha=1; }
   if(F==="speed"&&mv){ c.strokeStyle=G; c.lineWidth=1; for(let k=0;k<5;k++){ const u=(t*3+k/5)%1; c.globalAlpha=1-u; c.beginPath(); const y=hipY-20+k*8; c.moveTo(X(-16-u*30),y); c.lineTo(X(-26-u*30),y); c.stroke(); } c.globalAlpha=1; }
   return {top:-(headY-16)};
 }
@@ -8929,6 +8966,7 @@ const DIGI=[
 ];
 // Mech Suits go in the Top slot: wearing one turns your character into that walking mech.
 DIGI.push(...MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Mech Suits",d:m.d+" Wear it and you walk around as this mech."})));
+DIGI.push(...TINY_MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Tiny Mechs",d:m.d+" Sized to fit you: your own face sits in the cockpit."})));
 const DIGI_PETS={
   "Wisp guardian":{p:"Small, brave and always watching your back.",trait:{k:"guard",v:10,short:"10% less Void damage"},ab:{k:"buff",b:"guard",n:"Guardian Ward",cd:45,d:"Void armor for 10 min"},say:["I've got you!","*sparkle*","Stay close."]},
   "Ember kit":{p:"Mischievous and warm. Loves shiny scrap.",trait:{k:"luck",v:10,short:"Luckier Scrap finds"},ab:{k:"fetch",n:"Ember Dig",cd:120,d:"Finds a random part"},say:["kyu!","*tails flare*","Fetch, fetch!"]},
@@ -9273,7 +9311,7 @@ function bearBody(B,st,C,lift){ const R=B.R, h=lift||0;
 // --- Smacked Shop: the Digital tab
 function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
     el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.${save.digiFree!==monthKey()?" Your free monthly item is ready: open any item to claim it.":" You've claimed this month's free item."}`:"Members redeem digital rewards with RP and get one free each month. You can try anything on in Character first."}))));
-  for(const grp of ["Mech Suits","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
+  for(const grp of ["Mech Suits","Tiny Mechs","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
     const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
       const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${digiPrice(d).toLocaleString()} RP`}),!digiOn(d)?el("span",{class:"r-epic",text:"Hidden"}):null));
       g.append(c); } body.append(g); } consoleShopView(body); }
@@ -9293,7 +9331,7 @@ function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(
 // Owner tools → Digital items: price and show/hide every item.
 function digiAdmin(body){ body.append(el("p",{class:"sub",text:"Set the RP price for each digital item and choose which ones are in the shop. Digital items cost you nothing to hand out, so every RP spent on them is profit. Players who already own an item keep it even if you hide it."}));
   const rows=[]; const l=el("div",{class:"list"});
-  for(const grp of ["Mech Suits","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
+  for(const grp of ["Mech Suits","Tiny Mechs","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
     for(const d of DIGI.filter(x=>x.g===grp)){ const cv=lookCanvas({...fullLook(save.look),[d.k]:digiIndex(d)},44); cv.style.cssText+=";width:48px;height:48px;flex:none";
       const rp=el("input",{class:"num",type:"number",min:"1",step:"100",value:String(digiPrice(d)),style:"width:110px","aria-label":`RP price for ${d.n}`});
       const on=el("input",{type:"checkbox","aria-label":`${d.n} is in the shop`}); on.checked=digiOn(d); rows.push([d,rp,on]);
