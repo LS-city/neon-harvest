@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bytes · VRChat RP wallet</title>
+<style>
+:root{--bg:#0a0f14;--panel:#111a22;--line:#24384a;--ink:#e3f2ff;--dim:#8aa3b8;--acc:#3df5c8;--acc2:#7c8cff;--warn:#ffcf5a;--bad:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -10%,rgba(61,245,200,.14),transparent 55%),var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;display:flex;justify-content:center;padding:22px 14px 40px}
+main{width:min(620px,100%);display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+h1{margin:0;font-size:30px;letter-spacing:.08em;color:var(--acc);text-shadow:0 0 14px rgba(61,245,200,.5)}
+.sub{color:var(--dim);font-size:11px;letter-spacing:.14em}
+.card{background:var(--panel);border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h2{margin:0;font-size:12px;letter-spacing:.14em;color:var(--dim);font-weight:normal;text-transform:uppercase}
+button,input,select{font:inherit;color:var(--ink)}
+button{background:#0c141b;border:1px solid var(--line);padding:9px 12px;cursor:pointer}
+button:hover{border-color:var(--acc)} button:disabled{opacity:.5;cursor:default}
+button.hot{border-color:var(--acc);color:var(--acc)}
+button.google{background:#fff;color:#111;border-color:#fff;font-weight:600}
+button.small{padding:4px 8px;font-size:12px}
+input,select{background:#080d12;border:1px solid var(--line);padding:8px 9px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--acc2);outline-offset:1px}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{flex:1;min-width:90px}
+.tabs button[aria-selected=true]{border-color:var(--acc);color:var(--acc)}
+.bal{font-size:40px;color:var(--acc);text-align:center;letter-spacing:.04em}
+.bal small{font-size:14px;color:var(--dim)}
+.who{text-align:center;color:var(--dim)}
+.list{display:flex;flex-direction:column;gap:6px}
+.item{border:1px solid var(--line);padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.item .l{display:flex;flex-direction:column;gap:2px;min-width:0}
+.item .l span{color:var(--dim);font-size:12px;overflow-wrap:anywhere}
+.plus{color:var(--acc)} .minus{color:var(--bad)}
+.bubble{background:#fff;color:#111;border-radius:14px;padding:10px 14px;font-family:system-ui,sans-serif;font-size:15px;min-height:44px;white-space:pre-wrap;word-break:break-word;position:relative}
+.bubble::after{content:"";position:absolute;left:28px;bottom:-9px;border:9px solid transparent;border-top-color:#fff;border-bottom:0}
+.msg{font-size:12px;min-height:1.2em} .ok{color:var(--acc)} .bad{color:var(--bad)}
+.note{color:var(--dim);font-size:11px}
+.pill{border:1px solid var(--line);padding:2px 6px;font-size:11px;color:var(--warn)}
+label.chk{display:flex;align-items:center;gap:8px;cursor:pointer} label.chk input{width:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.pro{border:1px solid var(--warn);padding:12px;display:flex;flex-direction:column;gap:8px}
+.pro b{color:var(--warn)} .pro ul{margin:0;padding-left:18px}
+a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(--warn);color:var(--warn);padding:10px}
+[hidden]{display:none!important}
+@media (max-width:480px){.grid2{grid-template-columns:1fr}.bal{font-size:32px}}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>BYTES</h1><span class="sub">VRCHAT ROLEPLAY WALLET</span></header>
+
+  <!-- 1. sign in -->
+  <section class="card" id="v-signin" hidden>
+    <h2>Sign in</h2>
+    <button class="google" id="g">Continue with Google</button>
+    <input type="email" id="em" placeholder="Email" autocomplete="email">
+    <input type="password" id="pw" placeholder="Password" autocomplete="current-password">
+    <div class="row"><button class="hot" id="ep">Sign in</button><button id="ec">Create account</button></div>
+    <div class="msg bad" id="authmsg"></div>
+    <div class="note">Uses the NEON HARVEST account system. Bytes are play money for roleplay. They have no real-world value and can't be bought, sold or cashed out.</div>
+  </section>
+
+  <!-- 2. pick a handle -->
+  <section class="card" id="v-handle" hidden>
+    <h2>Pick your Bytes name</h2>
+    <p style="margin:0">This is how people find you to send Bytes. Use your VRChat name so people recognise you. It can't be changed later.</p>
+    <input id="h-in" maxlength="20" placeholder="3–20 letters, numbers, _ . -" autocomplete="off">
+    <button class="hot" id="h-go">Create my wallet (start with 100 Bytes)</button>
+    <div class="msg" id="h-msg"></div>
+  </section>
+
+  <!-- 3. app -->
+  <section id="v-app" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="card">
+      <div class="bal"><span id="bal">0</span> <small>BYTES</small></div>
+      <div class="who" id="who"></div>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-t="send" aria-selected="true">Send</button>
+        <button role="tab" data-t="hist">History</button>
+        <button role="tab" data-t="jobs">My jobs</button>
+        <button role="tab" data-t="biz">My groups</button>
+        <button role="tab" data-t="chat">Chatbox</button>
+        <button role="tab" data-t="admin" id="tab-admin" hidden>Admin</button>
+      </div>
+    </div>
+
+    <section class="card tab" id="t-send">
+      <h2>Send Bytes</h2>
+      <input id="s-to" placeholder="Their Bytes name" autocomplete="off">
+      <div class="row">
+        <input id="s-amt" type="number" min="1" step="1" placeholder="Amount">
+        <select id="s-kind"><option value="tip">Tip</option><option value="pay">Pay</option><option value="send">Send</option></select>
+      </div>
+      <input id="s-note" maxlength="80" placeholder="Note (optional), like “great drink!”">
+      <div class="row" id="quick"></div>
+      <button class="hot" id="s-go">Send</button>
+      <div class="msg" id="s-msg"></div>
+    </section>
+
+    <section class="card tab" id="t-hist" hidden>
+      <h2>History</h2>
+      <div class="list" id="hist"></div>
+    </section>
+
+    <section class="card tab" id="t-jobs" hidden>
+      <h2>Groups I work for</h2>
+      <div class="list" id="jobs"></div>
+      <div class="note">When a group hires you, accept here. Pick a job to show in your chatbox on the Chatbox tab.</div>
+    </section>
+
+    <section class="card tab" id="t-biz" hidden>
+      <h2>My groups</h2>
+      <div class="list" id="groups"></div>
+      <div id="pro-up" class="pro" hidden>
+        <b>⭐ Bytes Pro: run your own crew</b>
+        <ul>
+          <li>Start groups for your bar, club, shop or gang</li>
+          <li>Create staff roles and set wages</li>
+          <li>Hire players and pay everyone in one click</li>
+          <li>A ⭐ next to your name in the VRChat chatbox</li>
+        </ul>
+        <a id="pro-link" class="btn" target="_blank" rel="noopener" hidden>Get Bytes Pro on Patreon</a>
+        <span class="note" id="pro-how"></span>
+        <span class="note">The wallet, tips, payments and working a job are free for everyone. Pro is for owners. Bytes themselves are never for sale.</span>
+      </div>
+      <div id="biz-new" style="display:flex;flex-direction:column;gap:10px" hidden>
+      <h2 style="margin-top:6px">Start a group</h2>
+      <div class="row"><input id="g-name" maxlength="40" placeholder="Group name, like NEON Bar"><input id="g-tag" maxlength="12" placeholder="Short tag" style="max-width:150px"></div>
+      <button id="g-go">Create group</button>
+      </div>
+      <div class="msg" id="g-msg"></div>
+    </section>
+
+    <section class="card tab" id="t-group" hidden>
+      <div class="row" style="justify-content:space-between"><h2 id="gp-title" style="flex:none"></h2><button class="small" id="gp-back" style="flex:none">← Back</button></div>
+      <h2>Roles and default wages</h2>
+      <div class="list" id="gp-roles"></div>
+      <div class="row">
+        <input id="r-name" maxlength="30" placeholder="Role, like Bartender">
+        <input id="r-wage" type="number" min="0" step="1" placeholder="Wage" style="max-width:110px">
+        <select id="r-per" style="max-width:110px"><option>shift</option><option>hour</option><option>day</option><option>week</option></select>
+        <button id="r-add" style="flex:none">Add</button>
+      </div>
+      <h2 style="margin-top:6px">Staff</h2>
+      <div class="list" id="gp-staff"></div>
+      <div class="row">
+        <input id="hire-h" placeholder="Their Bytes name" autocomplete="off">
+        <select id="hire-r"></select>
+        <button id="hire-go" style="flex:none">Hire</button>
+      </div>
+      <h2 style="margin-top:6px">Payroll</h2>
+      <div class="row"><span id="pay-sum" style="flex:2"></span><button class="hot" id="pay-all" style="flex:1">Pay everyone</button></div>
+      <div class="msg" id="gp-msg"></div>
+      <button class="small" id="gp-del" style="align-self:flex-start;color:var(--bad)">Delete this group</button>
+    </section>
+
+    <section class="card tab" id="t-chat" hidden>
+      <h2>Above your head in VRChat</h2>
+      <div class="bubble" id="pv"></div>
+      <div class="note" id="pv-len"></div>
+      <div class="grid2" id="pv-opts"></div>
+      <label class="chk">Show job <select id="pv-job" style="flex:1"></select></label>
+      <input id="pv-extra" maxlength="60" placeholder="Your own message (optional)">
+      <div id="pv-local" style="display:flex;flex-direction:column;gap:10px">
+        <label class="chk">VRChat runs on
+          <select id="pv-where" style="flex:1"><option value="pc">This PC (or a headset linked to it)</option><option value="hmd">A standalone headset on my Wi-Fi</option></select>
+        </label>
+        <div id="pv-hmd" hidden style="display:flex;flex-direction:column;gap:6px">
+          <input id="pv-ip" inputmode="decimal" placeholder="Headset IP address, like 192.168.1.42" autocomplete="off">
+          <span class="note">On a Quest: Settings → Wi-Fi → tap your network → scroll to “IP address”. The headset and this PC must be on the same Wi-Fi.</span>
+        </div>
+        <label class="chk"><input type="checkbox" id="pv-pop" checked> Pop up “+25 Bytes from …” when I get paid</label>
+        <button class="hot" id="pv-go">▶ Start showing in VRChat</button>
+        <button id="pv-clear">Clear chatbox</button>
+        <div class="note">In VRChat: Action Menu → Options → OSC → Enabled. Keep this window and the black Bytes window open while you play. Only run one chatbox app at a time.</div>
+      </div>
+      <div id="pv-web" hidden style="display:flex;flex-direction:column;gap:10px">
+        <button class="hot" id="pv-copy">Copy this line</button>
+        <span class="note">You're using the web wallet, which can't type into VRChat by itself. Paste or type this line into your VRChat chatbox. For the automatic version, run the Bytes program on a PC on the same Wi-Fi as your headset.</span>
+      </div>
+      <div class="msg" id="pv-msg"></div>
+    </section>
+
+    <section class="card tab" id="t-admin" hidden>
+      <h2>Admin: create Bytes</h2>
+      <div class="row"><input id="m-to" placeholder="Bytes name"><input id="m-amt" type="number" min="1" step="1" placeholder="Amount" style="max-width:140px"></div>
+      <input id="m-note" maxlength="80" placeholder="Reason, like event prize">
+      <button class="hot" id="m-go">Create and send</button>
+      <div class="msg" id="m-msg"></div>
+      <h2 style="margin-top:6px">Admin: Bytes Pro supporters</h2>
+      <div class="row"><input id="p-to" placeholder="Bytes name"><input id="p-mo" type="number" min="1" max="24" step="1" value="1" style="max-width:90px" aria-label="Months"><button class="hot" id="p-go" style="flex:none">Give Pro (months)</button></div>
+      <div class="list" id="pro-list"></div>
+      <div class="msg" id="p-msg"></div>
+    </section>
+
+    <div class="row" style="justify-content:space-between"><span class="note" id="acct"></span><button class="small" id="out" style="flex:none">Sign out</button></div>
+  </section>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+"use strict";
+firebase.initializeApp({
+  apiKey: "AIzaSyBYWsYE7iEEY-fnTnBqiIxv3PFn_JRyzS8",
+  authDomain: "neon-harvest-ba7c6.firebaseapp.com",
+  projectId: "neon-harvest-ba7c6",
+  appId: "1:347913076098:web:ab96cf4e15db2156d5a39b"
+});
+const auth = firebase.auth(), db = firebase.firestore();
+const inc = n => firebase.firestore.FieldValue.increment(n);
+const ADMIN = "fouredwinx@gmail.com";
+// Paste your Patreon page link between the quotes when it's live, like "https://www.patreon.com/yourpage".
+const PATREON_URL = "";
+const $ = id => document.getElementById(id);
+const fmt = n => Math.floor(+n || 0).toLocaleString("en-US");
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const HANDLE_RE = /^[A-Za-z0-9_.-]{3,20}$/;
+const KIND = { tip: "tipped", pay: "paid", send: "sent", wage: "wage", mint: "created" };
+const say = (el, t, ok) => { $(el).textContent = t; $(el).className = "msg" + (ok === true ? " ok" : ok === false ? " bad" : ""); };
+const ruleErr = e => (e && e.code === "permission-denied") ? "Not allowed. Check the amount and your balance." : ((e && e.message) || "Something went wrong.");
+
+let isAdmin = false, proUntil = 0, proList = [];
+const isPro = () => isAdmin || proUntil > Date.now();
+let user = null, wallet = null, myHandle = "", txIn = [], txOut = [], myJobs = [], myGroups = [], openGid = null, openStaff = [];
+let subs = [], gsubs = [];
+const off = arr => arr.splice(0).forEach(f => { try { f(); } catch (e) {} });
+
+function show(view) { for (const v of ["signin", "handle", "app"]) $("v-" + v).hidden = v !== view; }
+function tab(t) {
+  document.querySelectorAll(".tab").forEach(s => s.hidden = s.id !== "t-" + t);
+  document.querySelectorAll("[role=tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.t === t || (t === "group" && b.dataset.t === "biz"))));
+}
+document.querySelectorAll("[role=tab]").forEach(b => b.onclick = () => tab(b.dataset.t));
+
+/* ---------------- sign in ---------------- */
+const authMsg = e => ({ "auth/invalid-credential": "Wrong email or password.", "auth/email-already-in-use": "That email already has an account. Sign in instead.", "auth/weak-password": "Use at least 6 characters.", "auth/popup-closed-by-user": "The Google window was closed.", "auth/popup-blocked": "Your browser blocked the Google window. Allow popups for localhost and try again." }[e && e.code] || (e && e.message) || "Sign-in failed.");
+$("g").onclick = async () => { say("authmsg", ""); try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (e) { say("authmsg", authMsg(e), false); } };
+$("ep").onclick = async () => { say("authmsg", ""); try { await auth.signInWithEmailAndPassword($("em").value.trim(), $("pw").value); } catch (e) { say("authmsg", authMsg(e), false); } };
+$("ec").onclick = async () => { say("authmsg", ""); try { await auth.createUserWithEmailAndPassword($("em").value.trim(), $("pw").value); } catch (e) { say("authmsg", authMsg(e), false); } };
+$("out").onclick = async () => { stopChat(); try { await post("/clear", { host: target() }); } catch (e) {} auth.signOut(); };
+
+auth.onAuthStateChanged(async u => {
+  off(subs); off(gsubs); user = u; wallet = null;
+  if (!u) { show("signin"); return; }
+  $("acct").textContent = "Signed in as " + (u.email || "account");
+  isAdmin = !!(u.email && u.email.toLowerCase() === ADMIN); proUntil = 0;
+  $("tab-admin").hidden = !isAdmin;
+  subs.push(db.doc("bytes_pro/" + u.uid).onSnapshot(s => { proUntil = s.exists ? (+s.data().until || 0) : 0; renderPro(); }, () => {}));
+  if (isAdmin) subs.push(db.collection("bytes_pro").onSnapshot(q => { proList = q.docs.map(d => ({ id: d.id, ...d.data() })); renderProList(); }, () => {}));
+  subs.push(db.doc("bytes_wallets/" + u.uid).onSnapshot(s => {
+    const prevRx = wallet && wallet.rx;
+    wallet = s.exists ? s.data() : null;
+    if (!wallet) { show("handle"); return; }
+    myHandle = wallet.handle; show("app");
+    $("bal").textContent = fmt(wallet.bal); renderPro();
+    if (prevRx !== undefined && prevRx !== null && wallet.rx && wallet.rx !== prevRx) incoming(wallet.rx);
+    renderChat();
+  }, e => say("authmsg", "Couldn't load your wallet: " + ruleErr(e), false)));
+  subs.push(db.collection("bytes_tx").where("to", "==", u.uid).onSnapshot(q => { txIn = q.docs.map(d => ({ id: d.id, ...d.data() })); renderHist(); }, () => {}));
+  subs.push(db.collection("bytes_tx").where("from", "==", u.uid).onSnapshot(q => { txOut = q.docs.map(d => ({ id: d.id, ...d.data() })); renderHist(); }, () => {}));
+  subs.push(db.collection("bytes_staff").where("uid", "==", u.uid).onSnapshot(q => { myJobs = q.docs.map(d => ({ id: d.id, ...d.data() })); renderJobs(); renderChat(); }, () => {}));
+  subs.push(db.collection("bytes_groups").where("owner", "==", u.uid).onSnapshot(q => { myGroups = q.docs.map(d => ({ id: d.id, ...d.data() })); renderGroups(); if (openGid) renderGroup(); }, () => {}));
+});
+
+/* ---------------- handle + wallet ---------------- */
+$("h-go").onclick = async () => {
+  const h = $("h-in").value.trim();
+  if (!HANDLE_RE.test(h)) return say("h-msg", "Use 3–20 letters, numbers, _ . or -", false);
+  $("h-go").disabled = true; say("h-msg", "Creating…");
+  try {
+    const hs = await db.doc("bytes_handles/" + h.toLowerCase()).get();
+    if (hs.exists) throw { message: "That name is taken. Try another." };
+    const b = db.batch();
+    b.set(db.doc("bytes_handles/" + h.toLowerCase()), { uid: user.uid });
+    b.set(db.doc("bytes_wallets/" + user.uid), { handle: h, bal: 100, tx: "", rx: "", at: Date.now() });
+    await b.commit();
+  } catch (e) { say("h-msg", e.code === "permission-denied" ? "That name is taken. Try another." : (e.message || "Couldn't create it."), false); }
+  $("h-go").disabled = false;
+};
+
+async function lookup(h) {
+  h = String(h || "").trim().replace(/^@/, "");
+  if (!HANDLE_RE.test(h)) throw { message: "That isn't a valid Bytes name." };
+  const s = await db.doc("bytes_handles/" + h.toLowerCase()).get();
+  if (!s.exists) throw { message: "No one is called @" + h + " on Bytes." };
+  return { uid: s.data().uid, handle: h };
+}
+
+/* ---------------- transfers ---------------- */
+async function transfer(to, amt, kind, note, grp) {
+  amt = Math.floor(+amt);
+  if (!(amt > 0)) throw { message: "Enter an amount above 0." };
+  if (amt > 1000000) throw { message: "That's more than the 1,000,000 limit." };
+  if (to.uid === user.uid) throw { message: "You can't send Bytes to yourself." };
+  if (!wallet || wallet.bal < amt) throw { message: "Not enough Bytes. You have " + fmt(wallet && wallet.bal) + "." };
+  const ref = db.collection("bytes_tx").doc();
+  const rec = { from: user.uid, to: to.uid, amt, kind, at: Date.now(), fromH: myHandle, toH: to.handle };
+  if (note) rec.note = String(note).slice(0, 80);
+  if (grp) rec.grp = String(grp).slice(0, 40);
+  const b = db.batch();
+  b.set(ref, rec);
+  b.update(db.doc("bytes_wallets/" + user.uid), { bal: inc(-amt), tx: ref.id });
+  b.update(db.doc("bytes_wallets/" + to.uid), { bal: inc(amt), rx: ref.id });
+  await b.commit();
+  return ref.id;
+}
+
+for (const q of [5, 10, 25, 50, 100]) { const b = document.createElement("button"); b.className = "small"; b.textContent = q; b.onclick = () => { $("s-amt").value = q; }; $("quick").append(b); }
+$("s-go").onclick = async () => {
+  say("s-msg", ""); $("s-go").disabled = true;
+  try {
+    const to = await lookup($("s-to").value);
+    const amt = Math.floor(+$("s-amt").value);
+    await transfer(to, amt, $("s-kind").value, $("s-note").value.trim());
+    say("s-msg", "✓ " + ({ tip: "Tipped", pay: "Paid", send: "Sent" }[$("s-kind").value]) + " " + fmt(amt) + " Bytes to @" + to.handle, true);
+    $("s-amt").value = ""; $("s-note").value = "";
+  } catch (e) { say("s-msg", e.code ? ruleErr(e) : e.message, false); }
+  $("s-go").disabled = false;
+};
+
+function renderHist() {
+  const all = [...txIn.map(t => ({ ...t, dir: "in" })), ...txOut.map(t => ({ ...t, dir: "out" }))].sort((a, b) => b.at - a.at).slice(0, 60);
+  $("hist").innerHTML = all.length ? all.map(t => {
+    const who = t.dir === "in" ? (t.from === "mint" ? "Bytes admin" : "@" + t.fromH) : "@" + t.toH;
+    const verb = t.dir === "in" ? (t.kind === "wage" ? "Wage from" : t.kind === "mint" ? "Created by" : "From") : (t.kind === "wage" ? "Wage to" : "To");
+    return `<div class="item"><div class="l"><b>${verb} ${esc(who)}</b><span>${esc(KIND[t.kind] || t.kind)}${t.note ? " · “" + esc(t.note) + "”" : ""} · ${new Date(t.at).toLocaleString()}</span></div><b class="${t.dir === "in" ? "plus" : "minus"}">${t.dir === "in" ? "+" : "−"}${fmt(t.amt)}</b></div>`;
+  }).join("") : '<div class="note">No Bytes moved yet.</div>';
+}
+
+/* ---------------- my jobs (staff side) ---------------- */
+function renderJobs() {
+  $("jobs").innerHTML = myJobs.length ? "" : '<div class="note">You don\'t work for any groups yet. A group owner can hire you by your Bytes name.</div>';
+  for (const j of myJobs) {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="l"><b>${esc(j.role)} @ ${esc(j.gname)}</b><span>${fmt(j.wage)} Bytes per ${esc(j.per)}${j.ok ? "" : ' · <span class="pill">job offer</span>'}</span></div>`;
+    const btns = document.createElement("div"); btns.className = "row"; btns.style.flex = "none";
+    if (!j.ok) { const a = document.createElement("button"); a.className = "small hot"; a.textContent = "Accept"; a.onclick = () => db.doc("bytes_staff/" + j.id).update({ ok: true }).catch(e => alert(ruleErr(e))); btns.append(a); }
+    const q = document.createElement("button"); q.className = "small"; q.textContent = j.ok ? "Quit" : "Decline";
+    q.onclick = () => { if (confirm((j.ok ? "Quit " : "Decline ") + j.gname + "?")) db.doc("bytes_staff/" + j.id).delete().catch(e => alert(ruleErr(e))); };
+    btns.append(q); d.append(btns); $("jobs").append(d);
+  }
+}
+
+/* ---------------- Bytes Pro ---------------- */
+function renderPro() {
+  const pro = isPro();
+  $("who").textContent = "@" + myHandle + (pro ? "  ⭐ PRO" + (isAdmin ? "" : " until " + new Date(proUntil).toLocaleDateString()) : "");
+  $("pro-up").hidden = pro; $("biz-new").hidden = !pro;
+  const a = $("pro-link"); a.hidden = !PATREON_URL; if (PATREON_URL) a.href = PATREON_URL;
+  $("pro-how").textContent = PATREON_URL ? "After you join, message your Bytes name (@" + myHandle + ") on Patreon. Pro is switched on by hand, usually within a day." : "Ask the Bytes owner how to get Pro.";
+  renderGroups(); renderChat();
+}
+function renderProList() {
+  const now = Date.now(); const rows = [...proList].sort((a, b) => b.until - a.until);
+  $("pro-list").innerHTML = rows.length ? "" : '<div class="note">No supporters yet.</div>';
+  for (const r of rows) {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="l"><b>@${esc(r.handle)}</b><span>${r.until > now ? "Pro until " + new Date(r.until).toLocaleDateString() : '<span class="pill">expired ' + new Date(r.until).toLocaleDateString() + "</span>"}</span></div>`;
+    const btns = document.createElement("div"); btns.className = "row"; btns.style.flex = "none";
+    const m = document.createElement("button"); m.className = "small hot"; m.textContent = "+1 month";
+    m.onclick = () => db.doc("bytes_pro/" + r.id).set({ until: Math.max(r.until, Date.now()) + 31 * 864e5, handle: r.handle, at: Date.now() }).catch(e => say("p-msg", ruleErr(e), false));
+    const x = document.createElement("button"); x.className = "small"; x.textContent = "Remove";
+    x.onclick = () => { if (confirm("Remove Pro from @" + r.handle + "?")) db.doc("bytes_pro/" + r.id).delete().catch(e => say("p-msg", ruleErr(e), false)); };
+    btns.append(m, x); d.append(btns); $("pro-list").append(d);
+  }
+}
+
+/* ---------------- my groups (owner side) ---------------- */
+function renderGroups() {
+  $("groups").innerHTML = myGroups.length ? "" : '<div class="note">You don\'t own any groups yet.</div>';
+  for (const g of myGroups) {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="l"><b>${esc(g.name)}</b><span>${esc(g.tag || "")}${g.tag ? " · " : ""}${(g.roles || []).length} roles</span></div>`;
+    const b = document.createElement("button"); b.className = "small hot"; b.textContent = isPro() ? "Manage" : "Needs Pro"; b.disabled = !isPro(); b.style.flex = "none";
+    b.onclick = () => openGroup(g.id); d.append(b); $("groups").append(d);
+  }
+}
+$("g-go").onclick = async () => {
+  if (!isPro()) return say("g-msg", "Starting a group needs Bytes Pro.", false);
+  const name = $("g-name").value.trim(), tag = $("g-tag").value.trim();
+  if (name.length < 2) return say("g-msg", "Give the group a name (2–40 characters).", false);
+  try {
+    const ref = await db.collection("bytes_groups").add({ name, tag, owner: user.uid, ownerH: myHandle, roles: [], at: Date.now() });
+    $("g-name").value = ""; $("g-tag").value = ""; say("g-msg", "✓ Created " + name, true); openGroup(ref.id);
+  } catch (e) { say("g-msg", ruleErr(e), false); }
+};
+function openGroup(gid) {
+  openGid = gid; off(gsubs); tab("group");
+  gsubs.push(db.collection("bytes_staff").where("gid", "==", gid).onSnapshot(q => { openStaff = q.docs.map(d => ({ id: d.id, ...d.data() })); renderGroup(); }, () => {}));
+  renderGroup();
+}
+$("gp-back").onclick = () => { openGid = null; off(gsubs); tab("biz"); };
+const curGroup = () => myGroups.find(g => g.id === openGid);
+function renderGroup() {
+  const g = curGroup(); if (!g) return;
+  $("gp-title").textContent = g.name + (g.tag ? " · " + g.tag : "");
+  const roles = g.roles || [];
+  $("gp-roles").innerHTML = roles.length ? "" : '<div class="note">Add roles like Bartender, DJ, Security, Manager.</div>';
+  roles.forEach((r, i) => {
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="l"><b>${esc(r.name)}</b><span>${fmt(r.wage)} Bytes per ${esc(r.per)}</span></div>`;
+    const x = document.createElement("button"); x.className = "small"; x.textContent = "Remove"; x.style.flex = "none";
+    x.onclick = () => db.doc("bytes_groups/" + g.id).update({ roles: roles.filter((_, k) => k !== i) }).catch(e => say("gp-msg", ruleErr(e), false));
+    d.append(x); $("gp-roles").append(d);
+  });
+  $("hire-r").innerHTML = roles.length ? roles.map((r, i) => `<option value="${i}">${esc(r.name)} (${fmt(r.wage)}/${esc(r.per)})</option>`).join("") : "<option value=''>Add a role first</option>";
+  $("gp-staff").innerHTML = openStaff.length ? "" : '<div class="note">No staff yet. Hire people by their Bytes name.</div>';
+  let total = 0;
+  for (const s of openStaff) {
+    if (s.ok) total += s.wage;
+    const d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="l"><b>@${esc(s.handle)} · ${esc(s.role)}</b><span>${fmt(s.wage)} Bytes per ${esc(s.per)} · ${s.ok ? (s.paid ? "last paid " + new Date(s.paid).toLocaleString() : "not paid yet") : '<span class="pill">offer sent</span>'}</span></div>`;
+    const btns = document.createElement("div"); btns.className = "row"; btns.style.flex = "none";
+    const sel = document.createElement("select"); sel.style.maxWidth = "130px"; sel.title = "Change role";
+    sel.innerHTML = '<option value="">Role…</option>' + roles.map((r, i) => `<option value="${i}">${esc(r.name)}</option>`).join("");
+    sel.onchange = () => { const r = roles[+sel.value]; if (!r) return; db.doc("bytes_staff/" + s.id).set({ ...strip(s), role: r.name, wage: r.wage, per: r.per }).catch(e => say("gp-msg", ruleErr(e), false)); };
+    const p = document.createElement("button"); p.className = "small hot"; p.textContent = "Pay"; p.disabled = !s.ok || !s.wage; p.onclick = () => payOne(s);
+    const f = document.createElement("button"); f.className = "small"; f.textContent = s.ok ? "Fire" : "Cancel";
+    f.onclick = () => { if (confirm((s.ok ? "Fire @" : "Cancel the offer to @") + s.handle + "?")) db.doc("bytes_staff/" + s.id).delete().catch(e => say("gp-msg", ruleErr(e), false)); };
+    btns.append(sel, p, f); d.append(btns); $("gp-staff").append(d);
+  }
+  $("pay-sum").textContent = "One round of pay for everyone: " + fmt(total) + " Bytes";
+}
+const strip = s => { const o = { ...s }; delete o.id; return o; };
+$("r-add").onclick = async () => {
+  const g = curGroup(); const name = $("r-name").value.trim(), wage = Math.max(0, Math.floor(+$("r-wage").value || 0)), per = $("r-per").value;
+  if (!name) return say("gp-msg", "Name the role.", false);
+  if ((g.roles || []).length >= 20) return say("gp-msg", "20 roles max.", false);
+  try { await db.doc("bytes_groups/" + g.id).update({ roles: [...(g.roles || []), { name: name.slice(0, 30), wage: Math.min(wage, 100000), per }] }); $("r-name").value = ""; $("r-wage").value = ""; say("gp-msg", "✓ Role added", true); }
+  catch (e) { say("gp-msg", ruleErr(e), false); }
+};
+$("hire-go").onclick = async () => {
+  const g = curGroup(); const r = (g.roles || [])[+$("hire-r").value];
+  if (!r) return say("gp-msg", "Add a role first.", false);
+  try {
+    const p = await lookup($("hire-h").value);
+    const sid = g.id + "_" + p.uid;
+    if (openStaff.some(s => s.id === sid)) throw { message: "@" + p.handle + " is already on your staff list." };
+    await db.doc("bytes_staff/" + sid).set({ gid: g.id, gname: g.name, uid: p.uid, handle: p.handle, role: r.name, wage: r.wage, per: r.per, ok: false, paid: 0, at: Date.now() });
+    $("hire-h").value = ""; say("gp-msg", "✓ Job offer sent to @" + p.handle + ". They accept it in their Bytes app.", true);
+  } catch (e) { say("gp-msg", e.code ? ruleErr(e) : e.message, false); }
+};
+async function payOne(s) {
+  const g = curGroup();
+  try {
+    await transfer({ uid: s.uid, handle: s.handle }, s.wage, "wage", g.name + " · " + s.role + " (" + s.per + ")", g.id);
+    await db.doc("bytes_staff/" + s.id).set({ ...strip(s), paid: Date.now() });
+    say("gp-msg", "✓ Paid @" + s.handle + " " + fmt(s.wage) + " Bytes", true);
+    return true;
+  } catch (e) { say("gp-msg", "@" + s.handle + ": " + (e.code ? ruleErr(e) : e.message), false); return false; }
+}
+$("pay-all").onclick = async () => {
+  const due = openStaff.filter(s => s.ok && s.wage > 0 && s.uid !== user.uid);
+  const total = due.reduce((a, s) => a + s.wage, 0);
+  if (!due.length) return say("gp-msg", "No hired staff with a wage to pay.", false);
+  if (total > (wallet ? wallet.bal : 0)) return say("gp-msg", "Payroll is " + fmt(total) + " Bytes but you have " + fmt(wallet.bal) + ".", false);
+  if (!confirm("Pay " + due.length + " staff a total of " + fmt(total) + " Bytes?")) return;
+  $("pay-all").disabled = true; let n = 0;
+  for (const s of due) { if (await payOne(s)) n++; }
+  $("pay-all").disabled = false; if (n === due.length) say("gp-msg", "✓ Paid all " + n + " staff (" + fmt(total) + " Bytes)", true);
+};
+$("gp-del").onclick = async () => {
+  const g = curGroup(); if (!g || !confirm("Delete " + g.name + "? Staff will be removed from it.")) return;
+  try { for (const s of openStaff) await db.doc("bytes_staff/" + s.id).delete(); await db.doc("bytes_groups/" + g.id).delete(); openGid = null; off(gsubs); tab("biz"); }
+  catch (e) { say("gp-msg", ruleErr(e), false); }
+};
+
+/* ---------------- admin ---------------- */
+$("p-go").onclick = async () => {
+  say("p-msg", "");
+  try {
+    const to = await lookup($("p-to").value); const months = Math.max(1, Math.min(24, Math.floor(+$("p-mo").value || 1)));
+    const cur = proList.find(r => r.id === to.uid); const base = Math.max(cur ? cur.until : 0, Date.now());
+    await db.doc("bytes_pro/" + to.uid).set({ until: base + months * 31 * 864e5, handle: to.handle, at: Date.now() });
+    $("p-to").value = ""; say("p-msg", "✓ @" + to.handle + " has Pro for " + months + " more month" + (months > 1 ? "s" : ""), true);
+  } catch (e) { say("p-msg", e.code ? ruleErr(e) : e.message, false); }
+};
+$("m-go").onclick = async () => {
+  say("m-msg", "");
+  try {
+    const to = await lookup($("m-to").value); const amt = Math.floor(+$("m-amt").value);
+    if (!(amt > 0 && amt <= 1000000)) throw { message: "Amount must be 1 to 1,000,000." };
+    const ref = db.collection("bytes_tx").doc(); const b = db.batch();
+    const rec = { from: "mint", to: to.uid, amt, kind: "mint", at: Date.now(), fromH: "admin", toH: to.handle };
+    const note = $("m-note").value.trim(); if (note) rec.note = note.slice(0, 80);
+    b.set(ref, rec); b.update(db.doc("bytes_wallets/" + to.uid), { bal: inc(amt), rx: ref.id });
+    await b.commit(); say("m-msg", "✓ Created " + fmt(amt) + " Bytes for @" + to.handle, true);
+  } catch (e) { say("m-msg", e.code ? ruleErr(e) : e.message, false); }
+};
+
+/* ---------------- VRChat chatbox ---------------- */
+const P = (() => { try { return JSON.parse(localStorage.getItem("bytes_prefs") || "{}"); } catch (e) { return {}; } })();
+const saveP = () => { try { localStorage.setItem("bytes_prefs", JSON.stringify(P)); } catch (e) {} };
+const OPTS = [["name", "My name", true], ["job", "Job + group", true], ["tipme", "“Tip me” line", true], ["bal", "My balance", false]];
+P.on = P.on || Object.fromEntries(OPTS.map(o => [o[0], o[2]]));
+for (const [k, l] of OPTS) { const lab = document.createElement("label"); lab.className = "chk"; const c = document.createElement("input"); c.type = "checkbox"; c.checked = !!P.on[k]; c.onchange = () => { P.on[k] = c.checked; saveP(); renderChat(); }; lab.append(c, document.createTextNode(l)); $("pv-opts").append(lab); }
+$("pv-extra").value = P.extra || ""; $("pv-extra").oninput = () => { P.extra = $("pv-extra").value; saveP(); renderChat(); };
+$("pv-pop").checked = P.pop !== false; $("pv-pop").onchange = () => { P.pop = $("pv-pop").checked; saveP(); };
+$("pv-job").onchange = () => { P.job = $("pv-job").value; saveP(); renderChat(); };
+
+function line() {
+  const parts = [];
+  if (P.on.name && myHandle) parts.push("💾 " + myHandle + (isPro() ? " ⭐" : ""));
+  const jobs = myJobs.filter(j => j.ok); const j = jobs.find(x => x.id === P.job) || jobs[0];
+  if (P.on.job && j) parts.push("🏷 " + j.role + " @ " + j.gname);
+  if (P.on.bal && wallet) parts.push("💰 " + fmt(wallet.bal) + " Bytes");
+  const ex = ($("pv-extra").value || "").trim(); if (ex) parts.push(ex);
+  if (P.on.tipme && myHandle) parts.push("💸 Tip me Bytes: " + myHandle);
+  return parts.join(" · ").slice(0, 144);
+}
+function renderChat() {
+  const jobs = myJobs.filter(j => j.ok);
+  $("pv-job").innerHTML = jobs.length ? jobs.map(j => `<option value="${esc(j.id)}">${esc(j.role)} @ ${esc(j.gname)}</option>`).join("") : "<option value=''>No jobs yet</option>";
+  if (P.job && jobs.some(j => j.id === P.job)) $("pv-job").value = P.job;
+  const t = line(); $("pv").textContent = t || " "; $("pv-len").textContent = t.length + " / 144 characters";
+}
+const LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
+$("pv-local").hidden = !LOCAL; $("pv-web").hidden = LOCAL;
+const IP_RE = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})$/;
+$("pv-where").value = P.where === "hmd" ? "hmd" : "pc"; $("pv-ip").value = P.ip || "";
+const whereUI = () => { $("pv-hmd").hidden = $("pv-where").value !== "hmd"; };
+$("pv-where").onchange = () => { P.where = $("pv-where").value; saveP(); whereUI(); lastSent = ""; };
+$("pv-ip").oninput = () => { P.ip = $("pv-ip").value.trim(); saveP(); lastSent = ""; };
+whereUI();
+function target() {
+  if ($("pv-where").value !== "hmd") return "";
+  const ip = $("pv-ip").value.trim();
+  if (!IP_RE.test(ip) || ip.split(".").some(n => +n > 255)) throw new Error("ip");
+  return ip;
+}
+$("pv-copy").onclick = async () => { try { await navigator.clipboard.writeText(line()); say("pv-msg", "✓ Copied. Paste it into your VRChat chatbox.", true); } catch (e) { say("pv-msg", "Couldn't copy. Select the text in the bubble and copy it by hand.", false); } };
+async function post(url, body) { if (!LOCAL) throw new Error("web"); const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); if (!r.ok) throw new Error("bad"); }
+let running = false, timer = null, lastSent = "", lastAt = 0, popUntil = 0;
+async function tick() {
+  if (Date.now() < popUntil) return;
+  const t = line(); if (!t) return;
+  if (t === lastSent && Date.now() - lastAt < 20000) return;
+  let host; try { host = target(); } catch (e) { return say("pv-msg", "Enter your headset's IP address, like 192.168.1.42.", false); }
+  try { await post("/chatbox", { text: t, host }); lastSent = t; lastAt = Date.now(); say("pv-msg", "● Sending to " + (host ? "your headset at " + host : "VRChat on this PC"), true); }
+  catch (e) { say("pv-msg", "Can't reach the Bytes program. Is its black window open?", false); }
+}
+function startChat() { running = true; lastSent = ""; $("pv-go").textContent = "■ Stop showing in VRChat"; tick(); timer = setInterval(tick, 4000); }
+function stopChat() { running = false; clearInterval(timer); $("pv-go").textContent = "▶ Start showing in VRChat"; say("pv-msg", ""); }
+$("pv-go").onclick = () => running ? stopChat() : startChat();
+$("pv-clear").onclick = async () => { try { await post("/clear", { host: target() }); say("pv-msg", "Chatbox cleared.", true); } catch (e) { say("pv-msg", "Can't reach the Bytes program.", false); } };
+
+async function incoming(txId) {
+  try {
+    const s = await db.doc("bytes_tx/" + txId).get(); if (!s.exists) return; const t = s.data();
+    const who = t.from === "mint" ? "Bytes admin" : t.fromH;
+    const msg = (t.kind === "wage" ? "💼 Wage +" : t.kind === "tip" ? "💸 Tip +" : "💸 +") + fmt(t.amt) + " Bytes from " + who + (t.note && t.kind !== "wage" ? " · “" + t.note + "”" : "");
+    if (running && P.pop !== false) { popUntil = Date.now() + 8000; await post("/chatbox", { text: msg.slice(0, 144), sound: true, host: target() }); lastSent = ""; }
+  } catch (e) {}
+}
+
+tab("send");
+</script>
+</body>
+</html>
