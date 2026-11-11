@@ -47,6 +47,7 @@ label.chk{display:flex;align-items:center;gap:8px;cursor:pointer} label.chk inpu
 .hlinks{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 header .dl,a.nhgo{font-size:12px;color:var(--acc);text-decoration:none;border:1px solid var(--acc);padding:5px 9px}
 a.nhgo{color:#ff3fa8;border-color:#ff3fa8}
+.dcbox{border-color:#5865f2!important}.dcbox b{color:#8b95ff!important}.dcprev{font-size:12px;line-height:1.5;padding:8px 10px;background:#0b0d16;border-left:3px solid #5865f2;white-space:pre-line}
 a.nhgo:hover,header .dl:hover{background:#0c141b}
 .emb{border:1px solid var(--warn);color:var(--warn);padding:1px 6px;font-size:11px;white-space:nowrap}
 .boxline{display:flex;gap:10px;align-items:center;flex-wrap:wrap} .boxline b{color:var(--acc);font-size:18px}
@@ -203,6 +204,13 @@ a.btn{display:block;text-align:center;text-decoration:none;border:1px solid var(
           <span class="note">On a Quest: Settings → Wi-Fi → tap your network → scroll to “IP address”. The headset and this PC must be on the same Wi-Fi.</span>
         </div>
         <label class="chk"><input type="checkbox" id="pv-pop" checked> Pop up “+25 Bytes from …” when I get paid</label>
+        <div class="nhbox dcbox">
+          <b>🎮 Discord status</b>
+          <label class="chk"><input type="checkbox" id="dc-on" checked> Show Bytes on my Discord profile</label>
+          <label class="chk"><input type="checkbox" id="dc-bal"> Include my balance</label>
+          <div class="dcprev" id="dc-prev"></div>
+          <span class="note" id="dc-note">Needs the Discord app open on this PC. Your friends see it under your name, with buttons to open Bytes and NEON HARVEST.</span>
+        </div>
         <button class="hot" id="pv-go">▶ Start showing in VRChat</button>
         <button id="pv-clear">Clear chatbox</button>
         <div class="note">In VRChat: Action Menu → Options → OSC → Enabled. Keep this window and the black Bytes window open while you play. Only run one chatbox app at a time.</div>
@@ -657,6 +665,7 @@ function renderChat() {
   if (P.job && jobs.some(j => j.id === P.job)) $("pv-job").value = P.job;
   const t = line(); $("pv").textContent = t || " "; $("pv-len").textContent = t.length + " / 144 characters";
   if (running) push(false);
+  dcPush(false);
 }
 const LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
 // On the web wallet, talk to the Bytes PC app if it's running on this computer.
@@ -665,7 +674,8 @@ let linked = LOCAL;
 function showLinked() { $("pv-local").hidden = !linked; $("pv-web").hidden = linked; $("dl-top").hidden = LOCAL || linked; }
 async function findApp(quiet) {
   if (LOCAL) {
-    try { const j = await (await fetch("/ping", { cache: "no-store" })).json(); if (j.showing && !running) startChat(); } catch (e) {}
+    try { const j = await (await fetch("/ping", { cache: "no-store" })).json(); dcCap = "discord" in j; dcState = j.discord; if (j.showing && !running) startChat(); } catch (e) {}
+    dcPush(true);
     return true;
   }
   if (!quiet) say("pv-msg", "Looking for the Bytes PC app…");
@@ -673,6 +683,7 @@ async function findApp(quiet) {
     const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 2500);
     const r = await fetch(BASE + "/ping", { cache: "no-store", signal: ctl.signal }); clearTimeout(tm);
     const j = await r.json(); linked = !!(j && j.app === "bytes" && j.v >= 3);
+    dcCap = !!(j && "discord" in j); dcState = j && j.discord;
     if (linked && j.showing && !running) startChat();
     if (!linked && !quiet) say("pv-msg", "Found an old version of the PC app. Download it again from this page.", false);
   } catch (e) { linked = false; if (!quiet) say("pv-msg", "PC app not found. Is the black Bytes window open on this computer?", false); }
@@ -700,6 +711,35 @@ $("pv-copy").onclick = async () => { try { await navigator.clipboard.writeText(l
 async function post(url, body) { if (!linked) throw new Error("web"); const r = await fetch(BASE + url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); if (!r.ok) throw new Error("bad"); }
 // The Bytes program keeps your line up by itself. This page only tells it what to show,
 // and checks in every few seconds in case the program was restarted.
+// Discord status: the PC app passes this to the Discord app on this computer.
+var dcCap = false, dcState = "", dcLast = "";
+$("dc-on").checked = P.dc !== false; $("dc-bal").checked = !!P.dcbal;
+$("dc-on").onchange = () => { P.dc = $("dc-on").checked; saveP(); dcPush(true); };
+$("dc-bal").onchange = () => { P.dcbal = $("dc-bal").checked; saveP(); dcPush(true); };
+function dcData() {
+  if (!myHandle || !wallet) return null;
+  const jobs = myJobs.filter(j => j.ok); const j = jobs.find(x => x.id === P.job) || jobs[0];
+  const details = j ? "🏷 " + j.role + " @ " + j.gname + (topIds.has(j.gid) ? " 🏆 TOP 1%" : "") : "฿ Bytes roleplay wallet";
+  let state = "💾 " + myHandle + (isPro() ? " ⭐" : "");
+  if ($("dc-bal").checked) state += " · 💰 " + fmt(wallet.bal) + " Bytes";
+  if (nhSave) state += " · ⚡ NEON HARVEST";
+  return { details: details.slice(0, 128), state: state.slice(0, 128) };
+}
+async function dcPush(force) {
+  const d = dcData(), on = $("dc-on").checked && !!d;
+  $("dc-prev").textContent = d ? "Playing Bytes\n" + d.details + "\n" + d.state : "Sign in to see your Discord status.";
+  $("dc-bal").disabled = !$("dc-on").checked;
+  if (!linked) return;
+  if (!dcCap) { $("dc-note").textContent = "Your Bytes PC app is an older version. Download it again to get Discord status."; return; }
+  const body = on ? { on: true, ...d } : { on: false }; const key = JSON.stringify(body);
+  if (!force && key === dcLast) return;
+  try { await post("/discord", body); dcLast = key; } catch (e) { return; }
+  $("dc-note").textContent = !on ? "Off. Nothing from Bytes shows on your Discord profile."
+    : dcState === "on" ? "● Showing on your Discord profile. Updates within about 15 seconds."
+    : "Waiting for Discord. Open the Discord app on this PC and it shows up by itself.";
+}
+// Check in now and then so the status comes back if the PC app or Discord restarts.
+setInterval(async () => { if (!linked) return; try { const j = await (await fetch(BASE + "/ping", { cache: "no-store" })).json(); dcCap = "discord" in j; dcState = j.discord; } catch (e) {} dcPush(true); }, 30000);
 let running = false, timer = null, lastSent = "", lastHost = "";
 async function push(force) {
   if (!running) return;
