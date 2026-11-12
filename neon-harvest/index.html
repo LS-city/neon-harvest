@@ -3575,6 +3575,55 @@ function openTheaterLibrary(){ thLibWatch(); const body=panel("Stream Dome Libra
     el("button",{class:"btn",type:"button",text:"Remove",onclick:async()=>{ try{ await thLibSave(thLib.filter(x=>x.id!==it.id)); if(it.aid&&ASSETS) ASSETS.delete(it.aid).catch(()=>{}); if(it.p&&ASSETS) it.p.forEach(id=>ASSETS.delete(id).catch(()=>{})); toast("Removed from the library."); }catch(e){ toast("Couldn't save. Only the owner can change the library."); } openTheaterLibrary(); }}))); });
   body.append(el("strong",{text:`In the library (${thLib.length}/${THL_MAX})`}),thLib.length?l:el("div",{class:"empty",text:"Nothing yet."}),el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back to the booth",onclick:()=>openTheaterBooth()}))); }
 
+/* ---- Classic Movies: 20 public-domain films built into the Stream Dome (streamed from the Internet Archive).
+   Anyone can watch one on their own, any time, for free, or put it on the big screen for everyone. ---- */
+const TH_CLASSICS=[
+ ["c_notld","Night of the Living Dead",1968,"Horror",5752,"Night.Of.The.Living.Dead_1080p/NightOfTheLivingDead_1080p.mp4","Strangers barricade a farmhouse against the dead. The original zombie classic."],
+ ["c_nosferatu","Nosferatu",1922,"Horror",5602,"Nosferatu_most_complete_version_93_mins./Nosferatu_1922_Symphony_of_Horror_512kb.mp4","Count Orlok creeps out of the shadows. Silent, with music."],
+ ["c_hohh","House on Haunted Hill",1959,"Horror",4483,"house_on_haunted_hill_ipod/house_on_haunted_hill.mp4","Vincent Price offers $10,000 to anyone who survives the night."],
+ ["c_carnival","Carnival of Souls",1962,"Horror",4980,"CarnivalofSouls/CarnivalOfSouls.mp4","A woman haunted by pale figures and an abandoned pavilion."],
+ ["c_lastman","The Last Man on Earth",1964,"Horror",5223,"lastmanonearth-1964/lastmanonearth-1964.mp4","Vincent Price, alone in a city of vampires."],
+ ["c_dementia","Dementia 13",1963,"Horror",4496,"dementia-13-1963_202312/Dementia%2013%20(1963).mp4","An axe murderer stalks a family castle. Early Francis Ford Coppola."],
+ ["c_zombie","White Zombie",1932,"Horror",3920,"white_zombie/white_zombie.mp4","Bela Lugosi commands an army of the walking dead."],
+ ["c_caligari","The Cabinet of Dr. Caligari",1920,"Horror",3061,"DasKabinettdesDoktorCaligariTheCabinetofDrCaligari/The_Cabinet_of_Dr._Caligari_512kb.mp4","A hypnotist and his sleepwalker in a twisted painted world. Silent."],
+ ["c_phantom","The Phantom of the Opera",1925,"Horror",6389,"ThePhantomoftheOpera/Phantom_of_the_Opera_512kb.mp4","Lon Chaney's masked phantom haunts the Paris opera. Silent."],
+ ["c_brain","The Brain That Wouldn't Die",1962,"Sci-fi",4255,"brain_that_wouldnt_die/brain_that_wouldnt_die.mp4","A surgeon keeps his fiancée's head alive in a tray. Peak B-movie."],
+ ["c_metropolis","Metropolis",1927,"Sci-fi",7118,"Metropolis1927EnglishVersion/Metropolis_1927_English_Version.mp4","The robot city that started cyberpunk. Silent."],
+ ["c_plan9","Plan 9 from Outer Space",1957,"Sci-fi",4700,"plan-9-from-outer-space/plan-9-from-outer-space.mp4","Aliens raise the dead. Called the worst movie ever made. Perfect for a watch party."],
+ ["c_robot","Robot Monster",1953,"Sci-fi",3756,"robot-monster-1953/Robot%20Monster%20(1953).mp4","A gorilla in a diving helmet sets out to destroy humanity."],
+ ["c_shrews","The Killer Shrews",1959,"Sci-fi",4134,"The_Killer_Shrews_1959/The_Killer_Shrews.mp4","Giant shrews trap a group on an island. Played by dogs in costumes."],
+ ["c_moon","A Trip to the Moon",1902,"Sci-fi",678,"ATripToTheMoon20Fps/TripToTheMoon20Fps.mp4","The rocket in the moon's eye. 11 minutes of pure movie magic."],
+ ["c_littleshop","The Little Shop of Horrors",1960,"Comedy",4351,"Little_ShopOf_Horrors.avi/The_Little_Shop_of_Horrors.mp4","A flower shop clerk raises a plant that eats people. Feed me!"],
+ ["c_charade","Charade",1963,"Thriller",6816,"charade-1963-cary-grant-audrey-hepburn-walter-matthau-1080p-reup/Charade%20(1963)%20%5B720p%20Blu-Ray%20Rip%5D.ia.mp4","Cary Grant and Audrey Hepburn chase a fortune through Paris."],
+ ["c_hisgirl","His Girl Friday",1940,"Comedy",5505,"his_girl_friday/his_girl_friday.mp4","The fastest-talking newspaper comedy ever filmed."],
+ ["c_detour","Detour",1945,"Thriller",4058,"Detour/Detour.mp4","A hitchhiker's ride goes horribly wrong. Classic noir."],
+ ["c_general","The General",1926,"Comedy",4724,"The_General_Buster_Keaton/The_General.mp4","Buster Keaton chases a stolen train. Unbelievable stunts. Silent."],
+].map(([id,t,yr,g,d,path,blurb])=>({id,t:`${t} (${yr})`,name:t,yr,g,d,u:"https://archive.org/download/"+path,blurb,classic:1}));
+const TH_GENRE_COL={Horror:"#ff2a3a",["Sci-fi"]:"#38e8ff",Comedy:"#ffd36a",Thriller:"#cf72ff"};
+let classicVid=null;
+function openClassics(filter){ filter=filter||"All"; const body=panel("Stream Dome · Classic Movies","20 free classic films. Watch any of them on your own, any time, or put one on the big screen for everyone."); currentView="thclassics";
+  const s=thLive(), mine=!!(thHost&&s&&s.by===myId), canShow=!!(DB&&myId)&&(!s||mine||IS_ADMIN);
+  const tabs=el("div",{class:"tabs"}); for(const g of ["All","Horror","Sci-fi","Comedy","Thriller"]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(filter===g),text:g,onclick:()=>openClassics(g)})); body.append(tabs);
+  const l=el("div",{class:"list"});
+  for(const it of TH_CLASSICS.filter(x=>filter==="All"||x.g===filter)){ const col=TH_GENRE_COL[it.g]||"#ffb13f", msg=el("span",{class:"sub"});
+    const show=el("button",{class:"btn",type:"button",text:mine?"Big screen (swap, free)":`Big screen · ${TH_FEE} chips`,onclick:async()=>{ show.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading…"; try{ await thStartLib(it); toast(`“${it.name}” is on the big screen!`,"#ffb13f"); openTheaterBooth(); }catch(e){ show.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } }});
+    if(!canShow) show.disabled=true;
+    l.append(el("div",{class:"li",style:`border-left:3px solid ${col}`},el("div",{class:"grow"},el("div",{},el("strong",{text:it.name}),el("span",{class:"sub",text:` · ${it.yr} · ${Math.round(it.d/60)} min`}),el("span",{class:"tag",style:`margin-left:6px;color:${col};border-color:${col}`,text:it.g})),el("div",{class:"sub",text:it.blurb}),msg),
+      el("button",{class:"btn hot",type:"button",text:"▶ Watch now (free)",onclick:()=>openClassicPlayer(it)}),show)); }
+  body.append(l,el("p",{class:"sub",text:canShow?"“Big screen” plays it for everyone in the theater, in sync, like any library movie.":"Someone's movie is on the big screen right now, but you can still watch any of these on your own."}),
+    el("p",{class:"sub",text:"These films are in the public domain in the US and stream from the Internet Archive (archive.org)."})); }
+function openClassicPlayer(it){ const body=panel(it.t,`${it.g} · ${Math.round(it.d/60)} min · just you, any time`); currentView="thclassic";
+  const v=document.createElement("video"); v.controls=true; v.playsInline=true; v.preload="auto"; v.src=it.u; v.style.cssText="width:100%;max-height:62vh;background:#000;display:block"; classicVid=v;
+  const key="thPos_"+it.id; let pos=0; try{ pos=+(localStorage.getItem(key)||0); }catch(e){} const msg=el("div",{class:"sub",role:"status",text:"Loading the movie…"});
+  v.addEventListener("loadedmetadata",()=>{ msg.textContent=pos>30&&pos<v.duration-60?`Picking up where you left off (${Math.floor(pos/60)} min in).`:""; if(pos>30&&pos<v.duration-60) v.currentTime=pos; v.play().catch(()=>{ msg.textContent="Tap play to start."; }); });
+  v.addEventListener("timeupdate",()=>{ if(Math.floor(v.currentTime)%10===0) try{ localStorage.setItem(key,String(Math.floor(v.currentTime))); }catch(e){} });
+  v.addEventListener("ended",()=>{ try{ localStorage.removeItem(key); }catch(e){} msg.textContent="The end. Thanks for watching!"; });
+  v.addEventListener("error",()=>{ msg.style.color="#ff7a7a"; msg.textContent="This movie couldn't load right now. Check your connection and try again."; });
+  try{ stTrack("act","Watch classic: "+it.name); }catch(e){}
+  body.append(v,msg,el("div",{class:"sub",text:it.blurb}),el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"⛶ Fullscreen",onclick:()=>{ try{ (v.requestFullscreen||v.webkitEnterFullscreen||v.webkitRequestFullscreen).call(v); }catch(e){} }}),el("button",{class:"btn",type:"button",text:"‹ All classics",onclick:()=>openClassics()}))); }
+// stop the private player whenever its panel closes
+setInterval(()=>{ if(classicVid&&(!classicVid.isConnected)){ try{ classicVid.pause(); classicVid.removeAttribute("src"); classicVid.load(); }catch(e){} classicVid=null; } },1000);
+
 /* ---- host: play a file from this device and stream it live ---- */
 function thCapture(v){ if(v.captureStream) return v.captureStream();
   // Safari / Firefox: paint the video into a canvas and route the sound through Web Audio
@@ -3680,6 +3729,7 @@ function thStatus(){ const s=thLive(); if(!s) return "";
 function streamHot(){ const s=thLive(), out=[{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},
     {x:300,hw:60,label:thHost?"Projection booth: your movie controls":s?`Projection booth: now showing “${s.title.slice(0,24)}”`:`Projection booth: play your MP4 (${TH_FEE} chips)`,act:()=>openTheaterBooth()},
     {x:470,hw:50,label:`House lights: ${TH_LV[thLights.lv].n}`,act:()=>openTheaterLights()},
+    {x:640,hw:60,label:"Classic movie rack: 20 free films to watch any time",act:()=>openClassics()},
     {x:2150,hw:70,label:s?"Big screen: watch fullscreen & sound":"Big screen (nothing playing yet)",act:()=>openTheaterWatch()}];
   for(const st of TH_SEATS){ const mine=!!(me.homeSit&&me.homeSit.key===st.id);
     out.push({x:st.x,hw:22,label:mine?"Stand up":`Take a seat (row ${st.row}, seat ${st.n})`,act:()=>{ if(mine){ me.homeSit=null; pushPresence(true); return; } me.homeSit={key:st.id,x:st.x,y:st.y}; me.x=st.x; me.y=st.y; target=null; pushPresence(true); }}); }
@@ -3698,8 +3748,9 @@ function openTheaterBooth(){ const s=thLive(), mine=!!thHost;
           el("button",{class:"btn",type:"button",text:"⏪ 10s",onclick:()=>{ v.currentTime=Math.max(0,v.currentTime-10); }}),el("button",{class:"btn",type:"button",text:"⏩ 10s",onclick:()=>{ v.currentTime=Math.min(v.duration||0,v.currentTime+10); }}),
           el("button",{class:"btn",type:"button",text:"⏹ End the movie",onclick:()=>{ thStopHost(); toast("Movie ended."); openTheaterBooth(); }}))))); }
     else if(IS_ADMIN) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"End this movie (owner)",onclick:async()=>{ try{ await DB.doc("club/theater").delete(); }catch(e){} thShow=null; thNudge(); thSetLights(0); toast("Movie ended."); openTheaterBooth(); }}))); }
-  if(s&&!mine&&!IS_ADMIN){ body.append(el("p",{class:"sub",text:"The screen is taken. When this movie ends, you can run the projector."})); return; }
+  if(s&&!mine&&!IS_ADMIN){ body.append(el("p",{class:"sub",text:"The screen is taken. When this movie ends, you can run the projector."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"🎬 Watch a classic movie on your own",onclick:()=>openClassics()}))); return; }
   if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to run the projector."})); return; }
+  body.append(el("div",{class:"detail",style:"border-color:#ffb13f;align-items:center"},el("div",{class:"info"},el("strong",{text:"🎬 Classic Movies"}),el("span",{class:"sub",text:"20 free classic films, from Night of the Living Dead to The Little Shop of Horrors. Put one on the big screen, or watch on your own any time."})),el("button",{class:"btn hot",type:"button",text:"Browse classics",onclick:()=>openClassics()})));
   thBoothLibrary(body,mine); thBoothShelf(body,mine);
   const file=el("input",{type:"file",accept:"video/mp4,video/webm,video/quicktime,.mp4,.m4v,.webm,.mov",style:"width:100%;box-sizing:border-box;padding:8px;background:#0d0818;color:#e9e2ff;border:1px dashed #ffb13f;font:inherit"});
   const title=el("input",{type:"text",maxlength:"60",placeholder:"Movie title (optional)",style:"width:100%;box-sizing:border-box;padding:9px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
@@ -3771,6 +3822,8 @@ function drawStreamDome(t){ const W=TH_W, X0=camX, X1=camX+VW, s=thLive(), src=t
   if(s&&X0<TH_SX+TH_SW){ ctx.save(); ctx.globalCompositeOperation="lighter"; const g=ctx.createLinearGradient(326,0,TH_SX,0); g.addColorStop(0,"rgba(200,210,255,.18)"); g.addColorStop(1,"rgba(200,210,255,.02)"); ctx.fillStyle=g;
     ctx.beginPath(); ctx.moveTo(326,52); ctx.lineTo(TH_SX,TH_SY); ctx.lineTo(TH_SX,TH_SY+TH_SH); ctx.lineTo(326,60); ctx.fill(); ctx.restore(); }
   // house-lights panel
+  if(X0<760&&X1>520){ const rx=640; ctx.fillStyle="#140a18"; ctx.fillRect(rx-58,128,116,130); ctx.strokeStyle="#ffb13f"; ctx.lineWidth=2; ctx.strokeRect(rx-58,128,116,130); ctx.fillStyle="#ffb13f"; ctx.font="bold 9px monospace"; ctx.textAlign="center"; ctx.fillText("CLASSIC MOVIES",rx,122); ctx.fillStyle="#9a8cc0"; ctx.font="8px monospace"; ctx.fillText("free · watch any time",rx,268);
+    for(let k=0;k<6;k++){ const it=TH_CLASSICS[(k+Math.floor(t/4)*2)%TH_CLASSICS.length], c=TH_GENRE_COL[it.g]||"#ffb13f", px=rx-50+(k%3)*34, py=136+(k/3|0)*60; ctx.fillStyle="#0a0610"; ctx.fillRect(px,py,30,52); ctx.fillStyle=c; ctx.globalAlpha=.25+.15*Math.sin(t*2+k); ctx.fillRect(px+2,py+2,26,34); ctx.globalAlpha=1; ctx.fillStyle=c; ctx.font="bold 6px monospace"; ctx.fillText(it.name.split(" ").slice(-1)[0].slice(0,7).toUpperCase(),px+15,py+44); ctx.fillStyle="#efe6d8"; ctx.fillText(String(it.yr),px+15,py+50); } }
   if(X0<540&&X1>400){ ctx.fillStyle="#1a1020"; ctx.fillRect(450,150,40,58); ctx.strokeStyle="#6a5a9a"; ctx.lineWidth=1; ctx.strokeRect(450,150,40,58); for(let i=0;i<3;i++){ ctx.fillStyle=thLights.lv===i?"#ffb13f":"#3a2a50"; ctx.fillRect(458+i*9,162,6,34); } ctx.fillStyle="#9a8cc0"; ctx.font="8px monospace"; ctx.textAlign="center"; ctx.fillText("LIGHTS",470,218); }
   // big-screen spot (fullscreen)
   if(X0<2240&&X1>2060){ ctx.fillStyle="#140a18"; ctx.fillRect(2110,180,80,70); ctx.strokeStyle="#38e8ff"; ctx.strokeRect(2110,180,80,70); ctx.fillStyle="#38e8ff"; ctx.font="bold 9px monospace"; ctx.textAlign="center"; ctx.fillText("WATCH",2150,206); ctx.fillText("FULLSCREEN",2150,220); }
@@ -4682,7 +4735,7 @@ const HELP=[
     ["Pay",["Each Data Box pays ₵150 and 5 chips, or ₵300 and 10 chips when most of it is LIVE data, up to 6 boxes a day."]],
     ["SIM or LIVE data",["Switch between SIM (game-made numbers) and LIVE (real data) in the game's top bar."]],
     ["Neon Row store owners",["Your store shows in the NEON ROW STORE panel. Hire a Neon Row Store scout to collect your real visits and top rewards, or tap Store report."]]],rel:["neonrow_owner"]},
-  {id:"stream",icon:"🎬",n:"Stream Dome theater",sub:"Watch movies together",where:"Metro → Stream Dome",steps:["To host: at the projection booth, pay 40 chips and pick a movie from the Stream Dome Library, your video shelf, or an MP4 (or .webm/.mov) on your phone or computer.","Library movies play for everyone in sync straight from the library: no viewer limit and it doesn't use your internet to stream.","Your video shelf keeps up to 12 videos saved in this browser on this device (never uploaded), so you can show them again without finding the file.","Keep your tab open until it ends. You control pause/skip and the house lights.","To watch: walk in, take a seat and watch the big screen, or open the fullscreen view by the far wall."],secs:[
+  {id:"stream",icon:"🎬",n:"Stream Dome theater",sub:"Watch movies together",where:"Metro → Stream Dome",steps:["To host: at the projection booth, pay 40 chips and pick a movie from the Stream Dome Library, your video shelf, or an MP4 (or .webm/.mov) on your phone or computer.","Library movies play for everyone in sync straight from the library: no viewer limit and it doesn't use your internet to stream.","The Classic Movies rack (left of the seats) has 20 free public-domain films: horror like Night of the Living Dead and Nosferatu, sci-fi like Metropolis and Plan 9, and comedies like The Little Shop of Horrors and The General. Watch any of them on your own any time for free, or put one on the big screen.","Your video shelf keeps up to 12 videos saved in this browser on this device (never uploaded), so you can show them again without finding the file.","Keep your tab open until it ends. You control pause/skip and the house lights.","To watch: walk in, take a seat and watch the big screen, or open the fullscreen view by the far wall."],secs:[
     ["Good to know",["The video never uploads: it plays from the host's device and streams live to everyone in the theater (up to 12 viewers).","Tap or press any key if the sound starts muted. Only play videos you have the right to share. The owner can end any movie."]]]},
   {id:"clash",icon:"🐾",n:"Companion Clash",sub:"A JRPG adventure, expeditions and customs",where:"Metro → Companion Clash",secs:[
     ["Companion Clash: the JRPG",["Walk up to the big screen and press E (or tap ▶ Play) to start. Pick a class: ⚔ Blade (tough sword fighter), ✦ Arcanist (fire, ice and lightning) or ✚ Medic (healer). Your companion fights beside you with a skill based on its trait.","Own more than one companion? Bring a team of up to 3 into battle. Pick them in the game menu (M → Team) or on the Save Crystal panel. Each companion levels up on its own, and your team follows you around the map.","Explore Lumen Village and the Pixel Plains. Monsters jump out of grass and forests; roads are safe. Battles are turn-based: pick Attack, Skill, Item, Guard or Run for each party member, then watch the round play out.","Win to earn XP, gold and levels. Use weak spots: slimes hate fire, bats hate lightning, and so on.","Beat the four guardians (Glitchwood, Rust Caverns, Sky Spire, Null Citadel) to win back the shards of the Neon Crown. Kiri and Bolt join your party along the way.","Controls: arrows or WASD move, Z or Enter confirm, X go back, M menu. On phones, use the on-screen D-pad and A/B buttons."]],
