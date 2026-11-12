@@ -4616,7 +4616,7 @@ function idle1211Safe(S,now,win,peek){ if(S.hold){ idleKey(win,S.hold.code,true)
 // Activities: where to go, then start/step (step returns true when finished).
 const IDLE_ACTS={
   play1211:{n:"Playing 12/11",where:()=>["line",LINE_X.cab],
-    start(S,now){ if(!idleHas1211()){ S.none=1; idleLog("🎮 No saved 12/11 trip yet. Skipping so it doesn't start a new game."); return; } open1211(); IDLE.ui="g1211"; S.t0=now; S.until=now+idleR(150,240)*1000; S.nk=now+1800; idleLog("🎮 Sits down at the 12/11 cabinet"); },
+    start(S,now){ if(!idleHas1211()){ S.none=1; idleLog("🎮 No saved 12/11 trip yet. Skipping so it doesn't start a new game."); return; } open1211(); { const g=$("#g1211"); if(g) g.classList.add("idlegame"); } IDLE.ui="g1211"; S.t0=now; S.until=now+idleR(150,240)*1000; S.nk=now+1800; idleLog("🎮 Sits down at the 12/11 cabinet"); },
     step(S,now){ if(S.none||S.noSave) return true; if(!$("#g1211")) return true; const win=g1211Frame&&g1211Frame.contentWindow;
       let peek=null; try{ peek=win&&win.__nh1211Peek&&win.__nh1211Peek(); }catch(e){}
       if(!peek){ if(now-S.t0>20000){ idleLog("🎮 12/11 didn't load. Leaving."); return true; } idleAct("Loading 12/11…"); return false; }
@@ -4624,11 +4624,11 @@ const IDLE_ACTS={
       idleFrameBot(S,now,win,{a:"KeyZ",b:"KeyX",dirs:["ArrowRight","ArrowRight","ArrowLeft","ArrowUp","ArrowDown"]}); idleAct(`Playing 12/11 · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
     end(S){ if(S.none) return; if(S.hold) idleKey(g1211Frame&&g1211Frame.contentWindow,S.hold.code,true); if($("#g1211")) close1211(); if(!S.noSave) idleLog("🎮 Saved and left 12/11"); }},
   read:{n:"Reading Ramblings of a Mad Man",where:()=>["story",STORY_X.door],
-    start(S,now){ openBook(); IDLE.ui="gbook"; S.until=now+idleR(150,240)*1000; S.next=now+3500; S.pages=0; idleLog("📖 Opens Ramblings of a Mad Man"); },
+    start(S,now){ openBook(); { const g=$("#gbook"); if(g) g.classList.add("idlegame"); } IDLE.ui="gbook"; S.until=now+idleR(150,240)*1000; S.next=now+3500; S.pages=0; idleLog("📖 Opens Ramblings of a Mad Man"); },
     step(S,now){ if(!$("#gbook")||!BK) return true; if(now>=S.next){ if(BK.mode==="end"){ idleLog(`📖 Finished a chapter after ${S.pages} pages`); return true; } bkPress("n"); S.pages++; S.next=now+idleR(7,11)*1000; } idleAct(`Reading · page ${S.pages}`); return now>=S.until; },
     end(S){ if($("#gbook")) closeBook(); idleLog(`📖 Closed the book (${S.pages} pages read)`); }},
   ccj:{n:"Playing Companion Clash",where:()=>["clash",CLASH_X.stage],
-    start(S,now){ if(!idleHasCcj()){ S.none=1; idleLog("⚔️ No saved Companion Clash adventure yet. Skipping so it doesn't start a new game."); return; } openCCJ(); IDLE.ui="gccj"; S.until=now+idleR(150,240)*1000; S.nk=now+1500; idleLog("⚔️ Boots up Companion Clash"); },
+    start(S,now){ if(!idleHasCcj()){ S.none=1; idleLog("⚔️ No saved Companion Clash adventure yet. Skipping so it doesn't start a new game."); return; } openCCJ(); { const g=$("#gccj"); if(g) g.classList.add("idlegame"); } IDLE.ui="gccj"; S.until=now+idleR(150,240)*1000; S.nk=now+1500; idleLog("⚔️ Boots up Companion Clash"); },
     step(S,now){ if(S.none) return true; if(!$("#gccj")||!CJ) return true; idleCcjBot(S,now); if(S.stop){ idleLog("⚔️ Left Companion Clash instead of starting a new game"); return true; } idleAct(`Playing Companion Clash · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
     end(S){ if(S.none) return; if(S.hold&&CJ) CJ.held[S.hold.k]=false; if($("#gccj")) closeCCJ(); if(!S.stop) idleLog("⚔️ Saved and left Companion Clash"); }},
   clubtrip:{n:"Club items & partying",where:()=>["club",390],
@@ -14136,7 +14136,10 @@ body.appui #overlay{z-index:30}
 #appui .apchatbar{display:flex;gap:8px;padding:8px 14px;border-top:1px solid var(--line);background:rgba(11,7,22,.95)}
 #appui .apchatbar input{flex:1;min-width:0;background:#0d0818;border:1px solid var(--line);color:var(--text);font:16px var(--f-ui);padding:9px 10px}
 #appui .apchip{display:inline-block;font-size:10px;border:1px solid currentColor;padding:1px 6px;margin-left:6px;vertical-align:middle}
-body.appui #game > :not(#appui):not(#overlay):not(#title):not(#toast):not(#invites):not(#deathov):not(canvas){visibility:hidden}
+body.appui #game > :not(#appui):not(#overlay):not(#title):not(#toast):not(#invites):not(#deathov):not(canvas):not(#gmydex):not(#g1211):not(#gccj):not(#gnf):not(#gbook):not(#gdsim){visibility:hidden}
+/* Full-screen windows (MyDex, 12/11, Companion Clash, Neon Fantasy, Story Mode, Data Sim) show over the app; ones the idle runner opened stay out of the way */
+body.appui #game > .idlegame{visibility:hidden}
+body.appui #gmydex,body.appui #g1211,body.appui #gccj,body.appui #gnf,body.appui #gbook,body.appui #gdsim{z-index:40}
 body.appui .idledock,body.appui .goalwrap{display:none!important}
 body.appui #toast{z-index:31;top:auto!important;bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;width:min(380px,92vw)!important;justify-content:flex-end}
 body.appui #invites{z-index:16}
