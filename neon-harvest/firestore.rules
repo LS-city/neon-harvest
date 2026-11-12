@@ -481,16 +481,17 @@ service cloud.firestore {
     match /hfcCards/{uid} {
       allow read: if signedIn();
       allow create, update: if mdOk() && me() == uid
-        && nd().keys().hasOnly(['name', 'plats', 'games', 'gids', 'open', 'at', 'st', 'img', 'photo'])
+        && nd().keys().hasOnly(['name', 'plats', 'games', 'gids', 'open', 'at', 'st', 'img', 'photo', 'display'])
         && nd().name is string && nd().name.size() > 0 && nd().name.size() <= 18
         && nd().plats is list && nd().plats.size() <= 4
         && nd().games is list && nd().games.size() >= 1 && nd().games.size() <= 12
         && nd().gids is list && nd().gids.size() <= 12
         && nd().open is bool && nd().at is int
         // Card style: background and neon color, plus an optional background image and picture (sizes capped).
-        && (!('st' in nd()) || (nd().st is map && nd().st.keys().hasOnly(['bg', 'color', 'frame', 'nm'])))
+        && (!('st' in nd()) || (nd().st is map && nd().st.keys().hasOnly(['bg', 'color', 'frame', 'nm', 'fit', 'pos'])))
         && (!('img' in nd()) || (nd().img is string && nd().img.size() <= 150000))
-        && (!('photo' in nd()) || (nd().photo is string && nd().photo.size() <= 70000));
+        && (!('photo' in nd()) || (nd().photo is string && nd().photo.size() <= 70000))
+        && (!('display' in nd()) || (nd().display is list && nd().display.size() <= 6));
       // The owner can remove a picture or background that breaks the rules.
       allow update: if isOwner();
       allow delete: if isOwner() || (signedIn() && me() == uid);
