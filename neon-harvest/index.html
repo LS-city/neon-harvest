@@ -1918,7 +1918,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   const ft=WARD.feet.opts[L.feet][0], nk=WARD.neck.opts[L.neck][0], hr=WARD.hair.opts[L.hair][0], HC=COLORS[L.hairCol]==="#2a2440"?"#3a3258":COLORS[L.hairCol];
   const dir=o.dir||1; const AC=COLORS[L.accent];
   c.save(); c.translate(x,y); c.scale(s,s);
-  if(o.dead){ c.globalAlpha=.5+.3*Math.sin(t*22); c.rotate(-(o.dir||1)*1.35); }
+  if(o.dead){ c.globalAlpha=.5+.3*Math.sin(t*22); c.rotate(-(o.dir||1)*1.35); } if(o.corpse) c.rotate(-1.5);
   c.fillStyle="rgba(0,0,0,.45)"; c.beginPath(); c.ellipse(0,0,14,4,0,0,7); c.fill();
   const FX=FX_KEYS.includes(o.fx)?o.fx:null;
   if(FX&&XFX[FX]&&XFX[FX].lift) c.translate(0,-XFX[FX].lift(t)); if(o.dk&&DRINK_FX[o.dk]&&DRINK_FX[o.dk].lift) c.translate(0,-DRINK_FX[o.dk].lift-Math.sin(t*2)*1.5); if(FX==="bong") c.translate(0,-(7+Math.sin(t*2)*2)); if(FX==="palace") c.translate(0,-(16+Math.sin(t*1.5)*3)); if(FX==="zerog"){ c.translate(0,-(26+Math.sin(t*1.1)*6)); c.rotate(Math.sin(t*.7)*.12); } if(FX==="laugh"||FX==="rave") c.translate(0,-Math.abs(Math.sin(t*(FX==="rave"?10:7)))*3); if(FX==="hyper") c.translate((Math.random()-.5)*1.4,(Math.random()-.5)*.8);
@@ -2941,79 +2941,113 @@ function lifeNotice(n){ const nm=myName||"runner", L=[]; const h=new Date().getH
   try{ L.push(...worldLines(n)); }catch(e){}
   return L.length?L[(Math.random()*L.length)|0]:null; }
 /* ============================================================ THE NIGHT VISITOR
-   One resident of the city is secretly a killer: Silas Crane, the friendly night-shift locksmith.
-   Every so often he takes someone. Everyone sees the same thing at the same time: the schedule comes from the clock.
-   The victim is found, the Clinic brings them back, and they remember dying, but never who did it.
+   One resident of the city is secretly a killer: Silas Crane, the friendly locksmith who wanders all over the city.
+   Every 40 minutes he takes someone who is out and about. Everyone sees the same thing at the same time: the schedule comes from the clock.
+   The body stays where it fell for 10 minutes, then the Clinic brings them back. They remember dying, but never who did it.
    Nothing in the game ever says it's him. Players have to notice for themselves. */
-const ZK_WIN=90*6e4, ZK_KILLER=LIFE_R.length-1;
+const ZK_WIN=40*6e4, ZK_BACK=10*6e4, ZK_KILLER=LIFE_R.length-1;
 const zkCache={};
 function zkSceneAt(R,t){ const slot=Math.floor(t/LIFE_SLOT), a=lifePick(R,slot), D=a==="work"?LIFE_JOB[R.job]:LIFE_ACT[a]; if(!D) return {a,sc:null,D:null}; let sc=D.sc; if(Array.isArray(sc)) sc=sc[Math.floor(seeded(hashNum(R.id)+slot*11)()*sc.length)]; return {a,sc,D}; }
-function zkPlan(w){ if(w in zkCache) return zkCache[w]; const r=seeded(hashNum("zk-night")+w*977); r(); let p=null;
-  if(r()<.45){ let vi=Math.floor(r()*(LIFE_R.length-1)); if(vi===ZK_KILLER) vi=0; const V=LIFE_R[vi], at=w*ZK_WIN+(12+r()*40)*6e4, back=at+(25+r()*30)*6e4, s=zkSceneAt(V,at);
-    const W=(SCENES[s.sc]||{w:2000}).w; let rng=s.D&&s.D.x?s.D.x():[300,W-300]; if(!Array.isArray(rng)) rng=[300,W-300]; const x=Math.round(rng[0]+r()*(rng[1]-rng[0]));
-    p={w,vi,V,at,back,sc:s.sc,a:s.a,x,clue:Math.floor(r()*ZK_CLUES.length)}; }
-  zkCache[w]=p; const ks=Object.keys(zkCache); if(ks.length>200) delete zkCache[ks[0]]; return p; }
+function zkPlan(w){ if(w in zkCache) return zkCache[w]; const r=seeded(hashNum("zk-night")+w*977); r(); const at=w*ZK_WIN+(18+r()*4)*6e4; let p=null;
+  // he only takes someone who's out somewhere (never at home in bed), and never the same person twice in a row
+  const start=Math.floor(r()*(LIFE_R.length-1)), prev=(()=>{ const q=seeded(hashNum("zk-night")+(w-1)*977); q(); q(); return Math.floor(q()*(LIFE_R.length-1)); })();
+  for(let k=0;k<LIFE_R.length-1&&!p;k++){ const vi=(start+k)%(LIFE_R.length-1), V=LIFE_R[vi], s=zkSceneAt(V,at); if(vi===prev||!s.sc||!SCENES[s.sc]) continue;
+    const W=SCENES[s.sc].w||2000; let rng=s.D&&s.D.x?s.D.x():[300,W-300]; if(!Array.isArray(rng)) rng=[300,W-300]; const x=Math.round(rng[0]+r()*(rng[1]-rng[0]));
+    p={w,vi,V,at,back:at+ZK_BACK,sc:s.sc,a:s.a,x,clue:Math.floor(r()*ZK_CLUES.length)}; }
+  zkCache[w]=p; const ks=Object.keys(zkCache); if(ks.length>400) delete zkCache[ks[0]]; return p; }
 function zkPlansBetween(t0,t1){ const out=[]; for(let w=Math.floor(t0/ZK_WIN)-1;w<=Math.floor(t1/ZK_WIN);w++){ const p=zkPlan(w); if(p&&p.at>=t0-ZK_WIN&&p.at<=t1) out.push(p); } return out; }
 function zkDeadPlan(R,now){ for(const p of zkPlansBetween(now-2*ZK_WIN,now)) if(p.V===R&&now>=p.at&&now<p.back) return p; return null; }
 function zkDeaths(R,now,span){ return zkPlansBetween(now-span,now).filter(p=>p.V===R&&p.back<=now); }
-function zkRecentVictim(R,now){ const d=zkDeaths(R,now,3*864e5); return d.length?d:null; }
-function zkKillerPlan(now){ for(const p of zkPlansBetween(now-ZK_WIN,now+ZK_WIN)) if(p.sc&&now>=p.at-10*6e4&&now<p.at+3*6e4) return p; return null; }
-function zkScenes(now){ return zkPlansBetween(now-2*ZK_WIN,now).filter(p=>p.sc&&now>=p.at&&now<p.back+15*6e4); }
-const ZK_CLUES=["A lock nearby was picked, not broken. Very neat work.","A witness remembers someone humming an old song. Nothing else.","No footprints. Whoever it was knew exactly where the cameras don't reach.","The nearest camera was looking the other way. Someone turned it.","A single brass shaving on the ground. Like from a freshly cut key.","Nobody heard a struggle. It was quiet. Polite, almost.","The victim's door was locked from the outside afterward."];
-// override what a resident is doing: dead victims are gone, and the killer is near his next victim
+function zkRecentVictim(R,now){ const d=zkDeaths(R,now,864e5); return d.length?d:null; }
+function zkKillerPlan(now){ for(const p of zkPlansBetween(now-ZK_WIN,now+ZK_WIN)) if(p.sc&&now>=p.at-8*6e4&&now<p.at+2*6e4) return p; return null; }
+function zkScenes(now){ return zkPlansBetween(now-2*ZK_WIN,now).filter(p=>p.sc&&now>=p.at&&now<p.back+5*6e4); }
+const ZK_CLUES=["A lock nearby was picked, not broken. Very neat work.","A witness remembers someone humming an old song. Nothing else.","No footprints. Whoever it was knew exactly where the cameras don't reach.","The nearest camera was looking the other way. Someone turned it.","A single brass shaving on the ground. Like from a freshly cut key.","Nobody heard a struggle. It was quiet. Polite, almost.","A door nearby was locked from the outside afterward.","Someone saw a man with a toolbag walking away. Calm. Not hurrying."];
+// where he wanders: every public place in the city, a new one every 10 minutes
+let ZK_ROAM=null;
+function zkRoam(){ if(ZK_ROAM) return ZK_ROAM; const s=new Set(); for(const D of [...Object.values(LIFE_ACT),...Object.values(LIFE_JOB)]){ const v=D&&D.sc; (Array.isArray(v)?v:[v]).forEach(x=>{ if(x) s.add(x); }); }
+  for(const x of ["street","neonrow","simcity","zerocool","streamdome","club","hhomes","park","market","cityhall","den","bar"]) s.add(x);
+  ZK_ROAM=[...s].filter(x=>SCENES[x]&&!["home","hhfloor","rowin","vip","void","ascend","prison"].includes(x)); return ZK_ROAM; }
+function zkRoamAct(now){ const slot=Math.floor(now/LIFE_SLOT), r=seeded(hashNum("zk-roam")+slot*31), L=zkRoam(), sc=L[Math.floor(r()*L.length)], W=SCENES[sc].w||2000;
+  return {key:"zkroam|"+slot,a:"walk",sc,mode:"walk",x:[160,W-160],ic:"🔑",l:pickOfS(r,["walking around","looking at the locks","just passing through","enjoying the night air"])+" at "+sceneName(sc),start:slot*LIFE_SLOT,end:(slot+1)*LIFE_SLOT}; }
+const pickOfS=(r,L)=>L[Math.floor(r()*L.length)];
+// override what a resident is doing: dead victims are gone, and the killer roams, then closes in on his next victim
 const lifeActBase=lifeAct;
 lifeAct=function(R,now){ const d=zkDeadPlan(R,now);
-  if(d){ const key="zkdead|"+d.at; if(!R.act||R.act.key!==key) R.act={key,a:"dead",sc:null,mode:"stand",x:null,ic:"🕯",l:`missing. Found dead ${d.sc?"at "+sceneName(d.sc):"in their apartment"}. The Clinic is bringing them back`,start:d.at,end:d.back}; R.actT=now; return R.act; }
-  if(R.ix===ZK_KILLER){ const p=zkKillerPlan(now); if(p){ const key="zkwalk|"+p.at; if(!R.act||R.act.key!==key) R.act={key,a:"walk",sc:p.sc,mode:"walk",x:[Math.max(80,p.x-140),p.x+140],ic:"🚶",l:"out for a late walk",start:p.at-10*6e4,end:p.at+3*6e4}; R.actT=now; return R.act; } }
+  if(d){ const key="zkdead|"+d.at; if(!R.act||R.act.key!==key) R.act={key,a:"dead",sc:null,mode:"stand",x:null,ic:"🕯",l:`dead. Found at ${sceneName(d.sc)}. The Clinic is bringing them back`,start:d.at,end:d.back}; R.actT=now; return R.act; }
+  if(R.ix===ZK_KILLER){ const p=zkKillerPlan(now), A=p?{key:"zkwalk|"+p.at,a:"walk",sc:p.sc,mode:"walk",x:[Math.max(80,p.x-140),p.x+140],ic:"🚶",l:"out for a walk",start:p.at-8*6e4,end:p.at+2*6e4}:zkRoamAct(now);
+    if(!R.act||R.act.key!==A.key) R.act=A; R.actT=now; return R.act; }
   return lifeActBase(R,now); };
 // ---- what people say
 const pickOf=L=>L[(Math.random()*L.length)|0];
-function zkVictimLine(R){ const d=zkRecentVictim(R,Date.now()); if(!d) return null; const p=d[d.length-1], mins=Math.round((p.back-p.at)/6e4), n=d.length;
-  return pickOf(["I died. I know I did. Cold hands… then nothing.",`The nurses say I was gone for ${mins} minutes. It felt like years.`,"Every time I try to picture their face, it just… slides away.","There was someone humming. That's all I remember. Just humming.",`Woke up at the Clinic again. ${p.sc?"They found me at "+sceneName(p.sc)+".":"They found me at home."} I don't remember getting there.`,"I keep checking over my shoulder. I don't even know who I'm looking for.",...(n>1?[`That's ${n} times now. Somebody in this city really doesn't like me.`,"Dying gets easier. Forgetting doesn't."]:[]),"If you find out who did it… don't tell me. I don't think I want to know."]); }
-function zkKillerLine(){ const nm=myName||"runner", now=Date.now(), L=["I never forget a face. Or a name, "+nm+".","Every door opens eventually.","You look tired, "+nm+". Get some sleep. Somewhere safe.","*hums an old song*",`Evening, ${nm}. Lovely night.`];
-  try{ const prev=[...meTrail].reverse().find(s=>s!==me.scene&&!TRAIL_SKIP.includes(s)); if(prev) L.push(`You came from ${sceneName(prev)}, didn't you? I notice things.`); }catch(e){}
+function zkVictimLine(R){ const d=zkRecentVictim(R,Date.now()); if(!d) return null; const p=d[d.length-1], n=d.length;
+  return pickOf(["I died. I know I did. Cold hands… then nothing.","They say my body lay there for ten minutes. Ten minutes and nobody saw who did it.","Every time I try to picture their face, it just… slides away.","There was someone humming. That's all I remember. Just humming.",`I woke up at the Clinic. They found me at ${sceneName(p.sc)}. I don't remember getting there.`,"I keep checking over my shoulder. I don't even know who I'm looking for.",...(n>1?[`That's ${n} times today. Somebody in this city really doesn't like me.`,"Dying gets easier. Forgetting doesn't."]:[]),"If you find out who did it… don't tell me. I don't think I want to know."]); }
+function zkNear(){ try{ const K=LIFE_R[ZK_KILLER]; return lifeHere(me.scene).includes(K)?K:null; }catch(e){ return null; } }
+function zkKillerLine(){ const nm=myName||"runner", now=Date.now(), L=["I never forget a face. Or a name, "+nm+".","Every door opens eventually.","You look tired, "+nm+". Get some sleep. Somewhere safe.","*hums an old song*",`Evening, ${nm}. Lovely night.`,"I get around. You'd be surprised where I turn up.","I know every lock in this city. Every single one."];
+  try{ const prev=[...meTrail].reverse().find(s=>s!==me.scene&&!TRAIL_SKIP.includes(s)); if(prev) L.push(`You came from ${sceneName(prev)}, didn't you? I notice things.`,`How was ${sceneName(prev)}? I was there too. Earlier.`); }catch(e){}
   if(save.credits>500) L.push(`₵${Math.floor(save.credits).toLocaleString()} in your pocket. That's a lot to carry around at night, ${nm}.`);
   try{ const pn=curPet(); if(pn) L.push(`Your ${pn.toLowerCase()} doesn't like me. Animals always know.`); }catch(e){}
+  try{ const Lk=fullLook(save.look), st=WARD.style.opts[Lk.style][0], ht=WARD.hat.opts[Lk.hat][0]; if(MECH_BY[st]) L.push(`Hiding inside a ${st}? Smart. Metal's hard to get through.`); if(ht&&ht!=="None") L.push(`Nice ${ht.toLowerCase()}, ${nm}. Easy to spot in a crowd.`); }catch(e){}
+  try{ if(myTrip&&myTrip.until>now) L.push(`You're on ${myTrip.name}, aren't you? Your eyes give it away. Careful. People get… careless.`); }catch(e){}
+  try{ if(APPUI_ON) L.push(`Always looking at that screen, ${nm}. You never see who's standing right behind you.`); }catch(e){}
+  try{ if(zkSt.lastSay&&now-zkSt.lastSay.t<10*6e4) L.push(`"${zkSt.lastSay.text.slice(0,40)}." I heard you say that earlier. I hear a lot of things.`); }catch(e){}
+  try{ const mins=Math.floor((now-zkSt.since)/6e4); if(mins>=30) L.push(`You've been out ${mins} minutes tonight, ${nm}. I've been counting.`); }catch(e){}
+  if(now-(zkSt.stillAt||now)>90e3) L.push(`You've been standing in one spot a while, ${nm}. Waiting for someone?`);
   if((zkSt.cross||0)>=2) L.push(`Funny how we keep running into each other, ${nm}.`,`You keep turning up wherever I am. People might talk, ${nm}.`);
+  if((zkSt.scenes||0)>=2) L.push(`That's ${zkSt.scenes} crime scenes you've poked around in. Playing detective, ${nm}?`);
   if(now-(zkSt.sceneAt||0)<15*6e4) L.push(`Find anything interesting back there, ${nm}? No? Shame.`,"Crime scenes are so… untidy. Don't you think?");
-  const last=zkPlansBetween(now-864e5,now).filter(p=>p.back<=now).pop(); if(last) L.push(`Shame about ${last.V.name.split(" ")[0]}. Don't worry. They always come back.`,`${last.V.name.split(" ")[0]} seems shaken lately. Wonder why.`);
+  if(zkSt.witness&&now-zkSt.witness<30*6e4) L.push(`You were there, weren't you, ${nm}? When it happened. Did you see anything? …No. Of course you didn't.`);
+  const last=zkPlansBetween(now-864e5,now).filter(p=>p.at<=now).pop(); if(last){ const N=last.V.name.split(" ")[0]; if(now<last.back) L.push(`Poor ${N}. Somebody should cover them up.`,`I heard about ${N}. Terrible. Where were you, ${nm}?`); else L.push(`Shame about ${N}. Don't worry. They always come back.`,`${N} seems shaken lately. Wonder why.`); }
   try{ if(IDLE) L.push("Your runner's on autopilot. Must be nice, not having to watch your back."); }catch(e){}
-  const h=new Date().getHours(); if(h>=23||h<5) L.push(`It's ${new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} where you are. Late. Lock your doors, ${nm}.`);
+  const h=new Date().getHours(); if(h>=23||h<5) L.push(`It's ${new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} where you are. Late. Lock your doors, ${nm}.`); if(h>=5&&h<9) L.push(`Up early, ${nm}? Or up late? I'm always up.`);
   try{ if(wxWet()) L.push("I like the rain. It washes everything away."); }catch(e){}
   try{ const on=onlinePeers().filter(p=>p.by&&p.by!==myId&&p.s&&p.s!==me.scene); if(on.length){ const p=on[(Math.random()*on.length)|0]; L.push(`I saw ${nameOf(p.by)} over at ${sceneName(p.s)}. All alone.`); } }catch(e){}
   return pickOf(L); }
-function zkGossip(){ const now=Date.now(), recent=zkPlansBetween(now-864e5,now).filter(p=>p.at<=now); if(!recent.length) return null; const p=recent[recent.length-1], N=p.V.name.split(" ")[0], dead=now<p.back;
-  return dead?pickOf([`Did you hear? They found ${N} ${p.sc?"at "+sceneName(p.sc):"at home"}. Dead.`,`${N}'s gone. Again. The Clinic's working on it.`,"Another body tonight. Nobody saw anything. Nobody ever does."])
-    :pickOf([`${N} came back from the dead today. They remember dying. Not who did it.`,`Third body this month. And every one of them came back with no memory of the face.`,`I walked past where they found ${N}. Gave me chills.`,"Lock your doors at night. I'm serious."]); }
-// stop chatting with your killer: victims who end up next to him feel something
+function zkGossip(){ const now=Date.now(), recent=zkPlansBetween(now-864e5,now).filter(p=>p.at<=now); if(!recent.length) return null; const p=recent[recent.length-1], N=p.V.name.split(" ")[0], dead=now<p.back, n=recent.length;
+  return dead?pickOf([`Did you hear? ${N}'s body is lying at ${sceneName(p.sc)} right now.`,`${N}'s dead. Again. The Clinic's on the way.`,"Another body. Nobody saw anything. Nobody ever does."])
+    :pickOf([`${N} came back from the dead. They remember dying. Not who did it.`,`${n} bodies since yesterday. And every one of them came back with no memory of the face.`,`I walked past where they found ${N}. Gave me chills.`,"Lock your doors at night. I'm serious.","Every 40 minutes. Like clockwork. Somebody's keeping a schedule."]); }
 function zkConvoScript(a,b){ const K=LIFE_R[ZK_KILLER]; const v=a===K?b:b===K?a:null; if(v&&zkRecentVictim(v,Date.now())){ const V=v.name.split(" ")[0]; return [[v,"Do I… know you from somewhere?"],[K,`I don't think so, ${V}. I'd remember.`],[v,"Sorry. You just feel… familiar. Cold."],[K,"*smiles* Get some rest. You look like you've been through something."]]; }
   const g=zkGossip(); if(g&&a!==K&&b!==K&&Math.random()<.5) return [[a,g],[b,pickOf(["Don't. I won't sleep tonight.","Who would even do that?","Nobody ever remembers who. Isn't that strange?","I'm walking home with someone tonight."])]]; return null; }
 NPC_ASK.push({q:"Anything strange happen to you lately?",a:n=>{ if(n.life&&n.ix===ZK_KILLER) return ["Strange? No. My nights are very… ordinary.","Nothing I'd tell you about, "+(myName||"runner")+". *smiles*"]; const v=n.life?zkVictimLine(n):null; if(v) return [v]; const g=zkGossip(); return g?[g,"Not to me. But have you heard about the bodies?"]:["Strange? In Sector 9? Every single day."]; }});
 NPC_ASK.push({q:"Do you feel safe in this city?",a:n=>{ if(n.life&&n.ix===ZK_KILLER) return ["Completely. I've never felt safer.","Safe is a feeling. Locks are a fact. I make locks."]; if(n.life&&zkRecentVictim(n,Date.now())) return ["Safe? I died. I came back. I don't know what safe means anymore."]; return ["Mostly. Except at night. People keep turning up dead lately.","I lock my door twice now."]; }});
+// ---- the alert everyone gets after a murder (closeable)
+function zkAlert(p,here){ let a=$("#zkAlert"); if(a) a.remove(); const N=p.V.name;
+  a=el("div",{id:"zkAlert",role:"alert",style:"position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;width:min(440px,calc(100vw - 24px));background:rgba(20,4,10,.96);border:1px solid #ff2a3a;box-shadow:0 0 24px rgba(255,42,58,.35);padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-family:var(--f-ui);color:#fde"});
+  const close=el("button",{type:"button","aria-label":"Close alert",style:"margin-left:auto;background:none;border:1px solid #ff8a8a;color:#ffbaba;font:600 13px var(--f-ui);min-width:36px;min-height:36px;cursor:pointer;flex:none",text:"✕",onclick:()=>a.remove()});
+  const go=el("button",{type:"button",style:"margin-top:8px;background:rgba(255,42,58,.18);border:1px solid #ff2a3a;color:#fff;font:600 12px var(--f-ui);padding:8px 12px;min-height:36px;cursor:pointer",text:here?"🔎 Look at the scene":`📍 Go to ${sceneName(p.sc)}`,onclick:()=>{ a.remove(); if(here){ me.x=p.x-60; zkInspect(p); } else { const why=ftBlocked(); if(why){ toast(why); return; } fastTravel(p.sc,p.x-120,sceneName(p.sc)); } }});
+  a.append(el("div",{style:"font-size:26px;line-height:1;flex:none",text:"🔪"}),el("div",{style:"flex:1;min-width:0"},el("div",{style:"font:700 13px var(--f-display);letter-spacing:.06em;color:#ff5a6a",text:"MURDER"}),el("div",{style:"font-size:13px;margin-top:3px;line-height:1.4",text:here?`${N} was just killed right here. Nobody saw who did it.`:`${N} was found dead at ${sceneName(p.sc)}. The body is still there.`}),el("div",{style:"font-size:11px;color:#c99;margin-top:3px",text:"The Clinic brings them back in 10 minutes. They won't remember who did it."}),go),close);
+  document.body.append(a); }
 // ---- state: the killer notices you
-const zkSt={cross:0,crossT:0,lastSc:"",sceneAt:0,seenK:{},announced:{},back:{}};
+const zkSt={cross:0,crossT:0,lastSc:"",sceneAt:0,scenes:0,witness:0,announced:{},back:{},since:Date.now(),stillAt:Date.now(),lastX:0,talkT:0,lastSay:null};
+{ const _say=sayText; sayText=function(v){ zkSt.lastSay={text:String(v||""),t:Date.now()}; return _say.apply(this,arguments); }; }
 setInterval(()=>{ try{ if(!save) return; const now=Date.now(), K=LIFE_R[ZK_KILLER];
+    if(Math.abs(me.x-zkSt.lastX)>20){ zkSt.lastX=me.x; zkSt.stillAt=now; }
     // crossing paths
-    if(me.scene!==zkSt.lastSc){ zkSt.lastSc=me.scene; const L=lifeHere(me.scene); if(L.includes(K)){ if(now-zkSt.crossT>20*6e4) zkSt.cross=0; zkSt.cross++; zkSt.crossT=now; if(zkSt.cross>=3&&Math.random()<.6) setTimeout(()=>{ if(lifeHere(me.scene).includes(K)) npcSay(K,`Following me, ${myName||"runner"}?`); },2500); } }
+    if(me.scene!==zkSt.lastSc){ zkSt.lastSc=me.scene; const L=lifeHere(me.scene); if(L.includes(K)){ if(now-zkSt.crossT>20*6e4) zkSt.cross=0; zkSt.cross++; zkSt.crossT=now; if(zkSt.cross>=3&&Math.random()<.6) setTimeout(()=>{ if(zkNear()) npcSay(K,`Following me, ${myName||"runner"}?`); },2500); } }
+    // he watches you: turns to face you, and talks to you when you're close
+    if(zkNear()&&!o_busy()){ K.dir=me.x<K.x?-1:1; const d=Math.abs(K.x-me.x); if(d<260&&now-zkSt.talkT>45e3&&Math.random()<.5){ zkSt.talkT=now; npcSay(K,zkKillerLine()); } }
     // victims coming back are shaken
     for(const p of zkPlansBetween(now-864e5,now)){ if(p.back<=now&&now-p.back<6*36e5&&!zkSt.back[p.at]){ zkSt.back[p.at]=1; lifeFeel(p.V,"zkback",6*36e5-(now-p.back),-.3,.35,"Remembers dying. Can't remember who did it"); } }
-    // news of a death or a return, only for things that just happened
+    // the murder itself, and the return
     for(const p of zkPlansBetween(now-ZK_WIN,now)){ const N=p.V.name;
-      if(now>=p.at&&now-p.at<3*6e4&&!zkSt.announced["d"+p.at]){ zkSt.announced["d"+p.at]=1;
-        if(me.scene===p.sc){ chatLine(null,`A scream echoes nearby. When you turn around, ${N} is on the ground. Nobody saw who did it.`,"sys"); try{ flash&&flash(); }catch(e){} beep(180,.35,"sawtooth"); setTimeout(()=>beep(120,.5,"sawtooth"),180); toast(`${N} was murdered. There's no one near them.`,"#ff2a3a"); }
-        else setTimeout(()=>chatLine(null,`📰 ${N} was found dead ${p.sc?"at "+sceneName(p.sc):"in their apartment"}. The Clinic is working on it.`,"sys"),4000+Math.random()*20000); }
-      if(now>=p.back&&now-p.back<3*6e4&&!zkSt.announced["b"+p.at]){ zkSt.announced["b"+p.at]=1; chatLine(null,`📰 ${N} is back from the dead. They remember dying, but not who did it.`,"sys"); } }
+      if(now>=p.at&&now-p.at<3*6e4&&!zkSt.announced["d"+p.at]){ zkSt.announced["d"+p.at]=1; const here=me.scene===p.sc;
+        if(here){ zkSt.witness=now; chatLine(null,`A scream echoes nearby. When you turn around, ${N} is on the ground. Nobody saw who did it.`,"sys"); beep(180,.35,"sawtooth"); setTimeout(()=>beep(120,.5,"sawtooth"),180); }
+        else chatLine(null,`📰 ${N} was found dead at ${sceneName(p.sc)}. The body is still there.`,"sys");
+        zkAlert(p,here); }
+      if(now>=p.back&&now-p.back<3*6e4&&!zkSt.announced["b"+p.at]){ zkSt.announced["b"+p.at]=1; chatLine(null,`📰 ${N} is back from the dead. They remember dying, but not who did it.`,"sys"); const a=$("#zkAlert"); if(a&&a.textContent.includes(N)) a.remove(); } }
   }catch(e){ console.error("zk",e); } },1000);
-// ---- crime scenes: chalk outline, tape and an evidence marker until it's cleaned up
-function zkHot(sc){ return zkScenes(Date.now()).filter(p=>p.sc===sc).map(p=>({x:p.x,hw:70,label:`Crime scene: where ${p.V.name} was found`,act:()=>zkInspect(p)})); }
-function zkInspect(p){ zkSt.sceneAt=Date.now(); const now=Date.now(), dead=now<p.back; const body=panel("Crime scene",`${p.V.name}, ${LIFE_JOB[p.V.job]?LIFE_JOB[p.V.job].n.toLowerCase():"resident"}`); currentView="zkscene";
-  body.append(el("p",{text:`${p.V.name} was found here at ${new Date(p.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}. ${dead?"The Clinic is working on bringing them back.":"The Clinic brought them back. They remember dying, but not who did it."}`}),
-    el("p",{class:"r-epic",text:"🔎 "+ZK_CLUES[p.clue]}),el("p",{class:"sub",text:"Nobody saw anything. Nobody ever does. Whoever is doing this knows the city very well."})); }
-function zkDraw(t){ for(const p of zkScenes(Date.now())){ if(p.sc!==me.scene) continue; const x=p.x, y=LANE.bot-14; if(x<camX-200||x>camX+VW+200) continue; ctx.save();
+function o_busy(){ return !$("#overlay").hidden; }
+// ---- crime scenes: the body lies there for 10 minutes, with chalk, tape and an evidence marker
+function zkHot(sc){ return zkScenes(Date.now()).filter(p=>p.sc===sc).map(p=>({x:p.x,hw:70,label:Date.now()<p.back?`Crime scene: ${p.V.name}'s body`:`Crime scene: where ${p.V.name} was found`,act:()=>zkInspect(p)})); }
+function zkInspect(p){ zkSt.sceneAt=Date.now(); if(!zkSt["seen"+p.at]){ zkSt["seen"+p.at]=1; zkSt.scenes++; } const now=Date.now(), dead=now<p.back; const body=panel("Crime scene",`${p.V.name}, ${LIFE_JOB[p.V.job]?LIFE_JOB[p.V.job].n.toLowerCase():"resident"}`); currentView="zkscene";
+  body.append(el("p",{text:`${p.V.name} was killed here at ${new Date(p.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}. ${dead?`The body is still here. The Clinic will bring them back in ${Math.max(1,Math.ceil((p.back-now)/6e4))} min.`:"The Clinic brought them back. They remember dying, but not who did it."}`}),
+    el("p",{class:"r-epic",text:"🔎 "+ZK_CLUES[p.clue]}),el("p",{class:"sub",text:"Nobody saw anything. Nobody ever does. Whoever is doing this knows the city very well, and keeps a schedule: every 40 minutes."})); }
+function zkDraw(t){ const now=Date.now(); for(const p of zkScenes(now)){ if(p.sc!==me.scene) continue; const x=p.x, y=LANE.bot-14; if(x<camX-200||x>camX+VW+200) continue; ctx.save();
   ctx.strokeStyle="rgba(240,240,255,.85)"; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(x-30,y,8,6,0,0,7); ctx.moveTo(x-22,y); ctx.lineTo(x+18,y-2); ctx.moveTo(x-12,y); ctx.lineTo(x-16,y-12); ctx.moveTo(x-6,y); ctx.lineTo(x-2,y+12); ctx.moveTo(x+18,y-2); ctx.lineTo(x+34,y-10); ctx.moveTo(x+18,y-2); ctx.lineTo(x+34,y+8); ctx.stroke();
-  ctx.fillStyle="#ffd23a"; for(const s of [-1,1]){ ctx.save(); ctx.translate(x+s*70,y-20); ctx.fillStyle="#2a2a36"; ctx.fillRect(-2,-30,4,50); ctx.restore(); } ctx.save(); ctx.translate(x-70,y-44); ctx.fillStyle="#ffd23a"; ctx.fillRect(0,0,140,9); ctx.fillStyle="#111"; ctx.font="bold 7px monospace"; ctx.textAlign="left"; ctx.beginPath(); ctx.rect(0,0,140,9); ctx.clip(); for(let k=0;k<4;k++) ctx.fillText("DO NOT CROSS",2+k*62-((t*6)%62),7); ctx.restore();
+  for(const s of [-1,1]){ ctx.save(); ctx.translate(x+s*70,y-20); ctx.fillStyle="#2a2a36"; ctx.fillRect(-2,-30,4,50); ctx.restore(); } ctx.save(); ctx.translate(x-70,y-44); ctx.fillStyle="#ffd23a"; ctx.fillRect(0,0,140,9); ctx.fillStyle="#111"; ctx.font="bold 7px monospace"; ctx.textAlign="left"; ctx.beginPath(); ctx.rect(0,0,140,9); ctx.clip(); for(let k=0;k<4;k++) ctx.fillText("DO NOT CROSS",2+k*62-((t*6)%62),7); ctx.restore();
   ctx.fillStyle="#ffd23a"; ctx.beginPath(); ctx.moveTo(x+40,y+6); ctx.lineTo(x+48,y+6); ctx.lineTo(x+44,y-6); ctx.fill(); ctx.fillStyle="#111"; ctx.font="bold 6px monospace"; ctx.textAlign="center"; ctx.fillText("1",x+44,y+4);
-  const pulse=.4+.3*Math.sin(t*3); ctx.fillStyle=`rgba(255,42,58,${pulse*.25})`; ctx.beginPath(); ctx.ellipse(x,y+4,60,10,0,0,7); ctx.fill(); ctx.restore(); } }
+  const pulse=.4+.3*Math.sin(t*3); ctx.fillStyle=`rgba(255,42,58,${pulse*.25})`; ctx.beginPath(); ctx.ellipse(x,y+4,60,10,0,0,7); ctx.fill(); ctx.restore();
+  // the body, lying in the chalk outline until the Clinic takes it
+  if(now<p.back){ try{ drawStick(ctx,x+2,y+2,.92,{dir:1,phase:0,moving:false,look:p.V.look,corpse:true},t); }catch(e){} } } }
 
 // --- stop-and-chat card
 let npcCard=null, npcCardEl=null;
@@ -5199,6 +5233,7 @@ function openWardrobe(tab="name",firstRun=false){
   const tabs=el("div",{class:"tabs"}); tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab==="name"),text:"Name",onclick:freshTab(()=>openWardrobe("name",firstRun))}));
   for(const k of SLOTS) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab===k),text:WARD[k].n,onclick:freshTab(()=>openWardrobe(k,firstRun))}));
   tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab==="hand"),text:"Hand",onclick:freshTab(()=>openWardrobe("hand",firstRun))}));
+  if(!firstRun) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(tab==="mech"),text:"🤖 My Mech",onclick:freshTab(()=>openWardrobe("mech",firstRun))}));
   wtop.append(tabs);
   if(tab==="name"){
     const inp=el("input",{class:"num",id:"handle",maxlength:"32",value:save.name||"",placeholder:"e.g. Byte Witch, N30N_K1D, ★Ronin★",autocomplete:"off",style:"min-width:0;flex:1"});
@@ -5219,6 +5254,7 @@ function openWardrobe(tab="name",firstRun=false){
     return;
   }
   if(tab==="hand"){ handTab(body,firstRun); return; }
+  if(tab==="mech"){ currentView="wardrobe-mech"; body.append(el("strong",{text:"🤖 My Mech · gem sockets"}),el("p",{class:"sub",text:"Customize your Mech Suit or Tiny Mech with Mech Gems. Socket up to 3: one Color gem, one Form gem, and Upgrades. They stay on for any mech you wear."})); mechRigView(body,true); return; }
   const g=el("div",{class:"grid wgrid"});
   const seenN=new Set();
   for(let i=0;i<slotLen(tab);i++){
@@ -10041,8 +10077,8 @@ function buyGem(g,cur){ const price=cur==="chips"?g.ch:g.cr, bal=cur==="chips"?s
 function socketGem(id){ const g=GEM_BY[id]; if(!g||gemCount(id)<1) return; const on=gemsOn();
   if(on.length>=GEM_MAX){ toast(`Your mech has ${GEM_MAX} sockets. Remove a gem first.`); beep(150,.15); return; }
   if(g.k!=="up"&&on.some(x=>GEM_BY[x].k===g.k)){ toast(`Only one ${GEM_KIND[g.k]} at a time. Remove the other one first.`); beep(150,.15); return; }
-  save.gems[id]=gemCount(id)-1; save.look={...save.look,mg:[...on,id]}; persist(); pushPresence(true); beep(900,.06); setTimeout(()=>beep(1400,.08),70); toast(`${g.n} socketed!`,g.col); openGemix("mech"); }
-function unsocketGem(id){ const on=gemsOn(); if(!on.includes(id)) return; save.gems=save.gems||{}; save.gems[id]=gemCount(id)+1; const rest=on.filter(x=>x!==id); save.look={...save.look,mg:rest.length?rest:undefined}; if(!rest.length) delete save.look.mg; persist(); pushPresence(true); beep(500,.06); toast(`${GEM_BY[id].n} back in your gem case.`); openGemix("mech"); }
+  save.gems[id]=gemCount(id)-1; save.look={...save.look,mg:[...on,id]}; persist(); pushPresence(true); beep(900,.06); setTimeout(()=>beep(1400,.08),70); toast(`${g.n} socketed!`,g.col); mechRefresh(); }
+function unsocketGem(id){ const on=gemsOn(); if(!on.includes(id)) return; save.gems=save.gems||{}; save.gems[id]=gemCount(id)+1; const rest=on.filter(x=>x!==id); save.look={...save.look,mg:rest.length?rest:undefined}; if(!rest.length) delete save.look.mg; persist(); pushPresence(true); beep(500,.06); toast(`${GEM_BY[id].n} back in your gem case.`); mechRefresh(); }
 let gemTab="shop";
 function openGemix(tab){ gemTab=tab||gemTab; const body=panel("Gemix · Mech Gems","Attachments for your Mech Suit or Tiny Mech. Buy with credits or chips, then socket up to 3."); currentView="gemix";
   const tabs=el("div",{class:"tabs"}); for(const [k,l] of [["shop","💎 Gem shop"],["mech","🤖 My mech"]]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":gemTab===k?"true":"false",text:l,onclick:()=>openGemix(k)})); body.append(tabs);
@@ -10053,7 +10089,8 @@ function openGemix(tab){ gemTab=tab||gemTab; const body=panel("Gemix · Mech Gem
         l.append(el("div",{class:"li"},gemCanvas(g,44),el("div",{class:"grow"},el("div",{text:g.n+(n?` · ×${n} owned`:"")}),el("div",{class:"sub",text:g.d})),
           el("div",{class:"row",style:"flex-direction:column;gap:4px"},el("button",{class:"btn hot",type:"button",text:`₵${g.cr.toLocaleString()}`,onclick:()=>buyGem(g,"credits")}),el("button",{class:"btn",type:"button",text:`${g.ch} chips`,onclick:()=>buyGem(g,"chips")})))); }
       body.append(l); } return; }
-  // My mech
+  mechRigView(body); }
+function mechRigView(body,fromChar){
   const L=fullLook(save.look), wearing=!!MECH_BY[WARD.style.opts[L.style][0]], on=gemsOn();
   const pv=lookCanvas(save.look,110); pv._walk=true; pv.style.cssText="width:140px;height:140px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
   body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:wearing?`Wearing ${WARD.style.opts[L.style][0]}`:"No mech on right now"}),
@@ -10063,9 +10100,10 @@ function openGemix(tab){ gemTab=tab||gemTab; const body=panel("Gemix · Mech Gem
     sl.append(g?el("div",{class:"li",style:"flex:1;min-width:150px"},gemCanvas(g,36),el("div",{class:"grow"},el("div",{text:g.n}),el("div",{class:"sub",text:GEM_KIND[g.k]})),el("button",{class:"btn",type:"button",text:"Remove",onclick:()=>unsocketGem(id)}))
       :el("div",{class:"li",style:"flex:1;min-width:150px;opacity:.6"},el("div",{class:"grow",text:"Empty socket"}))); }
   body.append(el("strong",{text:"Sockets"}),sl,el("strong",{text:"Your gem case"}));
-  const own=MECH_GEMS.filter(g=>gemCount(g.id)>0); if(!own.length){ body.append(el("div",{class:"empty",text:"No gems yet. Buy some in the Gem shop tab."})); return; }
+  const own=MECH_GEMS.filter(g=>gemCount(g.id)>0); if(!own.length){ body.append(el("div",{class:"empty",text:fromChar?"No gems yet. Buy them at Gemix in the Byte Market.":"No gems yet. Buy some in the Gem shop tab."})); return; }
   const l=el("div",{class:"list"}); for(const g of own) l.append(el("div",{class:"li"},gemCanvas(g,40),el("div",{class:"grow"},el("div",{text:`${g.n} ×${gemCount(g.id)}`}),el("div",{class:"sub",text:GEM_KIND[g.k]+" · "+g.d})),el("button",{class:"btn hot",type:"button",text:"Socket",onclick:()=>socketGem(g.id)})));
-  body.append(l); }
+  body.append(l); if(fromChar) body.append(el("p",{class:"sub",text:"Buy more gems at Gemix in the Byte Market."})); }
+function mechRefresh(){ if(currentView==="wardrobe-mech"){ if(tryOn) tryOn.mg=save.look.mg; openWardrobe("mech"); } else openGemix("mech"); }
 function drawGemixStall(ctx,x,t){ for(let k=0;k<5;k++){ const g=MECH_GEMS[(Math.floor(t/2)+k*8)%MECH_GEMS.length]; drawGemIcon(ctx,x-80+k*34,236,26,g,t+k); }
   ctx.fillStyle="#0b0716"; ctx.fillRect(x-100,168,58,44); ctx.strokeStyle="#ff8ad8"; ctx.strokeRect(x-99.5,168.5,57,43); ctx.fillStyle="#ff8ad8"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("MECH",x-71,182); ctx.fillText("GEMS",x-71,192); ctx.fillStyle="#38e8ff"; ctx.fillText("40 KINDS",x-71,204); }
 
