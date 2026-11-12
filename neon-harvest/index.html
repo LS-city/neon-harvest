@@ -2172,12 +2172,12 @@ function tickLookCans(t){ _lkF++; const many=liveLooks.size>6; let li=0; for(con
    Players pick a role at City Hall (Civic Center). Roles change what you can do everywhere:
    thieves steal, police arrest, medics heal, dealers deal, hackers crack ATMs, cult leaders gather
    followers, politicians run for Mayor. Crimes raise your Wanted level (★); police players and
-   police NPCs can put you in jail. Robot gangs, police patrols and civilians roam the city. */
+   police NPCs can put you in jail. Police patrols and civilians roam the city. */
 const ROLES={
   worker:{n:"Hard Worker",ic:"🔧",col:"#ffb84a",tag:"WORKER",d:"Honest work, honest pay. The backbone of Sector 9.",
     perks:["Union bonus: +₵120 for every 10 minutes you're clocked in on any shift","Daily union stipend: ₵250 at City Hall","Can't be pickpocketed while on shift","Can never be Wanted: no crimes, no jail"]},
-  police:{n:"Police",ic:"👮",col:"#3a7bff",tag:"POLICE",d:"Keep the peace. Catch thieves, bust gangs, run the precinct.",
-    perks:["Arrest Wanted players (★) nearby: they go to jail, you get ₵80 per star","Bust robot gang members for ₵80","Patrol pay: ₵60 every 5 minutes you're out on patrol","Thieves who try to rob you get caught on the spot"]},
+  police:{n:"Police",ic:"👮",col:"#3a7bff",tag:"POLICE",d:"Keep the peace. Catch thieves, chase Wanted runners, run the precinct.",
+    perks:["Arrest Wanted players (★) nearby: they go to jail, you get ₵80 per star","Patrol pay: ₵60 every 5 minutes you're out on patrol","Thieves who try to rob you get caught on the spot"]},
   medic:{n:"Medic",ic:"✚",col:"#43f0a4",tag:"MEDIC",d:"Patch people up, revive runners in The Void, treat hurt civilians.",
     perks:["Treat players: they get Speed for 5 min and full Void HP, you get ₵60","Revive deleted players in The Void","Treat injured civilians (🩹) for ₵40","Free Clinic patch-ups for yourself"]},
   thief:{n:"Thief",ic:"🦝",col:"#a0a6bc",tag:"THIEF",d:"Light fingers, fast feet. Every pocket is an opportunity.",
@@ -2206,7 +2206,7 @@ const PRISON={w:2600,x0:362,x1:2360,spawn:520,press:660,laundry:940,weight:1200,
 const PRISON_LINES=["Day 412. Or is it 413?","The laundry's the easy gig.","Don't trust the warden.","I'm innocent, I swear.","New fish \u2014 watch yourself.","Tunnel? What tunnel?","Keep your head down in here.","Commissary got energy drinks again.","Three hots and a cot.","You get used to the food. Sort of.","Shoot some hoops, pass the time.","I just read the whole library. Twice."];
 const ATM_SPOTS={street:1580,byte:2520,neonrow:1180,civic:960,grid:1300};
 const CIV_NAMES=["Mina","Dex","Old Ruiz","Kip","Sol","Nova","Bram","Ivy","Taz","Juno-2","Pell","Rhea","Otis","Quill","Vega","Moss","Lark","Ziggy","Fen","Halo"];
-const CIV_LINES=["Rain hasn't stopped in three years.","Watch your pockets around here.","The Rust Jaws took my scooter.","Vote for whoever fixes the street lights.","You smell like solder.","I heard the Mayor's office is hiring.","Cops doubled their patrols tonight.","Got any spare chips?","That club never closes.","Stay out of the alley after dark."];
+const CIV_LINES=["Rain hasn't stopped in three years.","Watch your pockets around here.","Somebody painted SIM CITY on the stairs past The Third Eye.","Vote for whoever fixes the street lights.","You smell like solder.","I heard the Mayor's office is hiring.","Cops doubled their patrols tonight.","Got any spare chips?","That club never closes.","Stay out of the alley after dark."];
 
 /* ---------- state helpers ---------- */
 function pRole(){ return ROLES[save.role]?save.role:""; }
@@ -2324,9 +2324,9 @@ function drawCityProps(t){ const ax=ATM_SPOTS[me.scene]; if(ax!=null) drawATM(ax
     ctx.save(); ctx.translate(pos.x,pos.y); ctx.scale(1,.32); ctx.rotate(age*.8); ctx.strokeStyle=r.col; glowOn(ctx,r.col,12); ctx.globalAlpha=Math.min(1,age)*Math.min(1,(9-age)/2); ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,70,0,7); ctx.stroke(); ctx.beginPath(); for(let k=0;k<=5;k++){ const a=k*Math.PI*.8; ctx.lineTo(Math.cos(a)*66,Math.sin(a)*66); } ctx.stroke(); ctx.restore(); ctx.shadowBlur=0;
     for(let k=0;k<8;k++){ const u=((age*.5)+k/8)%1; ctx.globalAlpha=(1-u)*.8; ctx.fillStyle=r.col; ctx.fillRect(pos.x+Math.cos(k*.785+age)*60,pos.y-u*80,2,2); } ctx.globalAlpha=1; } }
 
-/* ---------- city NPCs: civilians, police, robot gangs ---------- */
-const CITY_CFG={street:{civ:[[400,1500],[1500,2600],[2200,3400],[600,3800]],cop:[[500,2900]],gang:[3050,3900,3]},byte:{civ:[[300,1600],[1500,3000],[2600,4200]],cop:[[600,3000]],gang:[3500,4300,2]},
-  neonrow:{civ:[[300,1300],[1100,2300],[500,2000]],cop:[[400,2200]]},grid:{civ:[[400,2000],[1800,3600]],gang:[2900,4200,2]},civic:{civ:[[300,1000],[1600,2100]],cop:[[950,1650],[300,2100]]},smacked:{civ:[[300,1400]]},prison:{civ:[[430,1200],[1100,2000],[1500,2340]]}};
+/* ---------- city NPCs: civilians and police ---------- */
+const CITY_CFG={street:{civ:[[400,1500],[1500,2600],[2200,3400],[600,3800]],cop:[[500,2900]]},byte:{civ:[[300,1600],[1500,3000],[2600,4200]],cop:[[600,3000]]},
+  neonrow:{civ:[[300,1300],[1100,2300],[500,2000]],cop:[[400,2200]]},grid:{civ:[[400,2000],[1800,3600]]},civic:{civ:[[300,1000],[1600,2100]],cop:[[950,1650],[300,2100]]},smacked:{civ:[[300,1400]]},prison:{civ:[[430,1200],[1100,2000],[1500,2340]]}};
 const cityNpcs={}; let gangCd=0;
 function rndLook(seed){ const r=seeded(seed); const pick=k=>Math.floor(r()*Math.min(WARD[k].opts.length,WARD_BASE_LEN[k]||WARD[k].opts.length)); const col=()=>Math.floor(r()*COLORS.length); return {skin:pick("skin"),style:pick("style"),jacket:col(),pants:col(),visor:pick("visor"),hat:pick("hat"),hair:pick("hair"),hairCol:col(),feet:pick("feet"),accent:col(),nameCol:col(),neck:0,back:0}; }
 function cityGen(sc){ const b=cityGenBase(sc), r=lifeHere(sc); let L=r.length?b.concat(r):b; return L; }
@@ -2357,7 +2357,7 @@ function tickCity(dt){ const now=Date.now();
     if(n.k==="bot"&&!jailed()&&!roleIs("police")&&!(IS_ADMIN&&save.admImm)&&now>gangCd&&$("#overlay").hidden){ const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5); if(d<70&&!n.mug){ n.mug=1; gangMug(n); } }
     if(n.pause>0){ n.pause-=dt; continue; }
     if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; n.x=clamp(n.x,n.min,n.max); } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; }
-    if(n.k==="civ"&&!n.life&&Math.random()<dt/40){ n.pause=2+Math.random()*3; const pool=me.scene==="prison"?PRISON_LINES:CIV_LINES; if(Math.random()<.4) npcSay(n,me.scene!=="prison"&&n.hurt?"Ugh… I need a medic.":me.scene!=="prison"&&n.buyer&&roleIs("dealer")?"Psst… holding any Dust?":pool[(Math.random()*pool.length)|0]); }
+    if(n.k==="civ"&&!n.life&&Math.random()<dt/40){ n.pause=2+Math.random()*3; const pool=me.scene==="prison"?PRISON_LINES:CIV_LINES; if(Math.random()<.4) npcSay(n,me.scene!=="prison"&&n.hurt?"Ugh… I need a medic.":me.scene!=="prison"&&n.buyer&&roleIs("dealer")?"Psst… holding any Dust?":(me.scene!=="prison"&&Math.random()<.5&&(wxLine()||worldLine(n)))||pool[(Math.random()*pool.length)|0]); }
     if(n.k==="civ"&&!n.hurt&&Math.random()<dt/400) n.hurt=true;
     if(n.k==="civ"&&n.purse<80&&Math.random()<dt/60) n.purse+=5; }
   try{ lifeTick(dt); }catch(e){}
@@ -2376,9 +2376,9 @@ function drawGangBot(c,x,y,s,t,n){ c.save(); c.translate(x,y); c.scale(s,s); con
   c.fillStyle="#38e8ff"; c.font="bold 5px monospace"; c.textAlign="center"; c.fillText("⚙",0,-36); c.restore();
   c.save(); c.textAlign="center"; c.font="9px monospace"; c.fillStyle="#ff7a5a"; c.fillText(n.name.toUpperCase()+" "+moodEmoji(n),x,y-92*s); c.restore();
   if(n.say&&T-n.say.t<4) drawBubble(c,x,y-96*s,n.say.text,"#ff5a4a","#ffd8d0"); }
-function cityEnts(ents){ const L=cityGen(me.scene);
+function cityEnts(ents){ const L=cityGen(me.scene), wet=wxWet();
   for(const n of L){ if(n.k==="bot"){ if(n.out) continue; ents.push({x:n.x,y:n.y,draw:(c,x,y,s,t)=>drawGangBot(c,x,y,s,t,n)}); continue; }
-    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.life?!!(n.walking||n.vx):!!n.vx&&!(n.pause>0),look:n.look,name:lifeName(n)+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null,sit:!!n.sit,emote:(n.danceUntil>T||(n.life&&n.act&&n.act.mode==="dance"&&!n.goal&&!n.leaving))?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}}); }
+    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.life?!!(n.walking||n.vx):!!n.vx&&!(n.pause>0),look:n.look,name:lifeName(n)+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null,sit:!!n.sit,emote:(n.danceUntil>T||(n.life&&n.act&&n.act.mode==="dance"&&!n.goal&&!n.leaving))?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)},umb:wet&&!n.sit?UMB_COLS[hashNum((n.name||"c")+n.k)%UMB_COLS.length]:null}); }
   // acolytes behind cult leaders (me and peers)
   const acoLook=i=>({jacket:0,pants:0,skin:(i*3)%5,style:1,visor:0,hat:0});
   if(roleIs("cult")&&save.acolytes&&me.scene!=="void"){ const tr=roleTick.acoTrail||[]; for(let i=0;i<save.acolytes;i++){ const p=tr[Math.min(tr.length-1,14+i*12)]||me; ents.push({x:p.x-(me.dir||1)*(22+i*16),y:clamp(p.y+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:me.dir,phase:me.phase+i,moving:me.moving,look:acoLook(i),name:"",rk:"cult",cu:save.myCult?{by:myId,...save.myCult}:null,aco:1}}); } }
@@ -2613,7 +2613,7 @@ const FN_STEPS=[
   {k:"dome",t:"Visit the Stream Dome theater",d:"Take the Metro to the Stream Dome. Grab a seat, or play your own movie on the big screen.",ok:()=>(save.qstat["visit:streamdome"]||0)>=1}];
 const FN_STEP_PAY=60, FN_DONE_PAY=400, FN_DONE_CHIPS=25;
 const DG_POOL=[{k:"dig",n:3,t:"Dig 3 scrap piles"},{k:"sell",n:3,t:"Sell 3 parts"},{k:"drink",n:2,t:"Order 2 drinks at The Glitch"},{k:"chat_res",n:2,t:"Chat with 2 residents"},
-  {k:"treat",n:1,t:"Treat a resident to something"},{k:"asm",n:10,t:"Build 10 units at Harvest Assembly"},{k:"botkill",n:1,t:"Run off a Rust Jaws bot"},
+  {k:"treat",n:1,t:"Treat a resident to something"},{k:"asm",n:10,t:"Build 10 units at Harvest Assembly"},
   {k:"visit:civic",n:1,t:"Visit the Civic Center"},{k:"visit:club",n:1,t:"Go out to The Third Eye"},{k:"visit:grid",n:1,t:"Visit The Grid"},{k:"visit:streamdome",n:1,t:"Stop by the Stream Dome"},
   {k:"visit:racers",n:1,t:"Check out the Car Display"},
   {k:"vote",n:1,t:"Vote in the election",need:()=>{ try{ return candList().some(c=>c.uid!==myId); }catch(e){ return false; } }}];
@@ -2629,6 +2629,8 @@ function goalsInit(){ if(!save) return; qs(); const today=gDay();
   if(!save.daily||save.daily.day!==today){ const r=seeded(hashNum(String(myId||"solo")+today)), pool=DG_POOL.filter(g=>!g.need||g.need()), pick=[];
     while(pick.length<3&&pool.length) pick.push(pool.splice(Math.floor(r()*pool.length),1)[0].k);
     save.daily={day:today,g:pick,base:Object.fromEntries(pick.map(k=>[k,save.qstat[k]||0])),done:[],all:false}; persist(); }
+  // swap out any goal that no longer exists (the Rust Jaws are gone)
+  if(save.daily&&Array.isArray(save.daily.g)){ const bad=save.daily.g.filter(k=>!DG_POOL.some(g=>g.k===k)); if(bad.length){ const pool=DG_POOL.filter(g=>!save.daily.g.includes(g.k)&&(!g.need||g.need())); save.daily.base=save.daily.base||{}; save.daily.g=save.daily.g.map(k=>bad.includes(k)&&pool.length?pool.shift().k:k).filter(k=>DG_POOL.some(g=>g.k===k)); for(const k of save.daily.g) if(save.daily.base[k]==null) save.daily.base[k]=save.qstat[k]||0; persist(); } }
   // First Night: veterans who already did everything skip it quietly
   if(!save.fn||typeof save.fn!=="object"){ save.fn={done:[],fin:false}; if(FN_STEPS.every(s=>{ try{ return s.ok(); }catch(e){ return false; } })){ save.fn.done=FN_STEPS.map(s=>s.k); save.fn.fin=true; } persist(); } }
 function dgProg(k){ const g=DG_POOL.find(x=>x.k===k)||{n:1}; const have=Math.max(0,(save.qstat[k]||0)-((save.daily.base||{})[k]||0)); return {cur:Math.min(g.n,have),n:g.n,t:g.t||k}; }
@@ -2792,7 +2794,7 @@ function moodOf(n){ const now=Date.now(); if(n.moodT>now-1000&&n.mood) return n.
     if(lifeBday(n)){ v+=.5; e+=.3; k="party"; why.unshift("It's their birthday"); } }
   if(n.hurt){ v-=.4; why.unshift("Hurt — needs a medic"); }
   for(const ev of (n.ev||[])) if(ev.until>now){ v+=ev.dv; f+=ev.df; if(ev.why) why.unshift(ev.why); if(ev.k==="grateful") k="grateful"; if(ev.k==="angry"&&!k) k="angry"; }
-  if(here&&n.x!=null){ const L=cityGen(me.scene); if(L.some(b=>b.k==="bot"&&!b.out&&Math.abs(b.x-n.x)<180)){ f+=.7; why.unshift("Rust Jaws are nearby"); }
+  if(here&&n.x!=null){ const L=cityGen(me.scene); const wm=wxMood(n); if(wm){ v+=wm[0]; f+=wm[1]; why.push(wm[2]); }
     if(heatStars()&&Math.abs(me.x-n.x)<200){ f+=.5; why.unshift("A Wanted runner is close"); }
     const rl=relOf(npcKey(n)); if(Math.abs(me.x-n.x)<140){ if(rl>=4){ v+=.2; why.push("Happy to see you"); } else if(rl<=-3){ v-=.35; k=k||"angry"; why.unshift("Doesn't trust you"); } } }
   if(n.dance) { v+=.3; e+=.3; }
@@ -2813,7 +2815,7 @@ function lifeGreet(n){ const r=relOf(npcKey(n)), me1=myName||"runner", m=moodOf(
   try{ if(mayorId()===myId) return `Mayor ${me1}! ${lifeApproves(n)?"Love what you're doing.":"We need to talk about this city."}`; }catch(e){}
   if(roleIs("medic")&&n.hurt) return "Doc! Over here — I'm hurt!";
   if(r>=5&&n.life&&!rcd("gift_"+n.id)&&Math.random()<.5){ setCd("gift_"+n.id,20*36e5); const g=15+Math.floor(Math.random()*26); save.credits+=g; persist(); hud(); toast(`${n.name} slipped you ₵${g}: "Found this, thought of you."`,"#ff9ad5"); return `${me1}! Here, this is for you.`; }
-  if(Math.random()<.4){ const nl=lifeNotice(n); if(nl) return nl; }
+  if(Math.random()<.6){ const nl=lifeNotice(n); if(nl) return nl; }
   if(r>=3) return [`Hey ${me1}! Good to see you.`,`${me1}! How've you been?`,`Look who it is — ${me1}!`][(Math.random()*3)|0];
   if(roleIs("police")) return "Evening, officer.";
   if(save.look&&save.look.pet&&Math.random()<.3) return "Aww, your companion is adorable!";
@@ -2838,10 +2840,10 @@ function lifeAware(dt){ const L=cityGen(me.scene), W=(npcs[me.scene]||[]), all=L
     const res=L.filter(n=>n.life);
     for(const n of res){ if(T<n.chatT) continue; n.chatT=T+18+Math.random()*28; if(Math.abs(n.x-me.x)>VW) continue;
       const pal=res.find(o=>o!==n&&Math.abs(o.x-n.x)<70&&Math.abs(o.y-n.y)<60), pk=pal?[n.id,pal.id].sort().join():"";
-      if(pal&&T-(lifePairs[pk]||-99)>90){ lifePairs[pk]=T; const best=n.bestie===pal.ix; npcSay(n,best?`${pal.name.split(" ")[0]}! My favorite person!`:`Hey ${pal.name.split(" ")[0]}.`); setTimeout(()=>npcSay(pal,best?`${n.name.split(" ")[0]}!! Tonight's gonna be fun.`:["Hey yourself.","How's work?","Long time!"][(Math.random()*3)|0]),1300); lifeG=T+4; break; }
+      if(pal&&T-(lifePairs[pk]||-99)>90){ lifePairs[pk]=T; const best=n.bestie===pal.ix; npcSay(n,best?`${pal.name.split(" ")[0]}! My favorite person!`:`Hey ${pal.name.split(" ")[0]}.`); setTimeout(()=>npcSay(pal,best?`${n.name.split(" ")[0]}!! Tonight's gonna be fun.`:(Math.random()<.5&&wxLine())||["Hey yourself.","How's work?","Long time!"][(Math.random()*3)|0]),1300); lifeG=T+4; break; }
       const p=[...peers.values()].find(q=>q.s===me.scene&&q.by&&Math.abs(q.dx-n.x)<70); if(p&&Math.random()<.4){ npcSay(n,`Hey ${nameOf(p.by)}!`); lifeG=T+4; break; }
       const s=thLive(); if(s&&me.scene!=="streamdome"&&Date.now()-lifeGossipT>9e4){ lifeGossipT=Date.now(); npcSay(n,`Did you hear? “${s.title.slice(0,24)}” is playing at the Stream Dome!`); lifeG=T+4; break; }
-      npcSay(n,lifeLine(n)); lifeG=T+3; break; } } }
+      npcSay(n,(Math.random()<.45&&worldLine(n))||lifeLine(n)); lifeG=T+3; break; } } }
 
 /* ============================================================ NPC MINDS: awareness, stop-you-to-chat, deep questions, real-life questions, NPC friendships */
 // Questions NPCs ask you. Replies are fixed choices: nothing you pick is personal or identifying, and it stays in your save.
@@ -2865,7 +2867,7 @@ const NPC_Q=[
  {id:"deep_strong",k:"deep",q:"What keeps you going on the hard days?",o:[["The people I love","They're lucky to have you."],["Music","Same. A good song is a lifeline."],["Stubbornness","Ha! Stubborn is underrated."],["Games like this one","Then I'm glad we're here for you."]],mine:["My friends. And coffee.","Knowing tomorrow's a new shift.","Some days, nothing. Some days, a smile from a stranger."]},
  {id:"deep_real",k:"deep",q:"Do you ever wonder if we're the real ones, and you're the dream?",o:[["All the time","Okay, good, it's not just me."],["That's creepy","Sorry! I think about stuff when it rains."],["Maybe we're both real","I like that one best."]],mine:["Sometimes I see runners stare at something none of us can see.","I try not to think about it.","I think about it every night."]},
  {id:"deep_proud",k:"deep",q:"What's something you're proud of that nobody notices?",o:[["Getting through tough times","That's the biggest thing anyone can do."],["Being a good friend","The world needs more of those."],["Learning something new","Keep going. Growth looks good on you."],["Showing up every day","Showing up is half of everything."]],mine:["I never once burned the coffee. Not once.","I helped a lost kid get home last week.","Still standing. That counts."]},
- {id:"deep_world",k:"deep",q:"If you could change one thing about your world out there, what would it be?",o:[["More kindness","Yeah. Kindness is free and still somehow rare."],["Less stress","Everyone needs a break."],["Fairer prices","Ha! Same here. Have you seen rent in Sector 9?"],["Nothing, it's okay","A content soul. Rare and beautiful."]],mine:["Fewer Rust Jaws, more street cats.","Shorter shifts.","Everything, some nights."]},
+ {id:"deep_world",k:"deep",q:"If you could change one thing about your world out there, what would it be?",o:[["More kindness","Yeah. Kindness is free and still somehow rare."],["Less stress","Everyone needs a break."],["Fairer prices","Ha! Same here. Have you seen rent in Sector 9?"],["Nothing, it's okay","A content soul. Rare and beautiful."]],mine:["Fewer potholes, more street cats.","Shorter shifts.","Everything, some nights."]},
  {id:"fun_power",k:"fun",q:"Quick question: if you had one superpower, which one?",o:[["Flying","You'd be the fastest courier in the sector."],["Invisibility","Sneaky. I'll keep an eye on my wallet."],["Reading minds","Oh no. Please don't read mine."],["Unlimited credits","Practical. I respect it."]],mine:["Teleporting to work. Every morning.","Talking to cats.","Never needing sleep."]},
  {id:"fun_snack",k:"fun",q:"Okay, important question. Best late-night snack?",o:[["Noodles","Byte Bowl approves."],["Something sweet","A sweet tooth! Candy shop on Neon Row, trust me."],["Chips","Crunchy. Classic."],["I skip snacks","Discipline. I could never."]],mine:["Packet Bao. Every time.","Leftover anything.","Coffee counts as a snack, right?"]},
 ];
@@ -2903,6 +2905,7 @@ function lifeNotice(n){ const nm=myName||"runner", L=[]; const h=new Date().getH
   const M=npcMem(), told=npcTold(n);
   if(told.length&&Math.random()<.6){ const id=told[(Math.random()*told.length)|0], Q=NPC_Q.find(q=>q.id===id), pick=M[id]; if(Q&&pick!=null&&Q.o[pick]){ const ans=Q.o[pick][0];
     L.push(id==="real_drink"?`Still a ${ans.toLowerCase()} person out there?`:id==="real_pet"&&pick<3?"How's your pet doing out there?":id==="deep_dream"?`Still chasing that dream? "${ans}." I think about it.`:id==="real_day"&&pick===2?"Hey. Is today a little better than last time?":`I remember you told me: "${ans}". Still true?`); } }
+  try{ L.push(...worldLines(n)); }catch(e){}
   return L.length?L[(Math.random()*L.length)|0]:null; }
 // --- stop-and-chat card
 let npcCard=null, npcCardEl=null;
@@ -3113,7 +3116,7 @@ function roleActions(){ const A=[]; if(jailed()||me.dead) return A; const sc=me.
   const ns=L.filter(n=>near(n.x,n.y,60)&&!(n.k==="bot"&&n.out)).sort((a,b)=>Math.abs(a.x-me.x)-Math.abs(b.x-me.x));
   for(const n of ns){
     if(n.k==="bot"){ A.push({l:rk==="police"?`Bust ${n.name} (+₵80)`:`Fight ${n.name}`,f:()=>fightBot(n,rk==="police"),hot:1}); continue; }
-    if(n.k==="cop"){ if(heatStars()) A.push({l:`Turn yourself in to ${n.name}`,f:()=>{ goJail(Math.max(1,Math.floor(heatStars()/2)),"Turned yourself in"); }}); else A.push({l:`Talk to ${n.name}`,f:()=>npcSay(n,["Move along, citizen.","Keep your nose clean.","Rust Jaws were spotted east of here.","Quiet night. Too quiet."][(Math.random()*4)|0])}); continue; }
+    if(n.k==="cop"){ if(heatStars()) A.push({l:`Turn yourself in to ${n.name}`,f:()=>{ goJail(Math.max(1,Math.floor(heatStars()/2)),"Turned yourself in"); }}); else A.push({l:`Talk to ${n.name}`,f:()=>npcSay(n,Math.random()<.4&&wxLine()||["Move along, citizen.","Keep your nose clean.","Heard there are stairs past The Third Eye that go way down.","Quiet night. Too quiet."][(Math.random()*4)|0])}); continue; }
     if(rk==="thief") A.push({l:rcd("pp_"+n.name)?`${n.name}'s pockets are empty (${cdTxt(rcd("pp_"+n.name))})`:`Pickpocket ${n.name}`,f:()=>pickpocket(n)});
     if(rk==="medic"&&n.hurt) A.push({l:`Treat ${n.name} 🩹 (+₵40)`,f:()=>treatNpc(n),hot:1});
     if(rk==="dealer"&&n.buyer) A.push({l:save.dust?`Sell Neon Dust to ${n.name} 💊`:`${n.name} wants Dust (buy at the Black Market)`,f:()=>streetDeal(n)});
@@ -3247,14 +3250,14 @@ function openRoleMenu(){ const R=ROLES[pRole()]; const body=panel(R?`${R.ic} ${R
   const pol=cityPolicies(); if(pol.length) info.push(el("span",{class:"sub",text:"City laws: "+pol.map(k=>POLICIES[k].n).join(", ")}));
   if(info.length) body.append(el("div",{class:"detail"},el("div",{class:"info"},...info)));
   const A=roleActions(); body.append(el("strong",{text:A.length?"Nearby actions":"Nothing nearby"})); const l=el("div",{class:"list"}); for(const a of A) l.append(el("div",{class:"li"},el("div",{class:"grow",text:a.l}),el("button",{class:"btn"+(a.hot?" hot":""),type:"button",text:"Do it",onclick:()=>{ closePanel(); a.f(); }}))); body.append(l);
-  if(!A.length) body.append(el("div",{class:"sub",text:R?"Walk up to players, civilians (🩹 hurt, 💊 buyers), police or Rust Jaws gang bots to see what you can do.":""}));
+  if(!A.length) body.append(el("div",{class:"sub",text:R?"Walk up to players, civilians (🩹 hurt, 💊 buyers) or police to see what you can do.":""}));
   if(roleIs("hacker")||roleIs("police")) body.append(el("strong",{text:"Police radio"}),radioList());
   body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Role Office",onclick:()=>openRoleOffice()}),el("button",{class:"btn",type:"button",text:"Elections",onclick:()=>openElection()}))); }
 function radioList(){ const l=el("div",{class:"list"}); const W=wantedList(); if(!W.length) l.append(el("div",{class:"empty",text:"No Wanted runners online."})); for(const w of W) l.append(el("div",{class:"li"},el("div",{class:"grow",text:`${w.name}${w.me?" (you)":""}`}),el("span",{class:"r-epic",text:"★".repeat(w.hz)}),el("span",{class:"sub",text:sceneName(w.s)})));
   const cops=onlinePeers().filter(p=>p.rl==="police"); l.append(el("div",{class:"sub",text:cops.length?`Police on duty: ${cops.map(p=>`${nameOf(p.by)} (${sceneName(p.s)})`).join(", ")}`:"No police players on duty."})); return l; }
 function openPrecinct(){ const body=panel("Precinct 9","\"Serve. Protect. Fill out the forms.\""); currentView="precinct"; body.append(el("strong",{text:"Wanted board"}),radioList());
   if(heatStars()) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Turn yourself in (half the time, no fine)",onclick:()=>{ const st=Math.max(1,Math.floor(heatStars()/2)); const c=save.credits; goJail(st,"Turned yourself in"); save.credits=c; persist(); }})));
-  if(roleIs("police")) body.append(el("div",{class:"sub",text:`Your record: ${(save.rstat||{}).arrests||0} arrests, ${(save.rstat||{}).busts||0} gang busts. Patrol pay comes every 5 minutes while you're moving around the city.`}));
+  if(roleIs("police")) body.append(el("div",{class:"sub",text:`Your record: ${(save.rstat||{}).arrests||0} arrests. Patrol pay comes every 5 minutes while you're moving around the city.`}));
   else body.append(el("div",{class:"sub",text:"Want to wear the badge? Become Police at City Hall."})); }
 function openClinic(){ const body=panel("Clinic","Dr. Anand: \"Hold still. This will only sting a lot.\""); currentView=null; const free=policy("healthcare")||roleIs("medic"); const price=free?0:40;
   body.append(el("div",{class:"sub",text:"A patch-up gives you Speed for 5 minutes and full HP in The Void."}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:price?`Get patched up (₵${price})`:"Get patched up (free)",onclick:()=>{ if(rcd("clinic")) return toast(`Come back in ${cdTxt(rcd("clinic"))}.`); if(save.credits<price) return toast("Not enough credits."); save.credits-=price; setCd("clinic",10*6e4); save.buffs=save.buffs||{}; save.buffs.speed=Math.max(+save.buffs.speed||0,Date.now()+5*6e4); persist(); hud(); toast("Patched up: Speed for 5 min.","#43f0a4"); closePanel(); }})));
@@ -4222,7 +4225,7 @@ function safeAct(h){ try{ stTrack("act",h.label); }catch(e){} try{ h.act(); }cat
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
   setTimeout(()=>{ go(scene,x); if(scene==="assembly") chatLine(null,"Harvest Assembly: clock in at the shift board or walk into any open bay. ₵400 every 30 min while you keep building, plus speed tips. Up to 60 min per shift, 2 shifts a day. Leaving clocks you out.","sys"); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="neonrow") chatLine(null,"Neon Row: real local businesses rent these storefronts. Walk up to a store, see its rewards, and redeem with RP. Show your NR- code at the store in person.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards for Data Collectors Club members. Redeem with Reward Points (RP) and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
-function go(scene,x){ if(scene==="ascend"&&!godActive()){ toast("Elysium can only be reached with the God Particle."); return; } if(me.scene==="ascend"&&scene!=="ascend"&&godActive()&&!(godState&&godState.leaving)){ toast("The God Particle holds you in Elysium until it fades."); return; } if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="simcity"&&me.scene!=="simcity") setTimeout(()=>chatLine(null,"Sim City: the underworld below Sector 9. Black markets sell what you can't buy above ground, stock changes at midnight, and club items work down here.","sys"),50); if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } questEvent("visit:"+scene); me.scene=scene; me.x=Number.isFinite(x)?x:((SCENES[scene]&&SCENES[scene].spawn)||200); me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
+function go(scene,x){ try{ trailNote(me.scene); if(scene==="simcity") save.simSeen=1; }catch(e){} if(scene==="ascend"&&!godActive()){ toast("Elysium can only be reached with the God Particle."); return; } if(me.scene==="ascend"&&scene!=="ascend"&&godActive()&&!(godState&&godState.leaving)){ toast("The God Particle holds you in Elysium until it fades."); return; } if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="simcity"&&me.scene!=="simcity") setTimeout(()=>chatLine(null,"Sim City: the underworld below Sector 9. Black markets sell what you can't buy above ground, stock changes at midnight, and club items work down here.","sys"),50); if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } questEvent("visit:"+scene); me.scene=scene; me.x=Number.isFinite(x)?x:((SCENES[scene]&&SCENES[scene].spawn)||200); me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
 let loopErr=0;
@@ -4284,7 +4287,7 @@ function render(){
   ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(onShift()?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   try{ cityEnts(ents); }catch(e){}
   ents.sort((a,b)=>a.y-b.y);
-    for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else drawStick(ctx,e.x,e.y,s,e.o,T); if(e.alpha!=null) ctx.restore();
+    for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else { if(e.umb){ try{ drawUmbrella(ctx,e.x,e.y,s,T,e.umb); }catch(_e){} } drawStick(ctx,e.x,e.y,s,e.o,T); } if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
   drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); else if(me.scene==="rowin") drawRowInFront(T); }catch(e){}
   // seasons & weather (outdoor areas)
@@ -4781,7 +4784,7 @@ const HELP=[
     ["Rules",["You can switch roles once every 6 hours, and going back to plain civilian is free. You can't switch while you're Wanted or in jail.","Everyone can see your role, Wanted stars (★) and jail status over your head."]]],rel:["roles8","crime"]},
   {id:"roles8",icon:"📋",n:"The 8 roles",sub:"Worker, police, medic, thief and more",secs:[
     ["🔧 Hard Worker",["A union bonus of ₵120 for every 10 minutes on any shift, a daily ₵250 stipend at City Hall, can't be pickpocketed while working, and never Wanted."]],
-    ["👮 Police",["Arrest Wanted players (₵80 per star), bust Rust Jaws gang bots for ₵80, and get patrol pay every 5 minutes. Thieves who try to rob you are caught on the spot."]],
+    ["👮 Police",["Arrest Wanted players (₵80 per star) and get patrol pay every 5 minutes. Thieves who try to rob you are caught on the spot."]],
     ["✖ Medic",["Treat players (Speed and full Void HP; you earn ₵60), revive deleted players in The Void, treat hurt civilians (🩹) for ₵40, and patch yourself at the Clinic."]],
     ["🦝 Thief",["Pickpocket civilians for ₵15–60 and steal 6% of another player's credits, with +15% speed. Crimes make you Wanted."]],
     ["💊 Dealer",["Buy Neon Dust and hot parts at the Black Market crate in the Civic Center alley, then sell Dust to street buyers (💊) for ₵55–90. Deals make you Wanted."]],
@@ -4798,8 +4801,9 @@ const HELP=[
     ["Their lives",["Each resident has a name, a job, a best friend, a birthday and opinions. A Neon day lasts 2 real hours: they sleep, work, take lunch, and spend free time at the movies, the club, the bar, the Grid, shopping or the fountain."]],
     ["Their feelings",["The emoji over an NPC's head is how they feel. Tap a resident or press R next to them to see why, what they're doing, and your relationship."]],
     ["Friends",["They greet you, react to your emotes, flee from Wanted runners and remember how you treat them. Friends sometimes slip you credits and warn you when cops are near.","Residents vote in elections, and Mayor laws change their mood."]]]},
-  {id:"streetlife",icon:"🤖",n:"Street life",sub:"Civilians, police and the Rust Jaws",secs:[
-    ["Who's around",["Civilians wander and chat (🩹 hurt ones want a medic, 💊 ones want to buy Dust), police patrol, and the Rust Jaws robot gang roams. They'll mug you, so pay, fight, or run."]]]}]},
+  {id:"streetlife",icon:"🚶",n:"Street life",sub:"Civilians, police and residents who notice everything",secs:[
+    ["Who's around",["Civilians wander and chat (🩹 hurt ones want a medic, 💊 ones want to buy Dust) and police patrol."]],
+    ["They notice the world",["Residents talk about the weather and the season, open umbrellas when it rains, flinch at lightning, and get moody in a blizzard or cheerful under the cherry blossoms.","They notice where you've just been, what you're holding, your companion, black market gear from Sim City, who's mayor, what's playing at the Stream Dome, and which other runners they saw around the city.","They gossip with each other about all of it, and pass on the forecast and the Midnight Deal."]]]}]},
 
  {id:"rewards",icon:"🎁",n:"Real rewards",topics:[
   {id:"dcc",icon:"💠",n:"Data Collectors Club",sub:"The members-only club",steps:["Donate what you want to help the creator: join from your Character screen or Smacked Shop.","Send any amount to the owner's Cash App or PayPal with the note \"Neon Harvest: your username\".","Pick your symbol and send your request. The owner turns it on after the payment arrives."],secs:[
@@ -8967,9 +8971,9 @@ function adminCity(body){ currentView="admincity";
     el("button",{class:"btn",type:"button",text:"Clear my Wanted",onclick:()=>{ save.heat=0; save.heatAt=Date.now(); persist(); pushPresence(true); toast("Wanted cleared."); openAdmin("city"); }}),
     el("span",{class:"sub",text:"Set stars:"}),starSel,el("button",{class:"btn",type:"button",text:"Set",onclick:()=>{ save.heat=Math.max(0,Math.min(5,+starSel.value||0)); save.heatAt=Date.now(); persist(); pushPresence(true); openAdmin("city"); }}),
     jailed()?el("button",{class:"btn hot",type:"button",text:`Release me (${jailLeft()}s)`,onclick:()=>{ save.jail=null; persist(); pushPresence(true); toast("Released."); openAdmin("city"); }}):el("button",{class:"btn",type:"button",text:"Send me to prison",onclick:()=>{ const was=save.admImm; save.admImm=false; goJail(2,"Owner test"); save.admImm=was; openAdmin("city"); }})));
-  const imm=el("input",{type:"checkbox"}); imm.checked=!!save.admImm; imm.onchange=()=>{ save.admImm=imm.checked; persist(); toast(imm.checked?"Owner immunity on: NPC police and gangs will leave you alone.":"Owner immunity off: you can be chased, mugged and jailed like anyone."); };
+  const imm=el("input",{type:"checkbox"}); imm.checked=!!save.admImm; imm.onchange=()=>{ save.admImm=imm.checked; persist(); toast(imm.checked?"Owner immunity on: NPC police will leave you alone.":"Owner immunity off: you can be chased and jailed like anyone."); };
   const may=el("input",{type:"checkbox"}); may.checked=!!save.admMayor; may.onchange=()=>{ save.admMayor=may.checked; persist(); pushPresence(true); toast(may.checked?"Showing you as Mayor.":"Mayor badge off."); };
-  body.append(el("label",{class:"li",style:"cursor:pointer"},imm,el("div",{class:"grow"},el("strong",{text:"Immune to NPC police & gangs"}),el("div",{class:"sub",text:"Owner can't be chased, mugged or jailed by NPCs while this is on."}))),
+  body.append(el("label",{class:"li",style:"cursor:pointer"},imm,el("div",{class:"grow"},el("strong",{text:"Immune to NPC police"}),el("div",{class:"sub",text:"Owner can't be chased or jailed by NPCs while this is on."}))),
     el("label",{class:"li",style:"cursor:pointer"},may,el("div",{class:"grow"},el("strong",{text:"Wear the Mayor badge"}),el("div",{class:"sub",text:"Shows the MAYOR tag over your head."}))));
   if(save.cult) body.append(el("div",{class:"row"},el("span",{class:"sub",style:`color:${save.cult.col}`,text:`In cult: ${save.cult.n}`}),el("button",{class:"btn",type:"button",text:"Leave cult",onclick:()=>{ save.cult=null; persist(); pushPresence(true); openAdmin("city"); }})));
   // ---- Give yourself currency ----
@@ -13505,7 +13509,7 @@ function wxForecast(n){ const out=[]; let ts=Date.now(); for(let i=0;i<n;i++){ t
 function wxLabel(w){ return `${w.S.ic} ${w.S.n} · ${w.W.ic} ${w.W.n}`; }
 // HUD pill + announcements
 function wxTick(){ const w=wxNow(), key=w.S.k+":"+w.k, pill=$("#wxpill"); if(pill){ pill.hidden=false; pill.innerHTML=""; pill.append(document.createTextNode(w.S.ic+" "),el("b",{style:`color:${w.S.col}`,text:w.W.n})); pill.title=`${w.S.n} · ${w.W.n}. Tap for the forecast.`; }
-  if(wxLast&&wxLast!==key){ const [s0]=wxLast.split(":"); if(s0!==w.S.k){ chatLine(null,`${w.S.ic} The season turns: ${w.S.n} has come to Sector 9.`,"sys"); toast(`${w.S.ic} ${w.S.n} is here.`,w.S.col); } else if(WX_OUT.includes(me.scene)) chatLine(null,`${w.W.ic} The weather turns: ${w.W.n}.`,"sys"); }
+  if(wxLast&&wxLast!==key){ const [s0]=wxLast.split(":"); if(s0!==w.S.k){ chatLine(null,`${w.S.ic} The season turns: ${w.S.n} has come to Sector 9.`,"sys"); toast(`${w.S.ic} ${w.S.n} is here.`,w.S.col); try{ wxReactSeason(w.S); }catch(e){} } else if(WX_OUT.includes(me.scene)) chatLine(null,`${w.W.ic} The weather turns: ${w.W.n}.`,"sys"); }
   wxLast=key; }
 setInterval(()=>{ try{ wxTick(); }catch(e){} },5000);
 let wxWatched=false;
@@ -13538,7 +13542,7 @@ function drawWeather(T,dt){ if(!WX_OUT.includes(me.scene)) return; const w=wxNow
     // splashes on the ground
     c.fillStyle=k==="acid"?"rgba(150,255,90,.4)":"rgba(190,205,255,.35)"; for(let i=0;i<N(18);i++){ const u=(T*1.7+WXP[i].s)%1; if(u<.25){ c.globalAlpha=fade*(1-u*4); const x=X+WXP[i].x*VW; c.fillRect(x-3,300+WXP[i].r*6,6,1); } } c.globalAlpha=1;
     if(k==="acid"){ c.fillStyle="rgba(120,255,80,.05)"; c.fillRect(X,0,VW,H); } }
-  if(k==="storm"){ const now=Date.now(); if(now>wxNextBolt){ wxNextBolt=now+6000+Math.random()*10000; wxFlash=1; const bx=X+60+Math.random()*(VW-120); const pts=[[bx,0]]; let x=bx,y=0; while(y<170){ x+=(Math.random()-.5)*40; y+=14+Math.random()*16; pts.push([x,y]); } wxBolt={pts,t:now}; if(soundOn) setTimeout(()=>{ try{ beep(55,.9,"sawtooth",.05); beep(40,1.2,"square",.03); }catch(e){} },500+Math.random()*900); }
+  if(k==="storm"){ const now=Date.now(); if(now>wxNextBolt){ wxNextBolt=now+6000+Math.random()*10000; wxFlash=1; const bx=X+60+Math.random()*(VW-120); const pts=[[bx,0]]; let x=bx,y=0; while(y<170){ x+=(Math.random()-.5)*40; y+=14+Math.random()*16; pts.push([x,y]); } wxBolt={pts,t:now}; try{ wxReactBolt(); }catch(e){} if(soundOn) setTimeout(()=>{ try{ beep(55,.9,"sawtooth",.05); beep(40,1.2,"square",.03); }catch(e){} },500+Math.random()*900); }
     if(wxFlash>0){ c.fillStyle=`rgba(220,230,255,${wxFlash*.35})`; c.fillRect(X,0,VW,H); wxFlash=Math.max(0,wxFlash-dt*2.5); }
     if(wxBolt&&Date.now()-wxBolt.t<260){ c.strokeStyle="#eef4ff"; c.shadowColor="#a8c8ff"; c.shadowBlur=14; c.lineWidth=2; c.beginPath(); wxBolt.pts.forEach(([a,b],i)=>i?c.lineTo(a,b):c.moveTo(a,b)); c.stroke(); c.shadowBlur=0; } }
   if(k==="snow"||k==="blizzard"){ const n=N(k==="blizzard"?240:140), wind=k==="blizzard"?110:14; c.fillStyle="#f4f8ff"; c.globalAlpha=fade*.85;
@@ -13556,6 +13560,64 @@ function drawWeather(T,dt){ if(!WX_OUT.includes(me.scene)) return; const w=wxNow
     c.fillStyle="#f4f8ff"; for(let i=0;i<N(40);i++){ const p=WXP[i]; p.y+=p.v*dt*.06; if(p.y>1) p.y-=1; c.globalAlpha=fade*.6; c.fillRect(X+((p.x*VW+T*6)%VW),p.y*H,1.5,1.5); } c.globalAlpha=1; }
   if(k==="clear"){ c.globalAlpha=fade; for(let i=0;i<N(30);i++){ const p=WXP[i]; if(Math.sin(T*2+p.r*5)<.6) continue; c.fillStyle="#e8e0ff"; c.fillRect(X+p.x*VW,p.y*120,1.4,1.4); } c.globalAlpha=1; }
   c.restore(); }
+
+/* ============================================================ WORLD AWARENESS: residents notice the weather, the season, the news,
+   other runners, where you've been and what you're carrying, and talk about it with you and with each other. */
+const WX_LINES={
+  rain:["Rain again. Classic Sector 9.","Should've brought a bigger umbrella.","The neon looks better wet, honestly.","Puddles everywhere. My shoes are done."],
+  storm:["Did you see that lightning?!","This storm's rattling every window on the block.","Stay off the rooftops tonight.","Counting the seconds after the flash. Three… it's close."],
+  acid:["Acid rain! Keep it off your jacket.","Green rain. That's never a good sign.","My umbrella's smoking. That's normal, right?"],
+  fog:["Can barely see the end of the street.","Fog this thick, anyone could be out there.","Feels like the city's holding its breath."],
+  snow:["Snow! Actual snow!","Catch a flake on your tongue, I dare you.","The whole street looks brand new under the snow."],
+  blizzard:["I can't feel my fingers.","Whiteout! Stay close to the lights.","Who ordered a blizzard?"],
+  leaves:["Leaves everywhere. Autumn's here for real.","Crunch crunch. Best sound in the world.","The rooftop trees are dropping everything."],
+  blossom:["Cherry blossoms! Spring finally showed up.","Petals in my hair again.","Make a wish on a falling petal."],
+  heat:["It's so hot the neon's sweating.","Somebody turn the sky down.","Fireflies tonight. Summer's the best."],
+  aurora:["Look up! The aurora's out!","Green and purple lights over the city. Unreal.","I've lived here forever and the aurora still gets me."],
+  clear:["Clear night for once. You can see the stars.","No rain? Is the city broken?","Perfect night for a walk."],
+};
+const WX_IN={rain:"Is it still raining out there?",storm:"Hear that thunder? Glad we're inside.",acid:"Don't go out in that acid rain without a hood.",fog:"Heard the fog's so thick out there you can't see your own feet.",snow:"Is it still snowing? I want to go play in it.",blizzard:"Nobody's going anywhere in that blizzard.",leaves:"Leaves are falling all over the city.",blossom:"The blossoms are out. You should go look.",heat:"Inside's the only place to be in this heat.",aurora:"Someone said the aurora's out tonight. Go see it!",clear:"Clear skies tonight, I heard."};
+const WX_WET=["rain","storm","acid"];
+function wxOutside(){ return WX_OUT.includes(me.scene); }
+function wxWet(){ try{ return wxOutside()&&WX_WET.includes(wxNow().k); }catch(e){ return false; } }
+function wxLine(){ try{ const w=wxNow(); if(!wxOutside()) return WX_IN[w.k]||null; const L=WX_LINES[w.k]; return L?L[(Math.random()*L.length)|0]:null; }catch(e){ return null; } }
+// remember where you've been (this session) so residents can ask about it
+var meTrail=[];
+function trailNote(scene){ if(!scene||scene===meTrail[meTrail.length-1]) return; meTrail.push(scene); if(meTrail.length>6) meTrail.shift(); if(scene==="simcity"){ save.simSeen=1; } }
+const TRAIL_SKIP=["home","hhfloor","rowin","vip","ascend","void"];
+function worldLines(n){ const nm=myName||"runner", L=[]; const w=(()=>{ try{ return wxNow(); }catch(e){ return null; } })();
+  if(w){ const l=wxLine(); if(l) L.push(l,l);
+    const f=wxForecast?wxForecast(2):[]; const nx=f.find(x=>x.k!==w.k); if(nx&&!(wxLock&&wxLock.weather)) L.push(`Forecast says ${nx.W.n.toLowerCase()} by ${new Date(nx.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}.`);
+    if(w.seasonEnds&&w.seasonEnds-Date.now()<864e5) L.push(`${WX_SEASONS[(WX_SEASONS.indexOf(w.S)+1)%4].n} starts tomorrow. Can you feel it?`);
+    if(w.seasonEnds&&WX_SEASON_MS-(w.seasonEnds-Date.now())<6*36e5) L.push(`First day of ${w.S.n.toLowerCase()}! ${w.S.ic}`); }
+  // where you've been
+  const prev=[...meTrail].reverse().find(s=>s!==me.scene&&!TRAIL_SKIP.includes(s)); if(prev) L.push(prev==="simcity"?`You smell like the underground. Been down in Sim City?`:prev==="club"?"Back from The Third Eye? Your ears must be ringing.":prev==="void"?"You look like you just came out of The Void. Rough one?":`Back from ${sceneName(prev)}?`);
+  // Sim City and the black market
+  try{ if(!save.simSeen) L.push("Heard there's a whole city under the east end of Sector 9. Black markets and everything."); else { const d=bmDeal(); if(d) L.push(`Word from Sim City: the Midnight Deal today is ${d.n}.`); }
+    const hd=String(save.look&&save.look.hand||""); const bw=BM_WEAPONS.find(x=>x.id===hd); if(bw) L.push(`Is that a ${bw.n}? You didn't get that above ground.`,`A ${bw.n}… I'm not going to ask.`);
+    const pn=curPet(); if(pn&&BM_PETS.some(p=>p.n===pn)) L.push(`Is that a ${pn.toLowerCase()}?! Where did you even find one?`,`Keep that ${pn.toLowerCase()} away from me. Please.`); else if(pn) L.push(`Your ${pn.toLowerCase()} is staring at me.`,`Hi, little ${pn.toLowerCase()}!`);
+    if(gemsOn&&gemsOn().length) L.push("Those gems on your mech catch the light like crazy."); }catch(e){}
+  // other runners
+  try{ const on=onlinePeers().filter(p=>p.by&&p.by!==myId); if(on.length>=3) L.push(`Busy night. I've seen ${on.length} runners out tonight.`); else if(!on.length) L.push("Quiet night. Feels like you're the only runner around.");
+    const away=on.filter(p=>p.s&&p.s!==me.scene&&!TRAIL_SKIP.includes(p.s)); if(away.length){ const p=away[(Math.random()*away.length)|0]; L.push(`I saw ${nameOf(p.by)} over at ${sceneName(p.s)} a minute ago.`); } }catch(e){}
+  // city news
+  try{ const m=mayorId(); if(m&&m!==myId) L.push(`Mayor ${nameOf(m)} better fix the street lights.`,`What do you think of Mayor ${nameOf(m)}?`); }catch(e){}
+  try{ const s=thLive(); if(s&&me.scene!=="streamdome") L.push(`“${s.title.slice(0,28)}” is on the big screen at the Stream Dome right now.`); }catch(e){}
+  return L; }
+function worldLine(n){ const L=worldLines(n); return L.length?L[(Math.random()*L.length)|0]:null; }
+// residents reacting to lightning, the season changing, and weather on their mood
+function wxReactBolt(){ try{ const L=cityGen(me.scene).filter(n=>n.k!=="bot"&&n.name&&Math.abs(n.x-me.x)<VW*.6); L.sort(()=>Math.random()-.5).slice(0,2).forEach((n,i)=>setTimeout(()=>{ npcSay(n,["Whoa!","That was close!","Eek!","Did you see that?!"][(Math.random()*4)|0]); n.emote={e:"cheer",t:T}; },400+i*500)); }catch(e){} }
+function wxReactSeason(S){ try{ const L=cityGen(me.scene).filter(n=>n.life&&Math.abs(n.x-me.x)<VW); const n=L[0]; if(n) setTimeout(()=>npcSay(n,`First day of ${S.n.toLowerCase()}! ${S.ic}`),1200); }catch(e){} }
+function wxMood(n){ if(!wxOutside()) return null; const k=wxNow().k, likes=hashNum((n.name||"x")+"wx")%2===0;
+  return {rain:likes?[.1,0,"Loves the sound of rain"]:[-.12,0,"Stuck in the rain"],storm:[-.1,.25,"Jumpy in this storm"],acid:[-.2,.15,"Hates the acid rain"],fog:[-.05,.05,"Can't see a thing in this fog"],
+    snow:likes?[.3,0,"Loving the snow"]:[-.1,0,"Freezing in the snow"],blizzard:[-.25,.1,"Freezing in the blizzard"],leaves:[.12,0,"Kicking through autumn leaves"],blossom:[.3,0,"Cherry blossom season"],
+    heat:likes?[.15,0,"Summer person, loving the heat"]:[-.15,0,"Melting in the heat"],aurora:[.35,0,"Watching the aurora"],clear:[.1,0,"Enjoying a clear night"]}[k]||null; }
+// umbrellas for everyone out in the rain
+function drawUmbrella(c,x,y,s,t,col){ c.save(); c.translate(x,y); c.scale(s,s); const sw=Math.sin(t*1.7+x)*.06; c.rotate(sw);
+  c.strokeStyle="#2a2440"; c.lineWidth=1.6; c.beginPath(); c.moveTo(6,-58); c.lineTo(6,-104); c.stroke(); c.beginPath(); c.arc(4,-58,2,0,Math.PI); c.stroke();
+  c.fillStyle=col; c.beginPath(); c.moveTo(-22,-100); c.quadraticCurveTo(6,-128,34,-100); for(let k=0;k<4;k++){ const a=34-k*14; c.quadraticCurveTo(a-7,-104,a-14,-100); } c.closePath(); c.fill();
+  c.fillStyle="rgba(255,255,255,.18)"; c.beginPath(); c.moveTo(-14,-104); c.quadraticCurveTo(6,-122,20,-108); c.quadraticCurveTo(6,-116,-14,-104); c.fill(); c.restore(); }
+const UMB_COLS=["#ff3fa8","#38e8ff","#ffd36a","#43f0a4","#cf72ff","#ff7a45","#1a1a24","#e9e2ff"];
 
 setTimeout(()=>{ const p=$("#wxpill"); if(p) p.onclick=()=>openWeather(); try{ wxTick(); }catch(e){} },0);
 function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
