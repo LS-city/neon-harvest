@@ -342,10 +342,10 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #online{font-family:var(--f-ui);font-size:13px;color:var(--text);cursor:pointer} #online:hover{border-color:var(--cyan)}
 #hppill{--hp:100%;background:linear-gradient(90deg,rgba(67,240,164,.4) var(--hp),rgba(21,14,38,.82) var(--hp));font-weight:600;min-width:72px}
 #hppill[data-low="1"]{background:linear-gradient(90deg,rgba(255,90,74,.55) var(--hp),rgba(21,14,38,.82) var(--hp))}
-#combat,#clubBtn,#denBtn,#conBtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:4}
+#combat,#clubBtn,#denBtn,#zcBtn,#conBtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:4}
 #combat .btn{font-family:var(--f-display);font-size:13px;padding:12px 16px;touch-action:none}
 #combat .atk{border-color:#ff5a4a;color:#fff;box-shadow:0 0 14px rgba(255,90,74,.45) inset}
-@media (pointer:coarse){#combat,#clubBtn,#denBtn,#conBtn{right:calc(max(16px,env(safe-area-inset-right,0px)) + 214px);bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
+@media (pointer:coarse){#combat,#clubBtn,#denBtn,#zcBtn,#conBtn{right:calc(max(16px,env(safe-area-inset-right,0px)) + 214px);bottom:calc(64px + env(safe-area-inset-bottom,0px))}}
 #deathov{position:absolute;inset:0;z-index:18;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;background:radial-gradient(circle,rgba(120,0,20,.6),rgba(5,0,8,.94));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #deathov .dtitle{font-family:var(--f-display);font-size:clamp(44px,12vw,96px);color:#ff5a4a;text-shadow:3px 0 #38e8ff,-3px 0 #ff3fa8;animation:dglitch .25s steps(2) infinite}
 @keyframes dglitch{50%{transform:translateX(3px) skewX(-6deg)}}
@@ -415,7 +415,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #game.mobile.portrait #chatlog{top:calc(var(--top) + var(--cvh) + 64px);bottom:calc(64px + 176px + env(safe-area-inset-bottom,0px));left:12px;right:12px;width:auto;max-height:none;justify-content:flex-end;overflow:hidden}
 #game.mobile.portrait #chatlog.open{top:calc(var(--top) + var(--cvh) + 10px);bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6}
 #game.mobile.portrait #pad{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
-#game.mobile.portrait #combat,#game.mobile.portrait #clubBtn,#game.mobile.portrait #denBtn,#game.mobile.portrait #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(66px + 92px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-end}
+#game.mobile.portrait #combat,#game.mobile.portrait #clubBtn,#game.mobile.portrait #denBtn,#game.mobile.portrait #zcBtn,#game.mobile.portrait #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(66px + 92px + env(safe-area-inset-bottom,0px));flex-direction:column;align-items:flex-end}
 #game.mobile.portrait #invites{top:calc(var(--top) + 10px + var(--mst,0px));right:max(10px,env(safe-area-inset-right,0px));left:max(10px,env(safe-area-inset-left,0px));width:auto;z-index:9}
 #game.mobile:not(.portrait) #invites{top:calc(var(--top) + 8px + var(--mst,0px))}
 #game.mobile #invites .icard{box-shadow:0 6px 24px rgba(0,0,0,.6)}
@@ -429,7 +429,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 /* iPhone Safari: 100vh includes the area behind the toolbar, so use the visible height when the browser supports it */
 @supports (height:100svh){ #game.mobile{--cvh:max(min(86vw,54svh),min(110vw,calc(100svh - var(--top) - 350px)))} #game.mobile:not(.portrait) #chatlog.open{max-height:calc(100svh - var(--top) - 80px)} }
 #game.mobile:not(.portrait) #prompt{bottom:calc(66px + env(safe-area-inset-bottom,0px))}
-#game.mobile:not(.portrait) #combat,#game.mobile:not(.portrait) #clubBtn,#game.mobile:not(.portrait) #denBtn,#game.mobile:not(.portrait) #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+#game.mobile:not(.portrait) #combat,#game.mobile:not(.portrait) #clubBtn,#game.mobile:not(.portrait) #denBtn,#game.mobile:not(.portrait) #zcBtn,#game.mobile:not(.portrait) #conBtn{right:max(14px,env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 /* windows become full-screen sheets with a big close button */
 #game.mobile #overlay{padding:0;align-items:stretch;justify-content:stretch}
 #game.mobile .panel{width:100%;max-width:none;height:100%;max-height:none;border:0;box-shadow:none}
@@ -555,6 +555,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
   </div>
   <div id="clubBtn" hidden><button class="btn hot" id="btnClubItems" type="button">💊 My club items</button></div>
   <div id="denBtn" hidden><button class="btn hot" id="btnDenItems" type="button">🍙 My den items</button></div>
+  <div id="zcBtn" hidden><button class="btn hot" id="btnZCItems" type="button">❄ My Zero Cool items</button></div>
   <div id="conBtn" hidden><button class="btn hot" id="btnConPlay" type="button">🎮 Play</button><button class="btn" id="btnConOpen" type="button" aria-label="Console and games">🕹️</button></div>
   <div id="combat" hidden><button class="btn" id="btnBlock" type="button">Block [G]</button><button class="btn atk" id="btnAtk" type="button">Attack [F]</button></div>
   <div id="deathov" hidden></div>
@@ -1248,7 +1249,7 @@ function conOwned(id){ return hasItem(id)||save.look&&save.look.hand===id||(save
 function conGames(id){ save.conGames=save.conGames||{}; const g=save.conGames[id]; return Array.isArray(g)?g:[]; }
 function conIns(id){ const v=(save.conIns||{})[id]; return Number.isInteger(v)&&v>=0&&v<7?v:-1; }
 function syncConLook(){ if(!save.look) return; const h=save.look.hand; if(h&&CON_BY[h]){ const g=conIns(h); if(save.look.cg!==g){ save.look.cg=g; return true; } } else if(save.look.cg!=null){ delete save.look.cg; return true; } return false; }
-setInterval(()=>{ try{ if(save&&syncConLook()){ persist(); pushPresence(true); } const b=$("#conBtn"); if(b){ const K=save.look&&CON_BY[save.look.hand]; b.hidden=!K||!$("#overlay").hidden||me.scene==="void"||me.scene==="ascend"||me.dead; if(K) $("#btnConPlay").textContent=MOBILE?"🎮 Play":`🎮 Play ${K.n}`; const g=$("#game"), cb=$("#clubBtn").hidden?$("#denBtn"):$("#clubBtn"); const ci=$("#btnClubItems"), di=$("#btnDenItems"), short=!!(g&&g.classList.contains("portrait")); if(ci){ const want=short?"💊 Items":"💊 My club items"; if(ci.textContent!==want) ci.textContent=want; } if(di){ const want=short?"🍙 Items":"🍙 My den items"; if(di.textContent!==want) di.textContent=want; } if(g&&g.classList.contains("portrait")){ const w=cb&&!cb.hidden?cb.getBoundingClientRect().width+10:0; b.style.right=`calc(max(14px, env(safe-area-inset-right, 0px)) + ${Math.round(w)}px)`; } else b.style.right=""; } }catch(e){} },500);
+setInterval(()=>{ try{ if(save&&syncConLook()){ persist(); pushPresence(true); } const b=$("#conBtn"); if(b){ const K=save.look&&CON_BY[save.look.hand]; b.hidden=!K||!$("#overlay").hidden||me.scene==="void"||me.scene==="ascend"||me.dead; if(K) $("#btnConPlay").textContent=MOBILE?"🎮 Play":`🎮 Play ${K.n}`; const g=$("#game"), cb=[$("#clubBtn"),$("#denBtn"),$("#zcBtn")].find(x=>x&&!x.hidden)||$("#denBtn"); const ci=$("#btnClubItems"), di=$("#btnDenItems"), short=!!(g&&g.classList.contains("portrait")); if(ci){ const want=short?"💊 Items":"💊 My club items"; if(ci.textContent!==want) ci.textContent=want; } if(di){ const want=short?"🍙 Items":"🍙 My den items"; if(di.textContent!==want) di.textContent=want; } const zi=$("#btnZCItems"); if(zi){ const want=short?"❄ Items":"❄ My Zero Cool items"; if(zi.textContent!==want) zi.textContent=want; } if(g&&g.classList.contains("portrait")){ const w=cb&&!cb.hidden?cb.getBoundingClientRect().width+10:0; b.style.right=`calc(max(14px, env(safe-area-inset-right, 0px)) + ${Math.round(w)}px)`; } else b.style.right=""; } }catch(e){} },500);
 function conInHand(c,K,gi,dir,t,flourish){ const scr=CON_SCREEN[K.sh], S=K.sh==="halo"||K.sh==="tower"||K.sh==="cab"||K.sh==="vector"?16:14; c.save(); c.translate(dir*4,-3); drawConsoleArt(c,K,S,t,gi); c.restore();
   if(!scr&&gi>=0){ c.save(); c.translate(dir*17,-12); c.globalAlpha=.85; c.strokeStyle=gameCol(K,gi); c.shadowColor=c.strokeStyle; c.shadowBlur=6; c.lineWidth=.6; c.strokeRect(-7,-4.5,14,9); drawGameScreen(c,-7,-4.5,14,9,K,gi,t); c.restore(); }
   if(flourish){ c.save(); c.strokeStyle=conAcc(K,t); c.shadowColor=c.strokeStyle; c.shadowBlur=10; c.globalAlpha=.4+.3*Math.sin(t*8); c.lineWidth=1.2; c.beginPath(); c.arc(dir*4,-3,13,0,7); c.stroke(); c.restore(); } }
@@ -2704,14 +2705,15 @@ const LIFE_RES=[
  ["Wren Halvorsen","shopkeeper",["shopping","fountain"],.1,0,["freemarket"],["crackdown"],["trade","cheap","market","light"],"Sells vintage tech on Neon Row. Swears every piece has a story."],
  ["Ash Okafor","guard",["bar","chess","visit"],-.05,1,["crackdown","overtime"],["amnesty"],["safe","police","order","law"],"Rust Gate guard on the night shift. Tougher than he looks; softer than he lets on."],
  ["Bea Lomax","barista",["movies","shopping","fountain"],.25,0,["festival"],["crackdown"],["coffee","light","fun","kind"],"Morning barista. Knows everyone's order and half their problems."],
- ["Cyrus Vale","bartender",["club","movies"],0,1,["freemarket"],["healthcare"],["free","trade","night","cheap"],"Mixologist with a past nobody asks about."]];
+ ["Cyrus Vale","bartender",["club","movies"],0,1,["freemarket"],["healthcare"],["free","trade","night","cheap"],"Mixologist with a past nobody asks about."],
+ ["Silas Crane","locksmith",["walk","movies","chess"],.2,1,["crackdown"],["amnesty"],["safe","order","quiet","night"],"Night-shift locksmith. Polite, punctual, and remembers everyone's name."]];
 const LIFE_BESTIE=[[0,22],[1,13],[2,21],[3,16],[4,12],[5,18],[6,15],[7,17],[8,14],[9,23],[10,20],[11,19]];
 const LIFE_JOB={barista:{sc:"civic",x:()=>[CIVIC.coffee-40,CIVIC.coffee+40],ic:"☕",n:"Barista",l:"working the coffee cart"},courier:{sc:"street",mode:"walk",x:()=>[300,4100],ic:"📦",n:"Courier",l:"making deliveries"},
   guard:{sc:"prison",x:()=>[700,2200],ic:"🛡",n:"Prison guard",l:"on guard duty at Rust Gate"},nurse:{sc:"civic",x:()=>[CIVIC.clinic-60,CIVIC.clinic+60],ic:"🩺",n:"Nurse",l:"on shift at the Clinic"},
   vendor:{sc:"byte",x:()=>[800,3800],ic:"🛒",n:"Market vendor",l:"running a stall at Byte Market"},dj:{sc:"club",x:()=>[1250,1450],ic:"🎧",n:"DJ",l:"spinning at the Third Eye"},
   mechanic:{sc:"assembly",mode:"walk",x:()=>[400,2600],ic:"🔧",n:"Assembly mechanic",l:"working the assembly line"},clerk:{sc:"civic",x:()=>[CIVIC.hall-60,CIVIC.hall+60],ic:"🗂",n:"City Hall clerk",l:"filing forms at City Hall"},
   coder:{sc:"grid",x:()=>[2000,3000],ic:"💻",n:"Coder",l:"writing code at the Grid"},bartender:{sc:"bar",x:()=>[450,800],ic:"🍹",n:"Bartender",l:"tending bar at the Glitch"},
-  shopkeeper:{sc:"neonrow",x:()=>[400,2200],ic:"🏪",n:"Shopkeeper",l:"minding the shop on Neon Row"},usher:{sc:"streamdome",x:()=>[560,620],ic:"🎟",n:"Theater usher",l:"ushering at the Stream Dome"}};
+  shopkeeper:{sc:"neonrow",x:()=>[400,2200],ic:"🏪",n:"Shopkeeper",l:"minding the shop on Neon Row"},usher:{sc:"streamdome",x:()=>[560,620],ic:"🎟",n:"Theater usher",l:"ushering at the Stream Dome"},locksmith:{sc:"street",mode:"walk",x:()=>[300,4000],ic:"🔑",n:"Locksmith",l:"fixing locks around Sector 9"}};
 const LIFE_ACT={sleep:{sc:null,ic:"😴",l:"asleep at home"},movies:{sc:"streamdome",mode:"seat",ic:"🎬",l:"watching the big screen at the Stream Dome"},club:{sc:"club",mode:"dance",x:()=>[1500,2050],ic:"💃",l:"dancing at the Third Eye"},
   bar:{sc:"bar",x:()=>[300,1300],ic:"🍸",l:"having a drink at the Glitch"},chess:{sc:"grid",x:()=>[700,1900],ic:"♟",l:"playing chess at the Grid"},shopping:{sc:["byte","neonrow","cyberbuys"],mode:"walk",ic:"🛍",l:"shopping"},
   fountain:{sc:"civic",x:()=>[CIVIC.fountain-70,CIVIC.fountain+70],ic:"🪙",l:"making wishes at the Civic fountain"},coffee:{sc:"civic",x:()=>[CIVIC.coffee-70,CIVIC.coffee+70],ic:"☕",l:"grabbing a coffee at the Civic Center"},
@@ -2726,7 +2728,7 @@ const LIFE_LINES={movies_on:["Shh — the movie's on!","This part's so good.","P
   angry:["Don't push me.","What a day.","I'm SO done with this city."],scared:["Stay back!","I don't want any trouble!","Somebody call the cops!"],excited:["Best. Night. Ever.","Let's GO!","I love this!"],grateful:["Thank you, really.","I owe you one."],party:["It's my birthday today!","Birthday plans: everything!"]};
 const LIFE_JOBLINES={barista:["Want your usual?","I can draw a cat in latte foam."],courier:["Forty drops today. My legs!","I know every alley in this city."],guard:["Quiet in the yard today.","Seen a lot of folks walk out those gates."],
   nurse:["Remember to hydrate.","Busy day at the Clinic."],vendor:["Best prices in Byte Market!","Need a capacitor? I've got a guy."],dj:["New mix dropping tonight.","Bass is good for the soul."],mechanic:["The line jammed twice today.","Union meeting Friday."],
-  clerk:["Form 27-B? Second window.","You'd be surprised what people file."],coder:["My bot beat me at chess. Again.","Debugging is my cardio."],bartender:["What'll it be?","I hear everything in this job."],shopkeeper:["Come by the shop sometime!","Business is slow but steady."],usher:["Phones on silent, please.","I've seen every movie twice."]};
+  clerk:["Form 27-B? Second window.","You'd be surprised what people file."],coder:["My bot beat me at chess. Again.","Debugging is my cardio."],bartender:["What'll it be?","I hear everything in this job."],shopkeeper:["Come by the shop sometime!","Business is slow but steady."],usher:["Phones on silent, please.","I've seen every movie twice."],locksmith:["Every lock has a story.","Locked out? I can help with that. Any door.","I work nights. The city's quieter then."]};
 const LIFE_R=LIFE_RES.map((d,i)=>({id:"r"+i,ix:i,k:"civ",life:true,name:d[0],job:d[1],likes:d[2],cheer:d[3],owl:!!d[4],likePol:d[5],hatePol:d[6],words:d[7],bio:d[8],
   look:rndLook(hashNum("res"+i)*3+7),purse:30+((i*37)%50),hurt:false,buyer:i%5===2,bday:(hashNum("bd"+i)%365),x:0,y:300,dir:1,phase:0,vx:0,min:60,max:4000,ev:[],chatT:0,greetT:-99}));
 LIFE_BESTIE.forEach(([a,b])=>{ LIFE_R[a].bestie=b; LIFE_R[b].bestie=a; });
@@ -2807,7 +2809,7 @@ function lifeName(n){ return (n.name?n.name+" ":"")+moodEmoji(n); }
 
 /* ---- awareness ---- */
 let lifeG=0, lifeEmT=-9, lifeGossipT=0; const lifePairs={};
-function lifeLine(n){ const m=moodOf(n).k; if(["tired","sad","angry","scared","excited","grateful","party"].includes(m)&&Math.random()<.5) return LIFE_LINES[m][(Math.random()*LIFE_LINES[m].length)|0];
+function lifeLine(n){ if(n.life){ if(n.ix===ZK_KILLER&&Math.random()<.4) return zkKillerLine(); const zv=zkVictimLine(n); if(zv&&Math.random()<.6) return zv; } const m=moodOf(n).k; if(["tired","sad","angry","scared","excited","grateful","party"].includes(m)&&Math.random()<.5) return LIFE_LINES[m][(Math.random()*LIFE_LINES[m].length)|0];
   const a=n.life?n.act&&n.act.a:"walk"; let pool=a==="movies"?(thLive()?LIFE_LINES.movies_on:LIFE_LINES.movies_off):a==="work"&&n.job?LIFE_LINES.work.concat(LIFE_JOBLINES[n.job]):LIFE_LINES[a]||LIFE_LINES.walk; return pool[(Math.random()*pool.length)|0]; }
 function lifeGreet(n){ const r=relOf(npcKey(n)), me1=myName||"runner", m=moodOf(n).k;
   if(n.k==="cop") return roleIs("police")?"Evening, officer.":heatStars()?null:["Evening, citizen.","Stay safe out there.","Keep your nose clean."][(Math.random()*3)|0];
@@ -2816,6 +2818,7 @@ function lifeGreet(n){ const r=relOf(npcKey(n)), me1=myName||"runner", m=moodOf(
   try{ if(mayorId()===myId) return `Mayor ${me1}! ${lifeApproves(n)?"Love what you're doing.":"We need to talk about this city."}`; }catch(e){}
   if(roleIs("medic")&&n.hurt) return "Doc! Over here — I'm hurt!";
   if(r>=5&&n.life&&!rcd("gift_"+n.id)&&Math.random()<.5){ setCd("gift_"+n.id,20*36e5); const g=15+Math.floor(Math.random()*26); save.credits+=g; persist(); hud(); toast(`${n.name} slipped you ₵${g}: "Found this, thought of you."`,"#ff9ad5"); return `${me1}! Here, this is for you.`; }
+  if(n.life&&n.ix===ZK_KILLER) return zkKillerLine(); if(n.life){ const zv=zkVictimLine(n); if(zv&&Math.random()<.7) return zv; }
   if(Math.random()<.6){ const nl=lifeNotice(n); if(nl) return nl; }
   if(r>=3) return [`Hey ${me1}! Good to see you.`,`${me1}! How've you been?`,`Look who it is — ${me1}!`][(Math.random()*3)|0];
   if(roleIs("police")) return "Evening, officer.";
@@ -2906,8 +2909,84 @@ function lifeNotice(n){ const nm=myName||"runner", L=[]; const h=new Date().getH
   const M=npcMem(), told=npcTold(n);
   if(told.length&&Math.random()<.6){ const id=told[(Math.random()*told.length)|0], Q=NPC_Q.find(q=>q.id===id), pick=M[id]; if(Q&&pick!=null&&Q.o[pick]){ const ans=Q.o[pick][0];
     L.push(id==="real_drink"?`Still a ${ans.toLowerCase()} person out there?`:id==="real_pet"&&pick<3?"How's your pet doing out there?":id==="deep_dream"?`Still chasing that dream? "${ans}." I think about it.`:id==="real_day"&&pick===2?"Hey. Is today a little better than last time?":`I remember you told me: "${ans}". Still true?`); } }
+  try{ const g=zkGossip(); if(g) L.push(g); }catch(e){}
   try{ L.push(...worldLines(n)); }catch(e){}
   return L.length?L[(Math.random()*L.length)|0]:null; }
+/* ============================================================ THE NIGHT VISITOR
+   One resident of the city is secretly a killer: Silas Crane, the friendly night-shift locksmith.
+   Every so often he takes someone. Everyone sees the same thing at the same time: the schedule comes from the clock.
+   The victim is found, the Clinic brings them back, and they remember dying, but never who did it.
+   Nothing in the game ever says it's him. Players have to notice for themselves. */
+const ZK_WIN=90*6e4, ZK_KILLER=LIFE_R.length-1;
+const zkCache={};
+function zkSceneAt(R,t){ const slot=Math.floor(t/LIFE_SLOT), a=lifePick(R,slot), D=a==="work"?LIFE_JOB[R.job]:LIFE_ACT[a]; if(!D) return {a,sc:null,D:null}; let sc=D.sc; if(Array.isArray(sc)) sc=sc[Math.floor(seeded(hashNum(R.id)+slot*11)()*sc.length)]; return {a,sc,D}; }
+function zkPlan(w){ if(w in zkCache) return zkCache[w]; const r=seeded(hashNum("zk-night")+w*977); r(); let p=null;
+  if(r()<.45){ let vi=Math.floor(r()*(LIFE_R.length-1)); if(vi===ZK_KILLER) vi=0; const V=LIFE_R[vi], at=w*ZK_WIN+(12+r()*40)*6e4, back=at+(25+r()*30)*6e4, s=zkSceneAt(V,at);
+    const W=(SCENES[s.sc]||{w:2000}).w; let rng=s.D&&s.D.x?s.D.x():[300,W-300]; if(!Array.isArray(rng)) rng=[300,W-300]; const x=Math.round(rng[0]+r()*(rng[1]-rng[0]));
+    p={w,vi,V,at,back,sc:s.sc,a:s.a,x,clue:Math.floor(r()*ZK_CLUES.length)}; }
+  zkCache[w]=p; const ks=Object.keys(zkCache); if(ks.length>200) delete zkCache[ks[0]]; return p; }
+function zkPlansBetween(t0,t1){ const out=[]; for(let w=Math.floor(t0/ZK_WIN)-1;w<=Math.floor(t1/ZK_WIN);w++){ const p=zkPlan(w); if(p&&p.at>=t0-ZK_WIN&&p.at<=t1) out.push(p); } return out; }
+function zkDeadPlan(R,now){ for(const p of zkPlansBetween(now-2*ZK_WIN,now)) if(p.V===R&&now>=p.at&&now<p.back) return p; return null; }
+function zkDeaths(R,now,span){ return zkPlansBetween(now-span,now).filter(p=>p.V===R&&p.back<=now); }
+function zkRecentVictim(R,now){ const d=zkDeaths(R,now,3*864e5); return d.length?d:null; }
+function zkKillerPlan(now){ for(const p of zkPlansBetween(now-ZK_WIN,now+ZK_WIN)) if(p.sc&&now>=p.at-10*6e4&&now<p.at+3*6e4) return p; return null; }
+function zkScenes(now){ return zkPlansBetween(now-2*ZK_WIN,now).filter(p=>p.sc&&now>=p.at&&now<p.back+15*6e4); }
+const ZK_CLUES=["A lock nearby was picked, not broken. Very neat work.","A witness remembers someone humming an old song. Nothing else.","No footprints. Whoever it was knew exactly where the cameras don't reach.","The nearest camera was looking the other way. Someone turned it.","A single brass shaving on the ground. Like from a freshly cut key.","Nobody heard a struggle. It was quiet. Polite, almost.","The victim's door was locked from the outside afterward."];
+// override what a resident is doing: dead victims are gone, and the killer is near his next victim
+const lifeActBase=lifeAct;
+lifeAct=function(R,now){ const d=zkDeadPlan(R,now);
+  if(d){ const key="zkdead|"+d.at; if(!R.act||R.act.key!==key) R.act={key,a:"dead",sc:null,mode:"stand",x:null,ic:"🕯",l:`missing. Found dead ${d.sc?"at "+sceneName(d.sc):"in their apartment"}. The Clinic is bringing them back`,start:d.at,end:d.back}; R.actT=now; return R.act; }
+  if(R.ix===ZK_KILLER){ const p=zkKillerPlan(now); if(p){ const key="zkwalk|"+p.at; if(!R.act||R.act.key!==key) R.act={key,a:"walk",sc:p.sc,mode:"walk",x:[Math.max(80,p.x-140),p.x+140],ic:"🚶",l:"out for a late walk",start:p.at-10*6e4,end:p.at+3*6e4}; R.actT=now; return R.act; } }
+  return lifeActBase(R,now); };
+// ---- what people say
+const pickOf=L=>L[(Math.random()*L.length)|0];
+function zkVictimLine(R){ const d=zkRecentVictim(R,Date.now()); if(!d) return null; const p=d[d.length-1], mins=Math.round((p.back-p.at)/6e4), n=d.length;
+  return pickOf(["I died. I know I did. Cold hands… then nothing.",`The nurses say I was gone for ${mins} minutes. It felt like years.`,"Every time I try to picture their face, it just… slides away.","There was someone humming. That's all I remember. Just humming.",`Woke up at the Clinic again. ${p.sc?"They found me at "+sceneName(p.sc)+".":"They found me at home."} I don't remember getting there.`,"I keep checking over my shoulder. I don't even know who I'm looking for.",...(n>1?[`That's ${n} times now. Somebody in this city really doesn't like me.`,"Dying gets easier. Forgetting doesn't."]:[]),"If you find out who did it… don't tell me. I don't think I want to know."]); }
+function zkKillerLine(){ const nm=myName||"runner", now=Date.now(), L=["I never forget a face. Or a name, "+nm+".","Every door opens eventually.","You look tired, "+nm+". Get some sleep. Somewhere safe.","*hums an old song*",`Evening, ${nm}. Lovely night.`];
+  try{ const prev=[...meTrail].reverse().find(s=>s!==me.scene&&!TRAIL_SKIP.includes(s)); if(prev) L.push(`You came from ${sceneName(prev)}, didn't you? I notice things.`); }catch(e){}
+  if(save.credits>500) L.push(`₵${Math.floor(save.credits).toLocaleString()} in your pocket. That's a lot to carry around at night, ${nm}.`);
+  try{ const pn=curPet(); if(pn) L.push(`Your ${pn.toLowerCase()} doesn't like me. Animals always know.`); }catch(e){}
+  if((zkSt.cross||0)>=2) L.push(`Funny how we keep running into each other, ${nm}.`,`You keep turning up wherever I am. People might talk, ${nm}.`);
+  if(now-(zkSt.sceneAt||0)<15*6e4) L.push(`Find anything interesting back there, ${nm}? No? Shame.`,"Crime scenes are so… untidy. Don't you think?");
+  const last=zkPlansBetween(now-864e5,now).filter(p=>p.back<=now).pop(); if(last) L.push(`Shame about ${last.V.name.split(" ")[0]}. Don't worry. They always come back.`,`${last.V.name.split(" ")[0]} seems shaken lately. Wonder why.`);
+  try{ if(IDLE) L.push("Your runner's on autopilot. Must be nice, not having to watch your back."); }catch(e){}
+  const h=new Date().getHours(); if(h>=23||h<5) L.push(`It's ${new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} where you are. Late. Lock your doors, ${nm}.`);
+  try{ if(wxWet()) L.push("I like the rain. It washes everything away."); }catch(e){}
+  try{ const on=onlinePeers().filter(p=>p.by&&p.by!==myId&&p.s&&p.s!==me.scene); if(on.length){ const p=on[(Math.random()*on.length)|0]; L.push(`I saw ${nameOf(p.by)} over at ${sceneName(p.s)}. All alone.`); } }catch(e){}
+  return pickOf(L); }
+function zkGossip(){ const now=Date.now(), recent=zkPlansBetween(now-864e5,now).filter(p=>p.at<=now); if(!recent.length) return null; const p=recent[recent.length-1], N=p.V.name.split(" ")[0], dead=now<p.back;
+  return dead?pickOf([`Did you hear? They found ${N} ${p.sc?"at "+sceneName(p.sc):"at home"}. Dead.`,`${N}'s gone. Again. The Clinic's working on it.`,"Another body tonight. Nobody saw anything. Nobody ever does."])
+    :pickOf([`${N} came back from the dead today. They remember dying. Not who did it.`,`Third body this month. And every one of them came back with no memory of the face.`,`I walked past where they found ${N}. Gave me chills.`,"Lock your doors at night. I'm serious."]); }
+// stop chatting with your killer: victims who end up next to him feel something
+function zkConvoScript(a,b){ const K=LIFE_R[ZK_KILLER]; const v=a===K?b:b===K?a:null; if(v&&zkRecentVictim(v,Date.now())){ const V=v.name.split(" ")[0]; return [[v,"Do I… know you from somewhere?"],[K,`I don't think so, ${V}. I'd remember.`],[v,"Sorry. You just feel… familiar. Cold."],[K,"*smiles* Get some rest. You look like you've been through something."]]; }
+  const g=zkGossip(); if(g&&a!==K&&b!==K&&Math.random()<.5) return [[a,g],[b,pickOf(["Don't. I won't sleep tonight.","Who would even do that?","Nobody ever remembers who. Isn't that strange?","I'm walking home with someone tonight."])]]; return null; }
+NPC_ASK.push({q:"Anything strange happen to you lately?",a:n=>{ if(n.life&&n.ix===ZK_KILLER) return ["Strange? No. My nights are very… ordinary.","Nothing I'd tell you about, "+(myName||"runner")+". *smiles*"]; const v=n.life?zkVictimLine(n):null; if(v) return [v]; const g=zkGossip(); return g?[g,"Not to me. But have you heard about the bodies?"]:["Strange? In Sector 9? Every single day."]; }});
+NPC_ASK.push({q:"Do you feel safe in this city?",a:n=>{ if(n.life&&n.ix===ZK_KILLER) return ["Completely. I've never felt safer.","Safe is a feeling. Locks are a fact. I make locks."]; if(n.life&&zkRecentVictim(n,Date.now())) return ["Safe? I died. I came back. I don't know what safe means anymore."]; return ["Mostly. Except at night. People keep turning up dead lately.","I lock my door twice now."]; }});
+// ---- state: the killer notices you
+const zkSt={cross:0,crossT:0,lastSc:"",sceneAt:0,seenK:{},announced:{},back:{}};
+setInterval(()=>{ try{ if(!save) return; const now=Date.now(), K=LIFE_R[ZK_KILLER];
+    // crossing paths
+    if(me.scene!==zkSt.lastSc){ zkSt.lastSc=me.scene; const L=lifeHere(me.scene); if(L.includes(K)){ if(now-zkSt.crossT>20*6e4) zkSt.cross=0; zkSt.cross++; zkSt.crossT=now; if(zkSt.cross>=3&&Math.random()<.6) setTimeout(()=>{ if(lifeHere(me.scene).includes(K)) npcSay(K,`Following me, ${myName||"runner"}?`); },2500); } }
+    // victims coming back are shaken
+    for(const p of zkPlansBetween(now-864e5,now)){ if(p.back<=now&&now-p.back<6*36e5&&!zkSt.back[p.at]){ zkSt.back[p.at]=1; lifeFeel(p.V,"zkback",6*36e5-(now-p.back),-.3,.35,"Remembers dying. Can't remember who did it"); } }
+    // news of a death or a return, only for things that just happened
+    for(const p of zkPlansBetween(now-ZK_WIN,now)){ const N=p.V.name;
+      if(now>=p.at&&now-p.at<3*6e4&&!zkSt.announced["d"+p.at]){ zkSt.announced["d"+p.at]=1;
+        if(me.scene===p.sc){ chatLine(null,`A scream echoes nearby. When you turn around, ${N} is on the ground. Nobody saw who did it.`,"sys"); try{ flash&&flash(); }catch(e){} beep(180,.35,"sawtooth"); setTimeout(()=>beep(120,.5,"sawtooth"),180); toast(`${N} was murdered. There's no one near them.`,"#ff2a3a"); }
+        else setTimeout(()=>chatLine(null,`📰 ${N} was found dead ${p.sc?"at "+sceneName(p.sc):"in their apartment"}. The Clinic is working on it.`,"sys"),4000+Math.random()*20000); }
+      if(now>=p.back&&now-p.back<3*6e4&&!zkSt.announced["b"+p.at]){ zkSt.announced["b"+p.at]=1; chatLine(null,`📰 ${N} is back from the dead. They remember dying, but not who did it.`,"sys"); } }
+  }catch(e){ console.error("zk",e); } },1000);
+// ---- crime scenes: chalk outline, tape and an evidence marker until it's cleaned up
+function zkHot(sc){ return zkScenes(Date.now()).filter(p=>p.sc===sc).map(p=>({x:p.x,hw:70,label:`Crime scene: where ${p.V.name} was found`,act:()=>zkInspect(p)})); }
+function zkInspect(p){ zkSt.sceneAt=Date.now(); const now=Date.now(), dead=now<p.back; const body=panel("Crime scene",`${p.V.name}, ${LIFE_JOB[p.V.job]?LIFE_JOB[p.V.job].n.toLowerCase():"resident"}`); currentView="zkscene";
+  body.append(el("p",{text:`${p.V.name} was found here at ${new Date(p.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}. ${dead?"The Clinic is working on bringing them back.":"The Clinic brought them back. They remember dying, but not who did it."}`}),
+    el("p",{class:"r-epic",text:"🔎 "+ZK_CLUES[p.clue]}),el("p",{class:"sub",text:"Nobody saw anything. Nobody ever does. Whoever is doing this knows the city very well."})); }
+function zkDraw(t){ for(const p of zkScenes(Date.now())){ if(p.sc!==me.scene) continue; const x=p.x, y=LANE.bot-14; if(x<camX-200||x>camX+VW+200) continue; ctx.save();
+  ctx.strokeStyle="rgba(240,240,255,.85)"; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(x-30,y,8,6,0,0,7); ctx.moveTo(x-22,y); ctx.lineTo(x+18,y-2); ctx.moveTo(x-12,y); ctx.lineTo(x-16,y-12); ctx.moveTo(x-6,y); ctx.lineTo(x-2,y+12); ctx.moveTo(x+18,y-2); ctx.lineTo(x+34,y-10); ctx.moveTo(x+18,y-2); ctx.lineTo(x+34,y+8); ctx.stroke();
+  ctx.fillStyle="#ffd23a"; for(const s of [-1,1]){ ctx.save(); ctx.translate(x+s*70,y-20); ctx.fillStyle="#2a2a36"; ctx.fillRect(-2,-30,4,50); ctx.restore(); } ctx.save(); ctx.translate(x-70,y-44); ctx.fillStyle="#ffd23a"; ctx.fillRect(0,0,140,9); ctx.fillStyle="#111"; ctx.font="bold 7px monospace"; ctx.textAlign="left"; ctx.beginPath(); ctx.rect(0,0,140,9); ctx.clip(); for(let k=0;k<4;k++) ctx.fillText("DO NOT CROSS",2+k*62-((t*6)%62),7); ctx.restore();
+  ctx.fillStyle="#ffd23a"; ctx.beginPath(); ctx.moveTo(x+40,y+6); ctx.lineTo(x+48,y+6); ctx.lineTo(x+44,y-6); ctx.fill(); ctx.fillStyle="#111"; ctx.font="bold 6px monospace"; ctx.textAlign="center"; ctx.fillText("1",x+44,y+4);
+  const pulse=.4+.3*Math.sin(t*3); ctx.fillStyle=`rgba(255,42,58,${pulse*.25})`; ctx.beginPath(); ctx.ellipse(x,y+4,60,10,0,0,7); ctx.fill(); ctx.restore(); } }
+
 // --- stop-and-chat card
 let npcCard=null, npcCardEl=null;
 function npcSnoozed(){ return (+save.npcSnooze||0)>Date.now(); }
@@ -2962,7 +3041,7 @@ function npcConverse(a,b){ npcConvoBusy=true; const A=a.name.split(" ")[0], B=b.
     ...(s?[()=>[[a,`Did you hear “${s.title.slice(0,24)}” is on at the Stream Dome?`],[b,"Yes! Want to go together?"],[a,"Save me a seat."]]]:[]),
     ()=>[[a,`Work's been a lot lately, ${B}.`],[b,`${LIFE_JOB[b.job]?LIFE_JOB[b.job].l[0].toUpperCase()+LIFE_JOB[b.job].l.slice(1):"Same"}. Tell me about it.`],[a,"At least we've got each other."],[b,lv>=2?"Always.":"True."]],
   ];
-  const lines=pick(scripts)(); a.talkUntil=b.talkUntil=T+lines.length*2.6+1.5; lifeG=Math.max(lifeG,T+lines.length*2.6+1); a.dir=b.x>=a.x?1:-1; b.dir=a.x>=b.x?1:-1; a.sit=a.sit&&a.act&&a.act.mode==="seat";
+  let zs=null; try{ zs=zkConvoScript(a,b); }catch(e){} const lines=(zs&&(String(zs[0][1]).startsWith("Do I")||Math.random()<.45))?zs:pick(scripts)(); a.talkUntil=b.talkUntil=T+lines.length*2.6+1.5; lifeG=Math.max(lifeG,T+lines.length*2.6+1); a.dir=b.x>=a.x?1:-1; b.dir=a.x>=b.x?1:-1; a.sit=a.sit&&a.act&&a.act.mode==="seat";
   lines.forEach(([who,txt],i)=>setTimeout(()=>{ if(me.scene&&(who.here||!who.life)) npcSay(who,txt); },i*2600));
   setTimeout(()=>{ npcConvoBusy=false; npcBondAdd(a,b,1); if(npcBondLv(npcBond(a,b))>=2){ a.emote={e:"cheer",t:T}; } },lines.length*2600+400); }
 function npcFriendsBox(n){ if(!n.life) return null; const f=npcFriends(n).slice(0,5); const told=npcTold(n), M=npcMem();
@@ -3878,7 +3957,7 @@ const SCENES={
   zerocool:{w:2600, spawn:220},
 };
 // hotspots: x center, half-width, label, act
-function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc),...bytesHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
+function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc),...bytesHot(sc),...zkHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
 /* ============================================================ RP EXCHANGE MACHINES: trade credits for Reward Points */
 const RPM_COST=4000, RPM_GET=50, RPM_MAX=10;
 const RPM_SPOTS={street:{x:2150,n:"Sector 9"},byte:{x:2170,n:"Byte Market"},grid:{x:2000,n:"The Grid"},smacked:{x:1185,n:"Smacked Shop"}};
@@ -4351,7 +4430,7 @@ function render(){
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else { if(e.umb){ try{ drawUmbrella(ctx,e.x,e.y,s,T,e.umb); }catch(_e){} } drawStick(ctx,e.x,e.y,s,e.o,T); } if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
-  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); else if(me.scene==="rowin") drawRowInFront(T); }catch(e){}
+  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ zkDraw(T); }catch(e){} try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); else if(me.scene==="rowin") drawRowInFront(T); }catch(e){}
   // seasons & weather (outdoor areas)
   try{ drawWeather(T,dt); }catch(e){}
   ctx.setTransform(1,0,0,1,0,0);
@@ -4764,7 +4843,7 @@ const HELP=[
     ["Prices and stock",["Black market items cost credits plus chips.","Each shop only has some of its items in stock each day. Stock changes at midnight.","The Midnight Deal stall takes 25% off one item each day. The notice board in the City Square lists today's stock and the deal."]],
     ["Club items work here",["Third Eye club items work anywhere in Sim City, not just in the club. You can mix fusions down here too.","Dr. Hex's apothecary sells six club items each day at 20% off."]],
     ["Also down here",["The City Square: toss a chip in the fountain for a little luck, or sit on the bench.","Zero Cool: the underground club, with its own bar of 25 club items (see Zero Cool in Places).","Whisper: ask for rumors about the underworld.","The sealed gate at the east end: the deeper levels aren't open yet."]]],rel:["zerocool","thirdeye","mechgems","weapons"]},
-  {id:"zerocool",icon:"❄",n:"Zero Cool",sub:"The underground club in Sim City",where:"Sim City → walk east past the Kennel to the frosted ZERO COOL doors",steps:["Go down to Sim City and walk east, past the Kennel.","Press E (or tap USE) at the frosted ZERO COOL doors.","Buy club items at The Freezer Bar and use them right there.","Dance on the floor or in the ice cages, and ask DJ Null for the next track.","Take the tunnel at the west end back up to Sim City."],secs:[
+  {id:"zerocool",icon:"❄",n:"Zero Cool",sub:"The underground club in Sim City",where:"Sim City → walk east past the Kennel to the frosted ZERO COOL doors",steps:["Go down to Sim City and walk east, past the Kennel.","Press E (or tap USE) at the frosted ZERO COOL doors.","Buy club items at The Freezer Bar and use them right there, or tap ❄ My Zero Cool items (bottom right) anywhere in Sim City.","Your companion can fetch Zero Cool items and Den items too: Companion → Fetch, or type \"fetch 2 Frostbyte\" in chat.","Dance on the floor or in the ice cages, and ask DJ Null for the next track.","Take the tunnel at the west end back up to Sim City."],secs:[
     ["The Freezer Bar",["25 club items you can't get anywhere else, like Frostbyte, Black ICE, Zero Day, Root Access, Ghost Protocol, Kernel Panic, EMP Pulse and Glacier Rush.","Each one has its own screen effect and its own animation on your body that everyone can see.","The 3 epic house specials (Underworld Crown, Absolute Zero, Hard Reboot) cost chips. The rest cost credits.","Zero Cool items work in Zero Cool and anywhere in Sim City. Third Eye items work here too."]],
     ["Also inside",["DJ Null plays dark tracks and changes them every few minutes, or when you ask.","The Cold Room VIP booths and the server racks at the east end."]]],rel:["simcity","thirdeye"]},
   {id:"den",icon:"🕹",n:"Gamers Den",sub:"The gamer & anime bar",where:"Metro → Gamers Den",steps:["Order something at the Den Bar and use it while you're here.","Grab a seat in one of the six themed booths.","Pick a track on the jukebox (₵5).","Check the boards for games, watch parties and events, or pin your own.","Play THE VOID arcade cabinet at the far end."],secs:[
@@ -9378,7 +9457,7 @@ function petAct(kind){ const n=curPet(); if(!n){ toast("You don't have a compani
 var PET_SCALE=1.35, FETCH_FEE=0, FETCH_MAX=10, FETCH_TIPS=[0,5,10,25,50];
 let fetchCart={};
 function fetchPrice(id){ const it=BY[id]; if(!it) return null; if(it.t==="trip"){ const hp=housePrice(id); return hp; } return {price:Math.round(it.v),cur:"credits"}; }
-function fetchPool(kind){ return kind==="drink"?[...DRINKS.map(d=>d.id),...CEL_DRINKS.map(d=>d.id)]:kind==="food"?[...FOODS,...BB_FOODS].map(d=>d.id):TRIP_IDS.slice(); }
+function fetchPool(kind){ return kind==="drink"?[...DRINKS.map(d=>d.id),...CEL_DRINKS.map(d=>d.id)]:kind==="food"?[...FOODS,...BB_FOODS].map(d=>d.id):kind==="den"?DEN_MENU.map(d=>d.id):kind==="zc"?ZC_IDS.slice():TRIP_IDS.slice(); }
 function fetchTipDefault(){ const v=Math.floor(+save.fetchTip); return Number.isFinite(v)&&v>=0?Math.min(1000,v):5; }
 function petFetchBusy(){ return !!(save&&save.fetchJob); }
 function cartList(cart){ return Object.entries(cart||{}).filter(([id,q])=>BY[id]&&q>0).map(([id,q])=>[id,Math.min(FETCH_MAX,Math.floor(q))]); }
@@ -9402,19 +9481,20 @@ function petFetch(items,tip){ const n=curPet(); if(!n){ toast("You need a compan
 function deliverFetch(){ const j=save.fetchJob; if(!j) return; save.fetchJob=null; const list=(j.items||[]).filter(([id,q])=>BY[id]&&q>0); for(const [id,q] of list) addItem(id,q); questEvent("fetch",list.reduce((a,[,q])=>a+q,0));
   const n=j.pet||curPet()||"companion"; const g=PETS[n]?bondUp(n,2+Math.min(3,Math.floor((+j.tip||0)/10)),"fetch"):0; persist(); hud();
   if(curPet()===n) petSay(["Here you go!","Got it all!","Delivery!","*drops it at your feet*"][(Math.random()*4)|0]); beep(1200,.06,"triangle"); setTimeout(()=>beep(1600,.08,"triangle"),80);
-  toast(`Your ${n} fetched ${itemsText(list)}!${g?` Bond +${g}.`:""}${list.some(([id])=>BY[id].t==="trip")?" Club items work inside The Third Eye.":""}`,"#43f0a4");
+  toast(`Your ${n} fetched ${itemsText(list)}!${g?` Bond +${g}.`:""}${list.some(([id])=>BY[id].zc)?" Zero Cool items work in Sim City.":list.some(([id])=>BY[id].t==="trip")?" Club items work inside The Third Eye.":list.some(([id])=>BY[id].t==="den")?" Den items work in the Gamers Den.":""}`,"#43f0a4");
   if(!$("#overlay").hidden&&(currentView==="companion"||currentView==="fetch")) currentView==="fetch"?openFetch(fetchKind):openCompanion(); }
 setInterval(()=>{ try{ if(save&&save.fetchJob&&Date.now()>=+save.fetchJob.doneAt) deliverFetch(); }catch(e){} },300);
 const NUMW={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,couple:2,few:3};
 function findFetchable(q){ q=q.toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\b(me|a|an|some|the|please|pls|plz|my|one|of|for|us|get|bring|grab)\b/g," ").replace(/\s+/g," ").trim(); if(!q) return null; const qs=q.replace(/s\b/g,"");
-  const all=[...fetchPool("drink"),...fetchPool("food"),...fetchPool("club")];
+  const all=[...fetchPool("drink"),...fetchPool("food"),...fetchPool("club"),...fetchPool("den"),...fetchPool("zc")];
   const ex=all.find(id=>BY[id].n.toLowerCase()===q||BY[id].n.toLowerCase()===qs); if(ex) return ex;
   const inc=all.filter(id=>BY[id].n.toLowerCase().includes(q)||BY[id].n.toLowerCase().includes(qs)); if(inc.length) return inc[0];
+  const pk=k=>{ const pool=fetchPool(k).filter(id=>{ const p=fetchPrice(id); return p.cur==="credits"&&p.price<=save.credits; }); return pool.length?pool[(Math.random()*pool.length)|0]:fetchPool(k)[0]; }; if(/zero ?cool|freezer/.test(q)) return pk("zc"); if(/\bden\b|gamers? den/.test(q)) return pk("den");
   const words=q.split(" ").filter(w=>w.length>2&&!/^(drink|food|snack|club|item|drug)s?$/.test(w)); const part=all.map(id=>[id,words.filter(w=>BY[id].n.toLowerCase().includes(w.replace(/s$/,""))).length]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]); if(part.length) return part[0][0];
   const pick=k=>{ const pool=fetchPool(k).filter(id=>{ const p=fetchPrice(id); return p.cur==="credits"&&p.price<=save.credits; }); return pool.length?pool[(Math.random()*pool.length)|0]:fetchPool(k)[0]; };
   if(/drink|beer|soda|coffee|tea|juice|cocktail|shot|thirsty|bev/.test(q)) return pick("drink");
   if(/food|snack|eat|hungry|noodle|meal|bite/.test(q)) return pick("food");
-  if(/drug|club|trip|pill|high|party|candy|item/.test(q)) return pick("club");
+  if(/zero ?cool|freezer|frost|ice\b|icy/.test(q)) return pick("zc"); if(/\bden\b|gamer|anime/.test(q)) return pick("den"); if(/drug|club|trip|pill|high|party|candy|item/.test(q)) return pick("club");
   return null; }
 function parseFetchList(txt){ let tip=null; txt=txt.replace(/\b(?:with\s+(?:a\s+)?)?tip(?:ping)?\s*(?:of\s*)?₵?\s*(\d+)\b/i,(m,v)=>{ tip=+v; return " "; }).replace(/₵\s*(\d+)\s*tip\b/i,(m,v)=>{ tip=+v; return " "; });
   const out={}, miss=[]; for(let part of txt.split(/,|\band\b|&|\+|\bplus\b/i)){ part=part.trim(); if(!part) continue; let q=1; const m=part.match(/^(\d+|one|two|three|four|five|six|seven|eight|nine|ten|couple|few)\s*(?:x\b|×)?\s*(?:of\s+)?(.*)$/i); if(m){ q=/^\d+$/.test(m[1])?+m[1]:NUMW[m[1].toLowerCase()]; part=m[2]; }
@@ -9428,9 +9508,11 @@ function petChatCommand(v){ const n=curPet(); const re=new RegExp(`^(?:/fetch\\b
 let fetchKind="drink";
 function openFetch(kind){ fetchKind=kind=kind||fetchKind||"drink"; const n=curPet(); const body=panel(n?`${n} · Fetch`:"Fetch",n?`Fill a cart with up to ${FETCH_MAX} drinks, food or club items, add a tip if you like, and your ${n} brings it all back in one run. Tip: type "fetch 2 Neon Mules and a Ramen, tip 10" in chat.`:"Pick a companion first."); currentView="fetch";
   if(!n){ body.append(el("button",{class:"btn hot",type:"button",text:"Choose a companion",onclick:()=>{ tryOn=null; openWardrobe("pet"); }})); return; }
-  const tabs=el("div",{class:"row",style:"flex-wrap:wrap"}); for(const [k,lbl] of [["drink","🍹 Drinks"],["food","🍜 Food"],["club","💊 Club items"]]){ const inTab=fetchPool(k).reduce((a,id)=>a+(fetchCart[id]||0),0); tabs.append(el("button",{class:"btn"+(k===kind?" hot":""),type:"button",text:lbl+(inTab?` (${inTab})`:""),onclick:()=>openFetch(k)})); }
+  const tabs=el("div",{class:"row",style:"flex-wrap:wrap"}); for(const [k,lbl] of [["drink","🍹 Drinks"],["food","🍜 Food"],["club","💊 Club items"],["den","🍙 Den items"],["zc","❄ Zero Cool"]]){ const inTab=fetchPool(k).reduce((a,id)=>a+(fetchCart[id]||0),0); tabs.append(el("button",{class:"btn"+(k===kind?" hot":""),type:"button",text:lbl+(inTab?` (${inTab})`:""),onclick:()=>openFetch(k)})); }
   body.append(tabs); const job=save.fetchJob; if(job) body.append(el("p",{class:"r-uncommon",text:`Your ${job.pet} is out on a run for ${itemsText(job.items)}. Back in ${Math.max(0,Math.ceil((job.doneAt-Date.now())/1000))}s.`}));
   if(kind==="club") body.append(el("p",{class:"sub",text:"Club items only work inside The Third Eye or down in Sim City, but your companion can bring them to you anywhere."}));
+  if(kind==="den") body.append(el("p",{class:"sub",text:"Den items work inside the Gamers Den, but your companion can bring them to you anywhere."}));
+  if(kind==="zc") body.append(el("p",{class:"sub",text:"Zero Cool items work in Zero Cool and anywhere in Sim City. Your companion sneaks down and brings them to you anywhere."}));
   const l=el("div",{class:"list"}); for(const id of fetchPool(kind)){ const it=BY[id], pr=fetchPrice(id), q=fetchCart[id]||0;
     const set=v=>{ const total=cartCount(fetchCart)-q+v; if(total>FETCH_MAX){ toast(`Max ${FETCH_MAX} things per run.`); return; } if(v>0) fetchCart[id]=v; else delete fetchCart[id]; openFetch(kind); };
     const minus=el("button",{class:"btn",type:"button",text:"−","aria-label":`Remove one ${it.n}`,style:"min-width:36px",onclick:()=>set(q-1)}); if(!q) minus.disabled=true;
@@ -12377,6 +12459,14 @@ function drawElyExtras(t){ const W=ELY.W;
 npcs._elyOld=[{x:ELY.bar-80,y:262,look:{jacket:5,pants:5,visor:1,hat:0,back:Math.max(0,WARD.back.opts.findIndex(o=>o[0]==="Angel wings")),aura:Math.max(0,WARD.aura.opts.findIndex(o=>o[0]==="Golden glow"))},dir:1,vx:0,name:"Seraphine",fx:"god"},{x:ELY.bar+80,y:262,look:{jacket:18,pants:7,visor:3,hat:0,back:Math.max(0,WARD.back.opts.findIndex(o=>o[0]==="Bat wings")),aura:Math.max(0,WARD.aura.opts.findIndex(o=>o[0]==="Flames"))},dir:-1,vx:0,name:"Malakai",dk:"horns"}];
 document.getElementById("btnClubItems").addEventListener("click",()=>{ beep(700,.05); openMyClubItems(); });
 document.getElementById("btnDenItems").addEventListener("click",()=>{ beep(700,.05); openMyDenItems(); });
+document.getElementById("btnZCItems").addEventListener("click",()=>{ beep(1600,.05,"sine"); openMyZCItems(); });
+function openMyZCItems(){ const own=invList().filter(([id])=>BY[id]&&BY[id].zc), n=own.reduce((a,[,k])=>a+k,0); const body=panel(`My Zero Cool items (${n})`,"Use them in Zero Cool or anywhere in Sim City."); currentView="myzc";
+  const now=Date.now(), cur=myTrip&&myTrip.until>now&&BY[myTrip.id]&&BY[myTrip.id].zc?myTrip:null; if(cur) body.append(el("div",{class:"detail",style:"border-color:#8cdcff"},itemCanvas(cur.id,52),el("div",{class:"info"},el("strong",{style:"color:#8cdcff",text:`Active: ${cur.name}`}),el("span",{class:"sub",text:`${Math.max(1,Math.ceil((cur.until-now)/60e3))} min left. Using the same item again stacks it.`}))));
+  const can=me.scene==="zerocool"||me.scene==="simcity"; const l=el("div",{class:"list"}); if(!own.length) l.append(el("div",{class:"empty",text:"You don't have any Zero Cool items. Get them at The Freezer Bar, or send your companion to fetch some."}));
+  for(const [id,k] of own){ const it=BY[id], d=TRIPS[id]; const ub=el("button",{class:"btn hot",type:"button",text:can?"Use":"Use (Sim City only)",onclick:()=>useTrip(id)}); if(!can) ub.disabled=true;
+    l.append(el("div",{class:"li",style:"border-color:#2a5a7a"},itemCanvas(id,44),el("div",{class:"grow"},el("div",{class:RARCLS(it.r),text:`${it.n} ×${k}`}),el("div",{class:"sub",text:d.desc}),el("div",{class:"sub",text:`Lasts ${Math.round(d.dur/60*10)/10} min`})),ub)); }
+  body.append(l,el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"❄ The Freezer Bar",onclick:()=>{ if(me.scene==="zerocool"){ me.x=ZC_X.bar; openZCBar(); } else toast("The Freezer Bar is inside Zero Cool, in Sim City."); }}),el("button",{class:"btn",type:"button",text:"🐾 Send companion to fetch",onclick:()=>openFetch("zc")}))); }
+
 function openMyDenItems(){ const own=invList().filter(([id])=>BY[id]&&BY[id].t==="den"), n=own.reduce((a,[,k])=>a+k,0); const body=panel(`My den items (${n})`,"Use your Gamers Den snacks and drinks anywhere in the Den."); currentView="myden";
   const now=Date.now(), cur=myTrip&&myTrip.den&&myTrip.until>now?myTrip:null; if(cur){ const d=DEN_BY[cur.id]; body.append(el("div",{class:"detail",style:`border-color:${d?d.col:"#ffd36a"}`},itemCanvas(cur.id,52),el("div",{class:"info"},el("strong",{style:d?`color:${d.col}`:"",text:`Active: ${cur.name}`}),el("span",{class:"sub",text:`${Math.max(1,Math.ceil((cur.until-now)/60e3))} min left. Using the same item again makes it last longer.`})))); }
   const l=el("div",{class:"list"}); if(!own.length) l.append(el("div",{class:"empty",text:"You don't have any den items. Order them at the Den Bar."}));
@@ -13036,7 +13126,7 @@ function openBotControl(){ const body=panel("Bot Control","Pick how many bots yo
   for(const [k,B] of Object.entries(BOT_TYPES)){ const top=Object.entries(B.cats).sort((a,b)=>b[1]-a[1]).map(([c])=>catN[c]);
     d.append(el("div",{class:"li"},lookCanvas(B.look,40),el("div",{class:"grow"},el("div",{text:B.n+(B.boss?" (Hard mode boss)":"")}),el("div",{class:"sub",text:`${B.hp} HP · ${B.kind==="ranged"?"ranged shots":B.slam?"telegraphed ground slam":B.blink?"blinks behind you":"melee"}${B.volley?" + 3-shot volley":""} · ${B.chips[0]}–${B.chips[1]} chips`}),el("div",{class:"sub",text:`${Math.round(B.drop*100)}% drop chance${B.drops?` ×${B.drops}`:""}, mostly ${top.slice(0,2).join(" and ")}${B.minR?` · always ${B.minR} or better`:""}`})))); }
   body.append(d,el("p",{class:"sub",text:"Drops land on the floor with a glow in their rarity color. Walk over them to collect; they vanish after 45 seconds. Wardrobe unlocks you already own pay out credits instead. Bots still count as deaths: getting deleted costs 15% of your credits and chips."})); }
-function tickVoid(){ const inV=me.scene==="void"; { const cbb=$("#clubBtn"), inC=me.scene==="club"&&$("#overlay").hidden; if(cbb&&cbb.hidden===inC) cbb.hidden=!inC; const dbb=$("#denBtn"), inD=me.scene==="den"&&$("#overlay").hidden; if(dbb&&dbb.hidden===inD) dbb.hidden=!inD; } const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
+function tickVoid(){ const inV=me.scene==="void"; { const cbb=$("#clubBtn"), inC=me.scene==="club"&&$("#overlay").hidden; if(cbb&&cbb.hidden===inC) cbb.hidden=!inC; const dbb=$("#denBtn"), inD=me.scene==="den"&&$("#overlay").hidden; if(dbb&&dbb.hidden===inD) dbb.hidden=!inD; const zbb=$("#zcBtn"), inZ=(me.scene==="zerocool"||me.scene==="simcity")&&$("#overlay").hidden; if(zbb&&zbb.hidden===inZ) zbb.hidden=!inZ; } const cb=$("#combat"); if(cb.hidden===inV) cb.hidden=!inV; const hp=$("#hppill"); if(hp.hidden===inV) hp.hidden=!inV;
   if(inV){ const v=Math.ceil(myHP), txt=`HP ${v}`+(!MOBILE&&(save.botMode||"normal")!=="off"?` · Bots: ${botMode().n}`:""); if(hp.textContent!==txt){ hp.textContent=txt; hp.style.setProperty("--hp",v+"%"); hp.dataset.low=v<35?"1":""; } }
   if(inV&&!me.dead&&(me.burnUntil||0)>T&&T>=(me.burnNext||0)){ me.burnNext=T+.5; if(inSafe(me.x)) me.burnUntil=0; else { myHP=Math.max(0,myHP-2); lastHitT=T; addVfx({type:"burn",x:me.x,y:me.y}); addVfx({type:"num",x:me.x,y:me.y-84,txt:"-2",col:"#ff8a3a"}); if(myHP<=0) die(me.burnSrc||{}); } }
   if(!inV) me.burnUntil=0;
@@ -13969,6 +14059,7 @@ function appHere(main){ const sc=me.scene; main.append(el("h3",{text:"You are he
   let H=[]; try{ H=hotspots(sc)||[]; }catch(e){} const seen=new Set(), places=[], people=[];
   for(const h of H){ if(!h||!h.label||seen.has(h.label)) continue; seen.add(h.label); (h.npc?people:places).push(h); }
   places.sort((a,b)=>a.x-b.x);
+  { const it=sc==="club"?["💊","My club items",()=>openMyClubItems()]:sc==="den"?["🍙","My den items",()=>openMyDenItems()]:(sc==="zerocool"||sc==="simcity")?["❄","My Zero Cool items",()=>openMyZCItems()]:null; if(it){ main.append(el("h3",{text:"Your items"}),el("div",{class:"apcards"},appCard(it[0],it[1],"Use them right here",it[2],"hot"))); } }
   main.append(el("h3",{text:"Things to do"})); const c1=el("div",{class:"apcards"}); for(const h of places) c1.append(appCard(appIcon(h),h.label,"",()=>appTapHot(h))); if(!places.length) c1.append(el("div",{class:"apsub",text:"Nothing to tap here. Try the Travel tab."})); main.append(c1);
   if(people.length){ main.append(el("h3",{text:"People nearby"})); const c2=el("div",{class:"apcards"}); for(const h of people.slice(0,14)) c2.append(appCard("👤",h.label,"",()=>appTapHot(h))); main.append(c2); }
   const pe=onlinePeers().filter(p=>p.s===sc&&p.by!==myId); if(pe.length){ main.append(el("h3",{text:"Runners here"})); main.append(el("div",{class:"apsub",text:pe.map(p=>nameOf(p.by)).join(" · ")})); }
