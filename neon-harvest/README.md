@@ -56,6 +56,7 @@ A fight card for fighting game players. Players list the platforms they play on 
 - **My fighters**: save other players' cards so you can always find them.
 - **Fight requests**: challenge a player in one of their games. They accept or decline. After the matches, both players pick the winner. If they pick different winners the fight shows as disputed until they agree; only an agreed result counts toward a player's record.
 - **Fight badge**: forge your fight card into a badge for your vault, and send a copy to each player you've finished a fight with. They approve it like any badge request. The badge shows the player's name, their first game's username and their record when it was forged.
+- **Customize fight badges**: any fight card badge you own (your own or one you collected) can be restyled in the vault like a forged badge: color, frame, trim, frame animation, lens backdrop and sparkle. Its name and the player's name, username and record stay locked.
 - **Fight badge display**: up to 6 fight card badges shown on your fight card, picked from the card's slots or with "Show on my fight card" in the vault. Other players see them.
 - **Background picture fit**: fight card pictures are saved uncropped. Pick Fill the card (with Top, Center or Bottom focus) or Show whole picture, or reuse your MyDex background.
 - **Fight cards vault section**: the Vault has a Fight cards filter with your own fight badge and every one you've collected; tap one to see its details or open that player's fight card.

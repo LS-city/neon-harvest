@@ -394,6 +394,14 @@ service cloud.firestore {
             && nd().def.get('art', null) == od().def.get('art', null)
             && nd().def.get('r', 0) == od().def.get('r', 0)
             && nd().def.get('cat', '') == od().def.get('cat', ''))
+        // The owner restyles a fight card badge. Its name and the player's info on it can't change.
+        || (mdOk() && od().owner == me() && od().kind == 'fight'
+            && nd().diff(od()).affectedKeys().hasOnly(['def', 'styled'])
+            && mdDef(nd().def) && nd().styled is int
+            && nd().def.name == od().def.name
+            && nd().def.get('fc', null) == od().def.get('fc', null)
+            && nd().def.get('g', '') == od().def.get('g', '')
+            && nd().def.get('r', 0) == od().def.get('r', 0))
         // The owner hands it over, and only as part of a real request.
         || (mdOk() && od().owner == me() && mdTransferKeys() && nd().owner != me()
             && (mdReq(nd().via).from == me() || mdReq(nd().via).to == me()))
