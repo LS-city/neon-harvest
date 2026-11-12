@@ -13956,9 +13956,10 @@ function drawZCFacade(x,t){ ctx.fillStyle="#05090f"; ctx.fillRect(x-150,70,300,1
 /* ============================================================ APP MODE: a phone-style UI for NEON HARVEST.
    Scroll and tap like a normal app. The world keeps running underneath (shown in a live view), so idle mode,
    jobs, chat and everything else work the same. Switch between App and Immersive at any time. */
-let APPUI_ON=false, appTab="here", appEl=null, appHereKey="", appChatN=-1, appIdleKey="", appLiveCv=null;
+let appStKey="", APPUI_ON=false, appTab="here", appEl=null, appHereKey="", appChatN=-1, appIdleKey="", appLiveCv=null;
 const APP_CSS=`
 #appui{position:absolute;inset:0;z-index:14;display:flex;flex-direction:column;background:radial-gradient(120% 60% at 50% 0%,#1a0f30 0%,var(--ink) 60%);color:var(--text);font-family:var(--f-ui);user-select:none;-webkit-user-select:none}
+#appui,#appui *{box-sizing:border-box}
 #appui .apcol{flex:1;display:flex;flex-direction:column;width:100%;max-width:560px;margin:0 auto;min-height:0;border-inline:1px solid rgba(58,42,92,.5)}
 #appui header{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 8px;border-bottom:1px solid var(--line);background:rgba(11,7,22,.85)}
 #appui header .apbrand{font-family:var(--f-display);color:var(--mag);font-size:13px;letter-spacing:.06em;text-shadow:0 0 8px rgba(255,63,168,.6);flex:1;line-height:1.1}
@@ -14041,15 +14042,15 @@ function appBuild(){ if(appEl) return; if(!$("#appcss")){ const s=document.creat
   const stats=el("div",{class:"apstats",id:"apstats"}); const main=el("main",{id:"apmain"}); const chatbar=el("div",{class:"apchatbar",id:"apchatbar",hidden:true});
   const inp=el("input",{id:"apchatin",maxlength:"80",placeholder:"Say something…",autocomplete:"off","aria-label":"Chat message"});
   inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ appSend(); } e.stopPropagation(); }); chatbar.append(inp,el("button",{class:"apbtn hot",type:"button",text:"Send",onclick:appSend}));
-  const nav=el("nav",{"aria-label":"App sections"}); for(const [k,ic,n] of [["here","📍","Here"],["travel","🚇","Travel"],["idle","🤖","Idle"],["chat","💬","Chat"],["me","👤","Me"]]) nav.append(el("button",{type:"button","data-tab":k,onclick:()=>appGo(k)},el("span",{text:ic,"aria-hidden":"true"}),n));
+  const nav=el("nav",{"aria-label":"App sections"}); for(const [k,ic,n] of [["here","📍","Here"],["travel","🚇","Travel"],["idle","🤖","Idle"],["chat","💬","Chat"],["store","🏪","Store"],["me","👤","Me"]]) nav.append(el("button",{type:"button","data-tab":k,onclick:()=>appGo(k)},el("span",{text:ic,"aria-hidden":"true"}),n));
   col.append(hdr,stats,main,chatbar,nav); appEl.append(col); $("#game").append(appEl); }
 function appSend(){ const i=$("#apchatin"); const v=(i.value||"").trim().slice(0,80); if(!v) return; sayText(v); try{ petChatCommand(v); }catch(e){} i.value=""; appChatN=-1; appRender(); }
 function appSet(on,quiet){ APPUI_ON=!!on; appSave(on?"app":"play"); if(on){ appBuild(); appEl.hidden=false; document.body.classList.add("appui"); releaseKeys(); target=null; appHereKey=""; appRender(true); }
   else { if(appEl) appEl.hidden=true; document.body.classList.remove("appui"); try{ resize(); }catch(e){} try{ idleDockUpd(true); }catch(e){} }
   if(!quiet) toast(on?"📱 App view. Tap 🖥 Immersive (top right) to play full screen.":"🖥 Immersive view. Tap 📱 App to go back to the app.","#38e8ff"); }
 function appGo(k){ appTab=k; appHereKey=""; appChatN=-1; appIdleKey=""; appRender(true); const m=$("#apmain"); if(m) m.scrollTop=0; }
-function appNav(){ if(!appEl) return; appEl.querySelectorAll("nav button").forEach(b=>{ const on=b.dataset.tab===appTab; b.setAttribute("aria-current",on?"page":"false"); const old=b.querySelector(".dot"); if(old) old.remove();
-  const n=b.dataset.tab==="me"?(typeof unreadTotal==="function"?unreadTotal():0):b.dataset.tab==="idle"&&IDLE?"●":0; if(n) b.append(el("span",{class:"dot",text:String(n)})); }); $("#apchatbar").hidden=appTab!=="chat"; }
+function appNav(){ if(!appEl) return; const hasStore=appMyStores().length>0; const nv=appEl.querySelector("nav"); nv.style.gridTemplateColumns=`repeat(${hasStore?6:5},1fr)`; if(!hasStore&&appTab==="store") appTab="here"; appEl.querySelectorAll("nav button").forEach(b=>{ if(b.dataset.tab==="store") b.hidden=!hasStore; const on=b.dataset.tab===appTab; b.setAttribute("aria-current",on?"page":"false"); const old=b.querySelector(".dot"); if(old) old.remove();
+  const n=b.dataset.tab==="me"?(typeof unreadTotal==="function"?unreadTotal():0):b.dataset.tab==="idle"&&IDLE?"●":b.dataset.tab==="store"?appMyStores().reduce((x,k)=>x+(rowStaff[k]||[]).filter(c=>c.status==="ready").length,0):0; if(n) b.append(el("span",{class:"dot",text:String(n)})); }); $("#apchatbar").hidden=appTab!=="chat"; }
 function appCard(ic,title,sub,fn,cls){ return el("button",{class:"apcard"+(cls?" "+cls:""),type:"button",onclick:fn},el("span",{class:"ic",text:ic,"aria-hidden":"true"}),el("span",{class:"tx"},title,sub?el("small",{text:sub}):""),el("span",{class:"go",text:"›","aria-hidden":"true"})); }
 function appTapHot(h){ if(!$("#overlay").hidden) closePanel(); target=null; me.x=h.x; if(h.npc&&h.npc.x!=null) me.x=h.npc.x+(me.x<h.npc.x?-30:30); beep(880,.05); safeAct(h); setTimeout(()=>{ appHereKey=""; },400); }
 /* ---- tabs ---- */
@@ -14094,14 +14095,74 @@ function appMe(main){ const card=el("div",{class:"apme"}); try{ card.append(look
     b("📇","MyDex",()=>openMyDex()),b("🎭","Role",()=>openRoleMenu()),b("💠","Rewards",()=>openRP()),b("🎮","Consoles",()=>openConsoles()),b("🎵","Music",()=>openMusic()),b("🌦","Weather",()=>openWeather()),
     b(soundOn?"🔊":"🔇",soundOn?"Sound on":"Sound off",()=>{ $("#btnSnd").click(); appRender(true); }),b("❓","How to Play",()=>openGuide()),...(IS_ADMIN?[b("🛡️","Admin",()=>openAdmin())]:[])));
   main.append(el("h3",{text:"View"}),appCard("🖥","Switch to Immersive view","The full-screen game you walk around in. Best on a PC or laptop. You can switch back any time with the 📱 App button.",()=>appSet(false))); }
+/* ---- App view: Store tab for Neon Row storefront owners (orders, codes, NRC rewards and stock, rewarding visitors) */
+const appSt={slot:null,code:"",look:null,lookMsg:"",nm:"",price:"",stock:"",nrcAmt:"",sec:"orders",busy:false};
+function appMyStores(){ try{ return ROW_SLOTS.filter(s=>rowStores[s]&&(IS_ADMIN||rowIsPartner(s))); }catch(e){ return []; } }
+function appStoreKey(){ const s=appSt.slot; const c=(rowStaff[s]||[]).map(d=>d.code+d.status).join(","), it=(rowItems[s]||[]).map(i=>i.id+":"+i.stock+":"+i.sold+":"+i.active+":"+rowPrice(i)).join(","); const r=rowStores[s]||{}; return [s,c,it,r.until,myVerified,appSt.sec,appSt.look&&appSt.look.code+appSt.look.status,appSt.lookMsg,appSt.busy,onlinePeers().length].join("|"); }
+function appStoreSet(s,d,status){ if(appSt.busy) return; appSt.busy=true; appRender(true);
+  (async()=>{ try{ await DB.doc(`rowcodes/${s}/codes/${d.code}`).update({status,done:Date.now()}); d.status=status;
+      if(status==="cancelled"){ const it=(rowItems[s]||[]).find(x=>x.id===d.item); if(it&&it.sold>0) try{ await DB.doc(`rowitems/${s}/items/${it.id}`).update({sold:it.sold-1}); }catch(e){} }
+      toast(status==="picked"?`✓ ${d.code} picked up.`:`${d.code} cancelled. The player gets refunded automatically.`,status==="picked"?"#43f0a4":"#ffb84a"); beep(status==="picked"?1200:500,.07); }
+    catch(e){ toast("Couldn't update that code. Check your connection."); } appSt.busy=false; appRender(true); })(); }
+function appCodeCard(s,d){ const st=d.status, col=st==="picked"?"#43f0a4":st==="cancelled"?"#cf72ff":"#ffb84a";
+  const box=el("div",{class:"apcard",style:`flex-direction:column;align-items:stretch;cursor:default;border-left:3px solid ${col}`});
+  box.append(el("div",{style:"display:flex;justify-content:space-between;gap:8px;align-items:center"},el("span",{style:"font:700 16px var(--f-display);letter-spacing:.06em;color:#fff",text:d.code}),el("span",{style:`font-size:11px;color:${col}`,text:st==="picked"?"Picked up":st==="cancelled"?"Cancelled":"Waiting"})),
+    el("div",{text:`${d.title} · ${d.cur==="nrc"?(+d.nrc||0).toLocaleString()+" NRC":(+d.rp||0).toLocaleString()+" RP"}`}),el("div",{class:"apsub",text:`${cleanName(d.name||"")||"Runner"} · ${new Date(d.at).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}`}));
+  if(st==="ready"){ const row=el("div",{class:"aprow",style:"margin-top:4px"}); const ok=el("button",{class:"apbtn go",type:"button",text:"✓ Picked up",style:"flex:2",onclick:()=>appStoreSet(s,d,"picked")}), no=el("button",{class:"apbtn",type:"button",text:"Cancel & refund",style:"flex:1",onclick:()=>{ if(no.dataset.sure){ appStoreSet(s,d,"cancelled"); } else { no.dataset.sure=1; no.textContent="Tap again to cancel"; no.classList.add("hot"); } }}); if(appSt.busy){ ok.disabled=true; no.disabled=true; } row.append(ok,no); box.append(row); }
+  return box; }
+function appInput(key,props){ const i=el("input",{...props,value:appSt[key]||""}); i.style.cssText="flex:1;min-width:0;background:#0d0818;border:1px solid var(--line);color:var(--text);font:16px var(--f-ui);padding:10px"; i.addEventListener("input",()=>{ appSt[key]=i.value; }); i.addEventListener("keydown",e=>e.stopPropagation()); return i; }
+async function appLookup(){ const s=appSt.slot, code=normRowCode(appSt.code); appSt.look=null; if(!code){ appSt.lookMsg="Enter the full code, like NR-AB12-CD34."; appRender(true); return; }
+  appSt.lookMsg="Looking up…"; appRender(true); let d=(rowStaff[s]||[]).find(x=>x.code===code)||null; if(!d) try{ const sn=await DB.doc(`rowcodes/${s}/codes/${code}`).get(); d=sn.exists?{id:sn.id,...sn.data()}:null; }catch(e){}
+  appSt.look=d; appSt.lookMsg=d?"":"No reward from this store has that code. Check it with the customer."; beep(d?1000:150,.06); appRender(true); }
+async function appStock(s,it,delta){ const v=Math.max(it.sold||0,(+it.stock||0)+delta); if(v===it.stock) return; try{ await DB.doc(`rowitems/${s}/items/${it.id}`).update({stock:v,at:Date.now()}); beep(900,.04); }catch(e){ toast("Couldn't change the stock."); } }
+async function appToggle(s,it){ try{ await DB.doc(`rowitems/${s}/items/${it.id}`).update({active:!it.active,at:Date.now()}); toast(it.active?`${it.title} is hidden.`:`${it.title} is on the shelves.`); }catch(e){ toast("Couldn't update that reward."); } }
+async function appAddReward(){ const s=appSt.slot, title=String(appSt.nm||"").trim().slice(0,60), price=Math.floor(+appSt.price)||0, stock=Math.max(1,Math.floor(+appSt.stock)||0);
+  if(!title){ toast("Give the reward a name."); return; } if(price<1){ toast("Set an NRC price."); return; } if(stock<1){ toast("Set how many you're giving away."); return; }
+  try{ await DB.collection(`rowitems/${s}/items`).doc().set({title,desc:"",cur:"nrc",rp:0,nrc:price,stock,sold:0,active:true,at:Date.now()}); appSt.nm=""; appSt.price=""; appSt.stock=""; toast(`Added: ${title} for ${price.toLocaleString()} NRC (${stock} in stock).`,"#43f0a4"); beep(1200,.07); appRender(true); }
+  catch(e){ toast("Couldn't add it. Your rent may have run out; ask the game's owner."); } }
+function appStore(main){ const mine=appMyStores(); if(!mine.length){ main.append(el("h3",{text:"Neon Row store"}),el("div",{class:"apsub",text:"You don't run a Neon Row storefront. Storefronts are $30 a month. Ask the game's owner to set one up for your business."})); return; }
+  if(!mine.includes(appSt.slot)) appSt.slot=mine[0]; const s=appSt.slot, r=rowStores[s];
+  if(mine.length>1){ const pick=el("div",{class:"apstats",style:"padding:0 0 4px;border:0"}); for(const k of mine) pick.append(el("button",{class:"apstat",type:"button",style:`cursor:pointer;${k===s?"border-color:var(--cyan);color:var(--cyan)":""}`,text:rowStores[k].name,onclick:()=>{ appSt.slot=k; appSt.look=null; appSt.lookMsg=""; appRender(true); }})); main.append(pick); }
+  const waiting=(rowStaff[s]||[]).filter(c=>c.status==="ready"), items=[...(rowItems[s]||[])].sort((a,b)=>rowPrice(a)-rowPrice(b)), today=new Date().toDateString();
+  const picked=(rowStaff[s]||[]).filter(c=>c.status==="picked"&&c.done&&new Date(c.done).toDateString()===today).length, left=items.filter(i=>i.active).reduce((a,i)=>a+Math.max(0,i.stock-i.sold),0);
+  main.append(el("div",{class:"apme",style:`border-color:${rowCol(r)}`},el("div",{style:"flex:1;min-width:0"},el("strong",{style:`color:${rowCol(r)}`,text:r.name}),el("div",{class:"apsub",text:`Rent ${ROW_RENT}/month · paid until ${rowDay(r.until)}`}))));
+  if(!rowCanManage(s)){ main.append(el("div",{class:"apidle",style:"border-color:#ffb84a;background:rgba(255,184,74,.06);margin-top:10px"},el("strong",{style:"color:#ffb84a",text:"Verify your email first"}),el("div",{class:"apsub",text:"Verify the email the owner set for this store once, so only you can manage it."}),el("button",{class:"apbtn hot",type:"button",text:"Verify my email",onclick:()=>openStore(s,"manage")}))); return; }
+  const stat=(n,l,c)=>el("div",{style:`flex:1;background:var(--panel);border:1px solid var(--line);padding:10px 6px;text-align:center`},el("div",{style:`font:700 20px var(--f-display);color:${c}`,text:String(n)}),el("div",{class:"apsub",text:l}));
+  main.append(el("div",{class:"aprow",style:"margin-top:10px;flex-wrap:nowrap"},stat(waiting.length,"orders waiting","#ffb84a"),stat(picked,"picked up today","#43f0a4"),stat(left,"rewards in stock","#38e8ff")));
+  const secs=el("div",{style:"margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px"}); for(const [k,l] of [["orders",`📦 Orders${waiting.length?` (${waiting.length})`:""}`],["stock","🎁 Rewards"],["reward","💸 Pay NRC"]]) secs.append(el("button",{class:"apbtn"+(appSt.sec===k?" hot":""),type:"button",text:l,onclick:()=>{ appSt.sec=k; appRender(true); }})); main.append(secs);
+  if(appSt.sec==="orders"){
+    main.append(el("h3",{text:"Check a customer's code"})); const inp=appInput("code",{placeholder:"NR-XXXX-XXXX",autocomplete:"off","aria-label":"Customer's code",style:"text-transform:uppercase"}); inp.addEventListener("keydown",e=>{ if(e.key==="Enter") appLookup(); });
+    main.append(el("div",{class:"aprow",style:"flex-wrap:nowrap"},inp,el("button",{class:"apbtn hot",type:"button",text:"Look up",onclick:appLookup})));
+    if(appSt.lookMsg) main.append(el("div",{class:"apsub",style:"margin-top:6px;color:#ff9a9a",text:appSt.lookMsg})); if(appSt.look) main.append(el("div",{style:"margin-top:8px"},appCodeCard(s,appSt.look)));
+    main.append(el("h3",{text:`Waiting for pickup (${waiting.length})`})); const c1=el("div",{class:"apcards"}); [...waiting].sort((a,b)=>(a.at||0)-(b.at||0)).forEach(d=>c1.append(appCodeCard(s,d))); if(!waiting.length) c1.append(el("div",{class:"apsub",text:"No orders waiting. New ones show up here the moment a player redeems."})); main.append(c1);
+    const done=(rowStaff[s]||[]).filter(c=>c.status!=="ready").sort((a,b)=>(b.done||b.at||0)-(a.done||a.at||0)).slice(0,10);
+    if(done.length){ main.append(el("h3",{text:"Recent"})); const c2=el("div",{class:"apcards"}); done.forEach(d=>c2.append(appCodeCard(s,d))); main.append(c2); } }
+  else if(appSt.sec==="stock"){
+    main.append(el("h3",{text:"Add an NRC reward"}),el("div",{class:"apsub",style:"margin-bottom:6px",text:`Everyone can redeem NRC rewards. Players earn up to ${NRC_CAP} NRC a day (members ${NRC_CAP*2}).`}));
+    main.append(el("div",{class:"apcards"},appInput("nm",{placeholder:"Reward name (e.g. Free coffee)",maxlength:"60","aria-label":"Reward name"}),el("div",{class:"aprow",style:"flex-wrap:nowrap"},appInput("price",{type:"number",min:"1",inputmode:"numeric",placeholder:"NRC price","aria-label":"NRC price"}),appInput("stock",{type:"number",min:"1",inputmode:"numeric",placeholder:"How many","aria-label":"How many in stock"})),el("button",{class:"apbtn hot",type:"button",text:"＋ Add reward",onclick:appAddReward})));
+    main.append(el("h3",{text:`Your rewards (${items.length})`})); const c=el("div",{class:"apcards"});
+    for(const it of items){ const lf=Math.max(0,it.stock-it.sold); const box=el("div",{class:"apcard",style:`flex-direction:column;align-items:stretch;cursor:default;${it.active?"":"opacity:.6"}`});
+      box.append(el("div",{style:"display:flex;justify-content:space-between;gap:8px"},el("strong",{text:(it.dig?"✨ ":"")+it.title}),el("span",{style:`color:${it.cur==="nrc"?"#38e8ff":"#43f0a4"};white-space:nowrap`,text:rowPriceTxt(it)})),el("div",{class:"apsub",text:`${lf} left · ${it.sold} redeemed${it.active?"":" · hidden"}${it.cur==="rp"?" · members only":""}`}));
+      box.append(el("div",{class:"aprow",style:"align-items:center;flex-wrap:nowrap;margin-top:4px"},el("button",{class:"apbtn",type:"button",text:"−",style:"min-width:44px","aria-label":"One less in stock",onclick:()=>appStock(s,it,-1)}),el("span",{style:"min-width:54px;text-align:center;font-weight:600",text:`${it.stock} total`}),el("button",{class:"apbtn",type:"button",text:"+",style:"min-width:44px","aria-label":"One more in stock",onclick:()=>appStock(s,it,1)}),el("button",{class:"apbtn",type:"button",text:"+10",style:"min-width:50px",onclick:()=>appStock(s,it,10)}),el("span",{style:"flex:1"}),
+        el("button",{class:"apbtn",type:"button",text:it.active?"Hide":"Show",onclick:()=>appToggle(s,it)}),el("button",{class:"apbtn",type:"button",text:"Edit",onclick:()=>{ rowTab="items"; rowEdit={item:{...it}}; openStore(s,"manage"); }}))); c.append(box); }
+    if(!items.length) c.append(el("div",{class:"apsub",text:"No rewards yet. Add your first one above."})); main.append(c); }
+  else { main.append(el("h3",{text:"Reward a visitor with NRC"}),el("div",{class:"apsub",style:"margin-bottom:6px",text:"Thank a player who came to your store in person. Enter an amount, then tap Send next to their name."}),el("div",{class:"aprow",style:"flex-wrap:nowrap"},appInput("nrcAmt",{type:"number",min:"1",max:"100000",inputmode:"numeric",placeholder:"NRC to send","aria-label":"NRC to send"})));
+    const quick=el("div",{class:"aprow",style:"margin-top:6px"}); for(const v of [50,100,250,500]) quick.append(el("button",{class:"apbtn",type:"button",text:String(v),onclick:()=>{ appSt.nrcAmt=String(v); appRender(true); }})); main.append(quick);
+    const peers=onlinePeers().filter(p=>p.by&&p.by!==myId).sort((a,b)=>(b.s==="neonrow"?1:0)-(a.s==="neonrow"?1:0)||nameOf(a.by).localeCompare(nameOf(b.by)));
+    main.append(el("h3",{text:`Players online (${peers.length})`})); const c=el("div",{class:"apcards"});
+    for(const p of peers){ const at=p.s==="neonrow"; c.append(el("div",{class:"apcard",style:"cursor:default"},el("span",{class:"ic",text:at?"🏪":"👤"}),el("span",{class:"tx"},nameOf(p.by),el("small",{style:at?"color:#43f0a4":"",text:at?"At Neon Row now":"In "+sceneName(p.s)})),el("button",{class:"apbtn hot",type:"button",text:"Send",onclick:()=>{ const v=Math.floor(+appSt.nrcAmt)||0; rowSendNrc(s,p.by,v); }}))); }
+    if(!peers.length) c.append(el("div",{class:"apsub",text:"No other players are online. Ask your visitor to open NEON HARVEST and sign in."})); main.append(c); }
+  main.append(el("h3",{text:"More tools"}),appCard("🛠","Store settings","Inside & staff, posters & ads, order alerts, digital items and insights",()=>{ rowTab="inside"; rowEdit=null; openStore(s,"manage"); })); }
+
 /* ---- render + live refresh ---- */
 function appRender(force){ if(!APPUI_ON||!appEl) return; const st=$("#apstats"); st.replaceChildren(...appStatsHtml()); $("#apwhere").textContent=`${myName||"Runner"} · ${sceneName(me.scene)}`; appNav();
   const main=$("#apmain");
   if(appTab==="here"){ let key=me.scene; try{ key+="|"+(hotspots(me.scene)||[]).map(h=>h.label).join("|"); }catch(e){} if(!force&&key===appHereKey) return; appHereKey=key; }
   else if(appTab==="chat"){ if(!force&&chatHist.length===appChatN) return; appChatN=chatHist.length; }
   else if(appTab==="idle"){ const key=IDLE?`${IDLE.k}|${IDLE.paused}|${IDLE.log.length}|${IDLE.log[0]}|${Math.floor(Date.now()/5000)}`:"none"; if(!force&&key===appIdleKey) return; appIdleKey=key; }
+  else if(appTab==="store"){ const key=appStoreKey(); const ae=document.activeElement; if(!force&&(key===appStKey||(ae&&ae.tagName==="INPUT"&&ae.closest&&ae.closest("#apmain")))) return; appStKey=key; }
   else if(!force) return;
-  const y=main.scrollTop; main.replaceChildren(); ({here:appHere,travel:appTravel,idle:appIdle,chat:appChat,me:appMe}[appTab]||appHere)(main); if(appTab!=="chat") main.scrollTop=y; }
+  const y=main.scrollTop; main.replaceChildren(); ({here:appHere,travel:appTravel,idle:appIdle,chat:appChat,store:appStore,me:appMe}[appTab]||appHere)(main); if(appTab!=="chat") main.scrollTop=y; }
 setInterval(()=>{ try{ if(APPUI_ON) appRender(false); }catch(e){ console.error("app",e); } },1000);
 // the live view: a cropped copy of the world around your runner
 function appLiveTick(){ requestAnimationFrame(appLiveTick); if(!APPUI_ON||!appLiveCv||!appLiveCv.isConnected) return; const c=appLiveCv.getContext("2d"), W=cv.width, Hh=cv.height; if(!W||!Hh) return;
