@@ -3600,16 +3600,22 @@ const TH_CLASSICS=[
  ["c_general","The General",1926,"Comedy",4724,"The_General_Buster_Keaton/The_General.mp4","Buster Keaton chases a stolen train. Unbelievable stunts. Silent."],
 ].map(([id,t,yr,g,d,path,blurb])=>({id,t:`${t} (${yr})`,name:t,yr,g,d,u:"https://archive.org/download/"+path,blurb,classic:1}));
 const TH_GENRE_COL={Horror:"#ff2a3a",["Sci-fi"]:"#38e8ff",Comedy:"#ffd36a",Thriller:"#cf72ff"};
-let classicVid=null;
+let classicVid=null, thcOK=null;
+// Some hosts (like the claude.ai artifact viewer) block video from outside sites. Check once, then fall back to opening the film on archive.org.
+function thcProbe(){ if(thcOK!==null) return Promise.resolve(thcOK); return new Promise(res=>{ const v=document.createElement("video"); v.muted=true; v.preload="metadata"; let to=0; const done=ok=>{ if(thcOK!==null) return; thcOK=ok; clearTimeout(to); v.removeAttribute("src"); try{ v.load(); }catch(e){} res(ok); }; to=setTimeout(()=>done(false),15000); v.onloadedmetadata=()=>done(true); v.onerror=()=>done(false); v.src=TH_CLASSICS.find(x=>x.id==="c_moon").u; }); }
+function thcPage(it){ const m=/archive\.org\/download\/([^/]+)\//.exec(it.u); return m?"https://archive.org/details/"+m[1]:"https://archive.org"; }
+function thcOpenOut(it){ try{ window.open(thcPage(it),"_blank","noopener"); }catch(e){} }
 function openClassics(filter){ filter=filter||"All"; const body=panel("Stream Dome · Classic Movies","20 free classic films. Watch any of them on your own, any time, or put one on the big screen for everyone."); currentView="thclassics";
-  const s=thLive(), mine=!!(thHost&&s&&s.by===myId), canShow=!!(DB&&myId)&&(!s||mine||IS_ADMIN);
+  if(thcOK===null) thcProbe().then(()=>{ if(currentView==="thclassics") openClassics(filter); });
+  const blocked=thcOK===false, s=thLive(), mine=!!(thHost&&s&&s.by===myId), canShow=!blocked&&!!(DB&&myId)&&(!s||mine||IS_ADMIN);
+  if(blocked) body.append(el("div",{class:"detail",style:"border-color:#ff7a7a"},el("div",{class:"info"},el("strong",{text:"This version of the game can't stream these films"}),el("span",{class:"sub",text:"The claude.ai viewer blocks video from outside sites. Tap “Watch on archive.org” to open the film in a new tab, or play NEON HARVEST at ls-city.github.io/neon-harvest, where every classic plays right inside the game and on the big screen."}))));
   const tabs=el("div",{class:"tabs"}); for(const g of ["All","Horror","Sci-fi","Comedy","Thriller"]) tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(filter===g),text:g,onclick:()=>openClassics(g)})); body.append(tabs);
   const l=el("div",{class:"list"});
   for(const it of TH_CLASSICS.filter(x=>filter==="All"||x.g===filter)){ const col=TH_GENRE_COL[it.g]||"#ffb13f", msg=el("span",{class:"sub"});
     const show=el("button",{class:"btn",type:"button",text:mine?"Big screen (swap, free)":`Big screen · ${TH_FEE} chips`,onclick:async()=>{ show.disabled=true; msg.style.color="#ffb13f"; msg.textContent="Loading…"; try{ await thStartLib(it); toast(`“${it.name}” is on the big screen!`,"#ffb13f"); openTheaterBooth(); }catch(e){ show.disabled=false; msg.style.color="#ff7a7a"; msg.textContent=e&&e.message||"Couldn't start the movie."; } }});
     if(!canShow) show.disabled=true;
     l.append(el("div",{class:"li",style:`border-left:3px solid ${col}`},el("div",{class:"grow"},el("div",{},el("strong",{text:it.name}),el("span",{class:"sub",text:` · ${it.yr} · ${Math.round(it.d/60)} min`}),el("span",{class:"tag",style:`margin-left:6px;color:${col};border-color:${col}`,text:it.g})),el("div",{class:"sub",text:it.blurb}),msg),
-      el("button",{class:"btn hot",type:"button",text:"▶ Watch now (free)",onclick:()=>openClassicPlayer(it)}),show)); }
+      blocked?el("button",{class:"btn hot",type:"button",text:"Watch on archive.org ↗",onclick:()=>thcOpenOut(it)}):el("button",{class:"btn hot",type:"button",text:"▶ Watch now (free)",onclick:()=>openClassicPlayer(it)}),blocked?null:show)); }
   body.append(l,el("p",{class:"sub",text:canShow?"“Big screen” plays it for everyone in the theater, in sync, like any library movie.":"Someone's movie is on the big screen right now, but you can still watch any of these on your own."}),
     el("p",{class:"sub",text:"These films are in the public domain in the US and stream from the Internet Archive (archive.org)."})); }
 function openClassicPlayer(it){ const body=panel(it.t,`${it.g} · ${Math.round(it.d/60)} min · just you, any time`); currentView="thclassic";
@@ -3618,7 +3624,7 @@ function openClassicPlayer(it){ const body=panel(it.t,`${it.g} · ${Math.round(i
   v.addEventListener("loadedmetadata",()=>{ msg.textContent=pos>30&&pos<v.duration-60?`Picking up where you left off (${Math.floor(pos/60)} min in).`:""; if(pos>30&&pos<v.duration-60) v.currentTime=pos; v.play().catch(()=>{ msg.textContent="Tap play to start."; }); });
   v.addEventListener("timeupdate",()=>{ if(Math.floor(v.currentTime)%10===0) try{ localStorage.setItem(key,String(Math.floor(v.currentTime))); }catch(e){} });
   v.addEventListener("ended",()=>{ try{ localStorage.removeItem(key); }catch(e){} msg.textContent="The end. Thanks for watching!"; });
-  v.addEventListener("error",()=>{ msg.style.color="#ff7a7a"; msg.textContent="This movie couldn't load right now. Check your connection and try again."; });
+  v.addEventListener("error",()=>{ msg.style.color="#ff7a7a"; msg.textContent="This movie couldn't load here. You can watch it on archive.org instead."; msg.after(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Watch on archive.org ↗",onclick:()=>thcOpenOut(it)}))); });
   try{ stTrack("act","Watch classic: "+it.name); }catch(e){}
   body.append(v,msg,el("div",{class:"sub",text:it.blurb}),el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"⛶ Fullscreen",onclick:()=>{ try{ (v.requestFullscreen||v.webkitEnterFullscreen||v.webkitRequestFullscreen).call(v); }catch(e){} }}),el("button",{class:"btn",type:"button",text:"‹ All classics",onclick:()=>openClassics()}))); }
 // stop the private player whenever its panel closes
