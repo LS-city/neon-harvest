@@ -3810,6 +3810,7 @@ const SCENES={
   streamdome:{w:2400, spawn:200},
   racers:{w:7000, spawn:200},
   nfantasy:{w:3100, spawn:200},
+  simcity:{w:5200, spawn:240},
 };
 // hotspots: x center, half-width, label, act
 function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc),...bytesHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
@@ -3888,6 +3889,7 @@ function hotspotsBase(sc){
   if(sc==="civic"||sc==="prison") return cityHot(sc);
   if(sc==="streamdome") return streamHot();
   if(sc==="racers") return cdHot();
+  if(sc==="simcity") return simHot();
   if(sc==="street") return [
     {x:300,hw:60,label:"Enter Apt 7C (home)",act:()=>openHomeDoor()},
     {x:960,hw:80,label:"Shop at PARTS DEPOT",act:()=>openShop()},
@@ -3896,6 +3898,7 @@ function hotspotsBase(sc){
     {x:2400,hw:70,label:"Open the Trade Board",act:()=>openTrade()},
     {x:2650,hw:60,label:"Take the metro",act:()=>openMetro()},
     {x:3960,hw:90,label:"Enter The Third Eye club",act:()=>go("club",120)},
+    {x:SIM_ENTRY_X,hw:60,label:"Go down the stairs into Sim City (the underground)",act:()=>go("simcity",SIM_X.exit+90)},
     ...[2980,3140,3300,3460,3600].map((x,i)=>({x,hw:46,label:"Dig through scrap pile",act:()=>dig(i),scrap:i})),
   ];
   if(sc==="byte") return [
@@ -4218,7 +4221,7 @@ function safeAct(h){ try{ stTrack("act",h.label); }catch(e){} try{ h.act(); }cat
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
   ov.textContent="METRO › "+((METRO[scene]||{}).n||"").toUpperCase(); $("#game").appendChild(ov); requestAnimationFrame(()=>ov.style.opacity="1"); beep(440,.15,"triangle"); setTimeout(()=>beep(330,.2,"triangle"),160);
   setTimeout(()=>{ go(scene,x); if(scene==="assembly") chatLine(null,"Harvest Assembly: clock in at the shift board or walk into any open bay. ₵400 every 30 min while you keep building, plus speed tips. Up to 60 min per shift, 2 shifts a day. Leaving clocks you out.","sys"); if(scene==="linx"){ landLocal(); chatLine(null,`Linx Land: buy a plot for ₵${LAND_PRICE.toLocaleString()} (one per player), then install Credit Miners from the Workbench to mine credits.`,"sys"); } if(scene==="byte") chatLine(null,"Byte Market: stalls for every part, prebuilt rigs, and the Courier Hub, then Black ICE (hacker tools), Ring Ring Mobile (phones) and Volt Armory (weapons) at the far end.","sys"); if(scene==="neonrow") chatLine(null,"Neon Row: real local businesses rent these storefronts. Walk up to a store, see its rewards, and redeem with RP. Show your NR- code at the store in person.","sys"); if(scene==="smacked") chatLine(null,"Smacked Shop: real-life rewards for Data Collectors Club members. Redeem with Reward Points (RP) and get a pickup code.","sys"); if(scene==="grid") chatLine(null,"The Grid: stake a part or PC and duel other players, practice against the AI at any table, or hack your way through UPLOAD at the far end.","sys"); ov.style.opacity="0"; setTimeout(()=>ov.remove(),400); },450); }
-function go(scene,x){ if(scene==="ascend"&&!godActive()){ toast("Elysium can only be reached with the God Particle."); return; } if(me.scene==="ascend"&&scene!=="ascend"&&godActive()&&!(godState&&godState.leaving)){ toast("The God Particle holds you in Elysium until it fades."); return; } if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } questEvent("visit:"+scene); me.scene=scene; me.x=Number.isFinite(x)?x:((SCENES[scene]&&SCENES[scene].spawn)||200); me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
+function go(scene,x){ if(scene==="ascend"&&!godActive()){ toast("Elysium can only be reached with the God Particle."); return; } if(me.scene==="ascend"&&scene!=="ascend"&&godActive()&&!(godState&&godState.leaving)){ toast("The God Particle holds you in Elysium until it fades."); return; } if(scene!=="vip") me.vip=null; homeFx={}; if(asmSlot>=0&&scene!=="assembly") asmClockOut(); if(mySlot>=0&&scene!=="bar") clockOut(); if(cbSlot>=0&&scene!=="cyberbuys") cbClockOut(); if(bbSlot>=0&&scene!=="byte") bbClockOut(); if(clubSlot>=0&&scene!=="club") clubClockOut(); me.seat=null; me.dancing=false; if(scene!=="void") me.blocking=false; if(scene==="void"){ if(myHP<=0) myHP=100; setTimeout(()=>chatLine(null,"The Void: F or Attack to strike, hold G or Block to guard. The safe zone by the metro heals you. Getting deleted costs 15% of your credits and chips and sends you home.","sys"),50); } if(scene==="simcity"&&me.scene!=="simcity") setTimeout(()=>chatLine(null,"Sim City: the underworld below Sector 9. Black markets sell what you can't buy above ground, stock changes at midnight, and club items work down here.","sys"),50); if(scene==="club"){ setTimeout(()=>{ chatLine(null,"The Third Eye: grab a seat, hit the stage, or work a shift at the bar. Club items only work in here.","sys"); if(!soundOn) toast("Turn sound on (top right) for the club music."); },50); } questEvent("visit:"+scene); me.scene=scene; me.x=Number.isFinite(x)?x:((SCENES[scene]&&SCENES[scene].spawn)||200); me.y=300; target=null; camX=0; pushPresence(true); beep(330,.1,"triangle"); if(scene==="bar") chatLine(null,"You step into The Glitch. Synth bass hums through the floor.","sys"); }
 
 const COARSE=matchMedia("(pointer:coarse)").matches;
 let loopErr=0;
@@ -4261,7 +4264,7 @@ function stepInner(now){
 }
 function render(){
   ctx.setTransform(scale,0,0,scale,-camX*scale,0);
-  if(me.scene==="street") drawStreet(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="nfantasy") drawNfHub(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street"){ drawStreet(T); drawSimEntrance(T); } else if(me.scene==="simcity") drawSim(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="nfantasy") drawNfHub(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   drawBytesTerminals(T);
   // hotspot marker
@@ -4739,6 +4742,7 @@ const HELP=[
     ["What they can do",["Visitors see your decor, room style, lights and plants, and can sit on your couches and play your music. Only you can water plants, raid the fridge or flip switches."]]]}]},
 
  {id:"items",icon:"🎒",n:"Items & style",topics:[
+  {id:"simcity",icon:"🕶",n:"Sim City (the underground)",sub:"Black markets, a city square and The Sump",where:"Walk to the far east end of Sector 9, past The Third Eye, and take the stairs down. It's not a metro stop.",steps:["Rook's Arms sells black market weapons, The Gem Cartel sells black market Mech Gems, and The Kennel sells black market companions. None of them are sold above ground.","Every item is paid in credits plus chips. Each shop only has some of its items in stock each day, and the Midnight Deal stall takes 25% off one item. Stock changes at midnight.","Black market gems socket at Gemix (My mech tab) like any gem. Weapons go in Character → Hand. Companions go in Character → Companion.","Third Eye club items work anywhere in Sim City. Dr. Hex sells six of them each day for 20% less.","Dance at The Sump, toss a chip in the City Square fountain, read the notice board for today's stock, and ask Whisper for rumors."],secs:[]},
   {id:"mechgems",icon:"💎",n:"Mech Gems",sub:"Repaint, upgrade or rebuild your mech",where:"Byte Market → Gemix (the last stand, or Fast Travel → Gemix)",steps:["Wear a Mech Suit or Tiny Mech (Character → Top).","Buy gems at Gemix with credits or chips.","Open Gemix → My mech and tap Socket. Your mech has 3 sockets."],secs:[
     ["The 3 kinds",["Color gems (14) repaint the whole mech, some with shimmering, flickering or rainbow colors. Upgrade gems (14) bolt on boosters, wings, a halo, missile pods, cannons, a shield bubble, new arm weapons, orbiting gems and effects. Form gems (12) rebuild the whole frame: titan, phantom, beast, tank, seraph, samurai, spring, bear, kitsune, abyss, shinobi or colossus."]],
     ["Rules",["Up to 3 gems at once, with at most one Color gem and one Form gem. Remove a gem any time and it goes back to your gem case. Socketed gems stay on for any mech you wear, and everyone can see them. Tiny Mechs keep their cockpit with any Form gem."]]]},
@@ -4937,7 +4941,7 @@ function stashActions(id,refresh){ const it=BY[id], acts=el("div",{class:"row",s
   if(it.t==="drink"||it.t==="food") acts.append(el("button",{class:"btn hot",type:"button",text:it.t==="food"?"Eat it":"Drink it",onclick:()=>{ consumeItem(id); refresh(); }}));
   if(it.t==="enc") acts.append(el("button",{class:"btn hot",type:"button",text:"Decrypt",onclick:()=>openDecrypt()}));
   if(it.t==="den"){ const ub=el("button",{class:"btn hot",type:"button",text:me.scene==="den"?"Use it":"Use (inside the Gamers Den only)",onclick:()=>useDen(id)}); if(me.scene!=="den") ub.disabled=true; acts.append(ub); }
-  if(it.t==="trip"){ const ub=el("button",{class:"btn hot",type:"button",text:me.scene==="club"?"Use it":"Use (inside The Third Eye only)",onclick:()=>useTrip(id)}); if(me.scene!=="club") ub.disabled=true; acts.append(ub); const mx=typeof knownMixesFor==="function"?knownMixesFor(id):[]; for(const F of mx){ const other=F.a===id?F.b:F.a; const b=el("button",{class:"btn",type:"button",style:"border-color:#ffd36a;color:#ffd36a",text:`⚗ Mix + ${BY[other].n}`,onclick:()=>mixFusion(F)}); if(me.scene!=="club") b.disabled=true; acts.append(b); } }
+  if(it.t==="trip"){ const ub=el("button",{class:"btn hot",type:"button",text:me.scene==="club"||me.scene==="simcity"?"Use it":"Use (The Third Eye or Sim City only)",onclick:()=>useTrip(id)}); if(me.scene!=="club"&&me.scene!=="simcity") ub.disabled=true; acts.append(ub); const mx=typeof knownMixesFor==="function"?knownMixesFor(id):[]; for(const F of mx){ const other=F.a===id?F.b:F.a; const b=el("button",{class:"btn",type:"button",style:"border-color:#ffd36a;color:#ffd36a",text:`⚗ Mix + ${BY[other].n}`,onclick:()=>mixFusion(F)}); if(me.scene!=="club") b.disabled=true; acts.append(b); } }
   if(canHold(it)) acts.append(el("button",{class:"btn hot",type:"button",text:save.look.hand===id?"Unequip from hand":"Equip in hand",onclick:()=>{ const on=save.look.hand!==id; save.look={...save.look,hand:on?id:""}; persist(); pushPresence(true); toast(on?`${it.n} equipped. Try the Pose emote.`:`${it.n} unequipped.`); refresh(); }}));
   acts.append(el("button",{class:"btn",type:"button",text:"Put on a shelf",onclick:()=>{ const slot=save.display.indexOf(null); if(slot<0){ toast("All 6 shelves are full. Take something down first."); return; } save.display[slot]=id; addItem(id,-1); persist(); toast(`${it.n} placed on shelf ${slot+1}`); refresh(); }}));
   if(it.t==="console") acts.prepend(el("button",{class:"btn hot",type:"button",text:"🎮 Games & play",onclick:()=>openConsole(id)}));
@@ -4998,8 +5002,8 @@ function openWardrobe(tab="name",firstRun=false){
   const changed=[...SLOTS,"hand"].filter(k=>tryOn[k]!==fullLook(save.look)[k]);
   const exclNeed=changed.filter(k=>k!=="hand"&&isExcl(k,tryOn[k])&&!isOwned(k,tryOn[k]));
   const cost=changed.reduce((a,k)=>a+(isOwned(k,tryOn[k])||isExcl(k,tryOn[k])?0:optCost(k,tryOn[k])),0);
-  const wear=el("button",{class:"btn hot",type:"button",text:exclNeed.length?(MOBILE?"Get at Smacked Shop":`Get ${optName(exclNeed[0],tryOn[exclNeed[0]])} at Smacked Shop (RP)`):!changed.length?(MOBILE?"Wearing":"Wearing this look"):cost?(MOBILE?`Buy & wear ₵${cost}`:`Buy new items & wear (₵${cost})`):(MOBILE?"Wear look":"Wear this look"),onclick:()=>{
-    if(exclNeed.length){ tryOn=null; openSmacked("digital"); return; }
+  const wear=el("button",{class:"btn hot",type:"button",text:exclNeed.length?(isBM(exclNeed[0],tryOn[exclNeed[0]])?(MOBILE?"Sim City only":`${optName(exclNeed[0],tryOn[exclNeed[0]])}: sold only in Sim City`):MOBILE?"Get at Smacked Shop":`Get ${optName(exclNeed[0],tryOn[exclNeed[0]])} at Smacked Shop (RP)`):!changed.length?(MOBILE?"Wearing":"Wearing this look"):cost?(MOBILE?`Buy & wear ₵${cost}`:`Buy new items & wear (₵${cost})`):(MOBILE?"Wear look":"Wear this look"),onclick:()=>{
+    if(exclNeed.length){ if(isBM(exclNeed[0],tryOn[exclNeed[0]])){ toast("Black market only: The Kennel in Sim City. Take the stairs at the far east end of Sector 9.","#ff2a3a"); return; } tryOn=null; openSmacked("digital"); return; }
     if(cost>save.credits){ toast(`You need ₵${cost-Math.floor(save.credits)} more.`); beep(150,.15); return; }
     save.credits-=cost; save.owned=save.owned||[]; for(const k of changed) if(!isOwned(k,tryOn[k])) save.owned.push(k+":"+tryOn[k]);
     save.look={...tryOn}; persist(); pushPresence(true); emote("cheer"); toast(cost?`New gear bought for ₵${cost}`:"Look updated"); beep(1100,.08); openWardrobe(tab,firstRun); }});
@@ -5038,7 +5042,7 @@ function openWardrobe(tab="name",firstRun=false){
     const l={...tryOn,[tab]:i}; const cvs=lookCanvas(l,64); const own=isOwned(tab,i), cur=fullLook(save.look)[tab]===i, sel=tryOn[tab]===i;
     const card=el("button",{class:"card"+(sel?" sel":""),type:"button","aria-pressed":String(sel),onclick:()=>{ tryOn[tab]=i; openWardrobe(tab,firstRun); }});
     if(WARD[tab].color){ const sw=el("div",{style:`height:6px;background:${COLORS[i]}`}); card.append(cvs,sw); } else card.append(cvs);
-    if(isExcl(tab,i)) card.append(el("span",{class:"tag",style:"position:absolute;top:4px;left:4px;font-size:9px;color:#cf72ff;border-color:#cf72ff",text:"SMACKED"}));
+    if(isExcl(tab,i)) card.append(el("span",{class:"tag",style:`position:absolute;top:4px;left:4px;font-size:9px;color:${isBM(tab,i)?"#ff2a3a":"#cf72ff"};border-color:${isBM(tab,i)?"#ff2a3a":"#cf72ff"}`,text:isBM(tab,i)?"BLACK MARKET":"SMACKED"}));
     else if(wardIsNew(tab,i)) card.append(el("span",{class:"tag",style:"position:absolute;top:4px;left:4px;font-size:9px;color:#43f0a4;border-color:#43f0a4",text:"NEW"}));
     card.append(el("div",{class:"nm",text:optName(tab,i)}),...(tab==="pet"&&PETS[optName(tab,i)]?[el("div",{class:"r-uncommon",style:"font-size:10px;line-height:1.2",text:PETS[optName(tab,i)].trait.short})]:[]),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:!own&&isExcl(tab,i)?"color:#cf72ff":"",text:cur?"Wearing":own?"Owned":isExcl(tab,i)?`${digiOf(tab,i)?digiPrice(digiOf(tab,i)).toLocaleString():0} RP`:`₵${optCost(tab,i)}`}),el("span",{text:sel&&!cur?"Trying":""})));
     g.append(card);
@@ -6241,7 +6245,7 @@ function curHomeKey(){ return me.scene==="rowin"?"row:"+(rowInSlot||""):me.scene
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {rowin:(rowStores[rowInSlot]&&rowStores[rowInSlot].name)||"a Neon Row store",dexhub:"MyDex Hub",datasim:"Data Sim HQ",hhomes:"Harvest Homes",hhfloor:"a Harvest Homes hallway",racers:"the Car Display",nfantasy:"Neon Fantasy",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Ramblings of a Mad Man)",line:"The Line (12/11)"}[s]||"somewhere"; }
+function sceneName(s){ return {simcity:"Sim City (underground)",rowin:(rowStores[rowInSlot]&&rowStores[rowInSlot].name)||"a Neon Row store",dexhub:"MyDex Hub",datasim:"Data Sim HQ",hhomes:"Harvest Homes",hhfloor:"a Harvest Homes hallway",racers:"the Car Display",nfantasy:"Neon Fantasy",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Ramblings of a Mad Man)",line:"The Line (12/11)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -6272,6 +6276,7 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"Story Mode · Ramblings of a Mad Man",d:"The book by Edwin C. Reyes as a 2D pixel-art story game",s:"story",x:()=>STORY_X.door},
   {g:"Hot spots",n:"RP Exchange machine",d:"Members: trade ₵4,000 for 50 RP (Sector 9)",s:"street",x:2150},
   {g:"Hot spots",n:"Bytes terminal",d:"Your VRChat roleplay wallet (The Glitch)",s:"bar",x:195},
+  {g:"Hot spots",n:"Sim City entrance (underground)",d:"Stairs down at the far east end of Sector 9, past The Third Eye. Black markets below.",s:"street",x:4300},
   {g:"Hot spots",n:"Gemix (Mech Gems)",d:"Color, upgrade and form gems for your mech (Byte Market)",s:"byte",x:4600},
   {g:"Hot spots",n:"Car Display",d:"Dealership, garage and player car plots",s:"racers",x:()=>CD_DEAL[0]},
   {g:"Hot spots",n:"Neon Fantasy",d:"Step through the Gate of Aethernet: dungeons, bosses and loot",s:"nfantasy",x:()=>NFH.gate},
@@ -9803,12 +9808,13 @@ function applyGems(M,mg,t){ if(!mg||!mg.length) return M; const N={...M,c:M.c.sl
   for(const id of mg){ const g=GEM_BY[id]; if(!g) continue;
     if(g.k==="up"){ if(g.up) Object.assign(N,g.up); if(g.fx2) N.gfx.push(g.fx2); }
     if(g.k==="color"){ if(g.anim==="cycle"){ const h=(t*60)%360; N.c=[hsl(h,85,58),hsl(h+180,40,18),hsl(h+90,95,75)]; N.g=hsl(h+40,100,65); }
-      else { N.c=g.c.slice(); N.g=g.g; if(g.anim==="flicker") N.g=Math.sin(t*23)*Math.sin(t*7.3)>.35?g.c[2]:g.g; if(g.anim==="sheen") N.gfx.push("sheen"); if(g.anim==="pulse") N.pulse=1; } }
+      else { N.c=g.c.slice(); N.g=g.g; if(g.anim==="fake"&&(t%4)<.35){ N.c=["#7a7a80","#3a3a40","#a0a0a8"]; N.g="#a0a0a8"; } if(g.anim==="flicker") N.g=Math.sin(t*23)*Math.sin(t*7.3)>.35?g.c[2]:g.g; if(g.anim==="sheen") N.gfx.push("sheen"); if(g.anim==="pulse") N.pulse=1; } }
   }
+  for(const id of mg){ const g=GEM_BY[id]; if(g&&g.gfx) N.gfx.push(g.gfx); }
   N.gems=mg.slice(); return N; }
 // Extra gem effects, drawn in mech space (feet at 0) after the mech.
 function drawGemFx(c,M,t,dir,hipY,tTop,headY,mv){ const G=M.g;
-  for(const fx of M.gfx||[]){
+  for(const fx of M.gfx||[]){ if(typeof BM_GEMFX!=="undefined"&&BM_GEMFX[fx]){ c.save(); try{ BM_GEMFX[fx](c,M,t,dir,hipY,tTop,headY,mv); }catch(e){} c.restore(); continue; }
     if(fx==="sheen"){ const u=((t*.5)%1.6)-.3; c.save(); c.globalCompositeOperation="lighter"; c.globalAlpha=.35; c.fillStyle="#ffffff"; c.beginPath(); c.moveTo(-16+u*40,tTop); c.lineTo(-10+u*40,tTop); c.lineTo(-18+u*40,hipY+4); c.lineTo(-24+u*40,hipY+4); c.fill(); c.restore(); }
     if(fx==="jets"&&mv){ for(const s of [-1,1]){ const fl=4+Math.random()*4; c.fillStyle=G; c.shadowColor=G; c.shadowBlur=10; c.beginPath(); c.moveTo(s*6-dir*2-2,-2); c.lineTo(s*6-dir*(6+fl),2); c.lineTo(s*6-dir*2+2,-2); c.fill(); c.shadowBlur=0; } }
     if(fx==="bubble"){ c.save(); const p=.5+.5*Math.sin(t*3); c.strokeStyle=G; c.globalAlpha=.35+.25*p; c.lineWidth=1.4; c.beginPath(); c.ellipse(0,(headY+0)/2,28,-headY/2+10,0,0,7); c.stroke(); c.globalAlpha=.18; for(let k=0;k<8;k++){ const a=k*.785+t*.4; const x=Math.cos(a)*22, y=(headY/2)+Math.sin(a)*(-headY/2)*.8; c.beginPath(); for(let j=0;j<6;j++){ const b=j*1.047; c.lineTo(x+Math.cos(b)*5,y+Math.sin(b)*5); } c.closePath(); c.stroke(); } const hit=(t%3)<.25; if(hit){ c.globalAlpha=.5*(1-(t%3)/.25); c.fillStyle=G; c.beginPath(); c.ellipse(0,headY/2,28,-headY/2+10,0,0,7); c.fill(); } c.restore(); }
@@ -9850,7 +9856,7 @@ function openGemix(tab){ gemTab=tab||gemTab; const body=panel("Gemix · Mech Gem
   body.append(el("p",{class:"sub",text:`You have ₵${Math.floor(save.credits).toLocaleString()} and ${Math.floor(save.chips).toLocaleString()} chips.`}));
   if(gemTab==="shop"){ for(const [k,h,sub] of [["color","🎨 Color gems","Repaint your whole mech. One at a time."],["up","⚙ Upgrade gems","Bolt on parts and effects. Stack them."],["form","🔮 Form gems","Rebuild the whole frame. One at a time. Tiny Mechs keep their cockpit."]]){
       body.append(el("strong",{text:h}),el("span",{class:"sub",text:sub})); const l=el("div",{class:"list"});
-      for(const g of MECH_GEMS.filter(x=>x.k===k)){ const n=gemCount(g.id);
+      for(const g of MECH_GEMS.filter(x=>x.k===k&&!x.bm)){ const n=gemCount(g.id);
         l.append(el("div",{class:"li"},gemCanvas(g,44),el("div",{class:"grow"},el("div",{text:g.n+(n?` · ×${n} owned`:"")}),el("div",{class:"sub",text:g.d})),
           el("div",{class:"row",style:"flex-direction:column;gap:4px"},el("button",{class:"btn hot",type:"button",text:`₵${g.cr.toLocaleString()}`,onclick:()=>buyGem(g,"credits")}),el("button",{class:"btn",type:"button",text:`${g.ch} chips`,onclick:()=>buyGem(g,"chips")})))); }
       body.append(l); } return; }
@@ -10116,7 +10122,8 @@ const DIGI_PETS={
 const DIGI_GROUND=["Ember kit","Thunder pup","Pocket titan","Chibi oni","Molten boar","Gravel tortoise","Void jackal","Bloom stag","Solar lynx","Circuit panda","Cryo polar","Iron grizzly","Beat cub","Volt sun bear","Lunar moon bear"];
 const DIGI_BASE_LEN={};
 for(const it of DIGI){ if(DIGI_BASE_LEN[it.k]==null) DIGI_BASE_LEN[it.k]=WARD[it.k].opts.length; WARD[it.k].opts.push([it.n,it.k==="pet"?500:Math.round(it.rp/10),"smk"]); }
-function isExcl(k,i){ return !!(WARD[k]&&!WARD[k].color&&WARD[k].opts[i]&&WARD[k].opts[i][2]==="smk"); }
+function isExcl(k,i){ return !!(WARD[k]&&!WARD[k].color&&WARD[k].opts[i]&&(WARD[k].opts[i][2]==="smk"||WARD[k].opts[i][2]==="bm")); }
+function isBM(k,i){ return !!(WARD[k]&&WARD[k].opts&&WARD[k].opts[i]&&WARD[k].opts[i][2]==="bm"); }
 function digiOf(k,i){ return isExcl(k,i)?DIGI.find(d=>d.k===k&&d.n===WARD[k].opts[i][0]):null; }
 function digiIndex(d){ return WARD[d.k].opts.findIndex(o=>o[0]===d.n&&o[2]==="smk"); }
 // The owner sets each item's RP price and whether it's in the shop (shopinfo/digital); unset items use the suggested price.
@@ -11690,7 +11697,7 @@ function openHomeClock(){ const body=panel("Clock",new Date().toLocaleTimeString
 function drawHeld(){ if(!cbHolding||me.scene!=="cyberbuys") return; ctx.save(); drawItem(ctx,cbHolding.id,me.x,me.y-110,26,T); ctx.restore(); }
 
 /* ============================================================ GEAR: weapons in hand, decrypting */
-function weaponArt(c,it,S,t,col){
+function weaponArt(c,it,S,t,col){ if(typeof BM_WART!=="undefined"&&BM_WART[it.id]){ c.save(); BM_WART[it.id](c,S,t,col); c.restore(); return; }
   const id=it.id; const g=a=>{ c.shadowColor=col; c.shadowBlur=S*.25*a; }; const lw=v=>Math.max(1,S*v); c.lineCap="round";
   if(id==="wpn_knife"){ c.fillStyle="#2a2440"; c.fillRect(-S*.45,-S*.05,S*.3,S*.1); c.fillStyle="#8d86ab"; c.fillRect(-S*.16,-S*.08,S*.03,S*.16); g(1); c.fillStyle="#38e8ff"; c.beginPath(); c.moveTo(-S*.13,-S*.04); c.lineTo(S*.18,-S*.02); c.lineTo(S*.24,0); c.lineTo(S*.18,S*.03); c.lineTo(-S*.13,S*.04); c.fill(); c.shadowBlur=0; c.fillStyle="rgba(255,255,255,.85)"; c.fillRect(-S*.1,-S*.01,S*.25,lw(.015)); }
   else if(id==="wpn_baton"){ c.fillStyle="#1b1530"; c.fillRect(-S*.45,-S*.04,S*.85,S*.08); c.fillStyle="#4a4466"; for(let i=0;i<4;i++) c.fillRect(-S*.42+i*S*.06,-S*.05,S*.03,S*.1); g(1); c.fillStyle="#ffb84a"; c.fillRect(S*.36,-S*.06,S*.1,S*.12);
@@ -11863,7 +11870,7 @@ function housePrice(id){ const it=BY[id]; if(id==="trip_god") return {price:500,
 
 /* --- using consumables */
 function useTrip(id){ const d=TRIPS[id]; if(!d||!hasItem(id)) return;
-  if(me.scene!=="club"){ toast("Club items only work inside The Third Eye in Sector 9."); return; }
+  if(me.scene!=="club"&&me.scene!=="simcity"){ toast("Club items only work inside The Third Eye or down in Sim City."); return; }
   addItem(id,-1); persist(); closePanel(); me.dancing=false;
   me.emote={e:"use",t:T,it:id}; pushPresence(true,{emote:{e:"use",at:Date.now(),it:id}}); beep(300,.2,"triangle");
   setTimeout(()=>applyTrip(id),1500); }
@@ -11892,7 +11899,7 @@ function fusionRecipes(){ const wrap=el("div",{style:"display:flex;flex-directio
   wrap.append(l); return wrap; }
 function canMix(F){ if(!F||F.a===F.b) return (save.inv[F.a]||0)>=2; return hasItem(F.a)&&hasItem(F.b); }
 function knownMixesFor(id){ const known=save.fusions||[]; return FUSIONS.filter(F=>known.includes(F.key)&&(F.a===id||F.b===id)&&canMix(F)); }
-function mixFusion(F,onDone){ if(!F) return; if(me.scene!=="club"){ toast("Mix it inside The Third Eye."); return; } if(!canMix(F)){ toast(`You need ${BY[F.a].n} and ${BY[F.b].n}.`); return; }
+function mixFusion(F,onDone){ if(!F) return; if(me.scene!=="club"&&me.scene!=="simcity"){ toast("Mix it inside The Third Eye or down in Sim City."); return; } if(!canMix(F)){ toast(`You need ${BY[F.a].n} and ${BY[F.b].n}.`); return; }
   const cur=myTrip&&myTrip.until>Date.now()?myTrip:null; if(cur&&cur.id==="trip_god"){ toast("The God Particle won't share your mind. Nothing else takes hold."); return; }
   addItem(F.a,-1); addItem(F.b,-1); persist(); closePanel(); me.dancing=false; me.emote={e:"use",t:T,it:F.a}; pushPresence(true,{emote:{e:"use",at:Date.now(),it:F.a}}); beep(300,.2,"triangle"); setTimeout(()=>beep(450,.2,"triangle"),300);
   toast(`Mixing ${BY[F.a].n} + ${BY[F.b].n}…`,"#ffd36a");
@@ -12421,7 +12428,7 @@ function spawnPatron(){ const free=SEATS.map((_,i)=>i).filter(i=>!seatTaken(i));
   const PIDS=TRIP_IDS.filter(id=>id!=="trip_god"); const w=PIDS.map(id=>({common:5,uncommon:3,rare:2,epic:1})[BY[id].r]||1); let r=Math.random()*w.reduce((a,b)=>a+b,0), want=PIDS[0]; for(let i=0;i<PIDS.length;i++){ if((r-=w[i])<=0){ want=PIDS[i]; break; } }
   patrons.push({id:Math.random().toString(36).slice(2),seat,x:60,y:292,dir:1,phase:0,look:randomLook(),want,max:75,left:75,arrived:false,sat:false,leaving:false,served:false,moving:true}); }
 function tickClub(){
-  if(me.dancing){ if(me.moving||me.scene!=="club") me.dancing=false; else if(T>(me.danceNext||0)){ emote("dance"); me.danceNext=T+2.8; } }
+  if(me.dancing){ if(me.moving||(me.scene!=="club"&&me.scene!=="simcity")) me.dancing=false; else if(T>(me.danceNext||0)){ emote("dance"); me.danceNext=T+2.8; } }
   if(me.scene!=="club") return;
   if(clubShift&&T>clubNext&&patrons.filter(c=>!c.leaving&&!c.served).length<3){ spawnPatron(); clubNext=T+rnd(10,18); }
   for(const c of patrons){
@@ -13190,6 +13197,281 @@ if(save.name) myName=save.name;
 
 /* ============================================================ PRESENCE */
 let lastPush=0, lastSig="";
+/* ============================================================ SIM CITY: the underground city below Sector 9
+   Entrance: the stairwell at the far east end of Sector 9, past The Third Eye (not a metro stop).
+   Black markets sell items nobody can buy above ground: weapons, Mech Gems and companions. Third Eye club items work down here. */
+const SIM_NAME="Sim City", SIM_ENTRY_X=4300;
+const SIM_X={exit:150,gate:560,arms:980,cartel:1460,hex:1930,deal:2260,board:2560,fountain:2820,bench:3100,kennel:3520,sump:4080,broker:4560,deep:4980};
+// ---- black market weapons (held in your hand, fight in The Void)
+const BM_WEAPONS=[
+ {id:"bmw_widow",n:"Black Widow SMG",cr:9000,ch:70,col:"#ff2a3a",d:"A spider-shaped SMG. Its magazine legs twitch and the red hourglass pulses.",st:{dmg:8,range:260,cd:.2,kind:"ranged",fx:"bolt",col:"#ff2a3a"}},
+ {id:"bmw_reaper",n:"Reaper's Toll",cr:15000,ch:130,col:"#b06bff",d:"A smoking scythe. Little ghost faces drift off the blade.",st:{dmg:25,range:70,cd:1,kind:"melee",fx:"sweep",col:"#b06bff",multi:true}},
+ {id:"bmw_hexgun",n:"Hex Revolver",cr:10000,ch:80,col:"#43f0a4",d:"Its cylinder spins with glowing runes and hex smoke curls from the barrel.",st:{dmg:17,range:300,cd:.7,kind:"ranged",fx:"bolt",col:"#43f0a4"}},
+ {id:"bmw_crimson",n:"Crimson Oath",cr:13000,ch:110,col:"#ff3a5a",d:"A cursed katana that drips red light.",st:{dmg:19,range:54,cd:.6,kind:"melee",fx:"arc",col:"#ff3a5a"}},
+ {id:"bmw_wraith",n:"Wraith Bow",cr:12000,ch:100,col:"#a8e6ff",d:"A see-through ghost bow that flickers in and out. Its arrow has a skull tip.",st:{dmg:18,range:440,cd:.9,kind:"ranged",fx:"arrow",col:"#a8e6ff"}},
+ {id:"bmw_plague",n:"Plague Cannon",cr:14000,ch:120,col:"#a6ff3a",d:"A cannon fed by a bubbling canister of green sludge.",st:{dmg:20,range:170,cd:1.1,kind:"ranged",fx:"spread",col:"#a6ff3a",multi:true,slow:1}},
+ {id:"bmw_storm",n:"Storm Fist",cr:11000,ch:90,col:"#f5e663",d:"A heavy gauntlet with lightning jumping between the knuckles.",st:{dmg:10,range:34,cd:.32,kind:"melee",fx:"shock",col:"#f5e663",slow:.8}},
+ {id:"bmw_cleaver",n:"Void Cleaver",cr:16000,ch:140,col:"#7c5cff",d:"An axe with a tiny black hole spinning in the blade, pulling sparks in.",st:{dmg:27,range:60,cd:1.2,kind:"melee",fx:"slam",col:"#7c5cff",multi:true}},
+];
+// ---- black market Mech Gems (socket them at Gemix like any gem)
+const BM_GEMS=[
+ {id:"g_bm_bloodmoon",n:"Blood Moon Core",k:"color",cr:18000,ch:300,col:"#ff2a3a",c:["#5a0a12","#120206","#ff2a3a"],g:"#ff2a3a",anim:"pulse",gfx:"bleed",bm:1,d:"Blood-red armor that slowly drips red light onto the ground."},
+ {id:"g_bm_ghost",n:"Ghost Core",k:"color",cr:18000,ch:300,col:"#c8f0ff",c:["#d8e4f0","#6a7a90","#ffffff"],g:"#c8f0ff",anim:"pulse",gfx:"ghost",bm:1,d:"Pale see-through plating with spirit wisps rising off it."},
+ {id:"g_bm_counterfeit",n:"Counterfeit Gold Core",k:"color",cr:16000,ch:260,col:"#ffd23a",c:["#e8b830","#6a4a10","#fff2a8"],g:"#fff2a8",anim:"fake",gfx:"glint",bm:1,d:"Looks like solid gold. Every few seconds the paint glitches and shows the cheap grey metal underneath."},
+ {id:"g_bm_smoke",n:"Smoke Bomb Gem",k:"up",cr:20000,ch:320,col:"#9aa4b8",gfx:"smoke",bm:1,d:"Thick smoke rolls out around your mech's feet."},
+ {id:"g_bm_skulls",n:"Skull Orbit Gem",k:"up",cr:22000,ch:350,col:"#efe6d8",gfx:"skulls",bm:1,d:"Three tiny skulls with glowing eyes circle your mech."},
+ {id:"g_bm_cash",n:"Money Rain Gem",k:"up",cr:25000,ch:400,col:"#43f0a4",gfx:"cash",bm:1,d:"Cash bills flutter down around your mech wherever it goes."},
+ {id:"g_bm_chains",n:"Chain Gem",k:"up",cr:20000,ch:320,col:"#c9d3e0",gfx:"chains",bm:1,d:"Heavy chains hang from your mech's hips and swing as you walk."},
+ {id:"g_bm_kingpin",n:"Kingpin Form",k:"form",cr:30000,ch:500,col:"#ffd23a",form:{leg:"heavy",body:"vee",head:"skull",back:"cape",sh:"spikes",sc:1.1},gfx:"crown",bm:1,d:"Rebuilds your mech as an underworld boss: skull face, spikes, a cape and a gold crown floating overhead."},
+];
+// ---- black market companions
+const BM_PETS=[
+ {n:"Sewer croc",cr:28000,ch:350,ground:1,d:"A cyber crocodile from the drains. Its jaw snaps open and closed and its eyes glow toxic green.",info:{p:"Patient, cold, loyal to whoever feeds it.",trait:{k:"guard",v:12,short:"12% less Void damage"},ab:{k:"buff",b:"guard",n:"Iron Jaw",cd:45,d:"Void armor for 10 min"},say:["*snap*","...","*low hiss*"]}},
+ {n:"Rat king",cr:25000,ch:300,ground:1,d:"Three cyber rats with their tails tied in a glowing knot. The middle one wears a tiny crown.",info:{p:"Three minds, one appetite. Finds everything.",trait:{k:"luck",v:14,short:"Much luckier Scrap finds"},ab:{k:"fetch",n:"Sewer Haul",cd:90,d:"Finds a random part"},say:["squeak squeak squeak","*all three sniff*","The king approves."]}},
+ {n:"Contraband crow",cr:30000,ch:380,ground:0,d:"A black crow with a red eye, carrying a locked briefcase. Nobody knows what's inside.",info:{p:"Nosy, clever, always making deals.",trait:{k:"tips",v:15,short:"+15% shift tips"},ab:{k:"credits",lo:60,hi:140,n:"Briefcase Drop",cd:60,d:"Brings ₵60–140"},say:["Caw. Don't ask.","*clicks the latch*","Got a deal for you."]}},
+ {n:"Smuggler drone",cr:32000,ch:400,ground:0,d:"A stealth drone hauling a stenciled crate on a cable. Its scanner sweeps the ground.",info:{p:"Quiet and quick. Never seen, never caught.",trait:{k:"print",v:4,short:"+4 chips per CHIP PRINT"},ab:{k:"chips",lo:8,hi:18,n:"Smuggle Run",cd:60,d:"Finds 8–18 chips"},say:["*whirr*","Package secured.","Route clear."]}},
+ {n:"Phantom hound",cr:35000,ch:450,ground:1,d:"A smoky black hound with purple fire for eyes. It leaves a trail of shadow behind it.",info:{p:"Silent and fast. Follows you like your own shadow.",trait:{k:"speed",v:12,short:"+12% walk speed"},ab:{k:"buff",b:"luck",n:"Shadow Sniff",cd:45,d:"Lucky salvage for 10 min"},say:["*growl*","...","*sniffs the dark*"]}},
+ {n:"Neon cobra",cr:40000,ch:500,ground:1,d:"A coiled cobra with a glowing neon hood. It sways, flicks its tongue and never blinks.",info:{p:"Hypnotic. Calm until it isn't.",trait:{k:"regen",v:3,short:"+3 HP/s regen in The Void"},ab:{k:"heal",v:40,n:"Antivenom",cd:4,d:"Heals 40 HP in The Void"},say:["sssss.","*sways*","Look into my hood."]}},
+];
+// register weapons (BY only, so they never drop from scrap, loot or shops above ground)
+var BM_WART={};
+for(const w of BM_WEAPONS){ BY[w.id]={id:w.id,n:w.n,t:"weapon",r:"epic",v:Math.round(w.cr/25),bm:1,desc:w.d+" Black market."}; WSTATS[w.id]=w.st; }
+// register gems
+for(const g of BM_GEMS){ MECH_GEMS.push(g); GEM_BY[g.id]=g; }
+// register companions (appended to the end of the companion list so saved looks never shift)
+const BM_PET_IDX={};
+for(const p of BM_PETS){ WARD.pet.opts.push([p.n,500,"bm"]); BM_PET_IDX[p.n]=WARD.pet.opts.length-1; PETS[p.n]=p.info; if(p.ground) PET_GROUND.push(p.n); }
+function bmItems(){ return [...BM_WEAPONS.map(x=>({kind:"weapon",id:x.id,n:x.n,cr:x.cr,ch:x.ch,x})),...BM_GEMS.map(x=>({kind:"gem",id:x.id,n:x.n,cr:x.cr,ch:x.ch,x})),...BM_PETS.map(x=>({kind:"pet",id:"pet:"+x.n,n:x.n,cr:x.cr,ch:x.ch,x}))]; }
+function bmHash(s){ let h=2166136261; for(const ch of String(s)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return (h>>>0)/4294967296; }
+// rotating stock: each day only some of each shop's items are in
+function bmInStock(kind,id){ const list=kind==="weapon"?BM_WEAPONS.map(x=>x.id):kind==="gem"?BM_GEMS.map(x=>x.id):BM_PETS.map(x=>"pet:"+x.n); const k=dayKey(); const keep=Math.ceil(list.length*(kind==="pet"?.5:.6));
+  return list.slice().sort((a,b)=>bmHash(k+a)-bmHash(k+b)).slice(0,keep).includes(id); }
+function bmDeal(){ const all=bmItems().filter(i=>bmInStock(i.kind,i.id)); return all[Math.floor(bmHash("deal"+dayKey())*all.length)]||null; }
+function bmPrice(i){ const d=bmDeal(), off=d&&d.id===i.id?.75:1; return {cr:Math.round(i.cr*off/100)*100,ch:Math.round(i.ch*off),deal:off<1}; }
+function bmOwned(i){ if(i.kind==="weapon") return hasItem(i.id); if(i.kind==="pet") return isOwned("pet",BM_PET_IDX[i.n]); return false; }
+function bmBuy(i,after){ const P=bmPrice(i); if(bmOwned(i)){ toast("You already own that."); return; }
+  if(!bmInStock(i.kind,i.id)&&!IS_ADMIN){ toast("Out of stock today. The black market restocks at midnight."); return; }
+  if(save.credits<P.cr||save.chips<P.ch){ toast(`You need ₵${P.cr.toLocaleString()} and ${P.ch} chips.`); beep(160,.15,"square"); return; }
+  save.credits-=P.cr; save.chips-=P.ch;
+  if(i.kind==="weapon") addItem(i.id,1);
+  else if(i.kind==="gem"){ save.gems=save.gems||{}; save.gems[i.id]=Math.min(999,(save.gems[i.id]||0)+1); }
+  else { save.owned=save.owned||[]; const key="pet:"+BM_PET_IDX[i.n]; if(!save.owned.includes(key)) save.owned.push(key); }
+  persist(); hud(); try{ stTrack("act","Black market: "+i.n); }catch(e){} [220,330,494,660].forEach((f,k)=>setTimeout(()=>beep(f,.09,"sawtooth",.05),k*80));
+  toast(`🕶 ${i.n} is yours. Don't tell anyone where you got it.`,"#ff2a3a"); emote("cheer"); if(after) after(); }
+
+/* ---- shops ---- */
+const SIM_VENDORS={arms:{n:"Rook",shop:"Rook's Arms",kind:"weapon",col:"#ff2a3a",hi:"Rook leans on the counter. “Nothing in here is legal. Everything in here works.”"},
+  cartel:{n:"Vesper",shop:"The Gem Cartel",kind:"gem",col:"#ffd23a",hi:"Vesper rolls a glowing gem across her knuckles. “Gemix won't touch these. That's why they're mine.”"},
+  kennel:{n:"Mother Mange",shop:"The Kennel",kind:"pet",col:"#a6ff3a",hi:"Mother Mange scratches something in a cage. “They bite. Only people who deserve it.”"}};
+function simPreview(i,px){ if(i.kind==="weapon") return itemCanvas(i.id,px); if(i.kind==="gem") return gemCanvas(i.x,px/2|0); return bmPetCanvas(i.n,px); }
+function bmPetCanvas(n,px){ const cv=document.createElement("canvas"); cv.width=px*2; cv.height=px*2; const c=cv.getContext("2d"); let dead=0; const draw=()=>{ if(!cv.isConnected){ if(++dead>120) return; } else dead=0; c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,cv.width,cv.height); const ground=PET_GROUND.includes(n); try{ drawPetAt(c,cv.width/2,cv.height*(ground?.8:.82),cv.width/52,n,{},Math.sin(performance.now()/2400)>0?1:-1,performance.now()/1000,false); }catch(e){} requestAnimationFrame(draw); }; requestAnimationFrame(draw); return cv; }
+function openSimShop(key){ const V=SIM_VENDORS[key]; const body=panel(`${V.shop} · black market`,`${V.n} sells what you can't buy above ground. Stock changes every day at midnight.`); currentView="sim_"+key;
+  const deal=bmDeal(); body.append(el("p",{class:"sub",style:"font-style:italic",text:V.hi}),el("div",{class:"row"},el("span",{class:"pill cr",text:`₵${Math.floor(save.credits).toLocaleString()}`}),el("span",{class:"pill ch",text:`${Math.floor(save.chips).toLocaleString()} chips`})));
+  if(V.kind==="gem") body.append(el("div",{class:"sub",text:"Gems need a Mech Suit or Tiny Mech. Socket them at Gemix in Byte Market (My mech tab), same as any gem."}));
+  if(V.kind==="weapon") body.append(el("div",{class:"sub",text:"Hold them from Character → Hand. They fight in The Void like any weapon."}));
+  if(V.kind==="pet") body.append(el("div",{class:"sub",text:"Companions follow you everywhere. Switch them in Character → Companion."}));
+  const g=el("div",{class:"list"});
+  for(const i of bmItems().filter(x=>x.kind===V.kind)){ const own=bmOwned(i), stock=bmInStock(i.kind,i.id), P=bmPrice(i), cv=simPreview(i,64); cv.style.cssText+=";width:72px;height:72px;flex:none;background:radial-gradient(circle at 50% 55%,#2a0a14,#07040a 75%)";
+    const extra=i.kind==="weapon"?weaponStatText(i.id):i.kind==="pet"?`${i.x.info.trait.short} · ${i.x.info.ab.n}: ${i.x.info.ab.d}`:`${GEM_KIND[i.x.k]}${i.kind==="gem"&&gemCount(i.id)?` · you have ${gemCount(i.id)}`:""}`;
+    const b=el("button",{class:"btn hot",type:"button",text:own?"Owned":!stock&&!IS_ADMIN?"Sold out today":`Buy · ₵${P.cr.toLocaleString()} + ${P.ch} chips`,onclick:()=>bmBuy(i,()=>openSimShop(key))});
+    if(own||(!stock&&!IS_ADMIN)||save.credits<P.cr||save.chips<P.ch) b.disabled=true;
+    const row=el("div",{class:"row"},b); if(own&&i.kind==="weapon") row.append(el("button",{class:"btn",type:"button",text:"Hold it",onclick:()=>{ save.look={...save.look,hand:i.id}; persist(); pushPresence(true); toast(`Now holding ${i.n}.`,V.col); closePanel(); }}));
+    if(own&&i.kind==="pet") row.append(el("button",{class:"btn",type:"button",text:"Walk with it",onclick:()=>{ save.look={...fullLook(save.look),pet:BM_PET_IDX[i.n]}; try{ syncPetLook(); }catch(e){} persist(); pushPresence(true); toast(`${i.n} is following you.`,V.col); closePanel(); }}));
+    g.append(el("div",{class:"li",style:`border-color:${stock?V.col+"88":"var(--line)"};${stock?"":"opacity:.6"}`},cv,el("div",{class:"grow"},
+      el("div",{},el("strong",{text:i.n}),P.deal?el("span",{class:"tag",style:"margin-left:6px;color:#ff2a3a;border-color:#ff2a3a",text:"Midnight deal −25%"}):null,el("span",{class:"tag",style:"margin-left:6px;color:#ff8a8a;border-color:#ff8a8a",text:"Black market"})),
+      el("div",{class:"sub",text:i.x.d}),el("div",{class:"r-uncommon",style:"font-size:11px",text:extra}),
+      el("div",{class:"sub",text:stock?"In stock today":"Not in stock today. Check back after midnight."}),row))); }
+  body.append(g); }
+// Dr. Hex: Third Eye club items at black market prices (a few each day). They work down here.
+function hexStock(){ const ids=CAT.filter(i=>i.t==="trip"&&TRIPS[i.id]&&i.id!=="trip_god").map(i=>i.id); return ids.sort((a,b)=>bmHash("hex"+dayKey()+a)-bmHash("hex"+dayKey()+b)).slice(0,6); }
+function hexPrice(id){ const p=housePrice(id); return {price:Math.max(1,Math.round(p.price*.8)),cur:p.cur}; }
+function openHex(){ const body=panel("Dr. Hex · Apothecary","Third Eye club items, cheaper and off the books. Six different ones every day."); currentView="sim_hex";
+  body.append(el("p",{class:"sub",style:"font-style:italic",text:"Dr. Hex adjusts three pairs of glasses. “Same stuff the Third Eye pours. Down here it works too. Twenty percent off, no questions.”"}));
+  const l=el("div",{class:"list"}); for(const id of hexStock()){ const it=BY[id], P=hexPrice(id), cv=itemCanvas(id,48); cv.style.cssText+=";width:52px;height:52px;flex:none";
+    const buy=el("button",{class:"btn hot",type:"button",text:`Buy · ${P.cur==="chips"?P.price+" chips":"₵"+P.price}`,onclick:()=>{ const P2=hexPrice(id); if((P2.cur==="chips"?save.chips:save.credits)<P2.price){ toast("Not enough "+(P2.cur==="chips"?"chips.":"credits.")); return; } if(P2.cur==="chips") save.chips-=P2.price; else save.credits-=P2.price; addItem(id,1); persist(); hud(); beep(900,.06); toast(`Bought ${it.n}.`,RAR[it.r].c); openHex(); }});
+    const use=el("button",{class:"btn",type:"button",text:`Use one (${save.inv[id]||0})`,onclick:()=>useTrip(id)}); if(!hasItem(id)) use.disabled=true;
+    l.append(el("div",{class:"li"},cv,el("div",{class:"grow"},el("div",{class:RARCLS(it.r),text:it.n}),el("div",{class:"sub",text:TRIPS[id].desc||""})),buy,use)); }
+  body.append(l,el("div",{class:"sub",text:"Club items from your stash work anywhere in Sim City, not just The Third Eye."})); }
+function RARCLS(r){ return "r-"+r; }
+function openSimBoard(){ const body=panel("Sim City notice board","Scratched into the wall, updated nightly."); currentView="sim_board"; const d=bmDeal();
+  body.append(el("div",{class:"detail",style:"border-color:#ff2a3a"},el("div",{class:"info"},el("strong",{text:"🕶 Midnight deal"}),el("span",{text:d?`${d.n}: 25% off today only at ${d.kind==="weapon"?"Rook's Arms":d.kind==="gem"?"The Gem Cartel":"The Kennel"}.`:"No deal today."}))));
+  const l=el("div",{class:"list"}); for(const [k,V] of Object.entries(SIM_VENDORS)){ const ins=bmItems().filter(i=>i.kind===V.kind&&bmInStock(i.kind,i.id)).map(i=>i.n); l.append(el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:V.shop}),el("div",{class:"sub",text:"In stock: "+ins.join(", ")})))); }
+  l.append(el("div",{class:"li"},el("div",{class:"grow"},el("strong",{text:"Dr. Hex"}),el("div",{class:"sub",text:"Club items today: "+hexStock().map(id=>BY[id].n).join(", ")}))));
+  body.append(l,el("p",{class:"sub",text:"Rules down here: club items work, cops don't come, and nobody saw anything."})); }
+const SIM_RUMORS=["They say the deeper levels go all the way down to the old servers.","Rook used to make weapons for the city. Then the city stopped paying.","Vesper's gems aren't stolen. They're 'pre-owned'.","Mother Mange raised that cobra from an egg. Or a hard drive. Depends who you ask.","Everything at the Midnight Deal is real. Probably.","Somebody painted SIM CITY on the stairs up top. Name stuck.","If the crow offers you its briefcase, don't open it.","The fountain runs on runoff from The Third Eye. Explains the color."];
+function simBroker(){ const r=SIM_RUMORS[Math.floor(Math.random()*SIM_RUMORS.length)]; chatLine("Whisper",r,"sys"); toast("🕶 Whisper: “"+r+"”","#ff8a8a"); }
+
+function simHot(){ return [
+  {x:SIM_X.exit,hw:70,label:"Climb back up to Sector 9",act:()=>go("street",SIM_ENTRY_X)},
+  {x:SIM_X.arms,hw:110,label:"Rook's Arms (black market weapons)",act:()=>openSimShop("arms")},
+  {x:SIM_X.cartel,hw:110,label:"The Gem Cartel (black market Mech Gems)",act:()=>openSimShop("cartel")},
+  {x:SIM_X.hex,hw:90,label:"Dr. Hex's apothecary (club items)",act:()=>openHex()},
+  {x:SIM_X.deal,hw:70,label:"Midnight deal stall",act:()=>{ const d=bmDeal(); if(!d){ toast("No deal today."); return; } openSimShop(d.kind==="weapon"?"arms":d.kind==="gem"?"cartel":"kennel"); }},
+  {x:SIM_X.board,hw:60,label:"Read the notice board",act:()=>openSimBoard()},
+  {x:SIM_X.fountain,hw:80,label:"Toss a chip in the fountain",act:()=>{ if(save.chips<1){ toast("You don't have a chip to toss."); return; } save.chips-=1; persist(); hud(); beep(1200,.05); setTimeout(()=>beep(700,.12,"sine"),180); const r=Math.random(); if(r<.08){ save.credits+=150; toast("The fountain coughs up ₵150. Lucky.","#43f0a4"); } else toast(["Plink. Nothing happens. Probably.","Plink. The water glows a little brighter.","Plink. You feel watched.","Plink. Someone downstream says thanks."][Math.floor(r*4)%4]); }},
+  {x:SIM_X.bench,hw:50,label:"Sit on the bench",act:()=>toast("You sit for a minute and watch the underworld go by.")},
+  {x:SIM_X.kennel,hw:110,label:"The Kennel (black market companions)",act:()=>openSimShop("kennel")},
+  {x:SIM_X.sump,hw:130,label:"Dance at The Sump",act:()=>{ me.dancing=true; me.danceNext=0; toast("You hit The Sump's floor. Club items work down here.","#ff3fa8"); }},
+  {x:SIM_X.broker,hw:50,label:"Talk to Whisper (rumors)",act:()=>simBroker()},
+  {x:SIM_X.deep,hw:80,label:"Sealed gate: the deeper levels",act:()=>toast("The gate is welded shut. Something hums on the other side. Not yet.","#ff8a8a")},
+]; }
+
+/* ---- the street entrance at the far end of Sector 9 ---- */
+function drawSimEntrance(t){ const x=SIM_ENTRY_X; if(x<camX-200||x>camX+VW+200) return; ctx.save();
+  // tunnel shack built into the wall
+  ctx.fillStyle="#0e0a14"; ctx.fillRect(x-70,150,140,114); ctx.fillStyle="#1a1222"; for(let y=154;y<262;y+=10) ctx.fillRect(x-68,y,136,2);
+  ctx.fillStyle="#070408"; ctx.beginPath(); ctx.moveTo(x-46,264); ctx.lineTo(x-46,196); ctx.quadraticCurveTo(x,166,x+46,196); ctx.lineTo(x+46,264); ctx.fill();
+  // red glow from below + steps
+  const gl=.45+.25*Math.sin(t*2.3)+(Math.sin(t*17)>.95?.2:0); const g=ctx.createLinearGradient(0,200,0,264); g.addColorStop(0,"rgba(255,30,50,0)"); g.addColorStop(1,`rgba(255,30,50,${gl})`); ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(x-44,264); ctx.lineTo(x-44,198); ctx.quadraticCurveTo(x,170,x+44,198); ctx.lineTo(x+44,264); ctx.fill();
+  ctx.fillStyle="#2a1a22"; for(let k=0;k<5;k++) ctx.fillRect(x-38+k*4,226+k*8,76-k*8,3);
+  // railing
+  ctx.strokeStyle="#5a4a66"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x-60,264); ctx.lineTo(x-60,236); ctx.lineTo(x-46,236); ctx.moveTo(x+60,264); ctx.lineTo(x+60,236); ctx.lineTo(x+46,236); ctx.stroke();
+  // spray paint tag + arrow
+  ctx.save(); ctx.translate(x,140); ctx.rotate(-.06); ctx.font="700 18px Silkscreen, monospace"; ctx.textAlign="center"; ctx.fillStyle=Math.sin(t*9+1)*Math.sin(t*3)>.9?"#5a0a12":"#ff2a3a"; ctx.shadowColor="#ff2a3a"; ctx.shadowBlur=12; ctx.fillText("SIM CITY",0,0); ctx.shadowBlur=0; ctx.fillStyle="rgba(255,42,58,.6)"; ctx.fillRect(-46,4,3,10); ctx.fillRect(30,3,2,14); ctx.restore();
+  const ay=180+Math.sin(t*4)*4; ctx.fillStyle="#ff2a3a"; ctx.globalAlpha=.8; ctx.beginPath(); ctx.moveTo(x-8,ay); ctx.lineTo(x+8,ay); ctx.lineTo(x,ay+10); ctx.fill(); ctx.globalAlpha=1;
+  ctx.font="9px 'IBM Plex Mono',monospace"; ctx.fillStyle="#9a8cc0"; ctx.textAlign="center"; ctx.fillText("NO METRO · STAIRS ONLY",x,162);
+  // steam
+  for(let k=0;k<5;k++){ const u=(t*.3+k/5)%1; ctx.globalAlpha=(1-u)*.25; ctx.fillStyle="#d8c8d8"; ctx.beginPath(); ctx.arc(x-20+k*10+Math.sin(t+k)*6,250-u*70,6+u*14,0,7); ctx.fill(); } ctx.globalAlpha=1; ctx.restore(); }
+
+/* ---- drawing the underground city ---- */
+let SIM_CROWD=null, SIM_LAST=0, SIM_LOOKS={};
+function simLook(k){ if(!SIM_LOOKS[k]){ const L=randomLook(); L.pet=0; L.aura=0; SIM_LOOKS[k]=L; } return SIM_LOOKS[k]; }
+function simCrowdTick(t){ const W=SCENES.simcity.w; if(!SIM_CROWD){ SIM_CROWD=[]; for(let i=0;i<16;i++) SIM_CROWD.push({x:300+Math.random()*(W-600),dir:Math.random()<.5?-1:1,sp:28+Math.random()*30,phase:0,look:simLook("c"+i),pause:0,y:284+Math.random()*10}); }
+  const dt=Math.min(.1,Math.max(0,t-SIM_LAST)); SIM_LAST=t;
+  for(const c of SIM_CROWD){ if(c.pause>0){ c.pause-=dt; c.moving=false; continue; } c.x+=c.dir*c.sp*dt; c.phase+=dt*8; c.moving=true; if(c.x<260||c.x>W-260) c.dir*=-1; if(Math.random()<dt*.15){ c.pause=1+Math.random()*4; if(Math.random()<.5) c.dir*=-1; } } }
+function simShopFront(x,w,name,col,sub,t,seed){ const L=x-w/2; ctx.fillStyle="#120c16"; ctx.fillRect(L,96,w,168); ctx.fillStyle="#1c141f"; for(let y=100;y<262;y+=14) for(let k=L+((y/14)%2)*10;k<L+w;k+=20) ctx.fillRect(k,y,18,12);
+  ctx.fillStyle="#08050a"; ctx.fillRect(L-6,90,w+12,8); ctx.fillRect(L+14,150,w-28,114); ctx.fillStyle="rgba(255,200,150,.07)"; ctx.fillRect(L+18,154,w-36,108);
+  ctx.fillStyle="#2a1a20"; ctx.fillRect(L+14,226,w-28,10); // counter
+  // awning stripes
+  for(let k=0;k<w;k+=16){ ctx.fillStyle=(k/16)%2?"#1a0a10":col+"55"; ctx.beginPath(); ctx.moveTo(L+k,128); ctx.lineTo(L+k+16,128); ctx.lineTo(L+k+12,146); ctx.lineTo(L+k-4,146); ctx.fill(); }
+  neonText(name,x,120,14,col,flick(seed,t)); if(sub){ ctx.fillStyle="#9a8cc0"; ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText(sub,x,88); } }
+function drawSim(t){ const W=SCENES.simcity.w, X0=camX-120, X1=camX+VW+120, vis=x=>x>X0-200&&x<X1+200;
+  // cavern
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#040206"); g.addColorStop(.55,"#0d0710"); g.addColorStop(1,"#060407"); ctx.fillStyle=g; ctx.fillRect(camX,0,VW,H);
+  // far parallax: carved towers in the rock
+  const px=camX*.35; for(let i=-2;i<36;i++){ const bx=px+i*170, h=90+bmHash("t"+i)*110; if(bx<camX-200||bx>camX+VW+40) continue; ctx.fillStyle="#0f0913"; ctx.fillRect(bx,250-h,120,h); for(let wy=250-h+10;wy<240;wy+=14) for(let wx=bx+10;wx<bx+112;wx+=16) if(bmHash(i+"w"+wx+wy)<.1){ ctx.fillStyle=bmHash(wx+"c"+wy)<.4?"rgba(255,60,80,.22)":"rgba(255,190,120,.18)"; ctx.fillRect(wx,wy,6,7); } }
+  // ceiling rock + stalactites + pipes
+  ctx.fillStyle="#08050a"; ctx.fillRect(camX,0,VW,34); for(let x=Math.floor(X0/60)*60;x<X1;x+=60){ const h=10+bmHash("s"+x)*38; ctx.beginPath(); ctx.moveTo(x,30); ctx.lineTo(x+20,30); ctx.lineTo(x+10+bmHash("q"+x)*4,30+h); ctx.fill(); if(bmHash("d"+x)<.3){ const u=((t*.7+bmHash("e"+x))%1); ctx.fillStyle="rgba(140,220,255,.6)"; ctx.fillRect(x+10,30+h+u*220,1.5,4); ctx.fillStyle="#08050a"; } }
+  ctx.fillStyle="#1a1a24"; ctx.fillRect(camX,40,VW,8); ctx.fillStyle="#22222e"; ctx.fillRect(camX,42,VW,2); for(let x=Math.floor(X0/220)*220;x<X1;x+=220){ ctx.fillStyle="#2a2a36"; ctx.fillRect(x,37,10,14); if(bmHash("v"+x)<.4){ for(let k=0;k<4;k++){ const u=(t*.5+k/4)%1; ctx.globalAlpha=(1-u)*.25; ctx.fillStyle="#cfc6d8"; ctx.beginPath(); ctx.arc(x+5,52+u*30,3+u*8,0,7); ctx.fill(); } ctx.globalAlpha=1; } }
+  // hanging lanterns
+  for(let x=Math.floor(X0/150)*150+75;x<X1;x+=150){ const sw=Math.sin(t*1.2+x)*3; ctx.strokeStyle="#2a2a36"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x,48); ctx.lineTo(x+sw,74); ctx.stroke(); const c=bmHash("l"+x)<.5?"#ff2a3a":"#ffb84a"; ctx.fillStyle=c; ctx.shadowColor=c; ctx.shadowBlur=14; ctx.fillRect(x+sw-4,74,8,10); ctx.shadowBlur=0; ctx.globalAlpha=.035; ctx.beginPath(); ctx.arc(x+sw,80,50,0,7); ctx.fill(); ctx.globalAlpha=1; }
+  // exit stairs up
+  if(vis(SIM_X.exit)){ const x=SIM_X.exit; ctx.fillStyle="#1a1420"; for(let k=0;k<9;k++) ctx.fillRect(x-60+k*8,262-k*18,80,6); const sh=ctx.createLinearGradient(0,0,0,262); sh.addColorStop(0,"rgba(150,200,255,.18)"); sh.addColorStop(1,"rgba(150,200,255,0)"); ctx.fillStyle=sh; ctx.beginPath(); ctx.moveTo(x-10,0); ctx.lineTo(x+60,0); ctx.lineTo(x+40,262); ctx.lineTo(x-40,262); ctx.fill(); neonText("↑ SECTOR 9",x,96,11,"#9fd8ff",1); }
+  // welcome gate
+  if(vis(SIM_X.gate)){ const x=SIM_X.gate; ctx.fillStyle="#1a0e14"; ctx.fillRect(x-130,60,18,204); ctx.fillRect(x+112,60,18,204); ctx.fillRect(x-140,52,280,22); ctx.strokeStyle="#ff2a3a"; ctx.lineWidth=2; ctx.strokeRect(x-138,54,276,18); neonText("WELCOME TO SIM CITY",x,68,13,"#ff2a3a",flick(3,t)); ctx.fillStyle="#9a8cc0"; ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("population: nobody you know",x,88);
+    for(let k=0;k<2;k++){ const c=k?"#38e8ff":"#ff3fa8"; ctx.fillStyle=c; ctx.shadowColor=c; ctx.shadowBlur=10; ctx.fillRect(x-122+k*244-2,90,4,150*(.6+.4*Math.abs(Math.sin(t*1.5+k)))); ctx.shadowBlur=0; } }
+  // shops
+  if(vis(SIM_X.arms)){ simShopFront(SIM_X.arms,220,"ROOK'S ARMS","#ff2a3a","black market weapons",t,11); for(let k=0;k<4;k++) drawItem(ctx,BM_WEAPONS[(Math.floor(t/3)+k*2)%BM_WEAPONS.length].id,SIM_X.arms-75+k*50,190,40,t+k); }
+  if(vis(SIM_X.cartel)){ simShopFront(SIM_X.cartel,220,"THE GEM CARTEL","#ffd23a","gems Gemix won't sell",t,21); for(let k=0;k<4;k++) drawGemIcon(ctx,SIM_X.cartel-75+k*50,192,30,BM_GEMS[(Math.floor(t/2.5)+k*2)%BM_GEMS.length],t+k); }
+  if(vis(SIM_X.hex)){ const x=SIM_X.hex; simShopFront(x,170,"DR. HEX","#43f0a4","apothecary · club items",t,31); for(let k=0;k<6;k++){ const c=["#43f0a4","#cf72ff","#ff3fa8","#38e8ff","#ffd36a","#ff8a3a"][k]; ctx.fillStyle=c; ctx.globalAlpha=.7+.3*Math.sin(t*2+k); ctx.fillRect(x-60+k*22,184,10,18); ctx.fillRect(x-58+k*22,178,6,6); ctx.globalAlpha=1; } }
+  if(vis(SIM_X.deal)){ const x=SIM_X.deal; ctx.fillStyle="#1a0a10"; ctx.fillRect(x-60,200,120,64); ctx.fillStyle="#3a0a14"; ctx.fillRect(x-66,192,132,10); const d=bmDeal(); neonText("MIDNIGHT DEAL",x,180,11,"#ff2a3a",flick(41,t)); if(d){ if(d.kind==="weapon") drawItem(ctx,d.id,x,226,42,t); else if(d.kind==="gem") drawGemIcon(ctx,x,226,30,d.x,t); else drawPetAt(ctx,x,250,1.6,d.n,{},1,t,false); ctx.fillStyle="#ffd36a"; ctx.font="9px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("−25% TODAY",x,214); } }
+  // city square
+  if(vis(SIM_X.fountain)){ const x=SIM_X.fountain; ctx.fillStyle="#140e18"; ctx.fillRect(x-420,258,840,6); for(let k=-400;k<400;k+=40) { ctx.fillStyle=(k/40)%2?"#18121c":"#1e1622"; ctx.fillRect(x+k,264,40,4); }
+    neonText("CITY SQUARE",x,70,14,"#ffb84a",flick(51,t));
+    ctx.fillStyle="#2a2030"; ctx.beginPath(); ctx.ellipse(x,256,110,14,0,0,7); ctx.fill(); ctx.fillStyle="#3a0e2a"; ctx.beginPath(); ctx.ellipse(x,252,98,9,0,0,7); ctx.fill();
+    ctx.fillStyle="#2a2030"; ctx.fillRect(x-14,170,28,84); ctx.fillStyle="#1a1420"; ctx.fillRect(x-30,160,60,12);
+    // hooded statue
+    ctx.fillStyle="#3a3444"; ctx.beginPath(); ctx.moveTo(x-16,160); ctx.lineTo(x-10,110); ctx.quadraticCurveTo(x,92,x+10,110); ctx.lineTo(x+16,160); ctx.fill(); ctx.fillStyle="#08050a"; ctx.beginPath(); ctx.ellipse(x,114,5,7,0,0,7); ctx.fill(); ctx.fillStyle="#ff2a3a"; ctx.fillRect(x-3,113,2,1.5); ctx.fillRect(x+1,113,2,1.5);
+    // glowing water arcs
+    for(let s of [-1,1]) for(let k=0;k<14;k++){ const u=((t*.8+k/14)%1), xx=x+s*(14+u*80), yy=170+(u*u*80)-u*30; ctx.fillStyle=`hsla(${300+u*40},100%,65%,${1-u*.6})`; ctx.fillRect(xx,yy,3,3); }
+    ctx.fillStyle="rgba(255,63,168,.35)"; ctx.fillRect(x-90,249,180,3); }
+  if(vis(SIM_X.board)){ const x=SIM_X.board; ctx.fillStyle="#2a1a12"; ctx.fillRect(x-40,170,80,64); ctx.fillRect(x-4,234,8,30); for(let k=0;k<6;k++){ ctx.fillStyle=["#efe6d8","#d8c8a8","#ffb8b8"][k%3]; ctx.fillRect(x-34+(k%3)*24,176+(k/3|0)*28,20,22); } neonText("NOTICES",x,162,9,"#efe6d8",1); }
+  if(vis(SIM_X.bench)){ const x=SIM_X.bench; ctx.fillStyle="#2a1f1a"; ctx.fillRect(x-36,240,72,6); ctx.fillRect(x-32,246,4,18); ctx.fillRect(x+28,246,4,18); ctx.fillRect(x-36,224,72,4); }
+  if(vis(SIM_X.kennel)){ const x=SIM_X.kennel; simShopFront(x,220,"THE KENNEL","#a6ff3a","companions with no papers",t,61); for(let k=0;k<3;k++){ ctx.strokeStyle="#4a4a3a"; ctx.lineWidth=1.5; ctx.strokeRect(x-90+k*64,168,48,52); for(let b=0;b<5;b++) ctx.fillRect(x-90+k*64+b*10,168,1.5,52); drawPetAt(ctx,x-66+k*64,216,1.5,BM_PETS[(Math.floor(t/4)+k*2)%BM_PETS.length].n,{},1,t+k,false); } }
+  if(vis(SIM_X.sump)){ const x=SIM_X.sump; ctx.fillStyle="#0c0610"; ctx.fillRect(x-150,70,300,194); for(let k=0;k<10;k++){ const c=`hsl(${(t*60+k*36)%360},90%,60%)`; ctx.fillStyle=c; ctx.globalAlpha=.12+.1*Math.sin(t*4+k); ctx.beginPath(); ctx.moveTo(x-120+k*26,74); ctx.lineTo(x-140+k*26+Math.sin(t*2+k)*30,262); ctx.lineTo(x-110+k*26+Math.sin(t*2+k)*30,262); ctx.fill(); } ctx.globalAlpha=1;
+    neonText("THE SUMP",x,100,18,"#ff3fa8",flick(71,t)); ctx.fillStyle="#9a8cc0"; ctx.font="8px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("club items welcome",x,116); for(let k=0;k<12;k++){ ctx.fillStyle=(k+Math.floor(t*4))%2?"#2a0a24":"#1a0618"; ctx.fillRect(x-144+k*24,252,24,12); } }
+  if(vis(SIM_X.broker)){ const x=SIM_X.broker; ctx.fillStyle="#0a070c"; ctx.fillRect(x-40,140,80,124); ctx.fillStyle="rgba(255,138,138,.12)"; ctx.fillRect(x-36,144,72,120); neonText("WHISPER",x,132,9,"#ff8a8a",flick(81,t)); }
+  if(vis(SIM_X.deep)){ const x=SIM_X.deep; ctx.fillStyle="#120c10"; ctx.fillRect(x-90,80,180,184); ctx.fillStyle="#2a2228"; for(let k=0;k<9;k++) ctx.fillRect(x-84+k*20,86,8,178); ctx.strokeStyle="#ff8a3a"; ctx.lineWidth=2; ctx.beginPath(); for(let k=0;k<6;k++){ ctx.moveTo(x-80,100+k*28); ctx.lineTo(x+80,110+k*28); } ctx.stroke(); neonText("DEEPER LEVELS · SEALED",x,72,10,"#ff8a3a",flick(91,t)); const p=.5+.5*Math.sin(t*1.3); ctx.fillStyle=`rgba(124,92,255,${.1+p*.15})`; ctx.fillRect(x-84,240,168,24); }
+  // floor
+  ctx.fillStyle="#0c0910"; ctx.fillRect(camX,264,VW,80); ctx.fillStyle="#140f18"; for(let x=Math.floor(X0/48)*48;x<X1;x+=48) ctx.fillRect(x,268,46,2);
+  for(let x=Math.floor(X0/310)*310+40;x<X1;x+=310){ ctx.fillStyle="rgba(255,42,58,.12)"; ctx.beginPath(); ctx.ellipse(x,306,30,4,0,0,7); ctx.fill(); }
+  ctx.fillStyle="#050306"; ctx.fillRect(camX,342,VW,18);
+  // rats
+  for(let k=0;k<4;k++){ const rx=((t*(60+k*20)+k*900)%(W+200))-100; if(!vis(rx)) continue; const ry=330+k*3; ctx.fillStyle="#3a3438"; ctx.fillRect(rx,ry,8,4); ctx.fillRect(rx+8,ry+1,3,2); ctx.fillStyle="#ff2a3a"; ctx.fillRect(rx+9,ry+1,1,1); ctx.strokeStyle="#3a3438"; ctx.beginPath(); ctx.moveTo(rx,ry+2); ctx.lineTo(rx-8,ry+1+Math.sin(t*20+k)); ctx.stroke(); }
+  // vendors + crowd
+  const vend=[[SIM_X.arms,"v_arms"],[SIM_X.cartel,"v_cartel"],[SIM_X.hex,"v_hex"],[SIM_X.kennel,"v_kennel"],[SIM_X.broker,"v_broker"],[SIM_X.deal+40,"v_deal"]];
+  for(const [x,k] of vend) if(vis(x)) drawStick(ctx,x,250,.9,{dir:-1,phase:0,moving:false,look:simLook(k)},t);
+  simCrowdTick(t); for(const c of SIM_CROWD) if(vis(c.x)) drawStick(ctx,c.x,c.y,.95,{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look},t); }
+
+/* ---- black market weapon art (weapon space: grip at the left, pointing right) ---- */
+BM_WART={
+  bmw_widow:(c,S,t)=>{ c.fillStyle="#16101a"; c.fillRect(-S*.38,-S*.08,S*.62,S*.16); c.fillRect(S*.2,-S*.05,S*.32,S*.07); c.fillRect(-S*.36,S*.06,S*.1,S*.2);
+    c.strokeStyle="#3a2a40"; c.lineWidth=Math.max(1,S*.02); for(let k=0;k<4;k++){ const x=-S*.12+k*S*.07, tw=Math.sin(t*14+k*1.7)*S*.03; c.beginPath(); c.moveTo(x,S*.08); c.lineTo(x+(k<2?-1:1)*S*.06,S*.18+tw); c.lineTo(x+(k<2?-1:1)*S*.1,S*.26); c.stroke(); }
+    const p=.6+.4*Math.sin(t*5); c.fillStyle="#ff2a3a"; c.shadowColor="#ff2a3a"; c.shadowBlur=S*.3*p; c.beginPath(); c.moveTo(-S*.06,-S*.06); c.lineTo(S*.04,-S*.06); c.lineTo(-S*.01,0); c.lineTo(S*.04,S*.06); c.lineTo(-S*.06,S*.06); c.lineTo(-S*.01,0); c.fill(); c.shadowBlur=0;
+    c.fillStyle="#ff2a3a"; for(let k=0;k<3;k++) c.fillRect(S*.24+k*S*.08,-S*.03,S*.03,S*.02); },
+  bmw_reaper:(c,S,t)=>{ c.strokeStyle="#2a2030"; c.lineWidth=Math.max(1,S*.05); c.beginPath(); c.moveTo(-S*.5,S*.04); c.lineTo(S*.42,-S*.02); c.stroke(); c.fillStyle="#7c5cff"; c.fillRect(-S*.2,-S*.03,S*.04,S*.08);
+    c.shadowColor="#b06bff"; c.shadowBlur=S*.3; c.fillStyle="#b06bff"; c.beginPath(); c.moveTo(S*.42,-S*.02); c.quadraticCurveTo(S*.32,-S*.42,-S*.12,-S*.5); c.quadraticCurveTo(S*.2,-S*.3,S*.36,-S*.0); c.fill(); c.shadowBlur=0;
+    for(let k=0;k<3;k++){ const u=(t*.4+k/3)%1, gx=S*(.1-u*.3)+Math.sin(t*3+k)*S*.04, gy=-S*(.35+u*.3); c.globalAlpha=(1-u)*.8; c.fillStyle="#efe6ff"; c.beginPath(); c.arc(gx,gy,S*.05,0,7); c.fill(); c.fillRect(gx-S*.05,gy,S*.1,S*.05); c.fillStyle="#1a0a20"; c.fillRect(gx-S*.025,gy-S*.01,S*.015,S*.02); c.fillRect(gx+S*.01,gy-S*.01,S*.015,S*.02); } c.globalAlpha=1; },
+  bmw_hexgun:(c,S,t)=>{ c.fillStyle="#2a2030"; c.beginPath(); c.moveTo(-S*.4,-S*.02); c.lineTo(-S*.22,-S*.02); c.lineTo(-S*.28,S*.24); c.lineTo(-S*.42,S*.22); c.fill(); c.fillStyle="#3a3444"; c.fillRect(-S*.24,-S*.1,S*.3,S*.12); c.fillRect(S*.04,-S*.08,S*.4,S*.06);
+    c.save(); c.translate(-S*.08,-S*.04); c.rotate(t*2); c.fillStyle="#1a1420"; c.beginPath(); c.arc(0,0,S*.1,0,7); c.fill(); c.fillStyle="#43f0a4"; c.shadowColor="#43f0a4"; c.shadowBlur=S*.2; for(let k=0;k<6;k++){ const a=k*1.047; c.fillRect(Math.cos(a)*S*.065-S*.012,Math.sin(a)*S*.065-S*.012,S*.024,S*.024); } c.shadowBlur=0; c.restore();
+    for(let k=0;k<4;k++){ const u=(t*.6+k/4)%1; c.globalAlpha=(1-u)*.7; c.strokeStyle="#43f0a4"; c.lineWidth=Math.max(.6,S*.012); const r=S*(.03+u*.06), cx=S*(.48+u*.2), cy=-S*(.05+u*.18); c.beginPath(); for(let j=0;j<7;j++){ const a=j*1.047+u*2; j?c.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):c.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); } c.stroke(); } c.globalAlpha=1; },
+  bmw_crimson:(c,S,t)=>{ c.fillStyle="#1a0a10"; c.fillRect(-S*.45,-S*.035,S*.25,S*.07); c.strokeStyle="#ff3a5a"; c.lineWidth=Math.max(1,S*.012); for(let i=0;i<5;i++){ c.beginPath(); c.moveTo(-S*.44+i*S*.05,-S*.035); c.lineTo(-S*.41+i*S*.05,S*.035); c.stroke(); }
+    c.fillStyle="#2a2030"; c.fillRect(-S*.2,-S*.08,S*.03,S*.16); c.shadowColor="#ff2a3a"; c.shadowBlur=S*.3*(.7+.3*Math.sin(t*3)); c.fillStyle="#ffd0d8"; c.beginPath(); c.moveTo(-S*.17,-S*.03); c.quadraticCurveTo(S*.2,-S*.07,S*.58,-S*.1); c.quadraticCurveTo(S*.2,-S*.01,-S*.17,S*.03); c.fill();
+    c.strokeStyle="#ff2a3a"; c.lineWidth=Math.max(1,S*.02); c.beginPath(); c.moveTo(-S*.17,S*.01); c.quadraticCurveTo(S*.2,-S*.03,S*.58,-S*.1); c.stroke(); c.shadowBlur=0;
+    for(let k=0;k<4;k++){ const u=(t*.7+k/4)%1, x=S*(.0+k*.13); c.fillStyle="#ff2a3a"; c.globalAlpha=1-u; c.beginPath(); c.arc(x,-S*.02+u*S*.4,S*.018*(1-u*.5),0,7); c.fill(); } c.globalAlpha=1; },
+  bmw_wraith:(c,S,t)=>{ const fl=.55+.35*Math.sin(t*9)*Math.sin(t*2.3); c.globalAlpha=fl; c.strokeStyle="#a8e6ff"; c.shadowColor="#a8e6ff"; c.shadowBlur=S*.3; c.lineWidth=Math.max(1,S*.035); c.beginPath(); c.moveTo(-S*.05,-S*.48); c.quadraticCurveTo(-S*.32,0,-S*.05,S*.48); c.stroke();
+    c.lineWidth=Math.max(.6,S*.01); c.strokeStyle="#efffff"; c.beginPath(); c.moveTo(-S*.05,-S*.48); c.lineTo(-S*.05,S*.48); c.stroke(); c.globalAlpha=1;
+    c.strokeStyle="#cfefff"; c.lineWidth=Math.max(1,S*.015); c.beginPath(); c.moveTo(-S*.1,0); c.lineTo(S*.44,0); c.stroke(); c.fillStyle="#efe6d8"; c.beginPath(); c.arc(S*.48,0,S*.05,0,7); c.fill(); c.fillStyle="#0a1a2a"; c.fillRect(S*.46,-S*.015,S*.015,S*.02); c.fillRect(S*.49,-S*.015,S*.015,S*.02); c.shadowBlur=0;
+    for(let k=0;k<3;k++){ const u=(t*.8+k/3)%1; c.globalAlpha=(1-u)*.5; c.fillStyle="#a8e6ff"; c.beginPath(); c.arc(-S*.1-u*S*.2,Math.sin(t*4+k)*S*.1,S*.03*(1-u),0,7); c.fill(); } c.globalAlpha=1; },
+  bmw_plague:(c,S,t)=>{ c.fillStyle="#1e2414"; c.fillRect(-S*.4,-S*.1,S*.7,S*.2); c.fillRect(-S*.36,S*.08,S*.1,S*.18); c.fillStyle="#2a3420"; c.fillRect(S*.3,-S*.14,S*.18,S*.28); c.fillStyle="#0a0e06"; c.beginPath(); c.arc(S*.48,0,S*.08,0,7); c.fill();
+    c.fillStyle="#3a4a2a"; c.fillRect(-S*.2,-S*.34,S*.26,S*.24); c.fillStyle="rgba(166,255,58,.25)"; c.fillRect(-S*.18,-S*.32,S*.22,S*.2); const lv=.6+.1*Math.sin(t*2); c.fillStyle="#a6ff3a"; c.shadowColor="#a6ff3a"; c.shadowBlur=S*.25; c.fillRect(-S*.18,-S*.32+S*.2*(1-lv),S*.22,S*.2*lv); c.shadowBlur=0;
+    for(let k=0;k<4;k++){ const u=(t*.9+k/4)%1; c.fillStyle="#e8ffc8"; c.globalAlpha=1-u; c.beginPath(); c.arc(-S*.15+k*S*.05,-S*.14-u*S*.16,S*.018,0,7); c.fill(); } c.globalAlpha=1;
+    const u=(t*.8)%1; c.fillStyle="#a6ff3a"; c.globalAlpha=1-u; c.beginPath(); c.arc(S*.5,S*.06+u*S*.3,S*.025,0,7); c.fill(); c.globalAlpha=1; },
+  bmw_storm:(c,S,t)=>{ c.fillStyle="#2a2a36"; c.fillRect(-S*.3,-S*.16,S*.42,S*.32); c.fillStyle="#3a3a4a"; c.fillRect(-S*.42,-S*.1,S*.14,S*.2); c.fillStyle="#f5e663"; for(let k=0;k<4;k++) c.fillRect(S*.1,-S*.15+k*S*.085,S*.08,S*.06);
+    c.strokeStyle="#f5e663"; c.shadowColor="#f5e663"; c.shadowBlur=S*.3; c.lineWidth=Math.max(.8,S*.015); for(let k=0;k<3;k++){ if(Math.sin(t*25+k*2)<.2) continue; c.beginPath(); let x=S*.18, y=-S*.14+k*S*.1; c.moveTo(x,y); for(let j=0;j<4;j++){ x+=S*.05; y+=(Math.random()-.5)*S*.12; c.lineTo(x,y); } c.stroke(); } c.shadowBlur=0; },
+  bmw_cleaver:(c,S,t)=>{ c.strokeStyle="#2a2030"; c.lineWidth=Math.max(1,S*.05); c.beginPath(); c.moveTo(-S*.48,S*.02); c.lineTo(S*.25,0); c.stroke();
+    c.fillStyle="#3a3444"; c.beginPath(); c.moveTo(S*.12,-S*.06); c.lineTo(S*.5,-S*.34); c.quadraticCurveTo(S*.62,0,S*.5,S*.34); c.lineTo(S*.12,S*.06); c.fill();
+    c.save(); c.translate(S*.38,0); c.fillStyle="#05030a"; c.beginPath(); c.arc(0,0,S*.12,0,7); c.fill(); c.rotate(t*3); c.strokeStyle="#7c5cff"; c.shadowColor="#7c5cff"; c.shadowBlur=S*.3; c.lineWidth=Math.max(1,S*.02); c.beginPath(); c.ellipse(0,0,S*.13,S*.05,0,0,7); c.stroke(); c.shadowBlur=0;
+    for(let k=0;k<5;k++){ const u=(t*.7+k/5)%1, a=k*1.25+u*4, r=S*.3*(1-u); c.fillStyle="#cfc0ff"; c.globalAlpha=u; c.fillRect(Math.cos(a)*r,Math.sin(a)*r,S*.02,S*.02); } c.globalAlpha=1; c.restore(); },
+};
+
+/* ---- black market Mech Gem effects (mech space: feet at y=0, up is negative) ---- */
+const BM_GEMFX={
+  bleed:(c,M,t,dir,hipY,tTop)=>{ for(let k=0;k<4;k++){ const u=(t*.6+k/4)%1, x=-10+k*7; c.fillStyle="#ff2a3a"; c.shadowColor="#ff2a3a"; c.shadowBlur=6; c.globalAlpha=1-u*.4; c.beginPath(); c.ellipse(x,tTop+10+u*(-tTop-10),1.4,2.4,0,0,7); c.fill(); } c.globalAlpha=.5; c.beginPath(); c.ellipse(0,0,14+Math.sin(t)*2,2.4,0,0,7); c.fill(); c.globalAlpha=1; c.shadowBlur=0; },
+  ghost:(c,M,t,dir,hipY,tTop,headY)=>{ for(let k=0;k<6;k++){ const u=(t*.4+k/6)%1, x=Math.sin(k*2.1+t)*16; c.globalAlpha=(1-u)*.45; c.fillStyle="#c8f0ff"; c.beginPath(); c.arc(x,-u*(-headY+20),2+u*4,0,7); c.fill(); } c.globalAlpha=.12+.06*Math.sin(t*3); c.fillStyle="#c8f0ff"; c.beginPath(); c.ellipse(-dir*6,(headY)/2,14,-headY/2,0,0,7); c.fill(); c.globalAlpha=1; },
+  glint:(c,M,t,dir,hipY,tTop)=>{ const u=(t*.8)%1; if(u<.3){ c.fillStyle="#fff2a8"; c.globalAlpha=Math.sin(u/.3*Math.PI); c.font="bold 7px monospace"; c.textAlign="center"; c.fillText("$",10-u*20,tTop+6); c.globalAlpha=1; } },
+  smoke:(c,M,t,dir)=>{ for(let k=0;k<7;k++){ const u=(t*.35+k/7)%1; c.globalAlpha=(1-u)*.4; c.fillStyle=k%2?"#7a7a8a":"#9aa4b8"; c.beginPath(); c.arc(-dir*(u*30)+(k-3)*4,-3-u*10,4+u*10,0,7); c.fill(); } c.globalAlpha=1; },
+  skulls:(c,M,t,dir,hipY,tTop)=>{ for(let k=0;k<3;k++){ const a=t*1.6+k*2.094, x=Math.cos(a)*24, y=tTop+6+Math.sin(a)*6; c.save(); c.globalAlpha=Math.sin(a)<0?.5:1; c.translate(x,y); c.fillStyle="#efe6d8"; c.beginPath(); c.arc(0,0,3,0,7); c.fill(); c.fillRect(-2,1.5,4,2.2); c.fillStyle="#ff2a3a"; c.shadowColor="#ff2a3a"; c.shadowBlur=6; c.fillRect(-1.8,-.8,1.3,1.3); c.fillRect(.5,-.8,1.3,1.3); c.shadowBlur=0; c.restore(); } },
+  cash:(c,M,t,dir,hipY,tTop,headY)=>{ for(let k=0;k<6;k++){ const u=(t*.3+k/6)%1, x=Math.sin(k*1.9)*20+Math.sin(t*2+k)*4, y=headY-20+u*(-headY+20); c.save(); c.translate(x,y); c.rotate(Math.sin(t*3+k)*.8); c.globalAlpha=Math.min(1,(1-u)*2); c.fillStyle="#43f0a4"; c.fillRect(-4,-2,8,4); c.fillStyle="#1a7a50"; c.fillRect(-1,-1,2,2); c.restore(); } c.globalAlpha=1; },
+  chains:(c,M,t,dir,hipY)=>{ for(const s of [-1,1]){ const sw=Math.sin(t*3+s)*.5; for(let k=0;k<7;k++){ const x=s*9+Math.sin(sw)*k*2.4, y=hipY+2+k*3.2; c.strokeStyle=k%2?"#9aa4b8":"#c9d3e0"; c.lineWidth=1; c.beginPath(); c.ellipse(x,y,1.4,2,k%2?0:1.57,0,7); c.stroke(); } } },
+  crown:(c,M,t,dir,hipY,tTop,headY)=>{ const y=headY-14+Math.sin(t*2)*2; c.save(); c.translate(0,y); c.fillStyle="#ffd23a"; c.shadowColor="#ffd23a"; c.shadowBlur=10; c.beginPath(); c.moveTo(-8,3); c.lineTo(-8,-3); c.lineTo(-4,0); c.lineTo(0,-5); c.lineTo(4,0); c.lineTo(8,-3); c.lineTo(8,3); c.fill(); c.shadowBlur=0; c.fillStyle="#ff2a3a"; c.fillRect(-1,-1,2,2); c.restore();
+    for(let k=0;k<2;k++){ const a=t*2+k*3.14; c.fillStyle="#ffd23a"; c.globalAlpha=Math.sin(a)<0?.5:1; c.beginPath(); c.ellipse(Math.cos(a)*18,y+6+Math.sin(a)*4,2,2,0,0,7); c.fill(); } c.globalAlpha=1; },
+};
+
+/* ---- black market companion art (feet at y=0, facing dir) ---- */
+Object.assign(PET_ART,{
+  "Sewer croc":(c,dir,t,o)=>{ const st=o.moving?Math.sin(o.phase*3):0, jaw=Math.max(0,Math.sin(t*2.4))*.45, R=(x,y,w,h,col)=>{ c.fillStyle=col; c.fillRect(dir>0?x:-x-w,y,w,h); };
+    R(-12,-6,4,2,"#3a5a3a"); R(-16,-5+Math.sin(t*3),4,1.6,"#3a5a3a"); R(-9,-7,16,6,"#4a6a44"); for(let k=0;k<5;k++) R(-8+k*3,-8.4,1.6,1.6,"#2a4a2a"); R(-8,-1.8,14,1,"#6a8a5a");
+    R(-8,-1.5,2,1.5+st*.5,"#3a5a3a"); R(-3,-1.5,2,1.5-st*.5,"#3a5a3a"); R(2,-1.5,2,1.5+st*.5,"#3a5a3a");
+    c.save(); c.translate(dir*7,-5); c.scale(dir,1); c.fillStyle="#4a6a44"; c.save(); c.rotate(-jaw); c.fillRect(0,-3,9,2.6); c.fillStyle="#efe6d8"; for(let k=0;k<4;k++) c.fillRect(1.5+k*2,-.6,.8,1); c.restore(); c.fillStyle="#3a5a3a"; c.fillRect(0,-.4,8,2); c.restore();
+    c.fillStyle="#a6ff3a"; c.shadowColor="#a6ff3a"; c.shadowBlur=6+Math.sin(t*4)*2; R(7.6,-8.4,1.4,1.2,"#a6ff3a"); c.shadowBlur=0;
+    const u=(t*.5)%1; c.fillStyle="#a6ff3a"; c.globalAlpha=1-u; c.beginPath(); c.arc(dir*14,-3+u*4,.7,0,7); c.fill(); c.globalAlpha=1; },
+  "Rat king":(c,dir,t,o)=>{ const st=o.moving?Math.sin(o.phase*4):0;
+    c.strokeStyle="#ff8ad8"; c.lineWidth=.7; for(const k of [-1,0,1]){ c.beginPath(); c.moveTo(k*5-dir*3,-2); c.quadraticCurveTo(k*2-dir*7,1,-dir*8,-1); c.stroke(); }
+    c.fillStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=6+Math.sin(t*3)*3; c.beginPath(); c.arc(-dir*8,-1,1.6,0,7); c.fill(); c.shadowBlur=0;
+    for(const [k,dy] of [[-1,0],[1,0],[0,-1.5]]){ const x=k*5, tw=Math.sin(t*12+k)*.4, b=Math.abs(Math.sin(o.phase*4+k))*(o.moving?1:0);
+      c.fillStyle=k?"#6a6470":"#8a8490"; c.beginPath(); c.ellipse(x,-3+dy-b,4,2.6,0,0,7); c.fill(); c.beginPath(); c.ellipse(x+dir*4,-3.6+dy-b,2,1.6,0,0,7); c.fill(); c.fillStyle="#ff8ad8"; c.fillRect(x+dir*5.8-.4+tw,-3.8+dy-b,.9,.9); c.fillStyle="#ff2a3a"; c.fillRect(x+dir*4.4-.4,-4.6+dy-b,.9,.9); c.fillStyle="#8a8490"; c.beginPath(); c.arc(x+dir*3,-5.4+dy-b,1,0,7); c.fill(); }
+    c.fillStyle="#ffd23a"; c.shadowColor="#ffd23a"; c.shadowBlur=5; const cy=-7.6; c.beginPath(); c.moveTo(-2,cy+2); c.lineTo(-2,cy-1); c.lineTo(-1,cy+.6); c.lineTo(0,cy-1.6); c.lineTo(1,cy+.6); c.lineTo(2,cy-1); c.lineTo(2,cy+2); c.fill(); c.shadowBlur=0; },
+  "Contraband crow":(c,dir,t,o)=>{ const fl=Math.sin(t*(o.moving?14:7)); c.fillStyle="#16121c"; c.beginPath(); c.ellipse(0,-2,5.5,3.6,dir*-.2,0,7); c.fill(); c.beginPath(); c.arc(dir*5,-4.4,2.8,0,7); c.fill();
+    c.fillStyle="#3a3440"; c.beginPath(); c.moveTo(dir*7.4,-4.6); c.lineTo(dir*10.4,-4); c.lineTo(dir*7.4,-3.2); c.fill(); c.fillStyle="#ff2a3a"; c.shadowColor="#ff2a3a"; c.shadowBlur=6; c.fillRect(dir*5.8-.6,-5.6,1.2,1.2); c.shadowBlur=0;
+    c.fillStyle="#24202c"; c.beginPath(); c.moveTo(-1,-3); c.lineTo(-dir*4,-3-6*fl); c.lineTo(-dir*8,-2-4*fl); c.fill(); c.beginPath(); c.moveTo(-dir*5,-1); c.lineTo(-dir*9,0); c.lineTo(-dir*8.4,-2); c.fill();
+    c.strokeStyle="#9aa4b8"; c.lineWidth=.6; c.beginPath(); c.moveTo(dir*1,1.4); c.lineTo(dir*1,3.4); c.stroke(); c.fillStyle="#3a2a1a"; c.fillRect(-2.8+dir,3.4,7,4.6); c.fillStyle="#c9d3e0"; c.fillRect(dir-.6,4.4,1.6,1.2); c.strokeStyle="#5a4a2a"; c.strokeRect(-2.8+dir,3.4,7,4.6); },
+  "Smuggler drone":(c,dir,t,o)=>{ const sw=Math.sin(t*2)*.25; c.fillStyle="#1a1a24"; c.fillRect(-6,-4,12,4); c.fillStyle="#2a2a36"; c.fillRect(-9,-5,18,1.4);
+    for(const s of [-1,1]){ c.fillStyle="rgba(200,210,230,.35)"; c.beginPath(); c.ellipse(s*8,-6,4.5*Math.abs(Math.sin(t*40+s)),.9,0,0,7); c.fill(); c.fillStyle="#3a3a4a"; c.fillRect(s*8-.5,-6,1,1.4); }
+    c.fillStyle=Math.sin(t*6)>0?"#ff2a3a":"#4a0a10"; c.fillRect(dir*4,-3,1.4,1.2);
+    c.save(); c.rotate(sw); c.strokeStyle="#5a5a6a"; c.lineWidth=.5; c.beginPath(); c.moveTo(0,0); c.lineTo(0,6); c.stroke(); c.fillStyle="#6a5a3a"; c.fillRect(-4,6,8,6); c.strokeStyle="#3a2a10"; c.strokeRect(-4,6,8,6); c.fillStyle="#1a1410"; c.font="bold 3.4px monospace"; c.textAlign="center"; c.fillText("???",0,10.4); c.restore();
+    if((t%5)<1.4){ c.fillStyle="rgba(255,42,58,.14)"; c.beginPath(); c.moveTo(0,0); c.lineTo(-10+Math.sin(t*3)*8,20); c.lineTo(10+Math.sin(t*3)*8,20); c.fill(); } },
+  "Phantom hound":(c,dir,t,o)=>{ const st=o.moving?Math.sin(o.phase*3):0, R=(x,y,w,h,col)=>{ c.fillStyle=col; c.fillRect(dir>0?x:-x-w,y,w,h); }, RR=(x,y,w,h,col)=>R(x-.5,y-.5,w+1,h+1,col);
+    for(let k=0;k<6;k++){ const u=(t*.6+k/6)%1; c.globalAlpha=(1-u)*.35; c.fillStyle="#2a1a3a"; c.beginPath(); c.arc(-dir*(6+u*12),-6+Math.sin(k)*3-u*4,2+u*3,0,7); c.fill(); } c.globalAlpha=.85+.15*Math.sin(t*7);
+    RR(-8.6,-10.6,14.2,6.2,"#5a3a8a"); RR(-8,-5,2,5+st*.6,"#5a3a8a"); RR(-5,-5,2,5-st*.6,"#5a3a8a"); RR(1,-5,2,5-st*.6,"#5a3a8a"); RR(3.4,-5,2,5+st*.6,"#5a3a8a"); RR(4,-14,6,5,"#5a3a8a"); RR(9,-12.4,3.6,2.6,"#5a3a8a"); RR(4.4,-16.6,1.6,3,"#5a3a8a"); RR(7.4,-16.6,1.6,3,"#5a3a8a"); RR(-11,-12+Math.sin(t*6),3.4,1.4,"#5a3a8a");
+    R(-8,-10,13,5,"#140e1e"); R(-8,-5,2,5+st*.6,"#140e1e"); R(-5,-5,2,5-st*.6,"#140e1e"); R(1,-5,2,5-st*.6,"#140e1e"); R(3.4,-5,2,5+st*.6,"#140e1e"); R(4,-14,6,5,"#140e1e"); R(9,-12.4,3.6,2.6,"#140e1e"); R(4.4,-16.6,1.6,3,"#140e1e"); R(7.4,-16.6,1.6,3,"#140e1e"); R(-11,-12+Math.sin(t*6),3.4,1.4,"#140e1e");
+    c.globalAlpha=1; c.fillStyle="#b06bff"; c.shadowColor="#b06bff"; c.shadowBlur=8; R(7.6,-12.8,1.6,1.1,"#b06bff"); const fz=(t*3)%1; c.globalAlpha=1-fz; R(7.8,-13.6-fz*3,1,1.4,"#d8b8ff"); c.globalAlpha=1; c.shadowBlur=0; },
+  "Neon cobra":(c,dir,t,o)=>{ const sway=Math.sin(t*1.8)*2.2; c.fillStyle="#1a3a2a"; for(let k=0;k<3;k++){ c.beginPath(); c.ellipse(0,-1.4-k*2,8-k*2,2,0,0,7); c.fill(); }
+    c.strokeStyle="#1a3a2a"; c.lineWidth=3; c.beginPath(); c.moveTo(0,-6); c.quadraticCurveTo(dir*3+sway*.5,-11,dir*1+sway,-16); c.stroke();
+    c.save(); c.translate(dir*1+sway,-17); c.fillStyle="#1a3a2a"; c.beginPath(); c.ellipse(0,0,5,6,0,0,7); c.fill(); const p=.6+.4*Math.sin(t*3); c.globalAlpha=p; c.shadowBlur=6; for(let k=0;k<3;k++){ c.fillStyle=k%2?"#38e8ff":"#ff3fa8"; c.shadowColor=c.fillStyle; c.beginPath(); c.moveTo(0,-4+k*3); c.lineTo(1.4,-2.6+k*3); c.lineTo(0,-1.2+k*3); c.lineTo(-1.4,-2.6+k*3); c.fill(); } c.globalAlpha=1; c.shadowBlur=0;
+    c.fillStyle="#2a5a3a"; c.beginPath(); c.ellipse(dir*1.4,-5.6,2.6,1.8,0,0,7); c.fill(); c.fillStyle="#ffd36a"; c.fillRect(dir*2.2-.5,-6.4,1,1); if(Math.sin(t*5)>.4){ c.strokeStyle="#ff2a3a"; c.lineWidth=.5; c.beginPath(); c.moveTo(dir*3.8,-5.4); c.lineTo(dir*6,-5.2); c.lineTo(dir*6.8,-5.8); c.moveTo(dir*6,-5.2); c.lineTo(dir*6.8,-4.6); c.stroke(); } c.restore(); },
+});
+
 function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
