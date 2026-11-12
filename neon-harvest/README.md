@@ -53,6 +53,7 @@ A fight card for fighting game players. Players list the platforms they play on 
 - **Fight requests**: challenge a player in one of their games. They accept or decline. After the matches, both players pick the winner. If they pick different winners the fight shows as disputed until they agree; only an agreed result counts toward a player's record.
 - **Fight badge**: forge your fight card into a badge for your vault, and send a copy to each player you've finished a fight with. They approve it like any badge request.
 - Players can turn off fight requests, and MyDex blocks still apply.
+- **Style my fight card**: a picture (or the MyDex picture), one of the 8 card backgrounds or an uploaded image, and a neon color. Everyone who finds the card sees the style; the owner can remove a picture or background that breaks the rules.
 
 This needs the `hfcCards`, `hfcFights` and `hfcResults` rules and the updated `mdBadges` rule in `firestore.rules`. **Publish `firestore.rules` again after updating**, or the Fight tab can't save.
 

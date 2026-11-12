@@ -605,7 +605,7 @@ try{const c=localStorage.getItem("mydex_color");if(NEON[c]){S.look.color=c;apply
 const svgURL=b=>`url('data:image/svg+xml,${encodeURIComponent(b)}')`;
 const safeImg=u=>/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(u||"")?u:"";
 const BGS=[["grid","Grid"],["circuit","Circuit"],["hex","Hex mesh"],["aurora","Aurora"],["sunset","Sunset"],["rain","Data rain"],["carbon","Carbon"],["holo","Holo"]];
-function bgCSS(k){const n=NEON[S.look.color]||NEON.cyan,c=n[1],f=n[2],t=n[3],base=`linear-gradient(155deg,hsl(${t} 58% 24%),hsl(${t} 58% 12%) 60%,hsl(${t+25} 60% 18%))`,a=(col,p)=>`color-mix(in srgb,${col} ${p}%,transparent)`;
+function bgCSS(k,ck){const n=NEON[ck||S.look.color]||NEON.cyan,c=n[1],f=n[2],t=n[3],base=`linear-gradient(155deg,hsl(${t} 58% 24%),hsl(${t} 58% 12%) 60%,hsl(${t+25} 60% 18%))`,a=(col,p)=>`color-mix(in srgb,${col} ${p}%,transparent)`;
  switch(k){
  case "circuit":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" fill="none" stroke="${c}" stroke-opacity=".3"><path d="M0 30h40l20 20h30l30-30M30 120V80l20-20M90 0v30l-20 20M0 90h20l14 14h50l36-36"/><g fill="${c}" fill-opacity=".5" stroke="none"><circle cx="40" cy="30" r="2.500"/><circle cx="50" cy="60" r="2.500"/><circle cx="90" cy="30" r="2.500"/><circle cx="84" cy="104" r="2.500"/></g></svg>`)},${base}`;
  case "hex":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="42" height="72" fill="none" stroke="${c}" stroke-opacity=".28"><path d="M21 0 42 12v24L21 48 0 36V12ZM21 48v24"/></svg>`)},${base}`;
@@ -634,7 +634,7 @@ function drawStyle(){const P=S.profile,L=S.look,img=safeImg(L.img);
 async function upload(input){const f=input.files&&input.files[0];if(!f)return;const isP=input.id==="up_photo";
  try{const d=isP?await shrink(f,320,320,60000):await shrink(f,720,960,130000);if(isP)S.profile.photo=d;else{S.look.img=d;S.look.bg="img"}save();render();drawStyle();toast(isP?"Picture updated.":"Background updated.")}
  catch(e){const m=$("#st_err");if(m)m.textContent="That file couldn't be used. Try a JPG or PNG under 25 MB."}}
-document.addEventListener("change",e=>{if(e.target.id==="up_photo"||e.target.id==="up_bg")upload(e.target)});
+document.addEventListener("change",e=>{if(e.target.id==="up_photo"||e.target.id==="up_bg")upload(e.target);else if(e.target.id==="fc_up_photo"||e.target.id==="fc_up_bg")fcUpload(e.target)});
 
 /* ---------- Location ---------- */
 const cellOf=(la,ln)=>Math.floor(la*100)+"_"+Math.floor(ln*100);
@@ -777,13 +777,17 @@ const fcPlat=id=>(FC_PLATS.find(x=>x[0]===id)||[0,""])[1];
 const fcOpp=f=>f.a===myId?{id:f.b,name:f.bName}:{id:f.a,name:f.aName};
 const fcSaved=()=>Array.isArray(S.fcSaved)?S.fcSaved:[];
 const fcIsSaved=id=>fcSaved().some(x=>x.id===id);
-const fcDef=()=>({id:"fc_"+myId,name:(myName()+" Fight Card").slice(0,36),cat:"Fight card",sh:hash(myId+"fc")%8,g:"vs",h:hash(myId+"fch")%360,p:hash(myId+"fcp")%10,s:[0,1,2,3,5,9][hash(myId+"fcs")%6],r:2});
+const fcDef=()=>({id:"fc_"+myId,name:(myName()+" Fight Card").slice(0,36),cat:"Fight card",sh:hash(myId+"fc")%8,g:"vs",h:fc&&fc.st&&NEON[fc.st.color]?NEON[fc.st.color][3]:hash(myId+"fch")%360,p:hash(myId+"fcp")%10,s:[0,1,2,3,5,9][hash(myId+"fcs")%6],r:2});
 const fcRec=list=>{let w=0,l=0;list.forEach(f=>{if(f.winner===myId)w++;else if(f.winner)l++});return {w,l}};
 const fcDone=()=>fights.filter(f=>f.status==="done");
 const fcActive=id=>fights.find(f=>fcOpp(f).id===id&&["pending","accepted","disputed"].includes(f.status));
+const fcSt=p=>{const st=p&&p.st&&typeof p.st==="object"?p.st:{};return {bg:BGS.some(x=>x[0]===st.bg)||st.bg==="img"?st.bg:"grid",color:NEON[st.color]?st.color:"cyan"}};
+function fcBg(p){const st=fcSt(p),u=safeImg(p&&p.img);if(st.bg==="img"&&u)return `linear-gradient(rgba(6,8,22,.55),rgba(6,8,22,.78)),url('${u}') center/cover`;return bgCSS(st.bg==="img"?"grid":st.bg,st.color)}
+function fcVars(p){const n=NEON[fcSt(p).color];return `--ice:${n[1]};--flux:${n[2]};--th:${n[3]}`}
+function fcPic(p,px){const u=safeImg(p&&p.photo);return `<div class="sig ${u?"ph":""}" style="width:${px}px;height:${px}px;${u?"":"padding:"+Math.round(px/10)+"px"}">${u?`<img src="${u}" alt="">`:sigil(p.name)}</div>`}
 function fcCardHTML(p,rec,mine){const games=Array.isArray(p.games)?p.games:[],plats=Array.isArray(p.plats)?p.plats:[];
- return `<article class="card"><div class="id" style="grid-template-columns:64px minmax(0,1fr)"><div class="sig" style="width:64px;height:64px;padding:6px">${sigil(p.name)}</div><div style="min-width:0"><div class="lab">Harvest Fight Card</div><div class="namerow"><h${mine?1:2} class="name">${esc(p.name)}</h${mine?1:2}></div><div class="row" style="gap:14px;margin-top:2px"><span class="rec">${rec?`${rec.w}-${rec.l}`:"–"}</span><span class="mt">${rec?"wins - losses":"Record loading"}<br>${p.open?'<span style="color:var(--go)">Taking fight requests</span>':"Not taking requests"}</span></div></div></div>
- <div class="lab" style="margin-top:12px">Plays on</div><div class="chips" style="margin-top:6px">${plats.map(x=>`<span class="chip">${esc(fcPlat(x))}</span>`).join("")||'<span class="mt">No platforms yet</span>'}</div>
+ return `<article class="card" style="${fcVars(p)};background:${fcBg(p)}"><div class="id" style="grid-template-columns:64px minmax(0,1fr)">${fcPic(p,64)}<div style="min-width:0"><div class="lab">Harvest Fight Card</div><div class="namerow"><h${mine?1:2} class="name">${esc(p.name)}</h${mine?1:2}></div><div class="row" style="gap:14px;margin-top:2px"><span class="rec">${rec?`${rec.w}-${rec.l}`:"–"}</span><span class="mt">${rec?"wins - losses":"Record loading"}<br>${p.open?'<span style="color:var(--go)">Taking fight requests</span>':"Not taking requests"}</span></div></div></div>
+ <div class="lab" style="margin-top:12px">Plays on</div><div class="chips" style="margin-top:6px">${plats.map(x=>`<span class="chip" style="background:rgba(6,8,22,.55)">${esc(fcPlat(x))}</span>`).join("")||'<span class="mt">No platforms yet</span>'}</div>
  <div class="lab" style="margin-top:12px">Games and usernames</div><div class="fgl">${games.map(g=>`<div class="fg"><strong>${esc(fcGame(g))}</strong><span class="mt">${esc(fcPlat(g.plat))}</span><span class="tag">${esc(g.tag)}</span><span class="mt">${g.main?"Main: "+esc(g.main):""}</span></div>`).join("")||'<p class="mt" style="padding-top:8px">No games yet</p>'}</div></article>`}
 function fightRow(f){const o=fcOpp(f),me=f.a===myId,mine=me?f.ca:f.cb,theirs=me?f.cb:f.ca,lab=x=>x===myId?"you":x?esc(o.name):"";
  const head=`<div><strong>${esc(o.name)}</strong> <span class="mt">· ${esc(f.game)}${f.plat?" · "+esc(fcPlat(f.plat)):""}</span></div>${f.note?`<p class="mt">"${esc(f.note)}"</p>`:""}`;
@@ -801,7 +805,7 @@ function vFight(){
  if(!fc)return `<section class="panel stack"><div class="lab">Harvest Fight Card</div><h1 style="font:700 24px var(--display)">Make your fight card</h1><p>List the platforms you play on and every fighting game you play, with the username you use in each one. Other players can save your card, find you, and challenge you.</p><button class="btn hot" data-a="fcEditor">Make my fight card</button><button class="btn alt" data-a="fcFind">Find players</button></section>`;
  const inc=fights.filter(f=>f.status==="pending"&&f.b===myId),out=fights.filter(f=>f.status==="pending"&&f.a===myId),live=fights.filter(f=>f.status==="accepted"||f.status==="disputed"),done=fcDone().slice(0,15),old=fights.filter(f=>f.status==="declined"||f.status==="canceled").slice(0,5),saved=fcSaved();
  const sec=(t,body)=>body?`<div class="lab">${t}</div><div class="stack">${body}</div>`:"";
- return `${fcCardHTML(fc,fcRec(fcDone()),true)}<div class="btns"><button class="btn hot w" data-a="fcFind">Find players</button><button class="btn" data-a="fcEditor">Edit fight card</button><button class="btn alt" data-a="fcForge">Forge fight badge</button></div>
+ return `${fcCardHTML(fc,fcRec(fcDone()),true)}<div class="btns"><button class="btn hot w" data-a="fcFind">Find players</button><button class="btn" data-a="fcEditor">Edit fight card</button><button class="btn alt" data-a="fcStyle">Style my fight card</button><button class="btn alt w" data-a="fcForge">Forge fight badge</button></div>
  ${sec("Fight requests for you",inc.map(fightRow).join(""))}${sec("Fights in progress",live.map(fightRow).join(""))}${sec("Waiting on them",out.map(fightRow).join(""))}
  <div class="row between"><div class="lab">My fighters</div><div class="mt">${saved.length}</div></div><div class="stack">${saved.map(p=>`<button class="pl" data-a="fcOpen" data-v="${esc(p.id)}"><span style="width:38px;height:38px;display:block">${sigil(p.name)}</span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${esc(p.sub||"")}</span></span><span class="mt">${fcActive(p.id)?"Fight on":"View"}</span></button>`).join("")||`<section class="panel"><p class="mt">Save other players' fight cards here so you can always find them. Tap Find players to start.</p></section>`}</div>
  ${sec("Results",done.map(fightRow).join(""))}${sec("Closed",old.map(fightRow).join(""))}`}
@@ -830,7 +834,7 @@ function fcAddGame(){fcReadDraft();const E=fcEdit,d=E.d;let err="";const tag=d.t
  E.games.push({g:d.g,...(d.g==="other"?{n:n.slice(0,30)}:{}),plat:d.plat,tag:tag.slice(0,24),main:main.slice(0,24)});if(!E.plats.includes(d.plat))E.plats.push(d.plat);E.d={g:"",n:"",plat:"",tag:"",main:""};E.err="";drawFcEditor()}
 async function fcSave(){fcReadDraft();const E=fcEdit;if(!E)return;if(E.d.g||E.d.tag.trim()){E.err="Finish adding that game with Add game, or clear it first.";drawFcEditor();return}
  if(!E.games.length){E.err="Add at least one game.";drawFcEditor();return}
- const doc={name:myName().slice(0,18),plats:FC_PLATS.map(x=>x[0]).filter(k=>E.plats.includes(k)),games:E.games.map(g=>({g:g.g,...(g.g==="other"?{n:String(g.n).slice(0,30)}:{}),plat:g.plat,tag:String(g.tag).slice(0,24),main:String(g.main||"").slice(0,24)})),gids:[...new Set(E.games.map(g=>g.g))],open:!!E.open,at:Date.now()};
+ const doc={name:myName().slice(0,18),plats:FC_PLATS.map(x=>x[0]).filter(k=>E.plats.includes(k)),games:E.games.map(g=>({g:g.g,...(g.g==="other"?{n:String(g.n).slice(0,30)}:{}),plat:g.plat,tag:String(g.tag).slice(0,24),main:String(g.main||"").slice(0,24)})),gids:[...new Set(E.games.map(g=>g.g))],open:!!E.open,at:Date.now(),...(fc&&fc.st?{st:fc.st}:{}),...(fc&&fc.img?{img:fc.img}:{}),...(fc&&fc.photo?{photo:fc.photo}:{})};
  const b=document.querySelector('[data-a="fcSave"]');if(b){b.disabled=true;b.textContent="Saving…"}
  try{await d("hfcCards/"+myId).set(doc);fc=doc;fcList=null;fcEdit=null;closeSheet();bump("fcard");render();toast("Fight card saved.")}
  catch(e){bad(e);E.err="Couldn't save. Check your connection and try again.";drawFcEditor()}}
@@ -847,7 +851,7 @@ function fcSub(p){const g=(p.games||[]).map(fcGame);return g.slice(0,2).join(", 
 function drawFind(){const rows=fcMatches();
  sheet(`${sh("Find players")}<label class="f"><span class="lab">Name or in-game username</span><input type="text" id="fs_q" value="${esc(fcQ.q)}" autocomplete="off" placeholder="Search"></label>
  <div class="btns"><label class="f"><span class="lab">Game</span><select id="fs_g"><option value="">Any game</option>${FC_GAMES.map(([k,l])=>`<option value="${k}" ${fcQ.g===k?"selected":""}>${esc(l)}</option>`).join("")}</select></label><label class="f"><span class="lab">Platform</span><select id="fs_p"><option value="">Any platform</option>${FC_PLATS.map(([k,l])=>`<option value="${k}" ${fcQ.p===k?"selected":""}>${l}</option>`).join("")}</select></label></div>
- <div class="mt" role="status">${rows.length} ${rows.length===1?"player":"players"}</div><div class="stack" id="fs_list">${rows.slice(0,60).map(p=>`<button class="pl" data-a="fcOpen" data-v="${esc(p.id)}"><span style="width:38px;height:38px;display:block">${sigil(p.name)}</span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${esc(fcSub(p))}</span></span><span class="mt">${fcIsSaved(p.id)?"Saved":p.open?"Open":""}</span></button>`).join("")||`<section class="panel"><p class="mt">${fcList&&fcList.rows.length>1?"Nobody matches that. Try fewer filters.":"No other fight cards yet. Tell your friends to make one."}</p></section>`}</div>`,true)}
+ <div class="mt" role="status">${rows.length} ${rows.length===1?"player":"players"}</div><div class="stack" id="fs_list">${rows.slice(0,60).map(p=>`<button class="pl" data-a="fcOpen" data-v="${esc(p.id)}" style="${fcVars(p)}">${fcPic(p,38)}<span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${esc(fcSub(p))}</span></span><span class="mt">${fcIsSaved(p.id)?"Saved":p.open?"Open":""}</span></button>`).join("")||`<section class="panel"><p class="mt">${fcList&&fcList.rows.length>1?"Nobody matches that. Try fewer filters.":"No other fight cards yet. Tell your friends to make one."}</p></section>`}</div>`,true)}
 
 /* Someone's card */
 async function fcOpen(id){sheet(`<div class="wait"><div class="spin"></div></div>`);const r=++fcSeq;let p,rec=null;
@@ -907,6 +911,24 @@ async function fcBadge(id){const f=fights.find(x=>x.id===id&&x.status==="done");
   await b.commit();S.fcSent=[...(S.fcSent||[]),id].slice(-300);save();render();toast(`Fight badge sent to ${o.name}. They need to approve it.`)}
  catch(e){bad(e);toast(`Couldn't send it. ${o.name} may have badge requests turned off.`)}}
 
+/* Style my fight card */
+function fcStyle(){if(!fc){fcEditor();return}const st=fcSt(fc),img=safeImg(fc.img),ph=safeImg(fc.photo),dexPh=safeImg(S.profile.photo);
+ sheet(`${sh("Style my fight card")}<article class="card" style="${fcVars(fc)};background:${fcBg(fc)}"><div class="id" style="grid-template-columns:64px minmax(0,1fr)">${fcPic(fc,64)}<div style="min-width:0"><div class="lab">Harvest Fight Card</div><h3 class="name">${esc(fc.name)}</h3><div class="mt">Card preview. Everyone who finds you sees this.</div></div></div></article>
+ <div class="lab">Fight card picture</div>
+ <div class="btns"><label class="btn"><input class="vh" type="file" id="fc_up_photo" accept="image/*">${ph?"Change picture":"Upload picture"}</label><button class="btn alt" data-a="fcRmPhoto" ${ph?"":"disabled"}>Remove</button>${dexPh&&dexPh!==ph?`<button class="btn alt w" data-a="fcDexPhoto">Use my MyDex picture</button>`:""}</div>
+ <div class="lab">Card background</div>
+ <div class="tiles">${BGS.map(([k,l])=>`<button class="tile" data-a="fcSetBg" data-v="${k}" aria-pressed="${st.bg===k}"><span style="background:${bgCSS(k,st.color)}"></span><span>${l}</span></button>`).join("")}
+ ${img?`<button class="tile" data-a="fcSetBg" data-v="img" aria-pressed="${st.bg==="img"}"><span style="background:url('${img}') center/cover"></span><span>My image</span></button>`:""}
+ <label class="tile"><input class="vh" type="file" id="fc_up_bg" accept="image/*"><span>+</span><span>${img?"Replace":"Upload"}</span></label></div>
+ <div class="lab">Fight card neon color</div>
+ <div class="tiles">${Object.entries(NEON).map(([k,n])=>`<button class="tile" data-a="fcSetColor" data-v="${k}" aria-pressed="${st.color===k}"><span><span class="swatch" style="background:${n[1]};box-shadow:0 0 12px ${n[1]}"></span></span><span>${n[0]}</span></button>`).join("")}</div>
+ <p class="mt">This only styles your fight card. Your MyDex keeps its own look.</p><div class="err" id="fc_st_err" role="alert"></div>`,true)}
+async function fcPatch(ch,msg){if(!fc)return;const prev=fc,next={...fc,...ch,at:Date.now()};Object.keys(next).forEach(k=>{if(next[k]===null)delete next[k]});fc=next;render();fcStyle();
+ try{await d("hfcCards/"+myId).set(next);fcList=null;if(msg)toast(msg)}catch(e){bad(e);fc=prev;render();fcStyle();const m=$("#fc_st_err");if(m)m.textContent="Couldn't save that. Check your connection and try again."}}
+async function fcUpload(input){const f=input.files&&input.files[0];if(!f||!fc)return;const isP=input.id==="fc_up_photo";
+ try{const dt=isP?await shrink(f,320,320,60000):await shrink(f,720,960,130000);await fcPatch(isP?{photo:dt}:{img:dt,st:{...fcSt(fc),bg:"img"}},isP?"Fight card picture updated.":"Fight card background updated.")}
+ catch(e){const m=$("#fc_st_err");if(m)m.textContent="That file couldn't be used. Try a JPG or PNG under 25 MB."}}
+
 /* ---------- Admin ---------- */
 const adminData={};
 const ADMIN_TABS=[["players","Players"],["badges","Badges"],["designs","Player badges"],["forge","Forge"],["venues","Venues"],["spots","Spots"],["reports","Reports"],["notice","Notice"]];
@@ -947,6 +969,8 @@ const A={
  inbox(){const out=pendingOut();sheet(`${sh("Badge requests")}${incoming.map(reqCard).join("")||(out.length?"":"<p>No requests.</p>")}${out.length?`<div class="lab">Sent, waiting on them</div>${out.map(r=>`<div class="pl"><span style="width:38px;height:38px;display:block">${badgeSVG(r.giveDef,false,true)}</span><span style="min-width:0"><strong>${esc(r.toName)}</strong><br><span class="mt">${esc((r.giveDef&&r.giveDef.name)||"Badge")}</span></span><button class="btn alt" data-a="reqCancel" data-v="${esc(r.id)}">Cancel</button></div>`).join("")}`:""}`)},
  reqCancel(id){S.seen=[...S.seen,id].slice(-120);const r=d("mdReq/"+id);r.update({status:"no",done:Date.now()}).then(()=>r.delete()).catch(bad);closeSheet();toast("Request canceled.")},
  reqOk:approve,
+ fcStyle, fcSetBg(v){if(v==="img"&&!safeImg(fc&&fc.img))return;fcPatch({st:{...fcSt(fc),bg:v}})}, fcSetColor(v){if(!NEON[v])return;fcPatch({st:{...fcSt(fc),color:v}},NEON[v][0]+" on your fight card")},
+ fcRmPhoto(){fcPatch({photo:null},"Picture removed.")}, fcDexPhoto(){const u=safeImg(S.profile.photo);if(u)fcPatch({photo:u},"Using your MyDex picture.")},
  fcEditor, fcFind(v){fcFind(v==="1")}, fcOpen, fcSaveCard, fcAsk, fcSend, fcAnswer, fcCancel, fcClaim, fcClear, fcForge, fcForgeNow, fcBadge, fcAddGame, fcSave,
  fcPlat(k){fcReadDraft();const E=fcEdit;if(!E)return;E.plats=E.plats.includes(k)?E.plats.filter(x=>x!==k):[...E.plats,k];E.err="";drawFcEditor()},
  fcEditGame(i){fcReadDraft();const E=fcEdit,g=E&&E.games[+i];if(!g)return;E.games.splice(+i,1);E.d={g:g.g,n:g.n||"",plat:g.plat,tag:g.tag,main:g.main||""};E.err="";drawFcEditor();const t=$("#fe_tag");if(t)t.focus()},
