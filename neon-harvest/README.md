@@ -65,6 +65,17 @@ A fight card for fighting game players. Players list the platforms they play on 
 
 This needs the `hfcCards`, `hfcFights` and `hfcResults` rules and the updated `mdBadges` rule in `firestore.rules`. **Publish `firestore.rules` again after updating**, or the Fight tab can't save.
 
+## Cyber Soldier Card (MyDex → Soldier tab)
+
+The same system as the Harvest Fight Card, for first- and third-person shooter players (Call of Duty, Warzone, Gears of War, Marvel Rivals, Fortnite, Apex Legends, VALORANT, Counter-Strike 2, Overwatch 2, Halo Infinite, Rainbow Six Siege, Battlefield, Destiny 2, THE FINALS, or any other game).
+
+- Soldier card with platforms, up to 12 games, in-game usernames and a main hero, class or loadout.
+- Find players, save cards to My squad, match requests where both players agree on the winner, and a public win-loss record.
+- Soldier badges (crosshair) that show the player's name, username and record; a Soldier cards vault section; a 6-slot badge display; customizing like forged badges.
+- Style my soldier card: picture, 14 backgrounds or an uploaded picture (fill/whole picture and focus), 14 neon colors, 11 frames and 6 name effects.
+
+Data lives in its own collections (`cscCards`, `cscMatches`, `cscResults`) with the same rules as the fight card ones, plus a `soldier` badge kind. **Publish `firestore.rules` after updating.**
+
 ## Smacked Shop rewards and profit
 
 - **Reward Points (RP)** are the only way to pay at Smacked Shop. Only Data Collectors Club members earn them, and only from work: bar, store, club and noodle shifts, the assembly line, Courier Hub package runs, story quests and Story Mode. Parts orders, rig commissions and credits from miners, duels, the Void, gifts, trades and selling parts never turn into points, and points can't be traded or gifted.

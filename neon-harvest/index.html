@@ -8157,7 +8157,7 @@ window.NHMYDEX={ nameIssue:n=>{ const c=cleanName(n); if(c!==String(n).trim()) r
   forgePay:(e,fee,consume)=>{ save.credits-=fee; if(e.kind==="item"&&consume) addItem(e.id,-1); persist(); hud(); } };
 let dexFrame=null;
 function openMyDex(view){ if($("#gmydex")) return; if(!DB||!myId){ toast("Sign in to use MyDex."); return; } closePanel(); const wrap=el("div",{id:"gmydex",role:"dialog","aria-label":"MyDex"});
-  const fr=document.createElement("iframe"); fr.title="MyDex"; fr.setAttribute("allow","geolocation"); fr.src="mydex.html?v=18"+(view?"#"+view:""); dexFrame=fr; wrap.append(fr); $("#game").appendChild(wrap); releaseKeys&&releaseKeys(); try{ stTrack("act","Open MyDex"); }catch(e){} }
+  const fr=document.createElement("iframe"); fr.title="MyDex"; fr.setAttribute("allow","geolocation"); fr.src="mydex.html?v=19"+(view?"#"+view:""); dexFrame=fr; wrap.append(fr); $("#game").appendChild(wrap); releaseKeys&&releaseKeys(); try{ stTrack("act","Open MyDex"); }catch(e){} }
 function closeMyDex(){ const w=$("#gmydex"); if(w) w.remove(); dexFrame=null; }
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#gmydex")){ closeMyDex(); e.preventDefault(); e.stopImmediatePropagation(); } },true);
 function dexHot(){ return [{x:120,hw:60,label:"Take the metro",act:()=>openMetro()},{x:DEX_X.term,hw:100,label:"Open MyDex",act:()=>openMyDex()},{x:DEX_X.forge,hw:100,label:"Badge Forge: turn items into badges",act:()=>openMyDex("forge")},...(IS_ADMIN?[{x:DEX_X.board,hw:90,label:"MyDex admin controls",act:()=>openMyDex("admin")}]:[])]; }
