@@ -380,7 +380,11 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if isOwner()
         || (mdOk() && nd().by == me() && mdDef(nd().def) && nd().owner == me() && (mdSelfKind(id) || mdCustomOk(id)))
-        || (mdOk() && nd().by == me() && mdDef(nd().def) && nd().kind == 'venue' && mdStaff(nd().venue));
+        || (mdOk() && nd().by == me() && mdDef(nd().def) && nd().kind == 'venue' && mdStaff(nd().venue))
+        // Harvest Fight Card badge: one for your own vault, plus one per finished fight to give your opponent.
+        || (mdOk() && nd().by == me() && nd().owner == me() && mdDef(nd().def) && nd().kind == 'fight'
+            && nd().fight is string && id == me() + '_fc_' + nd().fight
+            && (nd().fight == 'self' || hfcFinished(nd().fight)));
       allow update: if isOwner()
         // The owner restyles a forged badge. The item art, rarity and category can't change.
         || (mdOk() && od().owner == me() && od().kind in ['item', 'pet']
@@ -448,6 +452,75 @@ service cloud.firestore {
     match /mdReports/{id} {
       allow create: if mdOk() && nd().by == me() && nd().text is string && nd().text.size() <= 300;
       allow read, delete: if isOwner();
+    }
+
+    // Harvest Fight Card (MyDex Fight tab).
+    function hfcFight(id) { return get(/databases/$(database)/documents/hfcFights/$(id)).data; }
+    function hfcFinished(id) {
+      return exists(/databases/$(database)/documents/hfcFights/$(id))
+        && hfcFight(id).status == 'done' && me() in hfcFight(id).p;
+    }
+    function hfcOpen(uid) {
+      return exists(/databases/$(database)/documents/hfcCards/$(uid))
+        && get(/databases/$(database)/documents/hfcCards/$(uid)).data.open == true
+        && (!exists(/databases/$(database)/documents/mdBlocks/$(uid))
+            || !(me() in get(/databases/$(database)/documents/mdBlocks/$(uid)).data.list));
+    }
+    function hfcStatusOnly() { return nd().diff(od()).affectedKeys().hasOnly(['status', 'at2']); }
+    // A player sets only their own answer. Same answer from both = done; different = disputed.
+    function hfcClaimOk() {
+      let k = me() == od().a ? 'ca' : 'cb';
+      return nd().diff(od()).affectedKeys().hasOnly([k, 'status', 'winner', 'at2'])
+        && nd().get(k, null) in od().p
+        && ((nd().ca == nd().cb && nd().status == 'done' && nd().winner == nd().ca)
+          || (nd().ca != null && nd().cb != null && nd().ca != nd().cb && nd().status == 'disputed' && nd().winner == null)
+          || ((nd().ca == null || nd().cb == null) && nd().status == 'accepted' && nd().winner == null));
+    }
+
+    // Public fight cards: platforms, games and in-game usernames.
+    match /hfcCards/{uid} {
+      allow read: if signedIn();
+      allow create, update: if mdOk() && me() == uid
+        && nd().keys().hasOnly(['name', 'plats', 'games', 'gids', 'open', 'at'])
+        && nd().name is string && nd().name.size() > 0 && nd().name.size() <= 18
+        && nd().plats is list && nd().plats.size() <= 4
+        && nd().games is list && nd().games.size() >= 1 && nd().games.size() <= 12
+        && nd().gids is list && nd().gids.size() <= 12
+        && nd().open is bool && nd().at is int;
+      allow delete: if isOwner() || (signedIn() && me() == uid);
+    }
+
+    // Fight requests and results. Only the two players can see or change them.
+    match /hfcFights/{id} {
+      allow read: if isOwner() || (signedIn() && me() in resource.data.p);
+      allow create: if mdOk()
+        && nd().keys().hasOnly(['a', 'aName', 'b', 'bName', 'p', 'game', 'plat', 'aTag', 'bTag', 'note', 'status', 'ca', 'cb', 'winner', 'at'])
+        && nd().a == me() && nd().b is string && nd().b != me() && nd().p == [me(), nd().b]
+        && nd().status == 'pending' && nd().ca == null && nd().cb == null && nd().winner == null
+        && nd().aName is string && nd().aName.size() <= 18 && nd().bName is string && nd().bName.size() <= 18
+        && nd().game is string && nd().game.size() > 0 && nd().game.size() <= 40
+        && nd().plat is string && nd().plat.size() <= 20
+        && nd().aTag is string && nd().aTag.size() <= 24 && nd().bTag is string && nd().bTag.size() <= 24
+        && nd().note is string && nd().note.size() <= 80 && nd().at is int
+        && hfcOpen(nd().b);
+      allow update: if mdOk() && (
+        (od().status == 'pending' && od().b == me() && hfcStatusOnly() && nd().status in ['accepted', 'declined'])
+        || (od().status in ['pending', 'accepted'] && me() in od().p && hfcStatusOnly() && nd().status == 'canceled'
+            && od().ca == null && od().cb == null)
+        || (od().status in ['accepted', 'disputed'] && me() in od().p && hfcClaimOk()));
+      allow delete: if isOwner() || (signedIn() && me() in resource.data.p && resource.data.status in ['declined', 'canceled']);
+    }
+
+    // Agreed results, public so anyone can see a player's record. Must match a finished fight.
+    match /hfcResults/{id} {
+      allow read: if signedIn();
+      allow create: if mdOk() && me() in nd().p
+        && nd().keys().hasOnly(['p', 'winner', 'game', 'at'])
+        && getAfter(/databases/$(database)/documents/hfcFights/$(id)).data.status == 'done'
+        && nd().p == getAfter(/databases/$(database)/documents/hfcFights/$(id)).data.p
+        && nd().winner == getAfter(/databases/$(database)/documents/hfcFights/$(id)).data.winner
+        && nd().game == getAfter(/databases/$(database)/documents/hfcFights/$(id)).data.game;
+      allow delete: if isOwner();
     }
 
     match /redeem/{uid} {

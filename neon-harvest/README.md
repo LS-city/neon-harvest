@@ -44,6 +44,18 @@ The owner account gets an Admin tab inside MyDex (also on the board at MyDex Hub
 | `database.rules.json` | Rules for live player positions and multiplayer events |
 | `build.py` | Rebuilds `index.html` from the claude.ai version of the game |
 
+## Harvest Fight Card (MyDex → Fight tab)
+
+A fight card for fighting game players. Players list the platforms they play on (PC, Xbox, Nintendo, PlayStation) and up to 12 fighting games, each with the username they use in that game and an optional main.
+
+- **Find players** searches every fight card by name or in-game username, and filters by game and platform.
+- **My fighters**: save other players' cards so you can always find them.
+- **Fight requests**: challenge a player in one of their games. They accept or decline. After the matches, both players pick the winner. If they pick different winners the fight shows as disputed until they agree; only an agreed result counts toward a player's record.
+- **Fight badge**: forge your fight card into a badge for your vault, and send a copy to each player you've finished a fight with. They approve it like any badge request.
+- Players can turn off fight requests, and MyDex blocks still apply.
+
+This needs the `hfcCards`, `hfcFights` and `hfcResults` rules and the updated `mdBadges` rule in `firestore.rules`. **Publish `firestore.rules` again after updating**, or the Fight tab can't save.
+
 ## Smacked Shop rewards and profit
 
 - **Reward Points (RP)** are the only way to pay at Smacked Shop. Only Data Collectors Club members earn them, and only from work: bar, store, club and noodle shifts, the assembly line, Courier Hub package runs, story quests and Story Mode. Parts orders, rig commissions and credits from miners, duels, the Void, gifts, trades and selling parts never turn into points, and points can't be traded or gifted.
