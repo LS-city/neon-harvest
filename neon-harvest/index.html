@@ -1928,8 +1928,8 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   const sy=o.sit?9:0, hip=-26-bob+sy, sh=-46-bob+sy, head=-56-bob+sy;
   if(o.dk) drinkFxLayer(c,o.dk,"behind",dir,head,t); if(FX) fxBehind(c,FX,head,t); if(FX==="acid"||FX==="kaleido") ghostTrail(c,dir,hip,sh,head,o.moving,t); if(FX==="drift"||FX==="lightspeed") ghostTrail2(c,dir,hip,sh,head,t,FX==="drift"?"168,232,255":"255,255,255");
   c.lineCap="round"; c.lineJoin="round";
-  const MECH=MECH_BY[style]; let mechTop=0;
-  if(MECH){ try{ mechTop=drawMech(c,applyGems(MECH,L.mg,t),o,t,dir,em,{SK,HC,AC}).top; }catch(e){} } else {
+  const W={
+  aura:()=>{
   // ---- aura (behind)
   if(aura==="Floor ring"){ c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=10; c.lineWidth=2; c.beginPath(); c.ellipse(0,0,17+Math.sin(t*4)*2,5,0,0,7); c.stroke(); c.shadowBlur=0; }
   if(aura==="Flames"){ for(let i=0;i<6;i++){ const fx=-12+i*5, fh=10+Math.abs(Math.sin(t*12+i*1.7))*12; c.fillStyle=i%2?"#ffb84a":"#ff5a4a"; c.globalAlpha=.75; c.beginPath(); c.moveTo(fx-3,0); c.quadraticCurveTo(fx+Math.sin(t*9+i)*3,-fh,fx+3,0); c.fill(); } c.globalAlpha=1; }
@@ -1941,6 +1941,8 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   if(aura==="Vapor trail"&&o.moving){ for(let i=0;i<6;i++){ c.fillStyle=i%2?"rgba(255,138,216,.35)":"rgba(56,232,255,.35)"; c.beginPath(); c.ellipse(-dir*(10+i*6),-30+Math.sin(t*6+i)*3,4+i,2+i*.6,0,0,7); c.fill(); } }
   if(aura==="Sparks"){ c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=6; for(let i=0;i<8;i++){ const a=t*2+i*.8, r=20+Math.sin(t*3+i)*5; c.fillRect(Math.cos(a)*r,-32+Math.sin(a)*r*1.2,2,2); } c.shadowBlur=0; }
   { const X={L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving}; wx2("aura",c,X); }
+  },
+  back:()=>{
   // ---- back item
   const bx=-dir*5;
   if(bk==="Backpack"){ c.fillStyle="#3a2a5c"; c.fillRect(bx-5-dir*2,sh+1,10,15); c.fillStyle=JC; c.fillRect(bx-5-dir*2,sh+4,10,2); }
@@ -1966,6 +1968,92 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   else if(bk==="Neon wings"){ const f=Math.sin(t*3)*.25; c.strokeStyle=JC; c.shadowColor=JC; c.shadowBlur=12; c.lineWidth=2;
     for(const side of [-1,1]){ c.save(); c.translate(bx,sh+4); c.rotate(side*(.4+f)); for(let k=0;k<3;k++){ c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(side*(14+k*4),-16-k*4,side*(22+k*5),-4+k*6); c.stroke(); } c.restore(); } c.shadowBlur=0; }
   wx2("back",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
+  },
+  neck:()=>{
+  // ---- neck
+  if(nk==="Tie"||nk==="Bow tie"){ c.fillStyle=COLORS[(L.jacket+2)%COLORS.length]; if(nk==="Tie"){ c.beginPath(); c.moveTo(-1.2,sh); c.lineTo(1.2,sh); c.lineTo(1.6,sh+10); c.lineTo(0,sh+12); c.lineTo(-1.6,sh+10); c.fill(); } else { c.beginPath(); c.moveTo(0,sh+.5); c.lineTo(-4,sh-1.5); c.lineTo(-4,sh+2.5); c.closePath(); c.moveTo(0,sh+.5); c.lineTo(4,sh-1.5); c.lineTo(4,sh+2.5); c.closePath(); c.fill(); c.fillRect(-1,sh-.5,2,2); } }
+  else if(nk==="Scarf"){ const fl=Math.sin(t*5)*2+(o.moving?-dir*3:0); c.fillStyle=COLORS[(L.jacket+3)%COLORS.length]; c.fillRect(-5,sh-2,10,3.5); c.beginPath(); c.moveTo(-dir*3,sh); c.lineTo(-dir*4,sh+3); c.lineTo(-dir*11+fl,sh+7); c.lineTo(-dir*10+fl,sh+3); c.closePath(); c.fill(); }
+  else if(nk==="Neon collar"||nk==="Spiked collar"){ const cc=nk==="Neon collar"?JC:"#1a1428"; c.fillStyle=cc; if(nk==="Neon collar"){ c.shadowColor=cc; c.shadowBlur=8; } c.fillRect(-4.5,sh-2,9,2.4); c.shadowBlur=0; if(nk==="Spiked collar"){ c.fillStyle="#c9d3e0"; for(let k=-1;k<=1;k++){ c.beginPath(); c.moveTo(k*3-1,sh-2); c.lineTo(k*3,sh-4.5); c.lineTo(k*3+1,sh-2); c.fill(); } } }
+  else if(nk==="Gold chain"){ c.strokeStyle="#ffd36a"; c.lineWidth=1; c.beginPath(); c.moveTo(-4,sh-1); c.quadraticCurveTo(0,sh+9,4,sh-1); c.stroke(); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=6; c.beginPath(); c.moveTo(0,sh+5); c.lineTo(2,sh+7.5); c.lineTo(0,sh+10); c.lineTo(-2,sh+7.5); c.fill(); c.shadowBlur=0; }
+  else if(nk==="Holo badge"){ c.fillStyle=`hsla(${(t*80)%360},100%,65%,.9)`; c.shadowColor=c.fillStyle; c.shadowBlur=8; c.fillRect(dir*1.5-1.5,sh+3,4,3); c.shadowBlur=0; }
+  else if(nk==="Choker"){ c.fillStyle="#1a1428"; c.fillRect(-4,sh-2.5,8,2); c.fillStyle=JC; c.beginPath(); c.arc(0,sh+.5,1.3,0,7); c.fill(); }
+  else if(nk==="Flower lei"){ const fc=["#ff3fa8","#ffb84a","#f5e663","#ff8ad8","#ece6ff"]; for(let k=0;k<7;k++){ const a=Math.PI*(k/6); c.fillStyle=fc[k%5]; c.beginPath(); c.arc(Math.cos(a)*-5.5,sh-1+Math.sin(a)*4.5,1.6,0,7); c.fill(); } }
+  else if(nk==="Glow sticks"){ for(let k=0;k<3;k++){ const gc=["#43f0a4","#ff3fa8","#38e8ff"][k]; c.strokeStyle=gc; c.shadowColor=gc; c.shadowBlur=8; c.lineWidth=1.1; c.beginPath(); c.ellipse(0,sh+1+k*1.5,5-k*.6,3+k*1.2,0,0,Math.PI); c.stroke(); } c.shadowBlur=0; }
+  else if(nk==="Cyber cables"){ for(const sd of [-1,1]){ c.strokeStyle=sd>0?JC:"#8a90a6"; c.lineWidth=1.2; c.beginPath(); c.moveTo(sd*2,head+7); c.quadraticCurveTo(sd*8,sh+2,sd*3,sh+8); c.stroke(); } c.fillStyle="#8a90a6"; c.fillRect(-1.5,head+6,3,2); }
+  else if(nk==="Pearl necklace"){ c.fillStyle="#f3ead8"; c.shadowColor="#fff"; c.shadowBlur=4; for(let k=0;k<9;k++){ const a=Math.PI*(k/8); c.beginPath(); c.arc(Math.cos(a)*-4.5,sh-1+Math.sin(a)*5,.9,0,7); c.fill(); } c.shadowBlur=0; }
+  else if(nk==="Bandolier"){ c.strokeStyle="#5a3f28"; c.lineWidth=2; c.beginPath(); c.moveTo(-5,sh); c.lineTo(5,hip); c.stroke(); c.fillStyle="#ffd36a"; for(let k=1;k<4;k++){ c.fillRect(-5+k*2.5-.6,sh+k*(hip-sh)/4-1,1.4,2.4); } }
+  wx2("neck",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
+  },
+  visor:()=>{
+  const vc=COLORS[(L.jacket+1)%COLORS.length];
+  c.fillStyle=vc; c.shadowColor=vc; c.shadowBlur=6;
+  if(vs==="Shades") c.fillRect(dir>0?-3:-7,head-3,10,4);
+  else if(vs==="Headband") c.fillRect(-8,head-3,16,3);
+  else if(vs==="Monocle"){ c.beginPath(); c.arc(dir*4,head-1,2.6,0,7); c.fill(); }
+  else if(vs==="Goggles"){ c.strokeStyle=vc; c.lineWidth=1.6; c.beginPath(); c.arc(dir*1,head-1,2.8,0,7); c.moveTo(dir*7.6,head-1); c.arc(dir*5,head-1,2.6,0,7); c.stroke(); c.fillStyle="#ffb84a"; c.fillRect(-8,head-2,4,1.6); }
+  else if(vs==="Cyber eye"){ c.fillStyle="#ff5a4a"; c.shadowColor="#ff5a4a"; c.shadowBlur=10; c.beginPath(); c.arc(dir*4,head-1,2,0,7); c.fill(); c.strokeStyle="#ff5a4a"; c.lineWidth=1; c.beginPath(); c.moveTo(dir*4,head-1); c.lineTo(dir*(14+Math.sin(t*5)*3),head-1); c.globalAlpha=.4; c.stroke(); c.globalAlpha=1; }
+  else if(vs==="Face mask"){ c.shadowBlur=0; c.fillStyle=vc; c.beginPath(); c.arc(0,head,8,.15*Math.PI,.85*Math.PI); c.fill(); c.fillStyle="#ece6ff"; c.fillRect(dir*3-1,head-3,2,2); }
+  else if(vs==="Round glasses"){ c.shadowBlur=0; c.strokeStyle="#ece6ff"; c.lineWidth=1.2; c.beginPath(); c.arc(dir*1,head-1,2.6,0,7); c.moveTo(dir*7.6,head-1); c.arc(dir*5,head-1,2.6,0,7); c.stroke(); c.fillStyle="rgba(168,232,255,.35)"; c.beginPath(); c.arc(dir*1,head-1,2.2,0,7); c.arc(dir*5,head-1,2.2,0,7); c.fill(); }
+  else if(vs==="Eyepatch"){ c.shadowBlur=0; c.fillStyle="#0b0716"; c.strokeStyle="#4a4466"; c.lineWidth=1; c.beginPath(); c.moveTo(-8,head-5); c.lineTo(8,head+1); c.stroke(); c.beginPath(); c.arc(dir*4,head-1,3,0,7); c.fill(); c.stroke(); c.fillStyle=SK; c.fillRect(dir*-1-1,head-2,2,2); }
+  else if(vs==="Heart shades"||vs==="Star shades"){ const col2=vs==="Heart shades"?"#ff3fa8":"#ffd36a"; c.fillStyle=col2; c.shadowColor=col2; c.shadowBlur=6; for(const ex of [dir*1,dir*5.5]){ c.save(); c.translate(ex,head-1);
+      if(vs==="Heart shades"){ c.beginPath(); c.moveTo(0,2.4); c.bezierCurveTo(-3.6,-.4,-1.8,-3.4,0,-1.2); c.bezierCurveTo(1.8,-3.4,3.6,-.4,0,2.4); c.fill(); }
+      else { c.beginPath(); for(let k=0;k<10;k++){ const r=k%2?1.2:2.9, a=-Math.PI/2+k*Math.PI/5; c.lineTo(Math.cos(a)*r,Math.sin(a)*r); } c.fill(); } c.restore(); } c.fillRect(dir*3-1,head-1.5,2,.8); }
+  else if(vs==="Scanner HUD"){ c.shadowBlur=0; c.fillStyle="rgba(67,240,164,.25)"; c.beginPath(); c.moveTo(dir*2,head-4); c.lineTo(dir*16,head-8); c.lineTo(dir*16,head+5); c.lineTo(dir*2,head+1); c.fill(); c.fillStyle="#43f0a4"; c.fillRect(dir*2-1,head-4,2,5); const sy2=head-7+((t*20)%12); c.fillRect(dir>0?8:-16,sy2,8,1); }
+  else if(vs==="Glowing eyes"){ const gl=.6+.4*Math.sin(t*4); c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=12; c.globalAlpha=gl; c.beginPath(); c.arc(dir*1,head-1,1.6,0,7); c.arc(dir*5,head-1,1.6,0,7); c.fill(); c.globalAlpha=1; }
+  else if(vs==="3D glasses"){ c.shadowBlur=0; c.fillStyle="#ece6ff"; c.fillRect(-8,head-3.5,16,1); c.fillStyle="rgba(255,90,74,.9)"; c.fillRect(dir>0?-1:-4,head-3,3.5,3); c.fillStyle="rgba(56,232,255,.9)"; c.fillRect(dir>0?3.5:.5,head-3,3.5,3); }
+  else if(vs==="Aviators"){ c.shadowBlur=0; c.fillStyle="#ffd36a"; c.fillRect(-8,head-3.5,16,.8); c.fillStyle="rgba(20,14,40,.9)"; c.beginPath(); c.ellipse(dir*1,head-1.5,2.4,2,0,0,7); c.ellipse(dir*5.5,head-1.5,2.4,2,0,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.5)"; c.fillRect(dir*5-1,head-3,1,1); }
+  else if(vs==="Pixel shades"){ c.shadowBlur=0; c.fillStyle="#0b0716"; c.fillRect(dir>0?-3:-8,head-3.5,11,2); c.fillRect(dir>0?-2:-7,head-1.5,3,2); c.fillRect(dir>0?3:-2,head-1.5,3,2); c.fillStyle="#ece6ff"; c.fillRect(dir>0?-2:-7,head-3,1,1); c.fillRect(dir>0?3:-2,head-3,1,1); }
+  else if(vs==="Masquerade mask"){ c.fillStyle=vc; c.beginPath(); c.moveTo(-8,head-4); c.quadraticCurveTo(0,head-6,8,head-4); c.lineTo(8,head-1); c.quadraticCurveTo(dir*3,head+1,0,head-1); c.quadraticCurveTo(-dir*3,head+1,-8,head-1); c.fill(); c.shadowBlur=0; c.fillStyle="#0b0716"; c.beginPath(); c.ellipse(dir*1,head-2.5,1.5,1,0,0,7); c.ellipse(dir*5,head-2.5,1.5,1,0,0,7); c.fill(); c.fillStyle="#ffd36a"; c.beginPath(); c.moveTo(-dir*7,head-4); c.lineTo(-dir*11,head-12); c.lineTo(-dir*8,head-5); c.fill(); }
+  else if(vs==="Night vision"){ c.shadowBlur=0; c.fillStyle="#2a2440"; c.fillRect(-8,head-4,16,3); c.fillStyle="#4a4466"; c.fillRect(dir>0?1:-7,head-6,6,6); c.fillStyle="#43f0a4"; c.shadowColor="#43f0a4"; c.shadowBlur=10; c.beginPath(); c.arc(dir>0?7:-7,head-3,1.8+Math.sin(t*5)*.3,0,7); c.fill(); }
+  else if(vs==="Cyclops eye"){ c.fillStyle="#0b0716"; c.fillRect(-8,head-4,16,4); const ex=dir*(2+Math.sin(t*2)*3); c.fillStyle="#ff5a4a"; c.shadowColor="#ff5a4a"; c.shadowBlur=12; c.beginPath(); c.arc(ex,head-2,1.8,0,7); c.fill(); }
+  else if(vs==="LED visor"){ c.fillStyle=`hsl(${(t*120)%360},100%,60%)`; c.shadowColor=c.fillStyle; c.fillRect(-8,head-4,16,4); c.fillStyle="#fff"; c.fillRect(-8+((t*30)%14),head-4,2,4); }
+  else { c.fillStyle=SK; c.shadowBlur=0; c.fillRect(dir*3-1,head-2,2,2); }
+  c.shadowBlur=0; wx2("visor",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
+  },
+  hat:()=>{
+  // ---- hat
+  if(ht==="Beanie"){ c.fillStyle=JC; c.beginPath(); c.arc(0,head-3,8.5,Math.PI,0); c.fill(); c.fillRect(-9,head-4,18,3); }
+  else if(ht==="Mohawk"){ c.fillStyle="#ff3fa8"; for(let i=-2;i<=2;i++){ c.beginPath(); c.moveTo(i*3-2,head-7); c.lineTo(i*3,head-16+Math.abs(i)*2); c.lineTo(i*3+2,head-7); c.fill(); } }
+  else if(ht==="Halo"){ c.strokeStyle="#ffb84a"; c.lineWidth=2; c.shadowColor="#ffb84a"; c.shadowBlur=10; c.beginPath(); c.ellipse(0,head-14+Math.sin(t*2),8,2.5,0,0,7); c.stroke(); c.shadowBlur=0; }
+  else if(ht==="Cap"){ c.fillStyle="#38e8ff"; c.beginPath(); c.arc(0,head-3,8.5,Math.PI,0); c.fill(); c.fillRect(dir>0?0:-13,head-4,13,2.5); }
+  else if(ht==="Headphones"){ c.strokeStyle="#4a4466"; c.lineWidth=2.5; c.beginPath(); c.arc(0,head-1,10,Math.PI*1.05,Math.PI*1.95); c.stroke(); c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=6; c.fillRect(-11,head-4,4,7); c.fillRect(7,head-4,4,7); c.shadowBlur=0; }
+  else if(ht==="Top hat"){ c.fillStyle="#1a1428"; c.fillRect(-10,head-8,20,3); c.fillRect(-6,head-22,12,15); c.fillStyle=JC; c.fillRect(-6,head-11,12,2.5); }
+  else if(ht==="Crown"){ c.fillStyle="#ffd77a"; c.shadowColor="#ffd77a"; c.shadowBlur=8; c.beginPath(); c.moveTo(-8,head-6); c.lineTo(-8,head-15); c.lineTo(-4,head-10); c.lineTo(0,head-17); c.lineTo(4,head-10); c.lineTo(8,head-15); c.lineTo(8,head-6); c.fill(); c.shadowBlur=0; c.fillStyle="#ff3fa8"; c.fillRect(-1,head-10,2,2); }
+  else if(ht==="Horns"){ c.fillStyle="#ff5a4a"; for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sd*3,head-7); c.quadraticCurveTo(sd*10,head-12,sd*8,head-18); c.lineTo(sd*7,head-7); c.fill(); } }
+  else if(ht==="Antenna"){ c.strokeStyle=SK; c.lineWidth=1.5; c.beginPath(); c.moveTo(dir*2,head-8); c.lineTo(dir*5,head-20); c.stroke(); const on=Math.sin(t*6)>0; c.fillStyle=on?"#43f0a4":"#2a2440"; c.shadowColor="#43f0a4"; c.shadowBlur=on?10:0; c.beginPath(); c.arc(dir*5,head-21,2.5,0,7); c.fill(); c.shadowBlur=0; }
+  else if(ht==="Bandana"){ c.fillStyle=COLORS[(L.jacket+4)%COLORS.length]; c.beginPath(); c.arc(0,head-2,8.8,Math.PI,0); c.fill(); c.fillRect(-9,head-3,18,2.5); c.beginPath(); c.moveTo(-dir*8,head-2); c.lineTo(-dir*13,head+2+Math.sin(t*5)); c.lineTo(-dir*12,head-3); c.fill(); c.fillStyle="#ece6ff"; for(let k=-1;k<=1;k++) c.fillRect(k*3.5-.6,head-6,1.2,1.2); }
+  else if(ht==="Bucket hat"){ c.fillStyle=JC; c.beginPath(); c.moveTo(-6,head-14); c.lineTo(6,head-14); c.lineTo(8,head-5); c.lineTo(-8,head-5); c.fill(); c.fillRect(-12,head-6,24,2.5); c.fillStyle="#0b0716"; c.fillRect(-7.5,head-8,15,1.5); }
+  else if(ht==="Cat ears"||ht==="Bunny ears"){ const ec=COLORS[(L.jacket+1)%COLORS.length]; for(const sd of [-1,1]){ c.fillStyle=ec; c.beginPath(); if(ht==="Cat ears"){ c.moveTo(sd*2.5,head-7); c.lineTo(sd*6,head-16); c.lineTo(sd*8.5,head-5); } else { c.ellipse(sd*4,head-17+Math.sin(t*3+sd)*.8,2.6,8,sd*.15,0,7); } c.fill(); c.fillStyle="#ffc6e0"; c.beginPath(); if(ht==="Cat ears"){ c.moveTo(sd*4,head-8); c.lineTo(sd*6,head-13); c.lineTo(sd*7.4,head-7); } else c.ellipse(sd*4,head-17+Math.sin(t*3+sd)*.8,1.2,5.5,sd*.15,0,7); c.fill(); } c.fillStyle=ec; c.fillRect(-8,head-8,16,2); }
+  else if(ht==="Wizard hat"){ c.fillStyle="#5a2a9a"; c.beginPath(); c.moveTo(-11,head-6); c.lineTo(11,head-6); c.lineTo(dir*-3,head-30); c.closePath(); c.fill(); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=8; for(const [sx,sy] of [[-3,-14],[3,-19],[0,-10]]){ c.fillRect(sx-1,head+sy-1,2,2); } c.shadowBlur=0; }
+  else if(ht==="Space helmet"){ c.strokeStyle="rgba(201,211,224,.9)"; c.lineWidth=1.6; c.fillStyle="rgba(168,232,255,.18)"; c.beginPath(); c.arc(0,head-1,12.5,0,7); c.fill(); c.stroke(); c.fillStyle="rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(dir*-5,head-6,2.5,4.5,dir*.5,0,7); c.fill(); c.fillStyle="#8a90a6"; c.fillRect(-9,head+10,18,3); c.fillStyle=Math.sin(t*5)>0?"#ff5a4a":"#3a1a20"; c.fillRect(dir*7,head+10.5,2,2); }
+  else if(ht==="Party hat"){ c.fillStyle=JC; c.beginPath(); c.moveTo(-6,head-6); c.lineTo(6,head-6); c.lineTo(0,head-22); c.fill(); c.fillStyle="#ece6ff"; for(let k=0;k<3;k++) c.fillRect(-3+k*2.5,head-10-k*4,1.5,1.5); c.fillStyle="#f5e663"; c.beginPath(); c.arc(0,head-23,2,0,7); c.fill(); }
+  else if(ht==="Beret"){ c.fillStyle=JC; c.beginPath(); c.ellipse(-dir*2,head-7,10,3.6,-dir*.15,0,7); c.fill(); c.fillRect(-1,head-12,2,2); }
+  else if(ht==="Visor cap"){ c.fillStyle=JC; c.fillRect(-8.5,head-6,17,2.5); c.fillStyle="rgba(56,232,255,.55)"; c.fillRect(dir>0?0:-12,head-5,12,2); }
+  else if(ht==="Ninja hood"){ c.fillStyle="#1a1428"; c.beginPath(); c.arc(0,head,9.5,Math.PI*.8,Math.PI*2.2); c.fill(); c.fillStyle=JC; c.fillRect(-9,head-5,18,1.8); c.beginPath(); c.moveTo(-dir*8,head-4); c.lineTo(-dir*14,head-1+Math.sin(t*6)); c.lineTo(-dir*13,head-5); c.fill(); }
+  else if(ht==="Fedora"){ c.fillStyle="#2a2440"; c.fillRect(-11,head-7,22,2.5); c.beginPath(); c.moveTo(-6,head-7); c.lineTo(-5,head-15); c.quadraticCurveTo(0,head-12,5,head-15); c.lineTo(6,head-7); c.fill(); c.fillStyle=JC; c.fillRect(-6,head-9.5,12,2); }
+  else if(ht==="Cowboy hat"){ c.fillStyle="#7a4a2a"; c.beginPath(); c.moveTo(-14,head-9); c.quadraticCurveTo(0,head-3,14,head-9); c.quadraticCurveTo(0,head-6,-14,head-9); c.fill(); c.beginPath(); c.moveTo(-6,head-6); c.lineTo(-6,head-15); c.quadraticCurveTo(0,head-11,6,head-15); c.lineTo(6,head-6); c.fill(); c.fillStyle="#ffd36a"; c.fillRect(-6,head-8.5,12,1.5); }
+  else if(ht==="Flower crown"){ const fc=["#ff3fa8","#ffb84a","#ff8ad8","#ece6ff","#43f0a4"]; c.strokeStyle="#2f8a4a"; c.lineWidth=1.2; c.beginPath(); c.arc(0,head-1,9,Math.PI*1.05,Math.PI*1.95); c.stroke(); for(let k=0;k<5;k++){ const a=Math.PI*(1.1+k*.2); c.fillStyle=fc[k]; c.beginPath(); c.arc(Math.cos(a)*9,head-1+Math.sin(a)*9,2.1,0,7); c.fill(); c.fillStyle="#f5e663"; c.fillRect(Math.cos(a)*9-.5,head-1.5+Math.sin(a)*9,1,1); } }
+  else if(ht==="Pirate hat"){ c.fillStyle="#3a2050"; c.strokeStyle="#ffd36a"; c.lineWidth=1; c.beginPath(); c.moveTo(-13,head-6); c.quadraticCurveTo(0,head-24,13,head-6); c.quadraticCurveTo(0,head-10,-13,head-6); c.fill(); c.stroke(); c.fillStyle="#ece6ff"; c.beginPath(); c.arc(0,head-12,2,0,7); c.fill(); c.fillRect(-2.5,head-10,5,1); }
+  else if(ht==="Holo crown"){ const hc2=`hsl(${(t*90)%360},100%,65%)`; c.strokeStyle=hc2; c.shadowColor=hc2; c.shadowBlur=12; c.lineWidth=1.5; c.globalAlpha=.85; c.beginPath(); c.moveTo(-8,head-7); c.lineTo(-8,head-16); c.lineTo(-4,head-11); c.lineTo(0,head-19); c.lineTo(4,head-11); c.lineTo(8,head-16); c.lineTo(8,head-7); c.closePath(); c.stroke(); c.globalAlpha=.25; c.fillStyle=hc2; c.fill(); c.globalAlpha=1; c.shadowBlur=0; for(let k=0;k<3;k++){ const u=(t*.8+k/3)%1; c.fillStyle=`rgba(255,255,255,${1-u})`; c.fillRect(-6+k*6,head-18-u*8,1.5,1.5); } }
+  wx2("hat",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
+  },
+  rain:()=>{
+  // ---- rain cloud aura
+  if(aura==="Rain cloud"){ c.fillStyle="#4a4466"; for(const [cx,r] of [[-6,6],[0,8],[7,6]]){ c.beginPath(); c.arc(cx,head-30,r,0,7); c.fill(); } c.strokeStyle="rgba(150,190,255,.7)"; c.lineWidth=1; c.beginPath(); for(let i=0;i<5;i++){ const ry=head-22+((t*40+i*7)%22); c.moveTo(-8+i*4,ry); c.lineTo(-9+i*4,ry+4); } c.stroke(); }
+  }};
+  const MECH=MECH_BY[style]; let mechTop=0;
+  if(MECH){ const MG=applyGems(MECH,L.mg,t), Q=mechGeom(MG,o,t), SC=Q.SC;
+    // wardrobe items worn on a mech: mapped from the human body onto the mech's head, chest and size
+    const onHead=f=>{ c.save(); c.translate(0,(Q.hy+Q.hOff)*SC); c.scale(Q.hk*SC,Q.hk*SC); c.translate(0,-head); try{ f(); }catch(e){} c.restore(); c.shadowBlur=0; c.globalAlpha=1; };
+    const onChest=(f,back)=>{ c.save(); c.translate(back?-dir*Q.bw*SC:0,(Q.tTop+(back?2:0))*SC); c.scale(Q.tk*SC,Q.tk*SC); c.translate(0,-sh); try{ f(); }catch(e){} c.restore(); c.shadowBlur=0; c.globalAlpha=1; };
+    const onBody=f=>{ c.save(); const k=Q.ak*SC; c.scale(k,k); try{ f(); }catch(e){} c.restore(); c.shadowBlur=0; c.globalAlpha=1; };
+    onBody(W.aura); onChest(W.back,true);
+    try{ mechTop=drawMech(c,MG,o,t,dir,em,{SK,HC,AC}).top; }catch(e){}
+    onChest(W.neck); onHead(W.visor); onHead(W.hat); onHead(W.rain);
+    if(ht!=="None") mechTop+=(HAT_TOPPERS.includes(ht)?14:8)*Q.hk*SC;
+  } else {
+  W.aura();
+  W.back();
   // ---- hair (back layer). Under a covering hat, hair above the hat line is hidden so hats sit right on every hairstyle.
   const capOn=ht!=="None"&&!HAT_TOPPERS.includes(ht); if(capOn){ c.save(); c.beginPath(); c.rect(-90,head-7,180,160); c.clip(); }
   if(hr==="Afro"){ c.fillStyle=HC; c.beginPath(); c.arc(0,head-3,12.5,0,7); c.fill(); for(let k=0;k<8;k++){ c.beginPath(); c.arc(Math.cos(k*.8)*11,head-3+Math.sin(k*.8)*11,3.2,0,7); c.fill(); } }
@@ -2015,19 +2103,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   if(style==="Lab coat"){ c.fillStyle="#ece6ff"; c.globalAlpha=.95; c.beginPath(); c.moveTo(-5,sh); c.lineTo(-3,sh); c.lineTo(-2,hip); c.lineTo(-7+(o.moving?-dir*3:0),hip+14); c.lineTo(-5,hip); c.closePath(); c.moveTo(5,sh); c.lineTo(3,sh); c.lineTo(2,hip); c.lineTo(7+(o.moving?-dir*3:0),hip+14); c.lineTo(5,hip); c.closePath(); c.fill(); c.globalAlpha=1; c.fillStyle="#38e8ff"; c.fillRect(dir*3,sh+4,1.5,3); }
   if(style==="Mech suit"){ c.fillStyle="#8a90a6"; c.fillRect(-10,sh-3,7,5); c.fillRect(3,sh-3,7,5); c.fillStyle="#c9d3e0"; c.fillRect(-4,sh+3,8,8); c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=10; c.beginPath(); c.arc(0,sh+7,2.2+Math.sin(t*4)*.4,0,7); c.fill(); c.shadowBlur=0; c.fillStyle="#4a4466"; c.fillRect(-5,hip-2,10,3); }
   wx2("torso",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
-  // ---- neck
-  if(nk==="Tie"||nk==="Bow tie"){ c.fillStyle=COLORS[(L.jacket+2)%COLORS.length]; if(nk==="Tie"){ c.beginPath(); c.moveTo(-1.2,sh); c.lineTo(1.2,sh); c.lineTo(1.6,sh+10); c.lineTo(0,sh+12); c.lineTo(-1.6,sh+10); c.fill(); } else { c.beginPath(); c.moveTo(0,sh+.5); c.lineTo(-4,sh-1.5); c.lineTo(-4,sh+2.5); c.closePath(); c.moveTo(0,sh+.5); c.lineTo(4,sh-1.5); c.lineTo(4,sh+2.5); c.closePath(); c.fill(); c.fillRect(-1,sh-.5,2,2); } }
-  else if(nk==="Scarf"){ const fl=Math.sin(t*5)*2+(o.moving?-dir*3:0); c.fillStyle=COLORS[(L.jacket+3)%COLORS.length]; c.fillRect(-5,sh-2,10,3.5); c.beginPath(); c.moveTo(-dir*3,sh); c.lineTo(-dir*4,sh+3); c.lineTo(-dir*11+fl,sh+7); c.lineTo(-dir*10+fl,sh+3); c.closePath(); c.fill(); }
-  else if(nk==="Neon collar"||nk==="Spiked collar"){ const cc=nk==="Neon collar"?JC:"#1a1428"; c.fillStyle=cc; if(nk==="Neon collar"){ c.shadowColor=cc; c.shadowBlur=8; } c.fillRect(-4.5,sh-2,9,2.4); c.shadowBlur=0; if(nk==="Spiked collar"){ c.fillStyle="#c9d3e0"; for(let k=-1;k<=1;k++){ c.beginPath(); c.moveTo(k*3-1,sh-2); c.lineTo(k*3,sh-4.5); c.lineTo(k*3+1,sh-2); c.fill(); } } }
-  else if(nk==="Gold chain"){ c.strokeStyle="#ffd36a"; c.lineWidth=1; c.beginPath(); c.moveTo(-4,sh-1); c.quadraticCurveTo(0,sh+9,4,sh-1); c.stroke(); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=6; c.beginPath(); c.moveTo(0,sh+5); c.lineTo(2,sh+7.5); c.lineTo(0,sh+10); c.lineTo(-2,sh+7.5); c.fill(); c.shadowBlur=0; }
-  else if(nk==="Holo badge"){ c.fillStyle=`hsla(${(t*80)%360},100%,65%,.9)`; c.shadowColor=c.fillStyle; c.shadowBlur=8; c.fillRect(dir*1.5-1.5,sh+3,4,3); c.shadowBlur=0; }
-  else if(nk==="Choker"){ c.fillStyle="#1a1428"; c.fillRect(-4,sh-2.5,8,2); c.fillStyle=JC; c.beginPath(); c.arc(0,sh+.5,1.3,0,7); c.fill(); }
-  else if(nk==="Flower lei"){ const fc=["#ff3fa8","#ffb84a","#f5e663","#ff8ad8","#ece6ff"]; for(let k=0;k<7;k++){ const a=Math.PI*(k/6); c.fillStyle=fc[k%5]; c.beginPath(); c.arc(Math.cos(a)*-5.5,sh-1+Math.sin(a)*4.5,1.6,0,7); c.fill(); } }
-  else if(nk==="Glow sticks"){ for(let k=0;k<3;k++){ const gc=["#43f0a4","#ff3fa8","#38e8ff"][k]; c.strokeStyle=gc; c.shadowColor=gc; c.shadowBlur=8; c.lineWidth=1.1; c.beginPath(); c.ellipse(0,sh+1+k*1.5,5-k*.6,3+k*1.2,0,0,Math.PI); c.stroke(); } c.shadowBlur=0; }
-  else if(nk==="Cyber cables"){ for(const sd of [-1,1]){ c.strokeStyle=sd>0?JC:"#8a90a6"; c.lineWidth=1.2; c.beginPath(); c.moveTo(sd*2,head+7); c.quadraticCurveTo(sd*8,sh+2,sd*3,sh+8); c.stroke(); } c.fillStyle="#8a90a6"; c.fillRect(-1.5,head+6,3,2); }
-  else if(nk==="Pearl necklace"){ c.fillStyle="#f3ead8"; c.shadowColor="#fff"; c.shadowBlur=4; for(let k=0;k<9;k++){ const a=Math.PI*(k/8); c.beginPath(); c.arc(Math.cos(a)*-4.5,sh-1+Math.sin(a)*5,.9,0,7); c.fill(); } c.shadowBlur=0; }
-  else if(nk==="Bandolier"){ c.strokeStyle="#5a3f28"; c.lineWidth=2; c.beginPath(); c.moveTo(-5,sh); c.lineTo(5,hip); c.stroke(); c.fillStyle="#ffd36a"; for(let k=1;k<4;k++){ c.fillRect(-5+k*2.5-.6,sh+k*(hip-sh)/4-1,1.4,2.4); } }
-  wx2("neck",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
+  W.neck();
   // ---- arms
   const sleeve=["Hoodie","Trench coat","Kimono jacket","Riot armor","Track jacket","Bomber jacket","Lab coat","Leather jacket","Puffer jacket","Mech suit","Rain slicker","Hazmat suit","Neon tux","Samurai armor"].includes(style)||NEW_SLEEVE.includes(style);
   const held=L.hand; let hx=0,hy=0,ha=0;
@@ -2067,57 +2143,9 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
     if(hr==="Afro"){ c.beginPath(); c.arc(0,head-3,9.5,Math.PI*1.05,Math.PI*1.95); c.fill(); } }
   wx2("hair",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
   if(capOn) c.restore();
-  const vc=COLORS[(L.jacket+1)%COLORS.length];
-  c.fillStyle=vc; c.shadowColor=vc; c.shadowBlur=6;
-  if(vs==="Shades") c.fillRect(dir>0?-3:-7,head-3,10,4);
-  else if(vs==="Headband") c.fillRect(-8,head-3,16,3);
-  else if(vs==="Monocle"){ c.beginPath(); c.arc(dir*4,head-1,2.6,0,7); c.fill(); }
-  else if(vs==="Goggles"){ c.strokeStyle=vc; c.lineWidth=1.6; c.beginPath(); c.arc(dir*1,head-1,2.8,0,7); c.moveTo(dir*7.6,head-1); c.arc(dir*5,head-1,2.6,0,7); c.stroke(); c.fillStyle="#ffb84a"; c.fillRect(-8,head-2,4,1.6); }
-  else if(vs==="Cyber eye"){ c.fillStyle="#ff5a4a"; c.shadowColor="#ff5a4a"; c.shadowBlur=10; c.beginPath(); c.arc(dir*4,head-1,2,0,7); c.fill(); c.strokeStyle="#ff5a4a"; c.lineWidth=1; c.beginPath(); c.moveTo(dir*4,head-1); c.lineTo(dir*(14+Math.sin(t*5)*3),head-1); c.globalAlpha=.4; c.stroke(); c.globalAlpha=1; }
-  else if(vs==="Face mask"){ c.shadowBlur=0; c.fillStyle=vc; c.beginPath(); c.arc(0,head,8,.15*Math.PI,.85*Math.PI); c.fill(); c.fillStyle="#ece6ff"; c.fillRect(dir*3-1,head-3,2,2); }
-  else if(vs==="Round glasses"){ c.shadowBlur=0; c.strokeStyle="#ece6ff"; c.lineWidth=1.2; c.beginPath(); c.arc(dir*1,head-1,2.6,0,7); c.moveTo(dir*7.6,head-1); c.arc(dir*5,head-1,2.6,0,7); c.stroke(); c.fillStyle="rgba(168,232,255,.35)"; c.beginPath(); c.arc(dir*1,head-1,2.2,0,7); c.arc(dir*5,head-1,2.2,0,7); c.fill(); }
-  else if(vs==="Eyepatch"){ c.shadowBlur=0; c.fillStyle="#0b0716"; c.strokeStyle="#4a4466"; c.lineWidth=1; c.beginPath(); c.moveTo(-8,head-5); c.lineTo(8,head+1); c.stroke(); c.beginPath(); c.arc(dir*4,head-1,3,0,7); c.fill(); c.stroke(); c.fillStyle=SK; c.fillRect(dir*-1-1,head-2,2,2); }
-  else if(vs==="Heart shades"||vs==="Star shades"){ const col2=vs==="Heart shades"?"#ff3fa8":"#ffd36a"; c.fillStyle=col2; c.shadowColor=col2; c.shadowBlur=6; for(const ex of [dir*1,dir*5.5]){ c.save(); c.translate(ex,head-1);
-      if(vs==="Heart shades"){ c.beginPath(); c.moveTo(0,2.4); c.bezierCurveTo(-3.6,-.4,-1.8,-3.4,0,-1.2); c.bezierCurveTo(1.8,-3.4,3.6,-.4,0,2.4); c.fill(); }
-      else { c.beginPath(); for(let k=0;k<10;k++){ const r=k%2?1.2:2.9, a=-Math.PI/2+k*Math.PI/5; c.lineTo(Math.cos(a)*r,Math.sin(a)*r); } c.fill(); } c.restore(); } c.fillRect(dir*3-1,head-1.5,2,.8); }
-  else if(vs==="Scanner HUD"){ c.shadowBlur=0; c.fillStyle="rgba(67,240,164,.25)"; c.beginPath(); c.moveTo(dir*2,head-4); c.lineTo(dir*16,head-8); c.lineTo(dir*16,head+5); c.lineTo(dir*2,head+1); c.fill(); c.fillStyle="#43f0a4"; c.fillRect(dir*2-1,head-4,2,5); const sy2=head-7+((t*20)%12); c.fillRect(dir>0?8:-16,sy2,8,1); }
-  else if(vs==="Glowing eyes"){ const gl=.6+.4*Math.sin(t*4); c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=12; c.globalAlpha=gl; c.beginPath(); c.arc(dir*1,head-1,1.6,0,7); c.arc(dir*5,head-1,1.6,0,7); c.fill(); c.globalAlpha=1; }
-  else if(vs==="3D glasses"){ c.shadowBlur=0; c.fillStyle="#ece6ff"; c.fillRect(-8,head-3.5,16,1); c.fillStyle="rgba(255,90,74,.9)"; c.fillRect(dir>0?-1:-4,head-3,3.5,3); c.fillStyle="rgba(56,232,255,.9)"; c.fillRect(dir>0?3.5:.5,head-3,3.5,3); }
-  else if(vs==="Aviators"){ c.shadowBlur=0; c.fillStyle="#ffd36a"; c.fillRect(-8,head-3.5,16,.8); c.fillStyle="rgba(20,14,40,.9)"; c.beginPath(); c.ellipse(dir*1,head-1.5,2.4,2,0,0,7); c.ellipse(dir*5.5,head-1.5,2.4,2,0,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.5)"; c.fillRect(dir*5-1,head-3,1,1); }
-  else if(vs==="Pixel shades"){ c.shadowBlur=0; c.fillStyle="#0b0716"; c.fillRect(dir>0?-3:-8,head-3.5,11,2); c.fillRect(dir>0?-2:-7,head-1.5,3,2); c.fillRect(dir>0?3:-2,head-1.5,3,2); c.fillStyle="#ece6ff"; c.fillRect(dir>0?-2:-7,head-3,1,1); c.fillRect(dir>0?3:-2,head-3,1,1); }
-  else if(vs==="Masquerade mask"){ c.fillStyle=vc; c.beginPath(); c.moveTo(-8,head-4); c.quadraticCurveTo(0,head-6,8,head-4); c.lineTo(8,head-1); c.quadraticCurveTo(dir*3,head+1,0,head-1); c.quadraticCurveTo(-dir*3,head+1,-8,head-1); c.fill(); c.shadowBlur=0; c.fillStyle="#0b0716"; c.beginPath(); c.ellipse(dir*1,head-2.5,1.5,1,0,0,7); c.ellipse(dir*5,head-2.5,1.5,1,0,0,7); c.fill(); c.fillStyle="#ffd36a"; c.beginPath(); c.moveTo(-dir*7,head-4); c.lineTo(-dir*11,head-12); c.lineTo(-dir*8,head-5); c.fill(); }
-  else if(vs==="Night vision"){ c.shadowBlur=0; c.fillStyle="#2a2440"; c.fillRect(-8,head-4,16,3); c.fillStyle="#4a4466"; c.fillRect(dir>0?1:-7,head-6,6,6); c.fillStyle="#43f0a4"; c.shadowColor="#43f0a4"; c.shadowBlur=10; c.beginPath(); c.arc(dir>0?7:-7,head-3,1.8+Math.sin(t*5)*.3,0,7); c.fill(); }
-  else if(vs==="Cyclops eye"){ c.fillStyle="#0b0716"; c.fillRect(-8,head-4,16,4); const ex=dir*(2+Math.sin(t*2)*3); c.fillStyle="#ff5a4a"; c.shadowColor="#ff5a4a"; c.shadowBlur=12; c.beginPath(); c.arc(ex,head-2,1.8,0,7); c.fill(); }
-  else if(vs==="LED visor"){ c.fillStyle=`hsl(${(t*120)%360},100%,60%)`; c.shadowColor=c.fillStyle; c.fillRect(-8,head-4,16,4); c.fillStyle="#fff"; c.fillRect(-8+((t*30)%14),head-4,2,4); }
-  else { c.fillStyle=SK; c.shadowBlur=0; c.fillRect(dir*3-1,head-2,2,2); }
-  c.shadowBlur=0; wx2("visor",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
-  // ---- hat
-  if(ht==="Beanie"){ c.fillStyle=JC; c.beginPath(); c.arc(0,head-3,8.5,Math.PI,0); c.fill(); c.fillRect(-9,head-4,18,3); }
-  else if(ht==="Mohawk"){ c.fillStyle="#ff3fa8"; for(let i=-2;i<=2;i++){ c.beginPath(); c.moveTo(i*3-2,head-7); c.lineTo(i*3,head-16+Math.abs(i)*2); c.lineTo(i*3+2,head-7); c.fill(); } }
-  else if(ht==="Halo"){ c.strokeStyle="#ffb84a"; c.lineWidth=2; c.shadowColor="#ffb84a"; c.shadowBlur=10; c.beginPath(); c.ellipse(0,head-14+Math.sin(t*2),8,2.5,0,0,7); c.stroke(); c.shadowBlur=0; }
-  else if(ht==="Cap"){ c.fillStyle="#38e8ff"; c.beginPath(); c.arc(0,head-3,8.5,Math.PI,0); c.fill(); c.fillRect(dir>0?0:-13,head-4,13,2.5); }
-  else if(ht==="Headphones"){ c.strokeStyle="#4a4466"; c.lineWidth=2.5; c.beginPath(); c.arc(0,head-1,10,Math.PI*1.05,Math.PI*1.95); c.stroke(); c.fillStyle=JC; c.shadowColor=JC; c.shadowBlur=6; c.fillRect(-11,head-4,4,7); c.fillRect(7,head-4,4,7); c.shadowBlur=0; }
-  else if(ht==="Top hat"){ c.fillStyle="#1a1428"; c.fillRect(-10,head-8,20,3); c.fillRect(-6,head-22,12,15); c.fillStyle=JC; c.fillRect(-6,head-11,12,2.5); }
-  else if(ht==="Crown"){ c.fillStyle="#ffd77a"; c.shadowColor="#ffd77a"; c.shadowBlur=8; c.beginPath(); c.moveTo(-8,head-6); c.lineTo(-8,head-15); c.lineTo(-4,head-10); c.lineTo(0,head-17); c.lineTo(4,head-10); c.lineTo(8,head-15); c.lineTo(8,head-6); c.fill(); c.shadowBlur=0; c.fillStyle="#ff3fa8"; c.fillRect(-1,head-10,2,2); }
-  else if(ht==="Horns"){ c.fillStyle="#ff5a4a"; for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sd*3,head-7); c.quadraticCurveTo(sd*10,head-12,sd*8,head-18); c.lineTo(sd*7,head-7); c.fill(); } }
-  else if(ht==="Antenna"){ c.strokeStyle=SK; c.lineWidth=1.5; c.beginPath(); c.moveTo(dir*2,head-8); c.lineTo(dir*5,head-20); c.stroke(); const on=Math.sin(t*6)>0; c.fillStyle=on?"#43f0a4":"#2a2440"; c.shadowColor="#43f0a4"; c.shadowBlur=on?10:0; c.beginPath(); c.arc(dir*5,head-21,2.5,0,7); c.fill(); c.shadowBlur=0; }
-  else if(ht==="Bandana"){ c.fillStyle=COLORS[(L.jacket+4)%COLORS.length]; c.beginPath(); c.arc(0,head-2,8.8,Math.PI,0); c.fill(); c.fillRect(-9,head-3,18,2.5); c.beginPath(); c.moveTo(-dir*8,head-2); c.lineTo(-dir*13,head+2+Math.sin(t*5)); c.lineTo(-dir*12,head-3); c.fill(); c.fillStyle="#ece6ff"; for(let k=-1;k<=1;k++) c.fillRect(k*3.5-.6,head-6,1.2,1.2); }
-  else if(ht==="Bucket hat"){ c.fillStyle=JC; c.beginPath(); c.moveTo(-6,head-14); c.lineTo(6,head-14); c.lineTo(8,head-5); c.lineTo(-8,head-5); c.fill(); c.fillRect(-12,head-6,24,2.5); c.fillStyle="#0b0716"; c.fillRect(-7.5,head-8,15,1.5); }
-  else if(ht==="Cat ears"||ht==="Bunny ears"){ const ec=COLORS[(L.jacket+1)%COLORS.length]; for(const sd of [-1,1]){ c.fillStyle=ec; c.beginPath(); if(ht==="Cat ears"){ c.moveTo(sd*2.5,head-7); c.lineTo(sd*6,head-16); c.lineTo(sd*8.5,head-5); } else { c.ellipse(sd*4,head-17+Math.sin(t*3+sd)*.8,2.6,8,sd*.15,0,7); } c.fill(); c.fillStyle="#ffc6e0"; c.beginPath(); if(ht==="Cat ears"){ c.moveTo(sd*4,head-8); c.lineTo(sd*6,head-13); c.lineTo(sd*7.4,head-7); } else c.ellipse(sd*4,head-17+Math.sin(t*3+sd)*.8,1.2,5.5,sd*.15,0,7); c.fill(); } c.fillStyle=ec; c.fillRect(-8,head-8,16,2); }
-  else if(ht==="Wizard hat"){ c.fillStyle="#5a2a9a"; c.beginPath(); c.moveTo(-11,head-6); c.lineTo(11,head-6); c.lineTo(dir*-3,head-30); c.closePath(); c.fill(); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=8; for(const [sx,sy] of [[-3,-14],[3,-19],[0,-10]]){ c.fillRect(sx-1,head+sy-1,2,2); } c.shadowBlur=0; }
-  else if(ht==="Space helmet"){ c.strokeStyle="rgba(201,211,224,.9)"; c.lineWidth=1.6; c.fillStyle="rgba(168,232,255,.18)"; c.beginPath(); c.arc(0,head-1,12.5,0,7); c.fill(); c.stroke(); c.fillStyle="rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(dir*-5,head-6,2.5,4.5,dir*.5,0,7); c.fill(); c.fillStyle="#8a90a6"; c.fillRect(-9,head+10,18,3); c.fillStyle=Math.sin(t*5)>0?"#ff5a4a":"#3a1a20"; c.fillRect(dir*7,head+10.5,2,2); }
-  else if(ht==="Party hat"){ c.fillStyle=JC; c.beginPath(); c.moveTo(-6,head-6); c.lineTo(6,head-6); c.lineTo(0,head-22); c.fill(); c.fillStyle="#ece6ff"; for(let k=0;k<3;k++) c.fillRect(-3+k*2.5,head-10-k*4,1.5,1.5); c.fillStyle="#f5e663"; c.beginPath(); c.arc(0,head-23,2,0,7); c.fill(); }
-  else if(ht==="Beret"){ c.fillStyle=JC; c.beginPath(); c.ellipse(-dir*2,head-7,10,3.6,-dir*.15,0,7); c.fill(); c.fillRect(-1,head-12,2,2); }
-  else if(ht==="Visor cap"){ c.fillStyle=JC; c.fillRect(-8.5,head-6,17,2.5); c.fillStyle="rgba(56,232,255,.55)"; c.fillRect(dir>0?0:-12,head-5,12,2); }
-  else if(ht==="Ninja hood"){ c.fillStyle="#1a1428"; c.beginPath(); c.arc(0,head,9.5,Math.PI*.8,Math.PI*2.2); c.fill(); c.fillStyle=JC; c.fillRect(-9,head-5,18,1.8); c.beginPath(); c.moveTo(-dir*8,head-4); c.lineTo(-dir*14,head-1+Math.sin(t*6)); c.lineTo(-dir*13,head-5); c.fill(); }
-  else if(ht==="Fedora"){ c.fillStyle="#2a2440"; c.fillRect(-11,head-7,22,2.5); c.beginPath(); c.moveTo(-6,head-7); c.lineTo(-5,head-15); c.quadraticCurveTo(0,head-12,5,head-15); c.lineTo(6,head-7); c.fill(); c.fillStyle=JC; c.fillRect(-6,head-9.5,12,2); }
-  else if(ht==="Cowboy hat"){ c.fillStyle="#7a4a2a"; c.beginPath(); c.moveTo(-14,head-9); c.quadraticCurveTo(0,head-3,14,head-9); c.quadraticCurveTo(0,head-6,-14,head-9); c.fill(); c.beginPath(); c.moveTo(-6,head-6); c.lineTo(-6,head-15); c.quadraticCurveTo(0,head-11,6,head-15); c.lineTo(6,head-6); c.fill(); c.fillStyle="#ffd36a"; c.fillRect(-6,head-8.5,12,1.5); }
-  else if(ht==="Flower crown"){ const fc=["#ff3fa8","#ffb84a","#ff8ad8","#ece6ff","#43f0a4"]; c.strokeStyle="#2f8a4a"; c.lineWidth=1.2; c.beginPath(); c.arc(0,head-1,9,Math.PI*1.05,Math.PI*1.95); c.stroke(); for(let k=0;k<5;k++){ const a=Math.PI*(1.1+k*.2); c.fillStyle=fc[k]; c.beginPath(); c.arc(Math.cos(a)*9,head-1+Math.sin(a)*9,2.1,0,7); c.fill(); c.fillStyle="#f5e663"; c.fillRect(Math.cos(a)*9-.5,head-1.5+Math.sin(a)*9,1,1); } }
-  else if(ht==="Pirate hat"){ c.fillStyle="#3a2050"; c.strokeStyle="#ffd36a"; c.lineWidth=1; c.beginPath(); c.moveTo(-13,head-6); c.quadraticCurveTo(0,head-24,13,head-6); c.quadraticCurveTo(0,head-10,-13,head-6); c.fill(); c.stroke(); c.fillStyle="#ece6ff"; c.beginPath(); c.arc(0,head-12,2,0,7); c.fill(); c.fillRect(-2.5,head-10,5,1); }
-  else if(ht==="Holo crown"){ const hc2=`hsl(${(t*90)%360},100%,65%)`; c.strokeStyle=hc2; c.shadowColor=hc2; c.shadowBlur=12; c.lineWidth=1.5; c.globalAlpha=.85; c.beginPath(); c.moveTo(-8,head-7); c.lineTo(-8,head-16); c.lineTo(-4,head-11); c.lineTo(0,head-19); c.lineTo(4,head-11); c.lineTo(8,head-16); c.lineTo(8,head-7); c.closePath(); c.stroke(); c.globalAlpha=.25; c.fillStyle=hc2; c.fill(); c.globalAlpha=1; c.shadowBlur=0; for(let k=0;k<3;k++){ const u=(t*.8+k/3)%1; c.fillStyle=`rgba(255,255,255,${1-u})`; c.fillRect(-6+k*6,head-18-u*8,1.5,1.5); } }
-  wx2("hat",c,{L,dir,t,head,sh,hip,AC,JC,HC,moving:o.moving});
-  // ---- rain cloud aura
-  if(aura==="Rain cloud"){ c.fillStyle="#4a4466"; for(const [cx,r] of [[-6,6],[0,8],[7,6]]){ c.beginPath(); c.arc(cx,head-30,r,0,7); c.fill(); } c.strokeStyle="rgba(150,190,255,.7)"; c.lineWidth=1; c.beginPath(); for(let i=0;i<5;i++){ const ry=head-22+((t*40+i*7)%22); c.moveTo(-8+i*4,ry); c.lineTo(-9+i*4,ry+4); } c.stroke(); }
+  W.visor();
+  W.hat();
+  W.rain();
   } // end of the normal body (mech suits draw their own)
   // ---- companion
   const pf=o.petFetch, pfu=pf?t-pf.t0:-1, pfOn=pf&&pfu>=0&&pfu<pf.dur, pfAway=pfOn&&pfu>.7&&pfu<pf.dur-.8;
@@ -10042,6 +10070,13 @@ function drawGemixStall(ctx,x,t){ for(let k=0;k<5;k++){ const g=MECH_GEMS[(Math.
   ctx.fillStyle="#0b0716"; ctx.fillRect(x-100,168,58,44); ctx.strokeStyle="#ff8ad8"; ctx.strokeRect(x-99.5,168.5,57,43); ctx.fillStyle="#ff8ad8"; ctx.font="7px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillText("MECH",x-71,182); ctx.fillText("GEMS",x-71,192); ctx.fillStyle="#38e8ff"; ctx.fillText("40 KINDS",x-71,204); }
 
 function mechNoise(i){ const v=Math.sin(i*127.1)*43758.5; return v-Math.floor(v); }
+// where a mech's head, chest and back are, so wardrobe items can be worn on it
+const MECH_HEADFIT={pilot:[0,.92],visor:[-2.5,.82],antenna:[-2.5,.82],hat:[-2.5,.82],mono:[-2,.85],horns:[-2.5,.82],dome:[-4,1],crest:[-2.5,.85],skull:[-3,.85],jaw:[-4,.9],cat:[-2.5,.82],bear:[-2.5,.82]};
+const MECH_BODYW={box:6,round:7,vee:9,slim:4,barrel:9};
+function mechGeom(M,o,t){ const mv=!!o.moving&&!o.sit, ph=(o.phase||0)*2, heavy=M.leg==="heavy"; let lift=0,bob=0;
+  if(M.leg==="hover") lift=14+Math.sin(t*2.2)*2.5; else if(M.leg==="tread"){ lift=6; bob=mv?Math.sin(t*20)*.4:0; } else if(M.leg==="spring") lift=14+Math.abs(Math.sin(t*(mv?7:3.4)))*(mv?9:4); else bob=mv?Math.abs(Math.sin(ph))*(heavy?2.6:1.8):Math.sin(t*1.6)*.5;
+  const hipY=-30-lift+bob+(o.sit?8:0), tTop=hipY-30, hy=tTop-8, hf=MECH_HEADFIT[M.head]||[-2.5,.85];
+  return {SC:(M.tiny?.8:1)*(M.sc||1),hipY,tTop,hy,hOff:hf[0],hk:hf[1],tk:1.5,bw:MECH_BODYW[M.body]||7,ak:Math.max(.8,(-(hy-14))/64)}; }
 function drawMech(c,M,o,t,dir,em,P){ const SC=(M.tiny?.8:1)*(M.sc||1); c.save(); c.scale(SC,SC); const out=drawMech1(c,M,o,t,dir,em,P||{}); c.restore(); return {top:out.top*SC}; }
 function drawMech1(c,M,o,t,dir,em,P){ const [C0,C1,C2]=M.c, G=M.g, mv=!!o.moving&&!o.sit, ph=(o.phase||0)*2, heavy=M.leg==="heavy";
   const R=(x,y,w,h,f)=>{ if(f) c.fillStyle=f; c.fillRect(dir>0?x:-x-w,y,w,h); }, X=x=>dir*x, glow=(b)=>{ c.shadowColor=G; c.shadowBlur=b; }, noglow=()=>{ c.shadowBlur=0; };
@@ -10251,8 +10286,8 @@ const DIGI=[
   {k:"aura",n:"Floating grimoire",rp:4500,g:"Legends",d:"A spellbook from a fantasy anime that floats beside you, flipping pages while runes circle it."},
 ];
 // Mech Suits go in the Top slot: wearing one turns your character into that walking mech.
-DIGI.push(...MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Mech Suits",d:m.d+" Wear it and you walk around as this mech."})));
-DIGI.push(...TINY_MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Tiny Mechs",d:m.d+" Sized to fit you: your own face sits in the cockpit."})));
+DIGI.push(...MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Mech Suits",d:m.d+" Wear it and you walk around as this mech. Your hat, glasses, neckwear, back item and aura from the wardrobe fit right on it."})));
+DIGI.push(...TINY_MECHS.map(m=>({k:"style",n:m.n,rp:m.rp,g:"Tiny Mechs",d:m.d+" Sized to fit you: your own face sits in the cockpit. Your hat, glasses, neckwear, back item and aura fit on it too."})));
 setTimeout(()=>{ try{ const V=VENDOR_LOOKS[STALL_BY.gemix]; V.style=digiIndex(DIGI.find(d=>d.n==="Idol Pod")); V.mg=["g_prism","g_orbit"]; }catch(e){} },0); // Gemix's vendor pilots a gem-loaded Tiny Mech
 const DIGI_PETS={
   "Wisp guardian":{p:"Small, brave and always watching your back.",trait:{k:"guard",v:10,short:"10% less Void damage"},ab:{k:"buff",b:"guard",n:"Guardian Ward",cd:45,d:"Void armor for 10 min"},say:["I've got you!","*sparkle*","Stay close."]},
