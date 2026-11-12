@@ -488,7 +488,7 @@ service cloud.firestore {
         && nd().gids is list && nd().gids.size() <= 12
         && nd().open is bool && nd().at is int
         // Card style: background and neon color, plus an optional background image and picture (sizes capped).
-        && (!('st' in nd()) || (nd().st is map && nd().st.keys().hasOnly(['bg', 'color'])))
+        && (!('st' in nd()) || (nd().st is map && nd().st.keys().hasOnly(['bg', 'color', 'frame', 'nm'])))
         && (!('img' in nd()) || (nd().img is string && nd().img.size() <= 150000))
         && (!('photo' in nd()) || (nd().photo is string && nd().photo.size() <= 70000));
       // The owner can remove a picture or background that breaks the rules.

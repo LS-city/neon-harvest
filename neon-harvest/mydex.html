@@ -79,6 +79,38 @@ svg.ic{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-
 .tile[aria-pressed=true]>span:first-of-type{border:2px solid var(--ice);box-shadow:0 0 10px var(--ice)}
 .swatch{border-radius:50%;width:70%;height:70%;display:block}
 .vh{position:absolute;opacity:0;width:1px;height:1px}
+/* Animated frames (cards and style tiles) */
+.frm{position:relative;overflow:hidden}
+.frm::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1}
+.fr-classic::before{content:none}
+.card.fr-none{border-color:transparent}.fr-none::before{content:none}
+.fr-pulse::before{box-shadow:inset 0 0 0 2px var(--ice),inset 0 0 22px color-mix(in srgb,var(--ice) 70%,transparent);animation:frPulse 1.8s ease-in-out infinite alternate}
+@keyframes frPulse{from{opacity:.3}to{opacity:1}}
+.fr-rainbow::before{padding:3px;background:conic-gradient(#ff4fb0,#ffb347,#c6ff3d,#3dffd8,#5da2ff,#b98cff,#ff4fb0);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:frHue 3s linear infinite}
+@keyframes frHue{to{filter:hue-rotate(360deg)}}
+.fr-trace::before{background:linear-gradient(90deg,var(--ice) 50%,transparent 0) 0 0/18px 2px repeat-x,linear-gradient(90deg,var(--flux) 50%,transparent 0) 0 100%/18px 2px repeat-x,linear-gradient(0deg,var(--flux) 50%,transparent 0) 0 0/2px 18px repeat-y,linear-gradient(0deg,var(--ice) 50%,transparent 0) 100% 0/2px 18px repeat-y;animation:frTrace .9s linear infinite}
+@keyframes frTrace{to{background-position:18px 0,-18px 100%,0 -18px,100% 18px}}
+.fr-corners::before{inset:6px;--k:linear-gradient(var(--flux),var(--flux));background:var(--k) 0 0/24px 3px,var(--k) 0 0/3px 24px,var(--k) 100% 0/24px 3px,var(--k) 100% 0/3px 24px,var(--k) 0 100%/24px 3px,var(--k) 0 100%/3px 24px,var(--k) 100% 100%/24px 3px,var(--k) 100% 100%/3px 24px;background-repeat:no-repeat;animation:frCorner 1.6s ease-in-out infinite alternate}
+@keyframes frCorner{from{inset:12px;opacity:.55}to{inset:4px;opacity:1}}
+.fr-glitch::before{box-shadow:inset 3px 0 0 var(--flux),inset -3px 0 0 var(--ice),inset 0 2px 0 var(--ice),inset 0 -2px 0 var(--flux);animation:frGlitch 2.4s steps(1) infinite}
+@keyframes frGlitch{0%,100%{transform:none;opacity:1}8%{transform:translate(3px,-1px)}10%{transform:translate(-3px,1px);opacity:.55}12%{transform:none;opacity:1}55%{transform:translate(-2px,0)}57%{transform:none}}
+.fr-fire::before{box-shadow:inset 0 0 0 2px #ffb347,inset 0 -18px 30px -6px #ff5a1f,inset 0 0 26px rgba(255,122,46,.55);animation:frFire .35s ease-in-out infinite alternate}
+@keyframes frFire{from{opacity:.7}to{opacity:1}}
+.fr-double::before{inset:5px;border:1px solid var(--flux);animation:frDouble 3s ease-in-out infinite}
+@keyframes frDouble{50%{inset:9px;opacity:.5}}
+.fr-holo::before{background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.24) 50%,transparent 65%) 0 0/300% 100% no-repeat;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);animation:frHolo 3.2s linear infinite}
+@keyframes frHolo{from{background-position:120% 0}to{background-position:-120% 0}}
+.fr-orbit::before{inset:0;background:radial-gradient(circle,var(--flux) 0 3px,transparent 4px) 0 0/10px 10px no-repeat;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ice) 60%,transparent);animation:frOrbit 3s linear infinite}
+@keyframes frOrbit{0%{background-position:0 0}25%{background-position:100% 0}50%{background-position:100% 100%}75%{background-position:0 100%}100%{background-position:0 0}}
+/* Name effects */
+.card .name.nm-glow{text-shadow:0 0 8px var(--ice),0 0 18px var(--ice)}
+.card .name.nm-grad{background:linear-gradient(90deg,var(--ice),var(--flux));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.card .name.nm-flicker{text-shadow:0 0 10px var(--ice);animation:nmFlick 3s steps(1) infinite}
+@keyframes nmFlick{0%,100%{opacity:1}42%{opacity:.4}44%{opacity:1}46%{opacity:.6}48%{opacity:1}}
+.card .name.nm-glitch{animation:nmGlitch 2.2s steps(1) infinite}
+@keyframes nmGlitch{0%,100%{text-shadow:0 1px 5px var(--ink)}10%{text-shadow:2px 0 var(--flux),-2px 0 var(--ice)}12%{text-shadow:-2px 0 var(--flux),2px 0 var(--ice)}14%{text-shadow:0 1px 5px var(--ink)}60%{text-shadow:1px 0 var(--flux)}62%{text-shadow:0 1px 5px var(--ink)}}
+.card .name.nm-chrome{background:linear-gradient(180deg,#fff,#b8c4dc 48%,#5a6684 52%,#e8eefc);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.nmchips button{font:700 15px var(--display)}
 label:focus-within{outline:2px solid var(--ice);outline-offset:2px}
 label.btn{cursor:pointer}
 #sheet.still{animation:none}
@@ -513,7 +545,7 @@ function save(){dirty=true;clearTimeout(saveT);saveT=setTimeout(persist,700)}
 let lastCard="";
 async function persist(){
  dirty=false;clearTimeout(saveT);const w1=d(`data/users/${myId}/mydex`).set(JSON.parse(JSON.stringify(S))).catch(bad);
- const P=S.profile, card={name:(P.name||NH.name()).slice(0,18),age:Math.max(MIN_AGE,+P.age||MIN_AGE),bio:P.bio.slice(0,120),facts:P.facts.map(f=>f.slice(0,40)),photo:P.photo||"",bg:S.look.bg,img:S.look.bg==="img"?S.look.img:"",mood:S.mood,met:Object.keys(met).length,display:S.display.slice(0,DISPLAY_MAX).map(k=>{const it=k==="own"?"own":V.find(x=>x.u===k);return it&&defOf(it)?defOf(it):null}).filter(Boolean),at:Date.now()};
+ const P=S.profile, card={name:(P.name||NH.name()).slice(0,18),age:Math.max(MIN_AGE,+P.age||MIN_AGE),bio:P.bio.slice(0,120),facts:P.facts.map(f=>f.slice(0,40)),photo:P.photo||"",bg:S.look.bg,img:S.look.bg==="img"?S.look.img:"",color:NEON[S.look.color]?S.look.color:"cyan",frame:frOk(S.look.frame),nm:nmOk(S.look.nm),mood:S.mood,met:Object.keys(met).length,display:S.display.slice(0,DISPLAY_MAX).map(k=>{const it=k==="own"?"own":V.find(x=>x.u===k);return it&&defOf(it)?defOf(it):null}).filter(Boolean),at:Date.now()};
  const sig=JSON.stringify({...card,at:0});
  if(sig!==lastCard&&vLoaded&&dLoaded){const prev=lastCard;lastCard=sig;d("mdCards/"+myId).set(card).catch(e=>{lastCard=prev;bad(e)})}
  if(S.visible&&pos) pushPres();
@@ -599,12 +631,17 @@ const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEac
 function watch(){document.querySelectorAll(".bd").forEach(b=>{if(io)io.observe(b);else b.classList.add("live")})}
 
 /* ---------- Card look and neon colors ---------- */
-const NEON={cyan:["Cyan","#7ceaff","#ff4fb0",230],blue:["Electric","#5da2ff","#7cf5ff",222],violet:["Ultraviolet","#b98cff","#ff5fd2",262],magenta:["Magenta","#ff5fe0","#7ceaff",298],pink:["Hot pink","#ff5c9f","#ffc06b",334],orange:["Solar","#ff9a3d","#ff5c9f",18],lime:["Acid lime","#c6ff3d","#5de0ff",215],aqua:["Aqua","#3dffd8","#b98cff",196]};
+const NEON={cyan:["Cyan","#7ceaff","#ff4fb0",230],blue:["Electric","#5da2ff","#7cf5ff",222],violet:["Ultraviolet","#b98cff","#ff5fd2",262],magenta:["Magenta","#ff5fe0","#7ceaff",298],pink:["Hot pink","#ff5c9f","#ffc06b",334],orange:["Solar","#ff9a3d","#ff5c9f",18],lime:["Acid lime","#c6ff3d","#5de0ff",215],aqua:["Aqua","#3dffd8","#b98cff",196],red:["Laser red","#ff4a5a","#ffd36a",350],gold:["Gold rush","#ffcf4a","#ff6fb4",40],mint:["Mint","#7dffb2","#ff9ad5",150],ghost:["Ghost white","#e8eefc","#7ceaff",230],teal:["Deep teal","#2fd6c4","#ffb347",180],royal:["Royal","#8f7bff","#ffcf4a",250]};
 function applyTheme(){const n=NEON[S.look.color]||NEON.cyan,r=document.documentElement.style;r.setProperty("--ice",n[1]);r.setProperty("--flux",n[2]);r.setProperty("--th",n[3]);try{localStorage.setItem("mydex_color",S.look.color)}catch(e){}}
 try{const c=localStorage.getItem("mydex_color");if(NEON[c]){S.look.color=c;applyTheme()}}catch(e){}
 const svgURL=b=>`url('data:image/svg+xml,${encodeURIComponent(b)}')`;
 const safeImg=u=>/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(u||"")?u:"";
-const BGS=[["grid","Grid"],["circuit","Circuit"],["hex","Hex mesh"],["aurora","Aurora"],["sunset","Sunset"],["rain","Data rain"],["carbon","Carbon"],["holo","Holo"]];
+const BGS=[["grid","Grid"],["circuit","Circuit"],["hex","Hex mesh"],["aurora","Aurora"],["sunset","Sunset"],["rain","Data rain"],["carbon","Carbon"],["holo","Holo"],["synth","Synthwave"],["city","Neon city"],["stars","Starfield"],["waves","Waves"],["plasma","Plasma"],["blueprint","Blueprint"]];
+const FRAMES=[["classic","Classic"],["none","No frame"],["pulse","Neon pulse"],["rainbow","Rainbow"],["trace","Circuit run"],["corners","Lock-on"],["glitch","Glitch"],["fire","Fire"],["double","Double line"],["holo","Holo sweep"],["orbit","Orbit"]];
+const NAMEFX=[["plain","Plain"],["glow","Glow"],["grad","Gradient"],["chrome","Chrome"],["flicker","Flicker"],["glitch","Glitch"]];
+const frOk=k=>FRAMES.some(x=>x[0]===k)?k:"classic", nmOk=k=>NAMEFX.some(x=>x[0]===k)?k:"plain";
+const frCls=k=>"frm fr-"+frOk(k), nmCls=k=>"nm-"+nmOk(k);
+const lookVars=ck=>{const n=NEON[ck]||NEON.cyan;return `--ice:${n[1]};--flux:${n[2]};--th:${n[3]}`};
 function bgCSS(k,ck){const n=NEON[ck||S.look.color]||NEON.cyan,c=n[1],f=n[2],t=n[3],base=`linear-gradient(155deg,hsl(${t} 58% 24%),hsl(${t} 58% 12%) 60%,hsl(${t+25} 60% 18%))`,a=(col,p)=>`color-mix(in srgb,${col} ${p}%,transparent)`;
  switch(k){
  case "circuit":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" fill="none" stroke="${c}" stroke-opacity=".3"><path d="M0 30h40l20 20h30l30-30M30 120V80l20-20M90 0v30l-20 20M0 90h20l14 14h50l36-36"/><g fill="${c}" fill-opacity=".5" stroke="none"><circle cx="40" cy="30" r="2.500"/><circle cx="50" cy="60" r="2.500"/><circle cx="90" cy="30" r="2.500"/><circle cx="84" cy="104" r="2.500"/></g></svg>`)},${base}`;
@@ -614,6 +651,12 @@ function bgCSS(k,ck){const n=NEON[ck||S.look.color]||NEON.cyan,c=n[1],f=n[2],t=n
  case "rain":return `repeating-linear-gradient(90deg,${a(c,14)} 0 2px,transparent 2px 19px),repeating-linear-gradient(180deg,${a(c,22)} 0 14px,transparent 14px 37px) 8px 0/19px 100%,hsl(${t} 58% 9%)`;
  case "carbon":return `repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 4px,transparent 4px 8px),repeating-linear-gradient(-45deg,rgba(0,0,0,.3) 0 4px,transparent 4px 8px),hsl(${t} 25% 13%)`;
  case "holo":return `conic-gradient(from 210deg at 30% 20%,${a(c,45)},${a(f,45)},${a("#ffb347",30)},${a(c,45)}),hsl(${t} 58% 11%)`;
+ case "synth":return `repeating-linear-gradient(0deg,${a(f,55)} 0 1px,transparent 1px 14px) 0 100%/100% 42% no-repeat,repeating-linear-gradient(90deg,${a(f,40)} 0 1px,transparent 1px 28px) 0 100%/100% 42% no-repeat,radial-gradient(circle at 50% 58%,${a(c,75)} 0 11%,transparent 12%),linear-gradient(180deg,hsl(${t+30} 60% 15%),hsl(${t} 58% 8%) 58%,hsl(${t+40} 60% 12%))`;
+ case "city":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120"><path fill="#06081a" d="M0 120V72h18V54h20v34h12V38h24v52h12V62h18v28h16V46h26v26h14V58h16v62Z"/><g fill="${c}" fill-opacity=".7"><rect x="56" y="46" width="4" height="4"/><rect x="64" y="58" width="4" height="4"/><rect x="134" y="54" width="4" height="4"/><rect x="144" y="66" width="4" height="4"/><rect x="24" y="80" width="4" height="4"/></g><g fill="${f}" fill-opacity=".7"><rect x="92" y="70" width="4" height="4"/><rect x="176" y="66" width="4" height="4"/><rect x="28" y="62" width="4" height="4"/></g></svg>`)} 0 100%/200px 120px repeat-x,radial-gradient(70% 45% at 50% 100%,${a(f,40)},transparent),linear-gradient(180deg,hsl(${t} 58% 20%),hsl(${t} 58% 8%))`;
+ case "stars":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" fill="#fff">${[[12,18,1.2],[48,40,.8],[90,12,1],[120,60,1.4],[30,90,.9],[70,110,1.1],[110,124,.7],[60,72,.6],[130,96,.9],[8,128,.7]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill-opacity="${r>1?.9:.55}"/>`).join("")}</svg>`)},radial-gradient(60% 50% at 70% 30%,${a(c,25)},transparent),radial-gradient(50% 40% at 20% 80%,${a(f,22)},transparent),hsl(${t} 50% 7%)`;
+ case "waves":return `${svgURL(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" fill="none" stroke="${c}" stroke-opacity=".35" stroke-width="1.5"><path d="M0 20q15-14 30 0t30 0 30 0 30 0"/><path d="M0 34q15-10 30 0t30 0 30 0 30 0" stroke="${f}" stroke-opacity=".25"/></svg>`)},${base}`;
+ case "plasma":return `radial-gradient(circle at 20% 30%,${a(f,60)},transparent 42%),radial-gradient(circle at 80% 70%,${a(c,60)},transparent 46%),radial-gradient(circle at 62% 12%,${a("#ffb347",35)},transparent 36%),radial-gradient(circle at 35% 85%,${a(c,30)},transparent 40%),hsl(${t} 58% 9%)`;
+ case "blueprint":return `linear-gradient(${a(c,24)} 2px,transparent 2px) 0 0/80px 80px,linear-gradient(90deg,${a(c,24)} 2px,transparent 2px) 0 0/80px 80px,linear-gradient(${a(c,10)} 1px,transparent 1px) 0 0/16px 16px,linear-gradient(90deg,${a(c,10)} 1px,transparent 1px) 0 0/16px 16px,hsl(${t} 60% 17%)`;
  default:return `linear-gradient(${a(c,16)} 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,${a(c,16)} 1px,transparent 1px) 0 0/24px 24px,${base}`;
  }}
 function myCardBg(){const u=safeImg(S.look.img);if(S.look.bg==="img"&&u)return `linear-gradient(rgba(6,8,22,.55),rgba(6,8,22,.78)),url('${u}') center/cover`;return bgCSS(S.look.bg==="img"?"grid":S.look.bg)}
@@ -621,7 +664,7 @@ function avatar(){const u=safeImg(S.profile.photo);return u?`<img src="${u}" alt
 function shrink(file,w,h,maxLen){return new Promise((ok,no)=>{if(!file||file.size>25e6)return no(0);const url=URL.createObjectURL(file),im=new Image();im.onerror=()=>{URL.revokeObjectURL(url);no(0)};im.onload=()=>{try{const c=document.createElement("canvas");c.width=w;c.height=h;const iw=im.naturalWidth||w,ih=im.naturalHeight||h,sc=Math.max(w/iw,h/ih),sw=w/sc,sh2=h/sc,x=c.getContext("2d");x.fillStyle="#000";x.fillRect(0,0,w,h);x.drawImage(im,(iw-sw)/2,(ih-sh2)/2,sw,sh2,0,0,w,h);URL.revokeObjectURL(url);let q=.85,d=c.toDataURL("image/jpeg",q);while(d.length>maxLen&&q>.3){q-=.1;d=c.toDataURL("image/jpeg",q)}d.length>maxLen?no(0):ok(d)}catch(e){no(0)}};im.src=url})}
 function drawStyle(){const P=S.profile,L=S.look,img=safeImg(L.img);
  sheet(`${sh("Style my MyDex")}
- <article class="card" style="background:${myCardBg()}"><div class="id"><div class="sig ${safeImg(P.photo)?"ph":""}">${avatar()}</div><div style="min-width:0"><h3 class="name">${esc(P.name||"Your name")}</h3><div class="mt">Card preview</div></div></div></article>
+ <article class="card ${frCls(L.frame)}" style="background:${myCardBg()}"><div class="id"><div class="sig ${safeImg(P.photo)?"ph":""}">${avatar()}</div><div style="min-width:0"><h3 class="name ${nmCls(L.nm)}">${esc(P.name||"Your name")}</h3><div class="mt">Card preview</div></div></div></article>
  <div class="lab">Profile picture</div>
  <div class="btns"><label class="btn"><input class="vh" type="file" id="up_photo" accept="image/*">${P.photo?"Change picture":"Upload picture"}</label><button class="btn alt" data-a="rmPhoto" ${P.photo?"":"disabled"}>Remove</button></div>
  <div class="lab">Card background</div>
@@ -630,7 +673,12 @@ function drawStyle(){const P=S.profile,L=S.look,img=safeImg(L.img);
  <label class="tile"><input class="vh" type="file" id="up_bg" accept="image/*"><span>+</span><span>${img?"Replace":"Upload"}</span></label></div>
  <div class="lab">MyDex neon color</div>
  <div class="tiles">${Object.entries(NEON).map(([k,n])=>`<button class="tile" data-a="setColor" data-v="${k}" aria-pressed="${L.color===k}"><span><span class="swatch" style="background:${n[1]};box-shadow:0 0 12px ${n[1]}"></span></span><span>${n[0]}</span></button>`).join("")}</div>
+ ${styleExtras("setFrame","setNm",frOk(L.frame),nmOk(L.nm),myCardBg())}
  <div class="err" id="st_err" role="alert"></div>`,true)}
+function styleExtras(fa,na,fr,nm,bg){return `<div class="lab">Card frame</div>
+ <div class="tiles">${FRAMES.map(([k,l])=>`<button class="tile" data-a="${fa}" data-v="${k}" aria-pressed="${fr===k}"><span class="${frCls(k)}" style="background:${bg}"></span><span>${l}</span></button>`).join("")}</div>
+ <div class="lab">Name effect</div>
+ <div class="chips nmchips">${NAMEFX.map(([k,l])=>`<button data-a="${na}" data-v="${k}" aria-pressed="${nm===k}">${l}</button>`).join("")}</div>`}
 async function upload(input){const f=input.files&&input.files[0];if(!f)return;const isP=input.id==="up_photo";
  try{const d=isP?await shrink(f,320,320,60000):await shrink(f,720,960,130000);if(isP)S.profile.photo=d;else{S.look.img=d;S.look.bg="img"}save();render();drawStyle();toast(isP?"Picture updated.":"Background updated.")}
  catch(e){const m=$("#st_err");if(m)m.textContent="That file couldn't be used. Try a JPG or PNG under 25 MB."}}
@@ -656,8 +704,8 @@ const dexNo=()=>String(hash(myId)%9000+1000);
 function meterNext(n){const a=CATS[0][5],names=CATS[0][6];for(let i=0;i<a.length;i++)if(n<a[i])return{need:a[i],name:names[i],prev:i?a[i-1]:0};return null}
 function vCard(){const P=S.profile,M=MOOD[S.mood],n=metCount(),nx=meterNext(n),pct=nx?(n-nx.prev)/(nx.need-nx.prev):1,on=Math.round(pct*20);
  const slots=Array.from({length:DISPLAY_MAX},(_,i)=>{const u=S.display[i],it=u&&(u==="own"?"own":V.find(x=>x.u===u)),df=it&&defOf(it);return df?`<button class="slot fill" data-a="tab" data-v="vault" aria-label="${esc(df.name)}">${badgeSVG(df)}</button>`:`<button class="slot" data-a="tab" data-v="vault">Empty</button>`}).join("");
- return `<article class="card" style="background:${myCardBg()}"><div class="id"><button class="sig ${safeImg(P.photo)?"ph":""}" data-a="styleSheet" aria-label="Change picture">${avatar()}</button>
- <div style="min-width:0"><div class="lab">Dex No. ${dexNo()}</div><div class="namerow"><h1 class="name">${esc(myName())}</h1><button class="moodb" data-a="moodSheet" aria-label="Change status" style="--m:${M.c}"><span class="bubble"></span></button></div><div class="moodt" style="--m:${M.c}">${M.t}</div><div class="mt">Age ${esc(P.age)}</div></div></div>
+ return `<article class="card ${frCls(S.look.frame)}" style="background:${myCardBg()}"><div class="id"><button class="sig ${safeImg(P.photo)?"ph":""}" data-a="styleSheet" aria-label="Change picture">${avatar()}</button>
+ <div style="min-width:0"><div class="lab">Dex No. ${dexNo()}</div><div class="namerow"><h1 class="name ${nmCls(S.look.nm)}">${esc(myName())}</h1><button class="moodb" data-a="moodSheet" aria-label="Change status" style="--m:${M.c}"><span class="bubble"></span></button></div><div class="moodt" style="--m:${M.c}">${M.t}</div><div class="mt">Age ${esc(P.age)}</div></div></div>
  <p class="bio">${esc(P.bio)||'<span class="mt">Add a quick bio so people know who they are meeting.</span>'}</p><div class="lab" style="margin-top:12px">3 facts about me</div><ul class="facts">${P.facts.map(f=>`<li><span>${esc(f)||'<span class="mt">Not filled in yet</span>'}</span></li>`).join("")}</ul>
  <div class="row between" style="margin-top:14px"><div class="lab">Badge display</div><div class="mt">${S.display.length}/${DISPLAY_MAX}</div></div><div class="slots">${slots}</div></article>
  <section class="panel"><div class="lab">Encounter meter</div><div class="meter" style="margin-top:6px"><div class="big">${n}</div><div style="min-width:0"><div>${n===1?"person":"people"} encountered</div><div class="seg">${Array.from({length:20},(_,i)=>`<i class="${i<on?"on":""}"></i>`).join("")}</div><div class="mt" style="margin-top:5px">${nx?`${nx.need-n} more to ${esc(nx.name)}`:"Meter maxed"}</div></div></div></section>
@@ -715,8 +763,8 @@ function centerCar(smooth){const car=$("#car");if(!car)return;const e=car.queryS
 document.addEventListener("scroll",e=>{const car=e.target;if(car.id!=="car"||performance.now()-(car._lock||0)<500)return;clearTimeout(car._t);car._t=setTimeout(()=>{const mid=car.scrollLeft+car.clientWidth/2;let best=0,bd=1e9;car.querySelectorAll("button").forEach((b,i)=>{const x=Math.abs(b.offsetLeft-car.offsetLeft+b.offsetWidth/2-mid);if(x<bd){bd=x;best=i}});if(best!==vaultIdx){vaultIdx=best;car.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("cur",i===best));renderVinfo();bump("cycle")}},110)},true);
 
 /* ---------- Players, requests, trades ---------- */
-function bgFor(card){const u=safeImg(card.img);return card.bg==="img"&&u?`linear-gradient(rgba(6,8,22,.55),rgba(6,8,22,.78)),url('${u}') center/cover`:bgCSS(card.bg==="img"?"grid":(card.bg||"grid"))}
-function miniCard(p){const M=MOOD[p.mood]||MOOD.g,u=safeImg(p.photo);return `<article class="card" style="background:${bgFor(p)}"><div class="id"><div class="sig ${u?"ph":""}">${u?`<img src="${u}" alt="">`:sigil(p.name)}</div><div style="min-width:0"><div class="namerow"><h2 class="name">${esc(p.name)}</h2><span class="moodb" style="--m:${M.c}"><span class="bubble"></span></span></div><div class="moodt" style="--m:${M.c}">${M.t}</div><div class="mt">Age ${esc(p.age)}${p.range?" · "+esc(p.range):""} · ${+p.met||0} met</div></div></div><p class="bio">${esc(p.bio)}</p><ul class="facts">${(Array.isArray(p.facts)?p.facts:[]).filter(Boolean).map(f=>`<li><span>${esc(f)}</span></li>`).join("")}</ul><div class="slots">${(Array.isArray(p.display)?p.display:[]).map(x=>`<div class="slot fill">${badgeSVG(x)}</div>`).join("")}</div></article>`}
+function bgFor(card){const u=safeImg(card.img);return card.bg==="img"&&u?`linear-gradient(rgba(6,8,22,.55),rgba(6,8,22,.78)),url('${u}') center/cover`:bgCSS(card.bg==="img"?"grid":(card.bg||"grid"),NEON[card.color]?card.color:"")}
+function miniCard(p){const M=MOOD[p.mood]||MOOD.g,u=safeImg(p.photo);return `<article class="card ${frCls(p.frame)}" style="${NEON[p.color]?lookVars(p.color)+";":""}background:${bgFor(p)}"><div class="id"><div class="sig ${u?"ph":""}">${u?`<img src="${u}" alt="">`:sigil(p.name)}</div><div style="min-width:0"><div class="namerow"><h2 class="name ${nmCls(p.nm)}">${esc(p.name)}</h2><span class="moodb" style="--m:${M.c}"><span class="bubble"></span></span></div><div class="moodt" style="--m:${M.c}">${M.t}</div><div class="mt">Age ${esc(p.age)}${p.range?" · "+esc(p.range):""} · ${+p.met||0} met</div></div></div><p class="bio">${esc(p.bio)}</p><ul class="facts">${(Array.isArray(p.facts)?p.facts:[]).filter(Boolean).map(f=>`<li><span>${esc(f)}</span></li>`).join("")}</ul><div class="slots">${(Array.isArray(p.display)?p.display:[]).map(x=>`<div class="slot fill">${badgeSVG(x)}</div>`).join("")}</div></article>`}
 async function getCard(id){const s=await d("mdCards/"+id).get();return s.exists?{id,...s.data()}:null}
 async function playerSheet(id){const live=near.find(p=>p.id===id),isNear=!!live;sheet(`<div class="wait"><div class="spin"></div></div>`);const r=++reqId;let p;try{p=await getCard(id)}catch(e){p=null}if(r!==reqId)return;
  if(!p){sheet(`${sh("No MyDex yet")}<p>This player hasn't set up their MyDex card.</p>`);return}
@@ -781,12 +829,12 @@ const fcDef=()=>({id:"fc_"+myId,name:(myName()+" Fight Card").slice(0,36),cat:"F
 const fcRec=list=>{let w=0,l=0;list.forEach(f=>{if(f.winner===myId)w++;else if(f.winner)l++});return {w,l}};
 const fcDone=()=>fights.filter(f=>f.status==="done");
 const fcActive=id=>fights.find(f=>fcOpp(f).id===id&&["pending","accepted","disputed"].includes(f.status));
-const fcSt=p=>{const st=p&&p.st&&typeof p.st==="object"?p.st:{};return {bg:BGS.some(x=>x[0]===st.bg)||st.bg==="img"?st.bg:"grid",color:NEON[st.color]?st.color:"cyan"}};
+const fcSt=p=>{const st=p&&p.st&&typeof p.st==="object"?p.st:{};return {bg:BGS.some(x=>x[0]===st.bg)||st.bg==="img"?st.bg:"grid",color:NEON[st.color]?st.color:"cyan",frame:frOk(st.frame),nm:nmOk(st.nm)}};
 function fcBg(p){const st=fcSt(p),u=safeImg(p&&p.img);if(st.bg==="img"&&u)return `linear-gradient(rgba(6,8,22,.55),rgba(6,8,22,.78)),url('${u}') center/cover`;return bgCSS(st.bg==="img"?"grid":st.bg,st.color)}
 function fcVars(p){const n=NEON[fcSt(p).color];return `--ice:${n[1]};--flux:${n[2]};--th:${n[3]}`}
 function fcPic(p,px){const u=safeImg(p&&p.photo);return `<div class="sig ${u?"ph":""}" style="width:${px}px;height:${px}px;${u?"":"padding:"+Math.round(px/10)+"px"}">${u?`<img src="${u}" alt="">`:sigil(p.name)}</div>`}
 function fcCardHTML(p,rec,mine){const games=Array.isArray(p.games)?p.games:[],plats=Array.isArray(p.plats)?p.plats:[];
- return `<article class="card" style="${fcVars(p)};background:${fcBg(p)}"><div class="id" style="grid-template-columns:64px minmax(0,1fr)">${fcPic(p,64)}<div style="min-width:0"><div class="lab">Harvest Fight Card</div><div class="namerow"><h${mine?1:2} class="name">${esc(p.name)}</h${mine?1:2}></div><div class="row" style="gap:14px;margin-top:2px"><span class="rec">${rec?`${rec.w}-${rec.l}`:"–"}</span><span class="mt">${rec?"wins - losses":"Record loading"}<br>${p.open?'<span style="color:var(--go)">Taking fight requests</span>':"Not taking requests"}</span></div></div></div>
+ return `<article class="card ${frCls(fcSt(p).frame)}" style="${fcVars(p)};background:${fcBg(p)}"><div class="id" style="grid-template-columns:64px minmax(0,1fr)">${fcPic(p,64)}<div style="min-width:0"><div class="lab">Harvest Fight Card</div><div class="namerow"><h${mine?1:2} class="name ${nmCls(fcSt(p).nm)}">${esc(p.name)}</h${mine?1:2}></div><div class="row" style="gap:14px;margin-top:2px"><span class="rec">${rec?`${rec.w}-${rec.l}`:"–"}</span><span class="mt">${rec?"wins - losses":"Record loading"}<br>${p.open?'<span style="color:var(--go)">Taking fight requests</span>':"Not taking requests"}</span></div></div></div>
  <div class="lab" style="margin-top:12px">Plays on</div><div class="chips" style="margin-top:6px">${plats.map(x=>`<span class="chip" style="background:rgba(6,8,22,.55)">${esc(fcPlat(x))}</span>`).join("")||'<span class="mt">No platforms yet</span>'}</div>
  <div class="lab" style="margin-top:12px">Games and usernames</div><div class="fgl">${games.map(g=>`<div class="fg"><strong>${esc(fcGame(g))}</strong><span class="mt">${esc(fcPlat(g.plat))}</span><span class="tag">${esc(g.tag)}</span><span class="mt">${g.main?"Main: "+esc(g.main):""}</span></div>`).join("")||'<p class="mt" style="padding-top:8px">No games yet</p>'}</div></article>`}
 function fightRow(f){const o=fcOpp(f),me=f.a===myId,mine=me?f.ca:f.cb,theirs=me?f.cb:f.ca,lab=x=>x===myId?"you":x?esc(o.name):"";
@@ -913,7 +961,7 @@ async function fcBadge(id){const f=fights.find(x=>x.id===id&&x.status==="done");
 
 /* Style my fight card */
 function fcStyle(){if(!fc){fcEditor();return}const st=fcSt(fc),img=safeImg(fc.img),ph=safeImg(fc.photo),dexPh=safeImg(S.profile.photo);
- sheet(`${sh("Style my fight card")}<article class="card" style="${fcVars(fc)};background:${fcBg(fc)}"><div class="id" style="grid-template-columns:64px minmax(0,1fr)">${fcPic(fc,64)}<div style="min-width:0"><div class="lab">Harvest Fight Card</div><h3 class="name">${esc(fc.name)}</h3><div class="mt">Card preview. Everyone who finds you sees this.</div></div></div></article>
+ sheet(`${sh("Style my fight card")}<article class="card ${frCls(st.frame)}" style="${fcVars(fc)};background:${fcBg(fc)}"><div class="id" style="grid-template-columns:64px minmax(0,1fr)">${fcPic(fc,64)}<div style="min-width:0"><div class="lab">Harvest Fight Card</div><h3 class="name ${nmCls(st.nm)}">${esc(fc.name)}</h3><div class="mt">Card preview. Everyone who finds you sees this.</div></div></div></article>
  <div class="lab">Fight card picture</div>
  <div class="btns"><label class="btn"><input class="vh" type="file" id="fc_up_photo" accept="image/*">${ph?"Change picture":"Upload picture"}</label><button class="btn alt" data-a="fcRmPhoto" ${ph?"":"disabled"}>Remove</button>${dexPh&&dexPh!==ph?`<button class="btn alt w" data-a="fcDexPhoto">Use my MyDex picture</button>`:""}</div>
  <div class="lab">Card background</div>
@@ -922,6 +970,7 @@ function fcStyle(){if(!fc){fcEditor();return}const st=fcSt(fc),img=safeImg(fc.im
  <label class="tile"><input class="vh" type="file" id="fc_up_bg" accept="image/*"><span>+</span><span>${img?"Replace":"Upload"}</span></label></div>
  <div class="lab">Fight card neon color</div>
  <div class="tiles">${Object.entries(NEON).map(([k,n])=>`<button class="tile" data-a="fcSetColor" data-v="${k}" aria-pressed="${st.color===k}"><span><span class="swatch" style="background:${n[1]};box-shadow:0 0 12px ${n[1]}"></span></span><span>${n[0]}</span></button>`).join("")}</div>
+ <div style="${fcVars(fc)}" class="stack">${styleExtras("fcSetFrame","fcSetNm",st.frame,st.nm,fcBg(fc))}</div>
  <p class="mt">This only styles your fight card. Your MyDex keeps its own look.</p><div class="err" id="fc_st_err" role="alert"></div>`,true)}
 async function fcPatch(ch,msg){if(!fc)return;const prev=fc,next={...fc,...ch,at:Date.now()};Object.keys(next).forEach(k=>{if(next[k]===null)delete next[k]});fc=next;render();fcStyle();
  try{await d("hfcCards/"+myId).set(next);fcList=null;if(msg)toast(msg)}catch(e){bad(e);fc=prev;render();fcStyle();const m=$("#fc_st_err");if(m)m.textContent="Couldn't save that. Check your connection and try again."}}
@@ -970,6 +1019,7 @@ const A={
  reqCancel(id){S.seen=[...S.seen,id].slice(-120);const r=d("mdReq/"+id);r.update({status:"no",done:Date.now()}).then(()=>r.delete()).catch(bad);closeSheet();toast("Request canceled.")},
  reqOk:approve,
  fcStyle, fcSetBg(v){if(v==="img"&&!safeImg(fc&&fc.img))return;fcPatch({st:{...fcSt(fc),bg:v}})}, fcSetColor(v){if(!NEON[v])return;fcPatch({st:{...fcSt(fc),color:v}},NEON[v][0]+" on your fight card")},
+ fcSetFrame(v){fcPatch({st:{...fcSt(fc),frame:frOk(v)}})}, fcSetNm(v){fcPatch({st:{...fcSt(fc),nm:nmOk(v)}})},
  fcRmPhoto(){fcPatch({photo:null},"Picture removed.")}, fcDexPhoto(){const u=safeImg(S.profile.photo);if(u)fcPatch({photo:u},"Using your MyDex picture.")},
  fcEditor, fcFind(v){fcFind(v==="1")}, fcOpen, fcSaveCard, fcAsk, fcSend, fcAnswer, fcCancel, fcClaim, fcClear, fcForge, fcForgeNow, fcBadge, fcAddGame, fcSave,
  fcPlat(k){fcReadDraft();const E=fcEdit;if(!E)return;E.plats=E.plats.includes(k)?E.plats.filter(x=>x!==k):[...E.plats,k];E.err="";drawFcEditor()},
@@ -981,6 +1031,7 @@ const A={
  czSet(v){if(!cz)return;const [k,x]=v.split("|"),nm=$("#cz_name");if(nm)cz.d.name=nm.value;cz.d[k]=k==="fx"?x:+x;drawCz(true)},
  rmPhoto(){S.profile.photo="";save();render();drawStyle()},
  setBg(v){S.look.bg=v;save();render();drawStyle()},
+ setFrame(v){S.look.frame=frOk(v);save();render();drawStyle()}, setNm(v){S.look.nm=nmOk(v);save();render();drawStyle()},
  setColor(v){S.look.color=v;applyTheme();save();render();drawStyle();toast(NEON[v][0]+" neon on")},
  moodSheet(){sheet(`${sh("How are you feeling?")}<p class="mt">People nearby see this color next to your name.</p>${Object.entries(MOOD).map(([k,m])=>`<button class="opt" data-a="setMood" data-v="${esc(k)}" aria-pressed="${S.mood===k}" style="--m:${m.c}"><span class="bubble"></span><span><strong>${m.t}</strong><br><span class="mt">${m.d}</span></span></button>`).join("")}`)},
  setMood(v){S.mood=v;S.m.moods++;closeSheet();bump("mood");render();toast("Status: "+MOOD[v].t)},
