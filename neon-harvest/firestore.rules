@@ -528,5 +528,124 @@ service cloud.firestore {
       allow write: if signedIn() && me() == uid
         && ((addsCode() && (isMember() || isOwner()) && withinLimit()) || (!addsCode() && keepsTotals()));
     }
+    // ================= BYTES: roleplay currency for VRChat (no real-world value) =================
+    // Every transfer is one batch: a receipt in bytes_tx, the sender's wallet down, the receiver's wallet up.
+    // These rules check all three against each other, so nobody can create Bytes out of thin air
+    // or take Bytes from someone else. Only the admin (isOwner) can mint new Bytes.
+    function bWal(uid) { return /databases/$(database)/documents/bytes_wallets/$(uid); }
+    function bTx(id) { return /databases/$(database)/documents/bytes_tx/$(id); }
+    function bHandle(h) { return /databases/$(database)/documents/bytes_handles/$(h); }
+    function bGroup(gid) { return get(/databases/$(database)/documents/bytes_groups/$(gid)).data; }
+    function bHandleOk(h) { return h is string && h.matches('^[A-Za-z0-9_.-]{3,20}$'); }
+    // Bytes Pro: supporters the admin has marked. Group-owner tools (groups, staff, wages) need it.
+    function bProDoc(uid) { return /databases/$(database)/documents/bytes_pro/$(uid); }
+    function bPro() { return isOwner() || (exists(bProDoc(me())) && get(bProDoc(me())).data.until > request.time.toMillis()); }
+    function bTxAfter(id) { return getAfter(bTx(id)).data; }
+    function bSpend(uid) {
+      return me() == uid && nd().diff(od()).affectedKeys().hasOnly(['bal', 'tx'])
+        && nd().tx is string && nd().tx.size() > 0 && !exists(bTx(nd().tx))
+        && bTxAfter(nd().tx).from == uid && bTxAfter(nd().tx).amt == od().bal - nd().bal && nd().bal >= 0;
+    }
+    function bReceive(uid) {
+      return nd().diff(od()).affectedKeys().hasOnly(['bal', 'rx'])
+        && nd().rx is string && nd().rx.size() > 0 && !exists(bTx(nd().rx))
+        && bTxAfter(nd().rx).to == uid && nd().bal == od().bal + bTxAfter(nd().rx).amt
+        && ((me() != uid && bTxAfter(nd().rx).from == me()) || (isOwner() && bTxAfter(nd().rx).from == 'mint')
+          || (me() == uid && bTxAfter(nd().rx).from == 'box' && bTxAfter(nd().rx).kind == 'withdraw'));
+    }
+    function bGrpDoc(gid) { return /databases/$(database)/documents/bytes_groups/$(gid); }
+
+    match /bytes_handles/{h} {
+      allow read: if signedIn();
+      allow create: if signedIn() && nd().keys().hasOnly(['uid']) && nd().uid == me()
+        && !exists(bWal(me())) && getAfter(bWal(me())).data.handle.lower() == h;
+    }
+
+    match /bytes_wallets/{uid} {
+      allow read: if signedIn() && (me() == uid || isOwner());
+      allow create: if signedIn() && me() == uid
+        && nd().keys().hasOnly(['handle', 'bal', 'tx', 'rx', 'at'])
+        && bHandleOk(nd().handle) && nd().bal == 100 && nd().tx == '' && nd().rx == '' && nd().at is int
+        && getAfter(bHandle(nd().handle.lower())).data.uid == me();
+      allow update: if signedIn() && (bSpend(uid) || bReceive(uid));
+    }
+
+    match /bytes_tx/{id} {
+      allow read: if signedIn() && (resource.data.from == me() || resource.data.to == me() || isOwner());
+      allow create: if signedIn()
+        && nd().keys().hasOnly(['from', 'to', 'amt', 'kind', 'note', 'at', 'fromH', 'toH', 'grp'])
+        && nd().amt is int && nd().amt > 0 && nd().amt <= 1000000
+        && nd().to is string && nd().to != nd().from && nd().at is int
+        && nd().get('note', '') is string && nd().get('note', '').size() <= 80
+        && nd().get('fromH', '') is string && nd().get('fromH', '').size() <= 20
+        && nd().get('toH', '') is string && nd().get('toH', '').size() <= 20
+        && nd().get('grp', '') is string && nd().get('grp', '').size() <= 40
+        && (
+          // player to player: send, tip, pay, wage
+          (nd().from == me() && (nd().kind in ['send', 'tip', 'pay'] || (nd().kind == 'wage' && bPro()))
+            && getAfter(bWal(nd().to)).data.rx == id && getAfter(bWal(me())).data.tx == id)
+          // admin creates Bytes
+          || (isOwner() && nd().from == 'mint' && nd().kind == 'mint' && getAfter(bWal(nd().to)).data.rx == id)
+          // owner moves Bytes from their wallet into their group's profit box
+          || (nd().kind == 'deposit' && nd().from == me() && nd().to == 'box' && bGroup(nd().grp).owner == me()
+            && getAfter(bWal(me())).data.tx == id && getAfter(bGrpDoc(nd().grp)).data.boxTx == id)
+          // owner takes Bytes back out of their group's profit box
+          || (nd().kind == 'withdraw' && nd().from == 'box' && nd().to == me() && bGroup(nd().grp).owner == me()
+            && getAfter(bWal(me())).data.rx == id && getAfter(bGrpDoc(nd().grp)).data.boxTx == id)
+        );
+    }
+
+    match /bytes_groups/{gid} {
+      allow read: if signedIn();
+      allow create: if signedIn() && nd().owner == me() && bGroupOk() && bPro()
+        && nd().get('box', 0) == 0 && !('boxTx' in nd());
+      allow update: if signedIn() && od().owner == me() && (
+          (nd().owner == me() && bGroupOk() && bPro()
+            && nd().get('box', 0) == od().get('box', 0) && nd().get('boxTx', '') == od().get('boxTx', ''))
+          || bBoxMove(gid));
+      // A group can only be deleted once its profit box is empty.
+      allow delete: if signedIn() && od().owner == me() && od().get('box', 0) == 0;
+    }
+    // Profit box: the leaderboard ranks groups by it. Each change must match a new receipt for this group.
+    function bBoxMove(gid) {
+      return nd().diff(od()).affectedKeys().hasOnly(['box', 'boxTx'])
+        && nd().boxTx is string && nd().boxTx.size() > 0 && !exists(bTx(nd().boxTx))
+        && bTxAfter(nd().boxTx).grp == gid && nd().box is int
+        && ((bTxAfter(nd().boxTx).kind == 'deposit' && nd().box == od().get('box', 0) + bTxAfter(nd().boxTx).amt)
+          || (bTxAfter(nd().boxTx).kind == 'withdraw' && nd().box == od().get('box', 0) - bTxAfter(nd().boxTx).amt && nd().box >= 0));
+    }
+    function bGroupOk() {
+      return nd().keys().hasOnly(['name', 'tag', 'owner', 'ownerH', 'roles', 'at', 'box', 'boxTx'])
+        && nd().name is string && nd().name.size() >= 2 && nd().name.size() <= 40
+        && nd().tag is string && nd().tag.size() <= 12
+        && nd().roles is list && nd().roles.size() <= 20;
+    }
+
+    // Staff: the group owner hires (ok=false), the staff member accepts (ok=true) or quits.
+    match /bytes_staff/{sid} {
+      allow read: if signedIn();
+      allow create: if signedIn() && bStaffOk(sid) && nd().ok == false && bGroup(nd().gid).owner == me() && bPro();
+      allow update: if signedIn() && (
+          (bStaffOk(sid) && nd().ok == od().ok && nd().gid == od().gid && nd().uid == od().uid && bGroup(od().gid).owner == me() && bPro())
+          || (od().uid == me() && nd().diff(od()).affectedKeys().hasOnly(['ok'])));
+      allow delete: if signedIn() && (od().uid == me() || bGroup(od().gid).owner == me());
+    }
+    function bStaffOk(sid) {
+      return sid == nd().gid + '_' + nd().uid
+        && nd().keys().hasOnly(['gid', 'gname', 'uid', 'handle', 'role', 'wage', 'per', 'ok', 'paid', 'at'])
+        && nd().role is string && nd().role.size() >= 1 && nd().role.size() <= 30
+        && nd().handle is string && nd().handle.size() <= 20 && nd().gname is string && nd().gname.size() <= 40
+        && nd().ok is bool
+        && nd().wage is int && nd().wage >= 0 && nd().wage <= 100000
+        && nd().per in ['shift', 'hour', 'day', 'week'];
+    }
+
+    match /bytes_pro/{uid} {
+      allow read: if signedIn() && (me() == uid || isOwner());
+      allow create, update: if isOwner() && nd().keys().hasOnly(['until', 'handle', 'at'])
+        && nd().until is int && nd().handle is string && nd().handle.size() <= 20;
+      allow delete: if isOwner();
+    }
+    // ================= end BYTES =================
   }
 }
