@@ -8831,6 +8831,9 @@ function refreshRow(){ if(!currentView||!currentView.startsWith("row:")||$("#ove
 
 /* --- the store, as players see it */
 function openStore(s,tab="rewards",refresh){ const r=rowStores[s]; if(!r){ toast("This storefront is for lease."); return; }
+  if(APPUI_ON&&tab==="manage"&&(IS_ADMIN||rowIsPartner(s))){ const body=panel(`${r.name} · Settings`,"Your store's look, staff, posters, alerts and digital items.",refresh); currentView=`row:${s}:${tab}`;
+    if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Sign in to manage your store."})); return; }
+    body.append(el("button",{class:"btn",type:"button",style:"align-self:flex-start;margin-bottom:6px",text:"‹ Back to the app",onclick:()=>{ closePanel(); }})); return rowManage(body,s); }
   const body=panel(r.name||"Neon Row",r.tagline||"A Neon Row partner store.",refresh); currentView=`row:${s}:${tab}`; if(!refresh&&tab==="rewards") rowVisit(s);
   if(!DB||!myId){ body.append(el("div",{class:"empty",text:"Neon Row stores need you to be signed in so your pickup codes are saved to your account."})); return; }
   const info=[r.addr&&`📍 ${r.addr}`,r.hours&&`🕒 ${r.hours}`].filter(Boolean);
@@ -9026,7 +9029,8 @@ function rowManage(body,s){ const r=rowStores[s];
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Send verification email",onclick:async()=>{ try{ const u=await window.claude.use("user"); await u.sendVerification(); msg.textContent="Sent. Open the link in that email, then tap I've verified."; }catch(e){ msg.textContent="Couldn't send it. Try again in a minute."; } }}),
         el("button",{class:"btn",type:"button",text:"I've verified",onclick:async()=>{ try{ const u=await window.claude.use("user"); myVerified=!!(await u.refresh()); }catch(e){} if(myVerified){ toast("Email verified. Welcome to Neon Row!","#43f0a4"); rowWatch(DB); openStore(s,"manage"); } else msg.textContent="Not verified yet. Open the link in the email first."; }})),msg))); return; }
   body.append(el("div",{class:"sub",text:`Rent paid until ${rowDay(r.until)}. ${IS_ADMIN?"You're managing this store as the owner.":"The outside sign and look are set by the game's owner. The inside, your staff, posters, ads and order alerts are yours to set below."}`}));
-  const tabs=el("div",{class:"tabs"}); [["items","My rewards"],["inside","🏬 Inside & staff"],["ads","🖼 Posters & ads"],["alerts","🔔 Order alerts"],["digital","✨ Digital items"],["insights","📊 Insights"],["payout","Reward a visitor"],["verify","Check a code"],["codes",`Redemptions (${(rowStaff[s]||[]).filter(c=>c.status==="ready").length} waiting)`]].forEach(([k,l])=>tabs.append(el("button",{class:"btn",type:"button","aria-pressed":String(rowTab===k),text:l,onclick:()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }}))); body.append(tabs);
+  const appM=APPUI_ON, setK=["inside","ads","alerts","digital","insights","items"]; if(appM&&!setK.includes(rowTab)&&!(rowEdit&&rowEdit.item)) rowTab="inside";
+  const tabs=appM?el("div",{style:"display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:6px 0 10px"}):el("div",{class:"tabs"}); [["items",appM?"🎁 Full reward editor":"My rewards"],["inside","🏬 Inside & staff"],["ads","🖼 Posters & ads"],["alerts","🔔 Order alerts"],["digital","✨ Digital items"],["insights","📊 Insights"],["payout","Reward a visitor"],["verify","Check a code"],["codes",`Redemptions (${(rowStaff[s]||[]).filter(c=>c.status==="ready").length} waiting)`]].filter(([k])=>!appM||setK.includes(k)).forEach(([k,l])=>tabs.append(el("button",{class:"btn"+(appM&&rowTab===k?" hot":""),type:"button","aria-pressed":String(rowTab===k),style:appM?"min-height:44px;text-align:left":"",text:l,onclick:()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }}))); body.append(tabs);
   if(rowTab==="insights") return rowInsights(body,s);
   if(rowTab==="inside") return rowInsideTab(body,s);
   if(rowTab==="ads") return rowAdsTab(body,s);
@@ -13969,7 +13973,9 @@ const APP_CSS=`
 #appui .apstats::-webkit-scrollbar{display:none}
 #appui .apstat{flex:none;font-size:11px;padding:5px 9px;border:1px solid var(--line);background:var(--panel);white-space:nowrap}
 #appui .apstat b{font-weight:600}
-#appui main{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 14px 20px;user-select:text;-webkit-user-select:text}
+#appui main{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:12px 14px 20px}
+#appui .apchat{user-select:text;-webkit-user-select:text}
+body.appui #overlay{z-index:30}
 #appui nav{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:rgba(11,7,22,.95);padding-bottom:env(safe-area-inset-bottom,0px)}
 #appui nav button{background:none;border:0;color:var(--dim);font:500 10px var(--f-ui);padding:8px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-height:54px;position:relative}
 #appui nav button span{font-size:20px;line-height:1;filter:grayscale(.6) brightness(.8)}
@@ -14018,7 +14024,7 @@ const APP_CSS=`
 #appui .apchip{display:inline-block;font-size:10px;border:1px solid currentColor;padding:1px 6px;margin-left:6px;vertical-align:middle}
 body.appui #game > :not(#appui):not(#overlay):not(#title):not(#toast):not(#invites):not(#deathov):not(canvas){visibility:hidden}
 body.appui .idledock,body.appui .goalwrap{display:none!important}
-body.appui #toast{z-index:16;top:auto!important;bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;width:min(380px,92vw)!important;justify-content:flex-end}
+body.appui #toast{z-index:31;top:auto!important;bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;width:min(380px,92vw)!important;justify-content:flex-end}
 body.appui #invites{z-index:16}
 #btnApp{border-color:var(--cyan);color:var(--cyan)}
 @media (prefers-reduced-motion:reduce){#appui .apcard:active{transform:none}}
@@ -14152,10 +14158,13 @@ function appStore(main){ const mine=appMyStores(); if(!mine.length){ main.append
     main.append(el("h3",{text:`Players online (${peers.length})`})); const c=el("div",{class:"apcards"});
     for(const p of peers){ const at=p.s==="neonrow"; c.append(el("div",{class:"apcard",style:"cursor:default"},el("span",{class:"ic",text:at?"🏪":"👤"}),el("span",{class:"tx"},nameOf(p.by),el("small",{style:at?"color:#43f0a4":"",text:at?"At Neon Row now":"In "+sceneName(p.s)})),el("button",{class:"apbtn hot",type:"button",text:"Send",onclick:()=>{ const v=Math.floor(+appSt.nrcAmt)||0; rowSendNrc(s,p.by,v); }}))); }
     if(!peers.length) c.append(el("div",{class:"apsub",text:"No other players are online. Ask your visitor to open NEON HARVEST and sign in."})); main.append(c); }
-  main.append(el("h3",{text:"More tools"}),appCard("🛠","Store settings","Inside & staff, posters & ads, order alerts, digital items and insights",()=>{ rowTab="inside"; rowEdit=null; openStore(s,"manage"); })); }
+  main.append(el("h3",{text:"Store settings"})); const st=el("div",{class:"apcards"});
+  for(const [k,ic,t,d] of [["inside","🏬","Inside & staff","Layout, counter staff and greeter"],["ads","🖼","Posters & ads","Posters inside and your screen ad"],["alerts","🔔","Order alerts","Get an email when someone redeems"],["digital","✨","Digital items","Rewards that land straight in a Stash"],["insights","📊","Insights","Visits, redemptions and busy hours"]]) st.append(appCard(ic,t,d,()=>{ rowTab=k; rowEdit=null; openStore(s,"manage"); }));
+  main.append(st); }
 
 /* ---- render + live refresh ---- */
-function appRender(force){ if(!APPUI_ON||!appEl) return; const st=$("#apstats"); st.replaceChildren(...appStatsHtml()); $("#apwhere").textContent=`${myName||"Runner"} · ${sceneName(me.scene)}`; appNav();
+let appTouchT=0; addEventListener("pointerdown",e=>{ if(e.target&&e.target.closest&&e.target.closest("#appui")) appTouchT=Date.now(); },true); addEventListener("touchstart",e=>{ if(e.target&&e.target.closest&&e.target.closest("#appui")) appTouchT=Date.now(); },{capture:true,passive:true});
+function appRender(force){ if(!APPUI_ON||!appEl) return; if(!force&&Date.now()-appTouchT<1500) return; const st=$("#apstats"); st.replaceChildren(...appStatsHtml()); $("#apwhere").textContent=`${myName||"Runner"} · ${sceneName(me.scene)}`; appNav();
   const main=$("#apmain");
   if(appTab==="here"){ let key=me.scene; try{ key+="|"+(hotspots(me.scene)||[]).map(h=>h.label).join("|"); }catch(e){} if(!force&&key===appHereKey) return; appHereKey=key; }
   else if(appTab==="chat"){ if(!force&&chatHist.length===appChatN) return; appChatN=chatHist.length; }
