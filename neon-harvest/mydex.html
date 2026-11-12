@@ -263,7 +263,13 @@ details summary{cursor:pointer;font:13px var(--mono);color:var(--dim);padding:8p
 .sh h2{font:700 20px var(--display);overflow-wrap:anywhere;min-width:0}
 .x{width:40px;height:40px;font:20px var(--mono);color:var(--dim);flex:none}
 label.f{display:grid;gap:4px}
-input[type=text],input[type=number],textarea{width:100%;background:var(--ink);border:1px solid var(--line);padding:10px;font-size:16px}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--ink);border:1px solid var(--line);padding:10px;font-size:16px}
+select{color:inherit;min-height:44px}
+.fgl{display:grid}
+.fg{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.fg strong{font:700 15px var(--display);overflow-wrap:anywhere}
+.tag{font:14px var(--mono);color:var(--ice);overflow-wrap:anywhere}
+.rec{font:700 28px var(--display);line-height:1;white-space:nowrap}
 textarea{resize:vertical;min-height:68px}
 .err{color:var(--stop);font-size:14px}
 .opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:12px;background:var(--panel);border:1px solid var(--line);text-align:left;width:100%;min-height:56px}
@@ -366,7 +372,7 @@ const MOOD={g:{c:"var(--go)",t:"Approachable",d:"Happy to meet and swap badges."
 const CAP=200, DISPLAY_MAX=6, MIN_AGE=21;
 
 /* ---------- Badge art ---------- */
-const G={bolt:"M53 30 40 53H50L47 70 60 46H50Z",eye:"M30 50Q50 32 70 50 50 68 30 50ZM44 50a6 6 0 1 0 12 0a6 6 0 1 0-12 0",node:"M50 42v10M44 62l4-8M56 62l-4-8M44 36a6 6 0 1 0 12 0a6 6 0 1 0-12 0M30 66a6 6 0 1 0 12 0a6 6 0 1 0-12 0M58 66a6 6 0 1 0 12 0a6 6 0 1 0-12 0",pin:"M50 70C38 56 34 50 34 44a16 16 0 0 1 32 0c0 6-4 12-16 26ZM44 44a6 6 0 1 0 12 0a6 6 0 1 0-12 0",swap:"M32 42H66L58 34M68 58H34L42 66",star:"M50 30l6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2Z",chip:"M38 38h24v24H38ZM45 45h10v10H45ZM44 38v-7M56 38v-7M44 62v7M56 62v7M38 44h-7M38 56h-7M62 44h7M62 56h7",signal:"M32 68v-6M44 68V54M56 68V42M68 68V30",key:"M32 44a10 10 0 1 0 20 0a10 10 0 1 0-20 0M49 51 67 69M60 62l-5 5M67 69l-4 4",flame:"M50 30c4 10 16 16 16 28a16 14 0 0 1-32 0c0-8 6-10 8-18 3 4 5 6 6 8 2-6 3-12 2-18Z",shield:"M50 30l18 6v14c0 10-8 17-18 20-10-3-18-10-18-20V36ZM42 50l6 6 11-12",wave:"M30 44q5-8 10 0t10 0 10 0 10 0M30 58q5-8 10 0t10 0 10 0 10 0",cube:"M50 30l17 10v20L50 70 33 60V40ZM33 40l17 10 17-10M50 50v20",heart:"M50 68C36 58 31 50 31 43a10 10 0 0 1 19-4 10 10 0 0 1 19 4c0 7-5 15-19 25Z",moon:"M60 32a20 20 0 1 0 8 28 16 16 0 0 1-8-28Z",orbit:"M30 50a20 8 0 1 0 40 0a20 8 0 1 0-40 0M44 50a6 6 0 1 0 12 0a6 6 0 1 0-12 0",crown:"M32 64V40l10 10 8-16 8 16 10-10v24Z",stamp:"M32 32h18l18 18-18 18-18-18Z",clock:"M30 50a20 20 0 1 0 40 0a20 20 0 1 0-40 0M50 38v12l8 6",lock:"M40 48v-6a10 10 0 0 1 20 0v6M36 48h28v20H36Z"};
+const G={vs:"M32 32 66 66M66 32 32 66M28 60l12 12M60 72l12-12",bolt:"M53 30 40 53H50L47 70 60 46H50Z",eye:"M30 50Q50 32 70 50 50 68 30 50ZM44 50a6 6 0 1 0 12 0a6 6 0 1 0-12 0",node:"M50 42v10M44 62l4-8M56 62l-4-8M44 36a6 6 0 1 0 12 0a6 6 0 1 0-12 0M30 66a6 6 0 1 0 12 0a6 6 0 1 0-12 0M58 66a6 6 0 1 0 12 0a6 6 0 1 0-12 0",pin:"M50 70C38 56 34 50 34 44a16 16 0 0 1 32 0c0 6-4 12-16 26ZM44 44a6 6 0 1 0 12 0a6 6 0 1 0-12 0",swap:"M32 42H66L58 34M68 58H34L42 66",star:"M50 30l6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2Z",chip:"M38 38h24v24H38ZM45 45h10v10H45ZM44 38v-7M56 38v-7M44 62v7M56 62v7M38 44h-7M38 56h-7M62 44h7M62 56h7",signal:"M32 68v-6M44 68V54M56 68V42M68 68V30",key:"M32 44a10 10 0 1 0 20 0a10 10 0 1 0-20 0M49 51 67 69M60 62l-5 5M67 69l-4 4",flame:"M50 30c4 10 16 16 16 28a16 14 0 0 1-32 0c0-8 6-10 8-18 3 4 5 6 6 8 2-6 3-12 2-18Z",shield:"M50 30l18 6v14c0 10-8 17-18 20-10-3-18-10-18-20V36ZM42 50l6 6 11-12",wave:"M30 44q5-8 10 0t10 0 10 0 10 0M30 58q5-8 10 0t10 0 10 0 10 0",cube:"M50 30l17 10v20L50 70 33 60V40ZM33 40l17 10 17-10M50 50v20",heart:"M50 68C36 58 31 50 31 43a10 10 0 0 1 19-4 10 10 0 0 1 19 4c0 7-5 15-19 25Z",moon:"M60 32a20 20 0 1 0 8 28 16 16 0 0 1-8-28Z",orbit:"M30 50a20 8 0 1 0 40 0a20 8 0 1 0-40 0M44 50a6 6 0 1 0 12 0a6 6 0 1 0-12 0",crown:"M32 64V40l10 10 8-16 8 16 10-10v24Z",stamp:"M32 32h18l18 18-18 18-18-18Z",clock:"M30 50a20 20 0 1 0 40 0a20 20 0 1 0-40 0M50 38v12l8 6",lock:"M40 48v-6a10 10 0 0 1 20 0v6M36 48h28v20H36Z"};
 const poly=(n,rot=-90,r=45)=>Array.from({length:n},(_,i)=>{const a=(rot+i*360/n)*Math.PI/180;return (50+r*Math.cos(a)).toFixed(1)+","+(50+r*Math.sin(a)).toFixed(1)}).join(" ");
 const gear=(n)=>Array.from({length:n*2},(_,i)=>{const a=(-90+i*180/n)*Math.PI/180,r=i%2?39:46;return (50+r*Math.cos(a)).toFixed(1)+","+(50+r*Math.sin(a)).toFixed(1)}).join(" ");
 const SHAPES=[poly(6),poly(8,-67.5),poly(4),"50,4 92,20 92,56 50,96 8,56 8,20",poly(32),"20,6 80,6 94,20 94,80 80,94 20,94 6,80 6,20",gear(8),poly(6,0)];
@@ -527,6 +533,12 @@ function subscribe(){
  c("mdReq").where("to","==",myId).onSnapshot(s=>{const nw=s.docs.map(x=>({id:x.id,...x.data()})).filter(x=>x.status==="pending"&&!S.blocked.includes(x.from));if(ready&&nw.length>incoming.length){const r=nw[nw.length-1];toast(`${r.fromName} sent you a badge request.`);NH.toast("MyDex: "+r.fromName+" sent you a badge request.")}incoming=nw;updInbox()},badSub);
  c("mdReq").where("from","==",myId).onSnapshot(s=>{outgoing=s.docs.map(x=>({id:x.id,...x.data()}));outgoing.forEach(onOutgoing);refresh()},badSub);
  d("mdCards/"+myId).onSnapshot(s=>{if(!s.exists||dirty||!lastCard||s.metadata.hasPendingWrites)return;if(applyMod(s.data())){lastCard="";refresh();save()}},()=>{});
+ d("hfcCards/"+myId).onSnapshot(s=>{fc=s.exists?s.data():null;fcBad=false;refresh()},fcErr);
+ c("hfcFights").where("p","array-contains",myId).onSnapshot(s=>{const nw=s.docs.map(x=>({id:x.id,...x.data()})).filter(f=>!S.blocked.includes(fcOpp(f).id));
+  if(ready&&!(s.metadata&&s.metadata.fromCache))nw.forEach(f=>{const old=fights.find(o=>o.id===f.id),o=fcOpp(f);
+   if(!old&&f.status==="pending"&&f.b===myId){toast(`${o.name} wants to fight.`);NH.toast("MyDex: "+o.name+" sent you a fight request.")}
+   else if(old&&old.status!==f.status){if(f.status==="accepted"&&f.a===myId)toast(`${o.name} accepted your fight.`);else if(f.status==="declined"&&f.a===myId)toast(`${o.name} declined your fight.`);else if(f.status==="disputed")toast(`You and ${o.name} picked different winners.`);else if(f.status==="done"&&old.status!=="done"&&(f.a===myId?f.cb:f.ca)===f.winner&&(f.a===myId?f.ca:f.cb)===f.winner&&old[f.a===myId?"ca":"cb"]===f.winner)toast(`${o.name} confirmed the result.`)}});
+  fights=nw.sort((a,b)=>(b.at2||b.at||0)-(a.at2||a.at||0));refresh()},fcErr);
  d("mdConfig/main").onSnapshot(s=>{const v=s.exists?s.data():{};cfg={...DEF_CFG,...v,forge:{...DEF_CFG.forge,...(v.forge||{}),on:{...DEF_CFG.forge.on,...((v.forge||{}).on||{})}}};banner()},badSub);
  d("mdBans/"+myId).onSnapshot(s=>{ban=s.exists?s.data():null;showBan()},()=>{});
  c("mdSpots").limit(300).onSnapshot(s=>{spots=s.docs.map(x=>({id:x.id,...x.data()}));refresh()},badSub);
@@ -637,7 +649,7 @@ setInterval(()=>{if(ready&&S.locOn&&tab==="radar")getPos().then(()=>{pushPres();
 addEventListener("pagehide",()=>{if(ready&&dirty)persist();if(ready&&S.visible)dropPres()});
 
 /* ---------- Views ---------- */
-const NAV=[["card","Card","chip"],["radar","Radar","signal"],["vault","Vault","cube"],["goals","Goals","star"],["spots","Spots","pin"]];
+const NAV=[["card","Card","chip"],["fight","Fight","vs"],["radar","Radar","signal"],["vault","Vault","cube"],["goals","Goals","star"],["spots","Spots","pin"]];
 function renderNav(){const list=IS_ADMIN?[...NAV,["admin","Admin","shield"]]:NAV;const n=$("#nav");n.style.gridTemplateColumns=`repeat(${list.length},1fr)`;n.innerHTML=list.map(([k,l,g])=>`<button data-a="tab" data-v="${esc(k)}" ${tab===k?'aria-current="page"':""}><svg class="ic" viewBox="24 24 52 52"><path d="${G[g]}"/></svg>${l}</button>`).join("")}
 function sigil(name,hue){let h=hash(name||"player"),r="";for(let y=0;y<7;y++)for(let x=0;x<4;x++){h=Math.imul(h^(x*31+y),2654435761)>>>0;if(h%100<52){r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`;if(x<3)r+=`<rect x="${6-x}" y="${y}" width="1" height="1"/>`}}return `<svg viewBox="0 0 7 7" fill="hsl(${hue??(hash(name)%360)} 100% 72%)" aria-hidden="true">${r}</svg>`}
 const dexNo=()=>String(hash(myId)%9000+1000);
@@ -660,7 +672,7 @@ function vRadar(){
  <div class="stack">${near.map(p=>playerRow(p)).join("")||`<section class="panel"><p class="mt">Nobody nearby is visible right now. Scan again in a bit, and make sure you're visible too.</p></section>`}</div>${onlineSection()}`}
 function onlineSection(){const l=onlineGame();return l.length?`<div class="lab">In NEON HARVEST now</div><p class="mt">Swap or send badges with them. Encounters only count in real life.</p><div class="stack">${l.map(p=>playerRow(p)).join("")}</div>`:""}
 function vaultList(){let a=design?["own",...allBadges()]:[...allBadges()];
- const f={earned:i=>i!=="own"&&i.kind==="goal",got:i=>i!=="own"&&i.from!=="Earned"&&i.kind!=="starter"&&i.kind!=="item"&&i.kind!=="pet",made:i=>i==="own"||i.kind==="custom",forged:i=>i!=="own"&&(i.kind==="item"||i.kind==="pet")}[vaultFilter];
+ const f={earned:i=>i!=="own"&&i.kind==="goal",got:i=>i!=="own"&&i.from!=="Earned"&&i.kind!=="starter"&&i.kind!=="item"&&i.kind!=="pet"&&!(i.kind==="fight"&&i.by===myId),made:i=>i==="own"||i.kind==="custom",forged:i=>i!=="own"&&(i.kind==="item"||i.kind==="pet"||(i.kind==="fight"&&i.by===myId))}[vaultFilter];
  return f?a.filter(f):a}
 function vVault(){const a=vaultList();vaultIdx=Math.min(vaultIdx,Math.max(0,a.length-1));const f=[["all","All"],["earned","Earned"],["forged","Forged"],["got","Received"],["made","Player made"]];
  return `<div class="row between"><h2 style="font:700 22px var(--display)">Badge Vault</h2><button class="btn hot" data-a="forge" data-v="items">Badge Forge</button></div>
@@ -694,7 +706,7 @@ function vSpots(){const away=s=>pos&&Number.isFinite(s.lat)?distTxt(distM(pos.la
  ${sortedBy(spots).map(s=>`<button class="pl" data-a="spot" data-v="${esc(s.id)}"><span style="width:38px;height:38px;display:block;color:var(--ice)"><svg class="ic" viewBox="24 24 52 52"><path d="${G.pin}"/></svg></span><span style="min-width:0"><strong>${esc(s.name)}</strong><br><span class="mt">${esc(s.vibe)} · by ${esc(s.byName)}</span></span><span class="mt">${away(s)}</span></button>`).join("")||(venues.length?"":`<section class="panel"><p>No spots yet. Be the first to add one.</p></section>`)}</div>
  ${staffVenues().length?`<button class="btn alt" data-a="staffQueue">Venue approvals</button>`:""}`}
 const staffVenues=()=>venues.filter(v=>(v.staff||[]).includes(myId));
-const V_={card:vCard,radar:vRadar,vault:vVault,goals:vGoals,spots:vSpots,admin:()=>`<div id="admin"></div>`};
+const V_={card:vCard,fight:vFight,radar:vRadar,vault:vVault,goals:vGoals,spots:vSpots,admin:()=>`<div id="admin"></div>`};
 function render(turn){const v=$("#view"),st=v.scrollTop;v.innerHTML=V_[tab]();renderNav();if(tab==="vault"){renderVinfo();centerCar(false)}if(tab==="admin")drawAdmin();watch();if(turn){v.scrollTop=0;v.classList.remove("turn");void v.offsetWidth;v.classList.add("turn")}else v.scrollTop=st;updChips()}
 function updChips(){const x=$("#locchip");if(!x)return;x.classList.toggle("off",!pos);x.lastChild.textContent=pos?"GPS LIVE":"LOC OFF"}
 const pendingOut=()=>outgoing.filter(r=>r.status==="pending");
@@ -722,7 +734,7 @@ async function onOutgoing(r){if(r.status==="pending"||S.seen.includes(r.id)||!re
  if(r.status==="ok"){if(r.type==="swap")S.m.trades++;else{if(r.own)S.m.sentOwn++;else S.m.gifts++}if(r.type==="ex")S.m.recv++;bump("exch");let enc=false;if(r.near&&(r.type==="ex"||r.type==="send")){try{enc=(await d("mdEnc/"+[myId,r.to].sort().join("_")).get()).exists}catch(_){}}queue({title:enc?"Encounter logged":"Approved",name:r.toName,sub:r.type==="swap"?"Swap complete":"Badge delivered",badges:[r.giveDef,r.wantDef].filter(Boolean)})}
  else toast(r.toName+" declined. Nothing changed hands.");
  save();d("mdReq/"+r.id).delete().catch(()=>{})}
-function reqCard(r){const lines={ex:"wants to exchange badges with you",send:"is giving you their badge",gift:"is giving you a badge",swap:"wants to swap with you"}[r.type];const a=r.giveDef,w=r.wantDef;
+function reqCard(r){const lines=r.fc?"is sending you their fight card badge from your match":{ex:"wants to exchange badges with you",send:"is giving you their badge",gift:"is giving you a badge",swap:"wants to swap with you"}[r.type];const a=r.giveDef,w=r.wantDef;
  return `<section class="panel stack"><p><strong>${esc(r.fromName)}</strong> ${lines}.</p><div class="row" style="justify-content:center;gap:18px">${a?`<div style="width:92px;height:92px">${badgeSVG(a)}</div>`:""}${w?`<div class="mt">for</div><div style="width:92px;height:92px">${badgeSVG(w)}</div>`:r.type==="ex"?`<div class="mt">for your badge</div>`:""}</div><p class="mt" style="text-align:center">You get ${esc(a&&a.name)}.${w?` You give ${esc(w.name)}.`:""}${r.near?" Counts as an encounter.":""}</p><div class="btns"><button class="btn alt" data-a="reqNo" data-v="${esc(r.id)}">Decline</button><button class="btn" data-a="reqOk" data-v="${esc(r.id)}">Approve</button></div></section>`}
 async function approve(id){const r=incoming.find(x=>x.id===id);if(!r)return;if(r.type==="ex"&&!design){needDesign();return}const at=Date.now();let b;
  try{if(r.near)await getPos().catch(()=>{});let myCopy=null;if(r.type==="ex"){const pre=DB.batch();myCopy=mintOps(pre);if(!heldCopy()||heldCopy().u!==myCopy)await pre.commit()}b=DB.batch();b.update(d("mdBadges/"+r.give),{owner:myId,from:r.fromName,at,via:r.id});let mine=null;
@@ -753,6 +765,147 @@ async function forgeNow(cat,i){const e=NH.forgeList()[cat][i],F=cfg.forge;if(!e|
  sheet(`<div class="wait"><div class="spin"></div><h2 style="font:700 19px var(--display)">Forging</h2></div>`);
  try{await d("mdBadges/"+id).set(badgeDoc(e.kind==="pet"?"pet":"item",df,"Badge Forge"));NH.forgePay(e,fee,F.consume);if(e.kind!=="item")S.petF=[...(S.petF||[]),e.id];bump("forge");closeSheet();queue({title:"Badge forged",name:df.name,sub:"It's in your vault now.",badges:[df]})}
  catch(err){bad(err);closeSheet();toast("The Forge couldn't make that. Nothing was used up.")}}
+
+/* ---------- Harvest Fight Card ---------- */
+const FC_PLATS=[["pc","PC"],["xbox","Xbox"],["nintendo","Nintendo"],["playstation","PlayStation"]];
+const FC_GAMES=[["t8","Tekken 8"],["sf6","Street Fighter 6"],["mk1","Mortal Kombat 1"],["ggst","Guilty Gear -Strive-"],["dbfz","Dragon Ball FighterZ"],["ssbu","Super Smash Bros. Ultimate"],["gbvsr","Granblue Fantasy Versus: Rising"],["cotw","Fatal Fury: City of the Wolves"],["2xko","2XKO"],["mvc","Marvel vs. Capcom Fighting Collection"],["uni2","Under Night In-Birth II"],["vf5","Virtua Fighter 5 R.E.V.O."],["other","Other game"]];
+const FC_MAX=12;
+let fcBad=false;const fcErr=e=>{bad(e);if(e&&e.code==="permission-denied"){fcBad=true;refresh()}};
+let fc=null, fights=[], fcList=null, fcCur=null, fcEdit=null, fcQ={q:"",g:"",p:""}, fcSeq=0;
+const fcGame=g=>g&&g.g==="other"?String(g.n||"Other game"):((FC_GAMES.find(x=>x[0]===(g&&g.g))||[0,"Game"])[1]);
+const fcPlat=id=>(FC_PLATS.find(x=>x[0]===id)||[0,""])[1];
+const fcOpp=f=>f.a===myId?{id:f.b,name:f.bName}:{id:f.a,name:f.aName};
+const fcSaved=()=>Array.isArray(S.fcSaved)?S.fcSaved:[];
+const fcIsSaved=id=>fcSaved().some(x=>x.id===id);
+const fcDef=()=>({id:"fc_"+myId,name:(myName()+" Fight Card").slice(0,36),cat:"Fight card",sh:hash(myId+"fc")%8,g:"vs",h:hash(myId+"fch")%360,p:hash(myId+"fcp")%10,s:[0,1,2,3,5,9][hash(myId+"fcs")%6],r:2});
+const fcRec=list=>{let w=0,l=0;list.forEach(f=>{if(f.winner===myId)w++;else if(f.winner)l++});return {w,l}};
+const fcDone=()=>fights.filter(f=>f.status==="done");
+const fcActive=id=>fights.find(f=>fcOpp(f).id===id&&["pending","accepted","disputed"].includes(f.status));
+function fcCardHTML(p,rec,mine){const games=Array.isArray(p.games)?p.games:[],plats=Array.isArray(p.plats)?p.plats:[];
+ return `<article class="card"><div class="id" style="grid-template-columns:64px minmax(0,1fr)"><div class="sig" style="width:64px;height:64px;padding:6px">${sigil(p.name)}</div><div style="min-width:0"><div class="lab">Harvest Fight Card</div><div class="namerow"><h${mine?1:2} class="name">${esc(p.name)}</h${mine?1:2}></div><div class="row" style="gap:14px;margin-top:2px"><span class="rec">${rec?`${rec.w}-${rec.l}`:"–"}</span><span class="mt">${rec?"wins - losses":"Record loading"}<br>${p.open?'<span style="color:var(--go)">Taking fight requests</span>':"Not taking requests"}</span></div></div></div>
+ <div class="lab" style="margin-top:12px">Plays on</div><div class="chips" style="margin-top:6px">${plats.map(x=>`<span class="chip">${esc(fcPlat(x))}</span>`).join("")||'<span class="mt">No platforms yet</span>'}</div>
+ <div class="lab" style="margin-top:12px">Games and usernames</div><div class="fgl">${games.map(g=>`<div class="fg"><strong>${esc(fcGame(g))}</strong><span class="mt">${esc(fcPlat(g.plat))}</span><span class="tag">${esc(g.tag)}</span><span class="mt">${g.main?"Main: "+esc(g.main):""}</span></div>`).join("")||'<p class="mt" style="padding-top:8px">No games yet</p>'}</div></article>`}
+function fightRow(f){const o=fcOpp(f),me=f.a===myId,mine=me?f.ca:f.cb,theirs=me?f.cb:f.ca,lab=x=>x===myId?"you":x?esc(o.name):"";
+ const head=`<div><strong>${esc(o.name)}</strong> <span class="mt">· ${esc(f.game)}${f.plat?" · "+esc(fcPlat(f.plat)):""}</span></div>${f.note?`<p class="mt">"${esc(f.note)}"</p>`:""}`;
+ if(f.status==="pending"&&!me)return `<section class="panel stack">${head}<p>${esc(o.name)} wants to fight you.${f.aTag?` Their tag: <span class="tag">${esc(f.aTag)}</span>`:""}</p><div class="btns"><button class="btn alt" data-a="fcAnswer" data-v="${esc(f.id)}|declined">Decline</button><button class="btn" data-a="fcAnswer" data-v="${esc(f.id)}|accepted">Accept fight</button></div></section>`;
+ if(f.status==="pending")return `<section class="panel stack">${head}<p class="mt">Waiting for ${esc(o.name)} to accept.</p><button class="btn alt" data-a="fcCancel" data-v="${esc(f.id)}">Cancel request</button></section>`;
+ if(f.status==="accepted"||f.status==="disputed"){const tag=me?f.bTag:f.aTag;
+  return `<section class="panel stack">${head}${tag?`<p>Find them as <span class="tag">${esc(tag)}</span></p>`:""}<div class="lab">After your matches, who won?</div>
+  ${f.status==="disputed"?`<p class="err" role="status">You picked ${lab(mine)}, ${esc(o.name)} picked ${lab(theirs)}. Talk it out, then change your answer so you both agree.</p>`:mine?`<p class="mt">You said ${lab(mine)} won. Waiting for ${esc(o.name)} to agree.</p>`:theirs?`<p class="mt">${esc(o.name)} already answered. Pick the winner to confirm.</p>`:""}
+  <div class="btns"><button class="btn ${mine===myId?"hot":"alt"}" data-a="fcClaim" data-v="${esc(f.id)}|me" aria-pressed="${mine===myId}">I won</button><button class="btn ${mine===o.id?"hot":"alt"}" data-a="fcClaim" data-v="${esc(f.id)}|them" aria-pressed="${mine===o.id}">${esc(o.name)} won</button>${!f.ca&&!f.cb?`<button class="btn bad w" data-a="fcCancel" data-v="${esc(f.id)}">Call it off</button>`:""}</div></section>`}
+ if(f.status==="done"){const won=f.winner===myId,sent=(S.fcSent||[]).includes(f.id);
+  return `<div class="pl" style="cursor:default"><span class="rec" style="font-size:20px;color:${won?"var(--go)":"var(--stop)"}">${won?"W":"L"}</span><span style="min-width:0"><strong>${esc(o.name)}</strong><br><span class="mt">${esc(f.game)}</span></span>${sent?'<span class="mt">Badge sent</span>':`<button class="btn alt" data-a="fcBadge" data-v="${esc(f.id)}" style="min-height:44px">Send badge</button>`}</div>`}
+ return `<div class="pl" style="cursor:default"><span class="mt">${f.status==="declined"?"Declined":"Called off"}</span><span style="min-width:0"><strong>${esc(o.name)}</strong><br><span class="mt">${esc(f.game)}</span></span><button class="btn alt" data-a="fcClear" data-v="${esc(f.id)}" style="min-height:44px">Clear</button></div>`}
+function vFight(){
+ if(fcBad)return `<section class="panel stack"><div class="lab">Harvest Fight Card</div><p>${IS_ADMIN?"The Fight tab can't load yet. Publish the updated firestore.rules in the Firebase console.":"The Fight tab is being set up. Check back soon."}</p></section>`;
+ if(!fc)return `<section class="panel stack"><div class="lab">Harvest Fight Card</div><h1 style="font:700 24px var(--display)">Make your fight card</h1><p>List the platforms you play on and every fighting game you play, with the username you use in each one. Other players can save your card, find you, and challenge you.</p><button class="btn hot" data-a="fcEditor">Make my fight card</button><button class="btn alt" data-a="fcFind">Find players</button></section>`;
+ const inc=fights.filter(f=>f.status==="pending"&&f.b===myId),out=fights.filter(f=>f.status==="pending"&&f.a===myId),live=fights.filter(f=>f.status==="accepted"||f.status==="disputed"),done=fcDone().slice(0,15),old=fights.filter(f=>f.status==="declined"||f.status==="canceled").slice(0,5),saved=fcSaved();
+ const sec=(t,body)=>body?`<div class="lab">${t}</div><div class="stack">${body}</div>`:"";
+ return `${fcCardHTML(fc,fcRec(fcDone()),true)}<div class="btns"><button class="btn hot w" data-a="fcFind">Find players</button><button class="btn" data-a="fcEditor">Edit fight card</button><button class="btn alt" data-a="fcForge">Forge fight badge</button></div>
+ ${sec("Fight requests for you",inc.map(fightRow).join(""))}${sec("Fights in progress",live.map(fightRow).join(""))}${sec("Waiting on them",out.map(fightRow).join(""))}
+ <div class="row between"><div class="lab">My fighters</div><div class="mt">${saved.length}</div></div><div class="stack">${saved.map(p=>`<button class="pl" data-a="fcOpen" data-v="${esc(p.id)}"><span style="width:38px;height:38px;display:block">${sigil(p.name)}</span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${esc(p.sub||"")}</span></span><span class="mt">${fcActive(p.id)?"Fight on":"View"}</span></button>`).join("")||`<section class="panel"><p class="mt">Save other players' fight cards here so you can always find them. Tap Find players to start.</p></section>`}</div>
+ ${sec("Results",done.map(fightRow).join(""))}${sec("Closed",old.map(fightRow).join(""))}`}
+
+/* Editor */
+function fcEditor(){const src=fc||{plats:[],games:[],open:true};fcEdit={plats:[...(src.plats||[])],games:(src.games||[]).map(g=>({...g})),open:src.open!==false,d:{g:"",n:"",plat:"",tag:"",main:""},err:""};drawFcEditor()}
+function fcReadDraft(){if(!fcEdit)return;const v=id=>{const e=$("#"+id);return e?e.value:undefined};const d=fcEdit.d;["g","n","plat","tag","main"].forEach(k=>{const x=v("fe_"+k);if(x!==undefined)d[k]=x});const o=$("#fe_open");if(o)fcEdit.open=o.checked}
+function drawFcEditor(){const E=fcEdit,d=E.d,platOpts=FC_PLATS.map(([k,l])=>`<option value="${k}" ${d.plat===k?"selected":""}>${l}</option>`).join("");
+ sheet(`${sh(fc?"Edit fight card":"Make your fight card")}
+ <div class="lab">Platforms you play on</div><div class="chips">${FC_PLATS.map(([k,l])=>`<button type="button" data-a="fcPlat" data-v="${k}" aria-pressed="${E.plats.includes(k)}">${l}</button>`).join("")}</div>
+ <div class="lab" style="margin-top:6px">Your games (${E.games.length}/${FC_MAX})</div><div class="fgl">${E.games.map((g,i)=>`<div class="fg"><strong>${esc(fcGame(g))}</strong><span class="mt">${esc(fcPlat(g.plat))}</span><span class="tag">${esc(g.tag)}</span><span class="row" style="justify-content:flex-end;gap:4px"><button type="button" class="btn alt" style="min-height:36px;padding:4px 10px" data-a="fcEditGame" data-v="${i}" aria-label="Edit ${esc(fcGame(g))}">Edit</button><button type="button" class="btn bad" style="min-height:36px;padding:4px 10px" data-a="fcDropGame" data-v="${i}" aria-label="Remove ${esc(fcGame(g))}">Remove</button></span>${g.main?`<span class="mt" style="grid-column:1/-1">Main: ${esc(g.main)}</span>`:""}</div>`).join("")||'<p class="mt">No games yet. Add your first one below.</p>'}</div>
+ ${E.games.length<FC_MAX?`<section class="panel stack"><div class="lab">Add a game</div>
+ <label class="f"><span class="lab">Game</span><select id="fe_g"><option value="">Pick a game</option>${FC_GAMES.map(([k,l])=>`<option value="${k}" ${d.g===k?"selected":""}>${esc(l)}</option>`).join("")}</select></label>
+ ${d.g==="other"?`<label class="f"><span class="lab">Game name</span><input type="text" id="fe_n" maxlength="30" value="${esc(d.n)}"></label>`:""}
+ <label class="f"><span class="lab">Platform for this game</span><select id="fe_plat"><option value="">Pick a platform</option>${platOpts}</select></label>
+ <label class="f"><span class="lab">Your username in this game</span><input type="text" id="fe_tag" maxlength="24" autocomplete="off" value="${esc(d.tag)}"></label>
+ <label class="f"><span class="lab">Main character (optional)</span><input type="text" id="fe_main" maxlength="24" autocomplete="off" value="${esc(d.main)}"></label>
+ <button type="button" class="btn alt" data-a="fcAddGame">Add game</button></section>`:`<p class="mt">That's the most games a card can hold.</p>`}
+ <label class="row"><input type="checkbox" id="fe_open" style="width:22px;height:22px" ${E.open?"checked":""}><span>Let other players send me fight requests</span></label>
+ <div class="err" id="fe_err" role="alert">${esc(E.err)}</div><button type="button" class="btn hot" data-a="fcSave">Save fight card</button>`,true)}
+function fcAddGame(){fcReadDraft();const E=fcEdit,d=E.d;let err="";const tag=d.tag.trim(),n=d.n.trim(),main=d.main.trim();
+ if(!d.g)err="Pick a game.";else if(d.g==="other"&&n.length<2)err="Type the game's name.";else if(!d.plat)err="Pick the platform you play it on.";else if(!tag)err="Add your username for this game.";
+ else if(E.games.some(g=>g.g===d.g&&g.plat===d.plat&&(d.g!=="other"||String(g.n).toLowerCase()===n.toLowerCase())))err="That game and platform is already on your card.";
+ else if(E.games.length>=FC_MAX)err="That's the most games a card can hold.";
+ if(err){E.err=err;drawFcEditor();return}
+ E.games.push({g:d.g,...(d.g==="other"?{n:n.slice(0,30)}:{}),plat:d.plat,tag:tag.slice(0,24),main:main.slice(0,24)});if(!E.plats.includes(d.plat))E.plats.push(d.plat);E.d={g:"",n:"",plat:"",tag:"",main:""};E.err="";drawFcEditor()}
+async function fcSave(){fcReadDraft();const E=fcEdit;if(!E)return;if(E.d.g||E.d.tag.trim()){E.err="Finish adding that game with Add game, or clear it first.";drawFcEditor();return}
+ if(!E.games.length){E.err="Add at least one game.";drawFcEditor();return}
+ const doc={name:myName().slice(0,18),plats:FC_PLATS.map(x=>x[0]).filter(k=>E.plats.includes(k)),games:E.games.map(g=>({g:g.g,...(g.g==="other"?{n:String(g.n).slice(0,30)}:{}),plat:g.plat,tag:String(g.tag).slice(0,24),main:String(g.main||"").slice(0,24)})),gids:[...new Set(E.games.map(g=>g.g))],open:!!E.open,at:Date.now()};
+ const b=document.querySelector('[data-a="fcSave"]');if(b){b.disabled=true;b.textContent="Saving…"}
+ try{await d("hfcCards/"+myId).set(doc);fc=doc;fcList=null;fcEdit=null;closeSheet();bump("fcard");render();toast("Fight card saved.")}
+ catch(e){bad(e);E.err="Couldn't save. Check your connection and try again.";drawFcEditor()}}
+
+/* Find players */
+async function fcFind(force){sheet(`${sh("Find players")}<div class="wait"><div class="spin"></div></div>`);const r=++fcSeq;
+ try{if(force||!fcList||Date.now()-fcList.t>60000){const s=await c("hfcCards").orderBy("at","desc").limit(300).get();fcList={t:Date.now(),rows:s.docs.map(x=>({id:x.id,...x.data()}))}}}
+ catch(e){bad(e);if(r===fcSeq)sheet(`${sh("Find players")}<p>Couldn't load players right now. Try again in a moment.</p><button class="btn" data-a="fcFind" data-v="1">Try again</button>`);return}
+ if(r===fcSeq)drawFind()}
+function fcMatches(){const q=fcQ.q.trim().toLowerCase();return (fcList?fcList.rows:[]).filter(p=>p.id!==myId&&!S.blocked.includes(p.id)
+ &&(!fcQ.g||(p.gids||[]).includes(fcQ.g))&&(!fcQ.p||(p.plats||[]).includes(fcQ.p))
+ &&(!q||String(p.name).toLowerCase().includes(q)||(p.games||[]).some(g=>String(g.tag).toLowerCase().includes(q))))}
+function fcSub(p){const g=(p.games||[]).map(fcGame);return g.slice(0,2).join(", ")+(g.length>2?` +${g.length-2}`:"")}
+function drawFind(){const rows=fcMatches();
+ sheet(`${sh("Find players")}<label class="f"><span class="lab">Name or in-game username</span><input type="text" id="fs_q" value="${esc(fcQ.q)}" autocomplete="off" placeholder="Search"></label>
+ <div class="btns"><label class="f"><span class="lab">Game</span><select id="fs_g"><option value="">Any game</option>${FC_GAMES.map(([k,l])=>`<option value="${k}" ${fcQ.g===k?"selected":""}>${esc(l)}</option>`).join("")}</select></label><label class="f"><span class="lab">Platform</span><select id="fs_p"><option value="">Any platform</option>${FC_PLATS.map(([k,l])=>`<option value="${k}" ${fcQ.p===k?"selected":""}>${l}</option>`).join("")}</select></label></div>
+ <div class="mt" role="status">${rows.length} ${rows.length===1?"player":"players"}</div><div class="stack" id="fs_list">${rows.slice(0,60).map(p=>`<button class="pl" data-a="fcOpen" data-v="${esc(p.id)}"><span style="width:38px;height:38px;display:block">${sigil(p.name)}</span><span style="min-width:0"><strong>${esc(p.name)}</strong><br><span class="mt">${esc(fcSub(p))}</span></span><span class="mt">${fcIsSaved(p.id)?"Saved":p.open?"Open":""}</span></button>`).join("")||`<section class="panel"><p class="mt">${fcList&&fcList.rows.length>1?"Nobody matches that. Try fewer filters.":"No other fight cards yet. Tell your friends to make one."}</p></section>`}</div>`,true)}
+
+/* Someone's card */
+async function fcOpen(id){sheet(`<div class="wait"><div class="spin"></div></div>`);const r=++fcSeq;let p,rec=null;
+ try{const s=await d("hfcCards/"+id).get();p=s.exists?{id,...s.data()}:null;
+  try{const rs=await c("hfcResults").where("p","array-contains",id).get();let w=0,l=0;rs.docs.forEach(x=>{const v=x.data();if(v.winner===id)w++;else l++});rec={w,l}}catch(_){}}
+ catch(e){bad(e);p=null}
+ if(r!==fcSeq)return;
+ if(!p){if(fcIsSaved(id)){S.fcSaved=fcSaved().filter(x=>x.id!==id);save()}sheet(`${sh("Card not found")}<p>This player removed their fight card.</p>`);return}
+ NAMES[id]=p.name;if(fcIsSaved(id)){S.fcSaved=fcSaved().map(x=>x.id===id?{id,name:p.name,sub:fcSub(p)}:x);save()}
+ const act=fcActive(id),blocked=S.blocked.includes(id);
+ sheet(`${sh(p.name)}${fcCardHTML(p,rec,false)}${act?`<p class="mt">You already have a fight going with ${esc(p.name)}. Check your Fight tab.</p>`:!p.open?`<p class="mt">${esc(p.name)} isn't taking fight requests right now.</p>`:""}
+ <div class="btns"><button class="btn ${fcIsSaved(id)?"alt":""}" data-a="fcSaveCard" data-v="${esc(id)}">${fcIsSaved(id)?"Remove from my fighters":"Save to my fighters"}</button><button class="btn hot" data-a="fcAsk" data-v="${esc(id)}" ${act||!p.open||blocked||!fc?"disabled":""}>Request a fight</button>${!fc?`<p class="mt w">Make your own fight card first to request fights.</p>`:""}<button class="btn alt w" data-a="fcFind">Back to search</button></div>`);fcCur=p}
+function fcSaveCard(id){const p=fcCur&&fcCur.id===id?fcCur:null;
+ if(fcIsSaved(id)){S.fcSaved=fcSaved().filter(x=>x.id!==id);toast("Removed from your fighters.")}
+ else{if(fcSaved().length>=100){toast("You can save up to 100 fighters.");return}S.fcSaved=[...fcSaved(),{id,name:p?p.name:nameFor(id),sub:p?fcSub(p):""}];bump("fcsave");toast("Saved to your fighters.")}
+ save();render();fcOpen(id)}
+
+/* Fights */
+function fcAsk(id){const p=fcCur;if(!p||p.id!==id)return;const games=p.games||[];
+ sheet(`${sh("Request a fight")}<p>Challenge <strong>${esc(p.name)}</strong>. They accept first, then you both report who won.</p>
+ <label class="f"><span class="lab">Game</span><select id="fq_g">${games.map((g,i)=>`<option value="${i}">${esc(fcGame(g))} · ${esc(fcPlat(g.plat))} · ${esc(g.tag)}</option>`).join("")}</select></label>
+ <label class="f"><span class="lab">Message (optional)</span><input type="text" id="fq_note" maxlength="80" placeholder="First to 3, tonight?"></label>
+ <div class="err" id="fq_err" role="alert"></div><div class="btns"><button class="btn alt" data-a="fcOpen" data-v="${esc(id)}">Back</button><button class="btn hot" data-a="fcSend" data-v="${esc(id)}">Send request</button></div>`)}
+async function fcSend(id){const p=fcCur;if(!p||p.id!==id||!fc)return;const g=(p.games||[])[+$("#fq_g").value];if(!g)return;
+ const mineG=(fc.games||[]).find(x=>x.g===g.g&&(g.g!=="other"||String(x.n).toLowerCase()===String(g.n).toLowerCase()))||(fc.games||[]).find(x=>x.g===g.g);
+ const doc={a:myId,aName:myName().slice(0,18),b:id,bName:String(p.name).slice(0,18),p:[myId,id],game:fcGame(g).slice(0,40),plat:g.plat||"",aTag:mineG?String(mineG.tag).slice(0,24):"",bTag:String(g.tag).slice(0,24),note:($("#fq_note").value||"").trim().slice(0,80),status:"pending",ca:null,cb:null,winner:null,at:Date.now()};
+ const btn=document.querySelector('[data-a="fcSend"]');btn.disabled=true;
+ try{await c("hfcFights").add(doc);closeSheet();bump("fcreq");toast(`Fight request sent to ${p.name}.`)}
+ catch(e){bad(e);btn.disabled=false;$("#fq_err").textContent=`That didn't go through. ${p.name} may have stopped taking requests.`}}
+async function fcAnswer(v){const [id,st]=v.split("|");const f=fights.find(x=>x.id===id);if(!f||f.status!=="pending"||f.b!==myId||!["accepted","declined"].includes(st))return;
+ try{await d("hfcFights/"+id).update({status:st,at2:Date.now()});toast(st==="accepted"?`Fight on. Find ${f.aName} as ${f.aTag||"their tag"}.`:"Request declined.")}catch(e){bad(e);toast("That didn't go through.")}}
+async function fcCancel(id){const f=fights.find(x=>x.id===id);if(!f)return;
+ try{await d("hfcFights/"+id).update({status:"canceled",at2:Date.now()});toast("Fight called off.")}catch(e){bad(e);toast("That didn't go through.")}}
+async function fcClaim(v){const [id,who]=v.split("|");const f=fights.find(x=>x.id===id);if(!f||!["accepted","disputed"].includes(f.status))return;
+ const o=fcOpp(f),win=who==="me"?myId:o.id,k=f.a===myId?"ca":"cb",other=f.a===myId?f.cb:f.ca;
+ const status=!other?"accepted":other===win?"done":"disputed";const at2=Date.now();
+ try{const b=DB.batch();b.update(d("hfcFights/"+id),{[k]:win,status,winner:status==="done"?win:null,at2});
+  if(status==="done")b.set(d("hfcResults/"+id),{p:f.p,winner:win,game:f.game,at:at2});
+  await b.commit();
+  if(status==="done"){bump("fcwin",win===myId?1:0);queue({title:win===myId?"Victory confirmed":"Result confirmed",name:o.name,sub:win===myId?`You beat ${o.name} in ${f.game}.`:`${o.name} took this one in ${f.game}.`,badges:[fcDef()]})}
+  else toast(status==="disputed"?`${o.name} picked a different winner. Talk it out.`:`Saved. Waiting for ${o.name} to agree.`)}
+ catch(e){bad(e);toast("That didn't save. Try again.")}}
+async function fcClear(id){try{await d("hfcFights/"+id).delete()}catch(e){bad(e)}}
+
+/* Fight badge */
+function fcForge(){if(!fc){fcEditor();return}const has=V.some(x=>x.u===myId+"_fc_self");
+ sheet(`${sh("Forge fight badge")}<div class="preview">${badgeSVG(fcDef())}</div><p>Your fight card becomes a badge. Keep one in your vault, and send a copy to each player you finish a fight with. They approve it like any badge request.</p>
+ <p class="mt">${fcDone().length} finished ${fcDone().length===1?"fight":"fights"} · ${(S.fcSent||[]).length} badges sent</p>
+ <div class="btns"><button class="btn hot w" data-a="fcForgeNow" ${has?"disabled":""}>${has?"Already in your vault":"Forge into my vault"}</button></div>`)}
+async function fcForgeNow(){if(!fc||V.some(x=>x.u===myId+"_fc_self"))return;const df=fcDef();
+ sheet(`<div class="wait"><div class="spin"></div><h2 style="font:700 19px var(--display)">Forging</h2></div>`);
+ try{await d("mdBadges/"+myId+"_fc_self").set(badgeDoc("fight",df,"Harvest Fight Card",{fight:"self"}));bump("forge");closeSheet();queue({title:"Badge forged",name:df.name,sub:"It's in your vault now.",badges:[df]})}
+ catch(e){bad(e);closeSheet();toast("The Forge couldn't make that.")}}
+async function fcBadge(id){const f=fights.find(x=>x.id===id&&x.status==="done");if(!f||!fc||(S.fcSent||[]).includes(id))return;const o=fcOpp(f),df=fcDef(),bid=`${myId}_fc_${id}`;
+ try{const b=DB.batch(),ref=c("mdReq").doc();b.set(d("mdBadges/"+bid),badgeDoc("fight",df,"Harvest Fight Card",{fight:id}));
+  b.set(ref,{from:myId,fromName:myName(),to:o.id,toName:o.name,type:"gift",give:bid,want:null,near:false,cell:"",giveDef:df,wantDef:null,own:false,fc:id,status:"pending",at:Date.now()});
+  await b.commit();S.fcSent=[...(S.fcSent||[]),id].slice(-300);save();render();toast(`Fight badge sent to ${o.name}. They need to approve it.`)}
+ catch(e){bad(e);toast(`Couldn't send it. ${o.name} may have badge requests turned off.`)}}
 
 /* ---------- Admin ---------- */
 const adminData={};
@@ -794,6 +947,10 @@ const A={
  inbox(){const out=pendingOut();sheet(`${sh("Badge requests")}${incoming.map(reqCard).join("")||(out.length?"":"<p>No requests.</p>")}${out.length?`<div class="lab">Sent, waiting on them</div>${out.map(r=>`<div class="pl"><span style="width:38px;height:38px;display:block">${badgeSVG(r.giveDef,false,true)}</span><span style="min-width:0"><strong>${esc(r.toName)}</strong><br><span class="mt">${esc((r.giveDef&&r.giveDef.name)||"Badge")}</span></span><button class="btn alt" data-a="reqCancel" data-v="${esc(r.id)}">Cancel</button></div>`).join("")}`:""}`)},
  reqCancel(id){S.seen=[...S.seen,id].slice(-120);const r=d("mdReq/"+id);r.update({status:"no",done:Date.now()}).then(()=>r.delete()).catch(bad);closeSheet();toast("Request canceled.")},
  reqOk:approve,
+ fcEditor, fcFind(v){fcFind(v==="1")}, fcOpen, fcSaveCard, fcAsk, fcSend, fcAnswer, fcCancel, fcClaim, fcClear, fcForge, fcForgeNow, fcBadge, fcAddGame, fcSave,
+ fcPlat(k){fcReadDraft();const E=fcEdit;if(!E)return;E.plats=E.plats.includes(k)?E.plats.filter(x=>x!==k):[...E.plats,k];E.err="";drawFcEditor()},
+ fcEditGame(i){fcReadDraft();const E=fcEdit,g=E&&E.games[+i];if(!g)return;E.games.splice(+i,1);E.d={g:g.g,n:g.n||"",plat:g.plat,tag:g.tag,main:g.main||""};E.err="";drawFcEditor();const t=$("#fe_tag");if(t)t.focus()},
+ fcDropGame(i){fcReadDraft();const E=fcEdit;if(!E)return;E.games.splice(+i,1);E.err="";drawFcEditor()},
  reqNo(id){d("mdReq/"+id).update({status:"no",done:Date.now()}).catch(bad);closeSheet()},
  styleSheet:drawStyle,
  czOpen, czSave, czReset(){if(!cz)return;cz.d={...cz.orig,tm:cz.orig.tm||0,lb:cz.orig.lb||0,fx:cz.orig.fx||(cz.orig.art.t==="pet"?"pets":"items")};drawCz(true)},
@@ -901,7 +1058,8 @@ document.addEventListener("click",e=>{const map=$("#map");
  if(dropping&&map&&e.target.closest("#map")){const r=map.getBoundingClientRect();pendingXY=fromMap((e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100);dropping=false;render();
   sheet(`${sh("New chill spot")}<label class="f"><span class="lab">Name</span><input type="text" id="s_name" maxlength="30"></label><label class="f"><span class="lab">Vibe</span><input type="text" id="s_vibe" maxlength="16" placeholder="Rooftop, quiet, late night"></label><label class="f"><span class="lab">Info for other players</span><textarea id="s_info" maxlength="200"></textarea></label><label class="row"><input type="checkbox" id="s_pub" style="width:22px;height:22px"><span>This is a public place, not someone's home.</span></label><div class="err" id="s_err" role="alert"></div><button class="btn" data-a="newSpot">Add spot</button>`);return}
  const x=e.target.closest("[data-a]");if(!x)return;const f=A[x.dataset.a];if(f)f(x.dataset.v)});
-document.addEventListener("input",e=>{if(e.target.id==="m_name")draft.name=e.target.value;if(e.target.id==="cz_name"&&cz){cz.d.name=e.target.value;const b=document.querySelector('[data-a="czSave"]');if(b)b.disabled=JSON.stringify(czClean(cz.d))===JSON.stringify(czClean(cz.orig))}if(e.target.id==="ad_q"){adminData.q=e.target.value;clearTimeout(adminData.t);adminData.t=setTimeout(async()=>{const box=$("#admin");const v=e.target.value;await drawAdmin();const i=$("#ad_q");if(i){i.focus();i.value=v}},350)}});
+let fsT=0;document.addEventListener("change",e=>{const id=e.target.id;if(id==="fe_g"){fcReadDraft();if(fcEdit)fcEdit.err="";drawFcEditor();const n=$("#fe_n")||$("#fe_plat");if(n)n.focus()}else if(id==="fs_g"||id==="fs_p"){fcQ[id==="fs_g"?"g":"p"]=e.target.value;drawFind();const x=$("#"+id);if(x)x.focus()}});
+document.addEventListener("input",e=>{if(e.target.id==="fs_q"){fcQ.q=e.target.value;clearTimeout(fsT);fsT=setTimeout(()=>{if(!$("#fs_q"))return;drawFind();const i=$("#fs_q");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)}if(e.target.id==="m_name")draft.name=e.target.value;if(e.target.id==="cz_name"&&cz){cz.d.name=e.target.value;const b=document.querySelector('[data-a="czSave"]');if(b)b.disabled=JSON.stringify(czClean(cz.d))===JSON.stringify(czClean(cz.orig))}if(e.target.id==="ad_q"){adminData.q=e.target.value;clearTimeout(adminData.t);adminData.t=setTimeout(async()=>{const box=$("#admin");const v=e.target.value;await drawAdmin();const i=$("#ad_q");if(i){i.focus();i.value=v}},350)}});
 document.addEventListener("submit",e=>{e.preventDefault();
  if(e.target.id==="adforge"){const on={};FORGE_TABS.forEach(([k])=>on[k]=$("#ff_"+k).checked);const fee=[0,1,2,3].map(i=>Math.max(0,+$("#ff_fee"+i).value||0)),forge={on,fee,consume:$("#ff_consume").checked,limit:Math.max(0,+$("#ff_limit").value||0),style:Math.max(0,Math.floor(+$("#ff_style").value||0))};adminDo(()=>d("mdConfig/main").set({...cfg,forge}),"Forge settings saved.");return}
  if(e.target.id==="adnotice"){const msg=$("#ad_msg").value.trim();adminDo(()=>d("mdConfig/main").set({...cfg,msg}),"Notice saved.");return}
@@ -909,7 +1067,7 @@ document.addEventListener("submit",e=>{e.preventDefault();
  if(!name){err.textContent="Choose a username.";return}
  const issue=NH.nameIssue(name);if(issue){err.textContent=issue;return}
  if(!Number.isInteger(age)||age<MIN_AGE||age>99){err.textContent=`MyDex is for players ${MIN_AGE} and up. Enter your real age.`;return}
- S.profile={...S.profile,name,age,bio:$("#f_bio").value.trim(),facts:[0,1,2].map(i=>$("#f_fact"+i).value.trim())};closeSheet();checkAwards();save();render();toast("Card saved.")});
+ S.profile={...S.profile,name,age,bio:$("#f_bio").value.trim(),facts:[0,1,2].map(i=>$("#f_fact"+i).value.trim())};closeSheet();checkAwards();save();render();toast("Card saved.");if(fc&&fc.name!==myName().slice(0,18)){fc={...fc,name:myName().slice(0,18),at:Date.now()};d("hfcCards/"+myId).set(fc).catch(bad)}});
 function net(){if(ban)return;const on=navigator.onLine;$("#offline").hidden=on;if(!on)$("#offline").innerHTML='<div class="wm" style="font-size:34px">NO SIGNAL</div><p>MyDex needs a connection to work. It will come back when you are online.</p>';const x=$("#netchip");x.classList.toggle("off",!on);x.lastChild.textContent=on?"ONLINE":"OFFLINE"}
 addEventListener("online",net);addEventListener("offline",net);net();
 
