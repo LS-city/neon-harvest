@@ -10290,6 +10290,8 @@ for(const it of DIGI){ if(DIGI_BASE_LEN[it.k]==null) DIGI_BASE_LEN[it.k]=WARD[it
 function isExcl(k,i){ return !!(WARD[k]&&!WARD[k].color&&WARD[k].opts[i]&&(WARD[k].opts[i][2]==="smk"||WARD[k].opts[i][2]==="bm")); }
 function isBM(k,i){ return !!(WARD[k]&&WARD[k].opts&&WARD[k].opts[i]&&WARD[k].opts[i][2]==="bm"); }
 function digiOf(k,i){ return isExcl(k,i)?DIGI.find(d=>d.k===k&&d.n===WARD[k].opts[i][0]):null; }
+// shop previews show each mech as it really looks, not with the gems socketed in your own mech
+function digiPrev(d,i){ const L={...fullLook(save.look),[d.k]:i}; if(d.k==="style"&&MECH_BY[d.n]) L.mg=[]; return L; }
 function digiIndex(d){ return WARD[d.k].opts.findIndex(o=>o[0]===d.n&&o[2]==="smk"); }
 // The owner sets each item's RP price and whether it's in the shop (shopinfo/digital); unset items use the suggested price.
 var digiCfg={};
@@ -10600,11 +10602,11 @@ function bearBody(B,st,C,lift){ const R=B.R, h=lift||0;
 function digitalView(body){ const ok=canRedeem(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{text:"Neo Anime Drop · Digital rewards"}),el("span",{text:"Original anime-style clothes, companions and effects, made for NEON HARVEST. Redeem with RP and it's yours instantly: no pickup code, and it doesn't count toward your monthly reward limit."}),
     el("span",{class:"sub",text:ok?`You have ${Math.floor(+save.rp||0).toLocaleString()} RP.${save.digiFree!==monthKey()?" Your free monthly item is ready: open any item to claim it.":" You've claimed this month's free item."}`:"Members redeem digital rewards with RP and get one free each month. You can try anything on in Character first."}))));
   for(const grp of ["Mech Suits","Tiny Mechs","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ body.append(el("strong",{text:grp}));
-    const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look={...fullLook(save.look),[d.k]:i}; const cv=lookCanvas(look,64);
+    const g=el("div",{class:"grid wgrid"}); const list=DIGI.filter(x=>x.g===grp&&(digiOn(x)||digiOwned(x)||IS_ADMIN)); if(!list.length){ body.lastChild.remove(); continue; } for(const d of list){ const i=digiIndex(d), own=digiOwned(d); const look=digiPrev(d,i); const cv=lookCanvas(look,64);
       const c=el("button",{class:"card",type:"button",onclick:()=>digiConfirm(d)},cv,el("div",{class:"nm",text:d.n}),el("div",{class:"meta"},el("span",{class:own?"r-uncommon":"",style:own?"":"color:#cf72ff",text:own?"Owned":`${digiPrice(d).toLocaleString()} RP`}),!digiOn(d)?el("span",{class:"r-epic",text:"Hidden"}):null));
       g.append(c); } body.append(g); } consoleShopView(body); }
 function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(+save.rp||0), ok=canRedeem(), price=digiPrice(d), live=digiOn(d)||IS_ADMIN; const body=panel(d.n,"Neo Anime Drop · digital reward"); currentView=null;
-  const pv=lookCanvas({...fullLook(save.look),[d.k]:i},110); pv.style.cssText="width:150px;height:150px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
+  const pv=lookCanvas(digiPrev(d,i),110); pv.style.cssText="width:150px;height:150px;flex:none;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 70%)";
   const extra=d.k==="pet"&&PETS[d.n]?el("span",{class:"r-uncommon",text:`${PETS[d.n].trait.short} · ${PETS[d.n].ab.n}: ${PETS[d.n].ab.d}`}):null;
   body.append(el("div",{class:"detail"},pv,el("div",{class:"info"},el("strong",{text:d.n}),el("span",{text:d.d}),extra,el("span",{class:"sub",text:`${({style:"Top",neck:"Neck",hat:"Head",hair:"Hairstyle",back:"Back",pet:"Companion",aura:"Aura",visor:"Eyes"})[d.k]} slot · ${own?"You own this.":`${price.toLocaleString()} RP · you have ${bal.toLocaleString()} RP`}`}))));
   const wear=()=>{ save.look={...fullLook(save.look),[d.k]:i}; persist(); pushPresence(true); emote("cheer"); toast(`Now wearing ${d.n}.`,"#cf72ff"); closePanel(); };
@@ -10620,7 +10622,7 @@ function digiConfirm(d){ const i=digiIndex(d), own=digiOwned(d), bal=Math.floor(
 function digiAdmin(body){ body.append(el("p",{class:"sub",text:"Set the RP price for each digital item and choose which ones are in the shop. Digital items cost you nothing to hand out, so every RP spent on them is profit. Players who already own an item keep it even if you hide it."}));
   const rows=[]; const l=el("div",{class:"list"});
   for(const grp of ["Mech Suits","Tiny Mechs","Legends","Cyber Bears","Spirit-Bound","Clothes","Companions","Effects"]){ l.append(el("strong",{text:grp}));
-    for(const d of DIGI.filter(x=>x.g===grp)){ const cv=lookCanvas({...fullLook(save.look),[d.k]:digiIndex(d)},44); cv.style.cssText+=";width:48px;height:48px;flex:none";
+    for(const d of DIGI.filter(x=>x.g===grp)){ const cv=lookCanvas(digiPrev(d,digiIndex(d)),44); cv.style.cssText+=";width:48px;height:48px;flex:none";
       const rp=el("input",{class:"num",type:"number",min:"1",step:"100",value:String(digiPrice(d)),style:"width:110px","aria-label":`RP price for ${d.n}`});
       const on=el("input",{type:"checkbox","aria-label":`${d.n} is in the shop`}); on.checked=digiOn(d); rows.push([d,rp,on]);
       l.append(el("div",{class:"li"},cv,el("div",{class:"grow"},el("div",{text:d.n}),el("div",{class:"sub",text:`Suggested ${d.rp.toLocaleString()} RP`})),rp,el("label",{class:"row",style:"gap:6px;align-items:center"},on,"In shop"))); } }
