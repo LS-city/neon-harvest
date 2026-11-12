@@ -44,6 +44,10 @@ The owner account gets an Admin tab inside MyDex (also on the board at MyDex Hub
 | `database.rules.json` | Rules for live player positions and multiplayer events |
 | `build.py` | Rebuilds `index.html` from the claude.ai version of the game |
 
+## Style my MyDex
+
+Players pick a picture, one of 14 card backgrounds (or an uploaded image), one of 14 neon colors, one of 11 card frames (most animated: neon pulse, rainbow, circuit run, lock-on, glitch, fire, double line, holo sweep, orbit) and one of 6 name effects. The color, frame and name effect are saved on the public card, so other players see them.
+
 ## Harvest Fight Card (MyDex → Fight tab)
 
 A fight card for fighting game players. Players list the platforms they play on (PC, Xbox, Nintendo, PlayStation) and up to 12 fighting games, each with the username they use in that game and an optional main.
@@ -53,7 +57,7 @@ A fight card for fighting game players. Players list the platforms they play on 
 - **Fight requests**: challenge a player in one of their games. They accept or decline. After the matches, both players pick the winner. If they pick different winners the fight shows as disputed until they agree; only an agreed result counts toward a player's record.
 - **Fight badge**: forge your fight card into a badge for your vault, and send a copy to each player you've finished a fight with. They approve it like any badge request.
 - Players can turn off fight requests, and MyDex blocks still apply.
-- **Style my fight card**: a picture (or the MyDex picture), one of the 8 card backgrounds or an uploaded image, and a neon color. Everyone who finds the card sees the style; the owner can remove a picture or background that breaks the rules.
+- **Style my fight card**: a picture (or the MyDex picture), one of the 14 card backgrounds or an uploaded image, one of 14 neon colors, one of 11 card frames and a name effect. Everyone who finds the card sees the style; the owner can remove a picture or background that breaks the rules.
 
 This needs the `hfcCards`, `hfcFights` and `hfcResults` rules and the updated `mdBadges` rule in `firestore.rules`. **Publish `firestore.rules` again after updating**, or the Fight tab can't save.
 
