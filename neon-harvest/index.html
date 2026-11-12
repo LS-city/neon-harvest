@@ -4580,31 +4580,62 @@ function idleFrameBot(S,now,win,keys){ // wander, talk and advance dialog like a
   if(Math.random()<.38){ idleKey(win,keys.a); setTimeout(()=>idleKey(win,keys.a,true),90); S.nk=now+idleR(300,700); return; }
   if(Math.random()<.04){ idleKey(win,keys.b); setTimeout(()=>idleKey(win,keys.b,true),90); S.nk=now+500; return; }
   const code=idlePick(keys.dirs); idleKey(win,code); S.hold={code,until:now+idleR(350,1500)}; }
-function idleCcjBot(S,now){ if(!CJ) return; if(S.hold&&now>=S.hold.until){ CJ.held[S.hold.k]=false; S.hold=null; } if(S.hold||now<(S.nk||0)) return;
+function idleCcjBot(S,now){ if(!CJ) return;
+  // Safety first: on the title screen, a "start over?" question or class select, never start a new game.
+  const ask=CJ.ask, risky=ask&&ask.opts.some(idleRisky);
+  if(CJ.mode==="title"||CJ.mode==="class"||risky){ if(S.hold){ CJ.held[S.hold.k]=false; S.hold=null; } if(now<(S.nk||0)) return; S.nk=now+450;
+    if(risky){ const safe=ask.opts.findIndex(o=>!idleRisky(o)); if(safe<0){ S.stop=1; return; } if(ask.sel!==safe){ cjPress(ask.sel>safe?"u":"d"); } else cjPress("a"); return; }
+    if(CJ.mode==="class"){ S.stop=1; return; }
+    const o=cjTitleOpts(), want=o.indexOf("Continue"); if(want<0){ S.stop=1; return; }
+    if(CJ.sel!==want) cjPress(CJ.sel>want?"u":"d"); else { cjPress("a"); idleLog("⚔️ Continues the saved Companion Clash adventure"); } return; }
+  if(S.hold&&now>=S.hold.until){ CJ.held[S.hold.k]=false; S.hold=null; } if(S.hold||now<(S.nk||0)) return;
   if(Math.random()<.4){ cjPress("a"); S.nk=now+idleR(300,700); return; }
   const k=idlePick(["u","d","l","r","r","l"]); CJ.held[k]=true; cjPress(k); S.hold={k,until:now+idleR(300,1300)}; }
 function idleOpenPanel(fn){ try{ fn(); IDLE.ui="panel"; }catch(e){ console.error(e); } }
 function idleClosePanel(){ if(IDLE&&IDLE.ui==="panel"){ closePanel(); IDLE.ui=null; } }
 
+// Variety: remember what the runner did lately (also across idle sessions) so it doesn't keep repeating itself.
+function idleMem(){ const m=save.idleMem&&typeof save.idleMem==="object"?save.idleMem:(save.idleMem={}); m.built=m.built&&typeof m.built==="object"?m.built:{}; m.recent=Array.isArray(m.recent)?m.recent:[]; return m; }
+function idleShuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]; } return a; }
+// Pick from a list, skipping anything in `recent` when possible, then remember it (keeps the last `keep`).
+function idleFresh(list,recent,keep,key){ const k=key||(x=>x); const fresh=list.filter(x=>!recent.includes(k(x))); const pick=idlePick(fresh.length?fresh:list); recent.push(k(pick)); while(recent.length>keep) recent.shift(); return pick; }
+// Never start a new game for the player: only play games that already have a save to continue.
+function idleHas1211(){ const P=t1211(); let has=!!P.sav||(Array.isArray(P.beat)&&P.beat.length>0); try{ has=has||!!localStorage.getItem("1211-save-v2"); }catch(e){} return has; }
+function idleHasCcj(){ try{ return !!cjS().cls; }catch(e){ return false; } }
+const idleSafe=t=>/^(continue|no\b|keep|cancel|back)/i.test(String(t).trim());
+const idleRisky=t=>/new (game|trip)|start over|reset|erase|delete|quit to title/i.test(String(t));
+// 12/11 title screen and "start over?" questions: always continue the saved trip, never start a new one.
+function idle1211Safe(S,now,win,peek){ if(S.hold){ idleKey(win,S.hold.code,true); S.hold=null; } if(now<(S.nk||0)) return false;
+  const tap=code=>{ idleKey(win,code); setTimeout(()=>idleKey(win,code,true),90); S.nk=now+450; };
+  if(!peek.menu){ tap("KeyZ"); idleAct("Loading the saved trip in 12/11"); return false; }
+  const items=peek.menu.items, want=items.findIndex(idleSafe);
+  if(want<0){ S.noSave=1; idleLog("🎮 No saved 12/11 trip to continue. Leaving so it doesn't start a new one."); return true; }
+  if(peek.menu.idx!==want){ tap(peek.menu.idx>want?"ArrowUp":"ArrowDown"); } else { tap("KeyZ"); if(peek.state==="title") idleLog("🎮 Continues the saved 12/11 trip"); }
+  idleAct("Continuing the saved trip in 12/11"); return false; }
+
 // Activities: where to go, then start/step (step returns true when finished).
 const IDLE_ACTS={
   play1211:{n:"Playing 12/11",where:()=>["line",LINE_X.cab],
-    start(S,now){ open1211(); IDLE.ui="g1211"; S.until=now+idleR(150,240)*1000; S.nk=now+1800; idleLog("🎮 Sits down at the 12/11 cabinet and starts playing"); },
-    step(S,now){ if(!$("#g1211")) return true; const win=g1211Frame&&g1211Frame.contentWindow; idleFrameBot(S,now,win,{a:"KeyZ",b:"KeyX",dirs:["ArrowRight","ArrowRight","ArrowLeft","ArrowUp","ArrowDown"]}); idleAct(`Playing 12/11 · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
-    end(S){ if(S.hold) idleKey(g1211Frame&&g1211Frame.contentWindow,S.hold.code,true); if($("#g1211")) close1211(); idleLog("🎮 Saved and left 12/11"); }},
+    start(S,now){ if(!idleHas1211()){ S.none=1; idleLog("🎮 No saved 12/11 trip yet. Skipping so it doesn't start a new game."); return; } open1211(); IDLE.ui="g1211"; S.t0=now; S.until=now+idleR(150,240)*1000; S.nk=now+1800; idleLog("🎮 Sits down at the 12/11 cabinet"); },
+    step(S,now){ if(S.none||S.noSave) return true; if(!$("#g1211")) return true; const win=g1211Frame&&g1211Frame.contentWindow;
+      let peek=null; try{ peek=win&&win.__nh1211Peek&&win.__nh1211Peek(); }catch(e){}
+      if(!peek){ if(now-S.t0>20000){ idleLog("🎮 12/11 didn't load. Leaving."); return true; } idleAct("Loading 12/11…"); return false; }
+      if(peek.state==="title"||(peek.menu&&peek.menu.items.some(idleRisky))) return idle1211Safe(S,now,win,peek);
+      idleFrameBot(S,now,win,{a:"KeyZ",b:"KeyX",dirs:["ArrowRight","ArrowRight","ArrowLeft","ArrowUp","ArrowDown"]}); idleAct(`Playing 12/11 · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
+    end(S){ if(S.none) return; if(S.hold) idleKey(g1211Frame&&g1211Frame.contentWindow,S.hold.code,true); if($("#g1211")) close1211(); if(!S.noSave) idleLog("🎮 Saved and left 12/11"); }},
   read:{n:"Reading Ramblings of a Mad Man",where:()=>["story",STORY_X.door],
     start(S,now){ openBook(); IDLE.ui="gbook"; S.until=now+idleR(150,240)*1000; S.next=now+3500; S.pages=0; idleLog("📖 Opens Ramblings of a Mad Man"); },
     step(S,now){ if(!$("#gbook")||!BK) return true; if(now>=S.next){ if(BK.mode==="end"){ idleLog(`📖 Finished a chapter after ${S.pages} pages`); return true; } bkPress("n"); S.pages++; S.next=now+idleR(7,11)*1000; } idleAct(`Reading · page ${S.pages}`); return now>=S.until; },
     end(S){ if($("#gbook")) closeBook(); idleLog(`📖 Closed the book (${S.pages} pages read)`); }},
   ccj:{n:"Playing Companion Clash",where:()=>["clash",CLASH_X.stage],
-    start(S,now){ openCCJ(); IDLE.ui="gccj"; S.until=now+idleR(150,240)*1000; S.nk=now+1500; idleLog("⚔️ Boots up Companion Clash"); },
-    step(S,now){ if(!$("#gccj")||!CJ) return true; idleCcjBot(S,now); idleAct(`Playing Companion Clash · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
-    end(S){ if(S.hold&&CJ) CJ.held[S.hold.k]=false; if($("#gccj")) closeCCJ(); idleLog("⚔️ Saved and left Companion Clash"); }},
+    start(S,now){ if(!idleHasCcj()){ S.none=1; idleLog("⚔️ No saved Companion Clash adventure yet. Skipping so it doesn't start a new game."); return; } openCCJ(); IDLE.ui="gccj"; S.until=now+idleR(150,240)*1000; S.nk=now+1500; idleLog("⚔️ Boots up Companion Clash"); },
+    step(S,now){ if(S.none) return true; if(!$("#gccj")||!CJ) return true; idleCcjBot(S,now); if(S.stop){ idleLog("⚔️ Left Companion Clash instead of starting a new game"); return true; } idleAct(`Playing Companion Clash · ${Math.ceil((S.until-now)/60e3)} min left`); return now>=S.until; },
+    end(S){ if(S.none) return; if(S.hold&&CJ) CJ.held[S.hold.k]=false; if($("#gccj")) closeCCJ(); if(!S.stop) idleLog("⚔️ Saved and left Companion Clash"); }},
   clubtrip:{n:"Club items & partying",where:()=>["club",390],
     start(S,now){ idleOpenPanel(()=>openClubCounter("menu")); S.stage=0; S.next=now+3500; idleAct("Looking over the club menu"); },
     step(S,now){
       if(S.stage===0){ if(now<S.next) return false; idleClosePanel(); const pool=CAT.filter(i=>i.t==="trip"&&TRIPS[i.id]&&i.id!=="trip_god").map(i=>({i,p:housePrice(i.id)})).filter(o=>o.p.cur==="credits"&&o.p.price<=Math.max(60,save.credits*.25));
-        if(pool.length){ const o=idlePick(pool); save.credits-=o.p.price; addItem(o.i.id); persist(); hud(); idleLog(`💊 Bought ${o.i.n} for ₵${o.p.price}`); useTrip(o.i.id); idleFloat(o.i.n,RAR[o.i.r].c); } else idleLog("💊 Skipped club items (saving credits)");
+        if(pool.length){ const o=idleFresh(pool,(IDLE.clubRecent||(IDLE.clubRecent=[])),2,x=>x.i.id); save.credits-=o.p.price; addItem(o.i.id); persist(); hud(); idleLog(`💊 Bought ${o.i.n} for ₵${o.p.price}`); useTrip(o.i.id); idleFloat(o.i.n,RAR[o.i.r].c); } else idleLog("💊 Skipped club items (saving credits)");
         S.stage=1; S.next=now+2500; return false; }
       if(S.stage===1){ if(now<S.next) return false; if(!idleWalk(1590)){ idleAct("Heading to the dance floor"); return false; } me.dancing=true; me.danceNext=0; S.stage=2; S.until=now+idleR(60,100)*1000; S.next=now+5000; idleLog("🪩 Hits the dance floor"); return false; }
       if(now>=S.next){ S.next=now+idleR(5,9)*1000; if(Math.random()<.4) emote("cheer"); idleFloat(idlePick(["♪","♫","✦","🎉"]),idlePick(["#ff3fa8","#38e8ff","#ffd36a"])); }
@@ -4613,7 +4644,7 @@ const IDLE_ACTS={
     start(S,now){ idleOpenPanel(()=>{ barMenuTab="drinks"; openCounter(); }); S.stage=0; S.n=0; S.next=now+3500; idleAct("Reading the drinks menu"); },
     step(S,now){
       if(S.stage===0){ if(now<S.next) return false; idleClosePanel(); const pool=[...DRINKS,...FOODS].filter(d=>Math.round(d.v*1.5)<=Math.max(30,save.credits*.1));
-        if(pool.length){ const d=idlePick(pool), p=Math.round(d.v*1.5); save.credits-=p; addItem(d.id); persist(); hud(); try{ consumeItem(d.id); }catch(e){} idleLog(`🍸 Ordered ${d.n} (₵${p})`); idleFloat(d.n,d.col||"#ffd36a"); } else idleLog("🍸 Just water tonight");
+        if(pool.length){ const d=idleFresh(pool,(IDLE.drinkRecent||(IDLE.drinkRecent=[])),3,x=>x.id), p=Math.round(d.v*1.5); save.credits-=p; addItem(d.id); persist(); hud(); try{ consumeItem(d.id); }catch(e){} idleLog(`🍸 Ordered ${d.n} (₵${p})`); idleFloat(d.n,d.col||"#ffd36a"); } else idleLog("🍸 Just water tonight");
         S.n++; S.stage=1; S.until=now+idleR(40,70)*1000; S.next=now+3000; return false; }
       if(!idleWalk(S.n%2?900:640)){ idleAct("Finding a spot at the bar"); return false; }
       if(now>=S.next){ S.next=now+idleR(6,10)*1000; me.emote={e:idlePick(["cheer","wave","pose","dance"]),t:T}; }
@@ -4621,10 +4652,12 @@ const IDLE_ACTS={
   build:{n:"Building rigs",where:()=>["home",1110],
     start(S,now){ idleOpenPanel(()=>openWorkbench("build")); S.next=now+2500; S.built=0; idleAct("Laying out parts on the workbench"); },
     step(S,now){ if(now<S.next) return false;
-      const rec=RECIPES.find(r=>Object.entries(r.need).every(([t,q])=>countType(t)>=q)&&pickParts(r,"cheap"));
+      const M=idleMem(), can=RECIPES.filter(r=>Object.entries(r.need).every(([t,q])=>countType(t)>=q)&&pickParts(r,"cheap"));
+      const low=can.length?Math.min(...can.map(r=>M.built[r.n]||0)):0, least=can.filter(r=>(M.built[r.n]||0)===low), notLast=least.filter(r=>r.n!==M.lastBuilt);
+      const rec=can.length?idlePick(notLast.length?notLast:least):null;
       if(!rec||S.built>=3){ if(!rec&&!S.built) idleLog("🔧 Not enough parts to build anything. Off to Scrap Alley."); IDLE.needParts=!rec; return true; }
       if($("#overlay").hidden) idleOpenPanel(()=>openWorkbench("build")); const stage=document.querySelector("#overlay .panel .body > .detail");
-      if(!stage){ S.next=now+800; return false; } doBuild(rec,"cheap",stage); S.built++; idleLog(`🔧 Building a ${rec.n}`); idleAct(`Assembling ${rec.n}…`); S.next=now+4200;
+      if(!stage){ S.next=now+800; return false; } doBuild(rec,"cheap",stage); S.built++; M.built[rec.n]=(M.built[rec.n]||0)+1; M.lastBuilt=rec.n; idleLog(`🔧 Building a ${rec.n}`); idleAct(`Assembling ${rec.n}…`); S.next=now+4200;
       setTimeout(()=>{ if(IDLE&&IDLE.ui==="panel") idleOpenPanel(()=>openWorkbench("build")); },3600); return false; },
     end(S){ idleClosePanel(); if(S.built) idleLog(`🔧 Built ${S.built} rig${S.built===1?"":"s"}`); }},
   pet:{n:"Hanging out with my companion",where:()=>["home",560],
@@ -4639,14 +4672,20 @@ const IDLE_ACTS={
       if(S.stage===1){ idleClosePanel(); if(!idleWalk(560)) return false; idleOpenPanel(()=>openShelves()); idleAct("Admiring the display shelves"); S.stage=2; S.next=now+5000; return false; }
       return true; },
     end(){ idleClosePanel(); }},
-  shop:{n:"Window shopping",where:()=>{ const s=IDLE.shopStop||(IDLE.shopStop=idlePick(IDLE_SHOPS)); return [s.sc,s.x]; },
+  shop:{n:"Window shopping",where:()=>{ const s=IDLE.shopStop||(IDLE.shopStop=idleFresh(IDLE_SHOPS,(IDLE.shopRecent||(IDLE.shopRecent=[])),4,x=>x.n)); return [s.sc,s.x]; },
     start(S,now){ const s=IDLE.shopStop; idleOpenPanel(s.open); S.next=now+idleR(5,8)*1000; idleLog(`🛍 Browses ${s.n}`); idleAct(`Browsing ${s.n}`); },
     step(S,now){ if(now<S.next) return false; idleClosePanel(); IDLE.shopStop=null; IDLE.shopN=(IDLE.shopN||0)+1; return true; }},
 };
 const IDLE_SHOPS=[{sc:"byte",x:520,n:"Chip Shack",open:()=>openStall(0,"buy")},{sc:"byte",x:1960,n:"GPU Garage",open:()=>openStall(4,"buy")},{sc:"byte",x:4600,n:"Gemix",open:()=>openGemix("shop")},{sc:"byte",x:4240,n:"Volt Armory",open:()=>openStall(10,"buy")},
   {sc:"smacked",x:800,n:"Smacked Shop",open:()=>openSmacked("shop")},{sc:"cyberbuys",x:600,n:"Cyber Buys & More",open:()=>openCbSection(0)},{sc:"street",x:960,n:"PARTS DEPOT",open:()=>openShop()}];
-const IDLE_LIFE_POOL=["bar","bowl","cb","asm","den","club","dig","party","play1211","read","ccj","clubtrip","drinks","build","pet","rigs","shop","shop"];
-function idleLifePick(){ const last=IDLE.lifeCur; let k; do{ k=idlePick(IDLE_LIFE_POOL); }while(k===last&&IDLE_LIFE_POOL.length>1); if(IDLE.needParts){ IDLE.needParts=false; k="dig"; } return k; }
+const IDLE_LIFE_POOL=["bar","bowl","cb","asm","den","club","dig","party","play1211","read","ccj","clubtrip","drinks","build","pet","rigs","shop"];
+// Deals the day's activities like a shuffled deck: every one comes up once before any repeats,
+// and nothing from the last few activities comes back right away (even after restarting idle).
+function idleLifePick(){ const M=idleMem(); if(IDLE.needParts){ IDLE.needParts=false; M.recent.push("dig"); while(M.recent.length>5) M.recent.shift(); return "dig"; }
+  const ok=k=>!(k==="play1211"&&!idleHas1211())&&!(k==="ccj"&&!idleHasCcj())&&!(k==="pet"&&!curPet());
+  if(!Array.isArray(IDLE.bag)||!IDLE.bag.length) IDLE.bag=idleShuffle(IDLE_LIFE_POOL.filter(ok));
+  let i=IDLE.bag.findIndex(k=>!M.recent.includes(k)&&ok(k)); if(i<0) i=IDLE.bag.findIndex(ok); if(i<0) i=0;
+  const k=IDLE.bag.splice(i,1)[0]||"shop"; M.recent.push(k); while(M.recent.length>5) M.recent.shift(); return k; }
 function idleActivity(a,now){ const A=IDLE_ACTS[a];
   if(IDLE.phase==="go"){ const [sc,x]=A.where(); if(!idleGoTo(sc,x)){ return; } IDLE.phase="do"; IDLE.aS={}; try{ A.start(IDLE.aS,now); }catch(e){ console.error("idle start",a,e); IDLE.phase="rest"; IDLE.restUntil=now+3000; } return; }
   if(IDLE.phase==="rest"){ if(now<IDLE.restUntil) return; IDLE.phase="go"; return; }
@@ -4681,7 +4720,7 @@ function idleDig(now){
   if(!IDLE.digStart){ IDLE.digStart=now; me.emote={e:"use",t:T}; idleAct("Digging through the scrap pile…"); beep(260,.05,"triangle"); return; } if(now-IDLE.digStart<1600) return; IDLE.digStart=0;
   const cnt=()=>invList().reduce((a,[,n])=>a+n,0), n0=cnt(), c0=save.chips; dig(i); const got=Math.max(0,cnt()-n0), ch=Math.max(0,save.chips-c0); IDLE.st.parts+=got; IDLE.st.chips+=ch; idleFloat(`+${got} part${got===1?"":"s"}`,"#43f0a4"); idleLog(`🔧 Dug up ${got} item${got===1?"":"s"} and ${ch} chips`); }
 const IDLE_PARTY=[{scene:"club",x:1590,k:"dance",n:"The Third Eye dance floor"},{scene:"club",x:1940,k:"dance",n:"The Third Eye stage"},{scene:"bar",x:900,k:"hang",n:"The Glitch"},{scene:"den",k:"booth",n:"a Gamers Den booth"}];
-function idleParty(now){ if(IDLE.phase==="go"&&IDLE.spot==null){ IDLE.spot=idlePick(IDLE_PARTY); IDLE.until=now+idleR(60,100)*1000; }
+function idleParty(now){ if(IDLE.phase==="go"&&IDLE.spot==null){ IDLE.spot={...idleFresh(IDLE_PARTY,(IDLE.partyRecent||(IDLE.partyRecent=[])),2,x=>x.n)}; IDLE.until=now+idleR(60,100)*1000; }
   const P=IDLE.spot; let x=P.x; if(P.k==="booth"){ if(!P.seat){ const used=new Set((typeof denCust!=="undefined"?denCust:[]).map(c=>c.seat)); P.seat=idlePick(DEN_SEATS.filter(s=>!used.has(s.k))); } x=P.seat.x; }
   if(IDLE.phase==="go"){ if(!idleGoTo(P.scene,x)){ if(me.scene===P.scene) idleAct(`Heading to ${P.n}`); return; } IDLE.phase="party"; IDLE.next=now+3000; idleLog(`🪩 Partying at ${P.n}`);
     if(P.k==="dance"){ me.dancing=true; me.danceNext=0; idleAct(`Dancing at ${P.n}`); } else if(P.k==="booth"){ const h=hotspots("den").find(h=>h.x===P.seat.x); try{ h&&h.act(); }catch(e){} idleAct(`Chilling in ${P.n}`); } else idleAct(`Hanging out at ${P.n}`); return; }
@@ -8185,7 +8224,7 @@ function t1211(){ save.t1211=save.t1211&&typeof save.t1211==="object"?save.t1211
 let g1211Frame=null;
 function open1211(){ if($("#g1211")) return; closePanel(); const wrap=el("div",{id:"g1211",role:"dialog","aria-label":"12/11 game"});
   const bar=el("div",{class:"g1bar"},el("strong",{text:"12/11"}),el("span",{class:"g1sub",text:MOBILE?"Use the on-screen buttons":"Arrows/WASD move · Z/Enter = A · X = B · Esc/Shift = START"}),el("button",{class:"btn hot",type:"button",text:"✕ Leave 12/11",onclick:close1211}));
-  const fr=document.createElement("iframe"); fr.title="12/11 by Rassir"; fr.setAttribute("allow","autoplay"); { const P=t1211(), inj="<script>window.__nh1211Cloud="+JSON.stringify(P.sav||null).replace(/</g,"\\u003c")+";window.__nh1211Beat="+JSON.stringify(P.beat||[])+";window.__nh1211Lv="+(+P.lv||0)+";<\/script>"; fr.srcdoc=G1211_DOC.replace("<head>","<head>"+inj); } g1211Frame=fr;
+  const fr=document.createElement("iframe"); fr.title="12/11 by Rassir"; fr.setAttribute("allow","autoplay"); { const P=t1211(), inj="<script>window.__nh1211Cloud="+JSON.stringify(P.sav||null).replace(/</g,"\\u003c")+";window.__nh1211Beat="+JSON.stringify(P.beat||[])+";window.__nh1211Lv="+(+P.lv||0)+";<\/script>"; fr.srcdoc=G1211_DOC.replace("<head>","<head>"+inj).replace("  function start(data) {","  window.__nh1211Peek = () => ({ state, menu: ui.menu ? { items: ui.menu.items.slice(), idx: ui.menu.idx } : null });\n  function start(data) {"); } g1211Frame=fr;
   const foc=()=>{ try{ fr.focus(); fr.contentWindow.focus(); }catch(e){} }; fr.addEventListener("load",()=>{ foc(); setTimeout(foc,300); });
   wrap.append(bar,fr); $("#game").appendChild(wrap); releaseKeys&&releaseKeys(); setTimeout(foc,400);
   if(soundOn&&typeof AC!=="undefined"&&AC&&AC.suspend) try{ AC.suspend(); }catch(e){}

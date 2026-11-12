@@ -44,6 +44,13 @@ The owner account gets an Admin tab inside MyDex (also on the board at MyDex Hub
 | `database.rules.json` | Rules for live player positions and multiplayer events |
 | `build.py` | Rebuilds `index.html` from the claude.ai version of the game |
 
+## Idle mode
+
+Send your runner off to work, dig, party or live a day in the city on their own.
+
+- **Variety:** "Live a day in the city" deals activities like a shuffled deck, so every activity comes up once before any repeat, and nothing from the last five comes back right away (remembered across idle sessions). Building rigs rotates through every rig type it can build instead of the same one each time. Window shopping, drinks, club items and party spots don't repeat right away either.
+- **Never starts a new game:** in 12/11 the runner picks CONTINUE on the title screen and answers NO to "start over"; in Companion Clash it picks Continue and "Keep my adventure". If there's no save yet, the runner skips that game instead of starting one.
+
 ## Style my MyDex
 
 Players pick a picture, one of 14 card backgrounds (or an uploaded image), one of 14 neon colors, one of 11 card frames (most animated: neon pulse, rainbow, circuit run, lock-on, glitch, fire, double line, holo sweep, orbit) and one of 6 name effects. The color, frame and name effect are saved on the public card, so other players see them.
