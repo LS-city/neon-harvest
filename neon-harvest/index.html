@@ -4494,6 +4494,7 @@ function render(){
   let _dzs=[0,0]; try{ _dzs=dzShake(); }catch(e){} ctx.setTransform(scale,0,0,scale,-camX*scale+_dzs[0]*scale,_dzs[1]*scale);
   if(me.scene==="street"){ drawStreet(T); drawSimEntrance(T); } else if(me.scene==="simcity") drawSim(T); else if(me.scene==="zerocool") drawZeroCool(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="nfantasy") drawNfHub(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
+  try{ const _st=dzOn(); if(_st&&_st.k==="kaiju"&&WX_OUT.includes(me.scene)) drawKaijuBack(_st,T,ctx,camX); }catch(e){}
   drawBytesTerminals(T);
   // hotspot marker
   if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
@@ -13981,7 +13982,8 @@ const DZ={quake:{n:"Earthquake",ic:"💥",col:"#ffb84a",d:"The ground shakes in 
   hurricane:{n:"Hurricane",ic:"🌀",col:"#6ad0ff",d:"Sideways rain and howling wind. Everyone outside gets pushed along by the storm."},
   freeze:{n:"Deep freeze",ic:"🥶",col:"#bfe8ff",d:"The temperature crashes. Ice covers everything and everyone outside moves slower."},
   toxic:{n:"Toxic leak",ic:"☢",col:"#7aff4a",d:"A chemical plant leaks. Green fog rolls through the streets. Hold your breath."},
-  tsunami:{n:"Tsunami",ic:"🌊",col:"#2a8aff",d:"Giant waves crash through the outdoor areas. Get caught and you're swept down the street."}};
+  tsunami:{n:"Tsunami",ic:"🌊",col:"#2a8aff",d:"Giant waves crash through the outdoor areas. Get caught and you're swept down the street."},
+  kaiju:{n:"Kaiju battle",ic:"🦖",col:"#ff3fa8",d:"Two giant kaiju, Slagmaw and Voltipede, are fighting on the skyline. The whole city shakes. Back one and win ₵150 if it wins!"}};
 let dzState=null, dzWatched=false, dzSeen="", dzCraters=[], dzLastShake=0;
 const dzOn=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until?dzState:null;
 const dzRecent=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until+10*6e4?dzState:null;
@@ -13991,8 +13993,8 @@ const DZ_SCARED={quake:["Earthquake! Get away from the windows!","The whole buil
   meteor:["Something's falling from the sky!","That one hit the next block!","It's the end of the world!"],volcano:["Since when do we have a volcano?!","The sky's on fire!","Don't breathe the ash!"],
   blackout:["Who turned off the city?!","My phone's dead. Everything's dead.","Stay close, I can't see a thing."],wildfire:["The rooftops are on fire!","Call somebody! Anybody!","I can smell the smoke from here."],
   hurricane:["Hold on to something!","My umbrella's gone. Just gone.","The wind's pushing me down the street!"],freeze:["I can't feel my face.","The fountain froze solid!","Careful, the whole street's ice."],
-  toxic:["Don't breathe the green stuff!","My eyes are burning!","Cover your mouth with something!"],tsunami:["WAVE! Get to high ground!","Here comes another one!","The street's a river!"]};
-const DZ_AFTER={quake:"Did you feel that earthquake? My cups all fell.",tornado:"That tornado tore the roof off the noodle stand.",flood:"Everything's still soggy after that flood.",meteor:"There's a crater down the street from the meteor strike.",volcano:"There's ash on everything. Everything.",blackout:"The power's back, but my fridge didn't make it.",wildfire:"Half the rooftop gardens burned in that fire.",hurricane:"That hurricane threw a scooter through my window.",freeze:"Still thawing out from that deep freeze.",toxic:"They say the toxic leak's cleaned up. I'm not so sure.",tsunami:"I found a fish in my mailbox after that tsunami."};
+  toxic:["Don't breathe the green stuff!","My eyes are burning!","Cover your mouth with something!"],tsunami:["WAVE! Get to high ground!","Here comes another one!","The street's a river!"],kaiju:["KAIJU! Two of them!","Go Voltipede! Zap that rock!","Slagmaw's going to win, look at the size of it!","They're stepping on the train line!"]};
+const DZ_AFTER={quake:"Did you feel that earthquake? My cups all fell.",tornado:"That tornado tore the roof off the noodle stand.",flood:"Everything's still soggy after that flood.",meteor:"There's a crater down the street from the meteor strike.",volcano:"There's ash on everything. Everything.",blackout:"The power's back, but my fridge didn't make it.",wildfire:"Half the rooftop gardens burned in that fire.",hurricane:"That hurricane threw a scooter through my window.",freeze:"Still thawing out from that deep freeze.",toxic:"They say the toxic leak's cleaned up. I'm not so sure.",tsunami:"I found a fish in my mailbox after that tsunami.",kaiju:"There's a kaiju footprint where the noodle stand used to be."};
 function dzAlert(st){ let a=$("#dzAlert"); if(a) a.remove(); const D=DZ[st.k];
   a=el("div",{id:"dzAlert",role:"alert",style:`position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;width:min(440px,calc(100vw - 24px));background:rgba(16,8,4,.96);border:1px solid ${D.col};box-shadow:0 0 24px ${D.col}55;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-family:var(--f-ui);color:#fde`});
   const close=el("button",{type:"button","aria-label":"Close alert",style:"margin-left:auto;background:none;border:1px solid #c9a;color:#fdd;font:600 13px var(--f-ui);min-width:36px;min-height:36px;cursor:pointer;flex:none",text:"✕",onclick:()=>a.remove()});
@@ -14006,13 +14008,13 @@ setInterval(()=>{ try{ dzCheck(); if(dzOn()&&Math.random()<.35) dzPanic(); }catc
 setInterval(()=>{ try{ if(dzState&&Date.now()>=dzState.until&&Date.now()<dzState.until+2000) chatLine(null,`${DZ[dzState.k].ic} The ${DZ[dzState.k].n.toLowerCase()} is over. Search the rubble outside for anything valuable.`,"sys"); }catch(e){} },1000);
 function dzSpeed(){ const st=dzOn(); if(!st||!WX_OUT.includes(me.scene)) return 1; return {flood:.6,freeze:.7,toxic:.85,tsunami:.8}[st.k]||1; }
 function dzShake(){ const st=dzOn(); if(!st) return [0,0]; const t=Date.now()/1000, rm=matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches?.3:1; let a=0;
-  if(st.k==="quake") a=(2.2+1.8*Math.max(0,Math.sin(t*.7)))*rm; else if(st.k==="meteor") a=Math.max(0,1-(t*1000-dzLastShake)/600)*5*rm; else if(st.k==="tornado"&&WX_OUT.includes(me.scene)) a=.8*rm; else if(st.k==="volcano") a=Math.max(0,Math.sin(t*.4))*1.2*rm; else if(st.k==="hurricane"&&WX_OUT.includes(me.scene)) a=1*rm; else if(st.k==="tsunami"&&WX_OUT.includes(me.scene)) a=Math.max(0,1-Math.abs(dzWaveX()-me.x)/500)*4*rm;
+  if(st.k==="quake") a=(2.2+1.8*Math.max(0,Math.sin(t*.7)))*rm; else if(st.k==="meteor") a=Math.max(0,1-(t*1000-dzLastShake)/600)*5*rm; else if(st.k==="tornado"&&WX_OUT.includes(me.scene)) a=.8*rm; else if(st.k==="volcano") a=Math.max(0,Math.sin(t*.4))*1.2*rm; else if(st.k==="hurricane"&&WX_OUT.includes(me.scene)) a=1*rm; else if(st.k==="kaiju") a=kjShake(st)*(WX_OUT.includes(me.scene)?1:.5)*rm; else if(st.k==="tsunami"&&WX_OUT.includes(me.scene)) a=Math.max(0,1-Math.abs(dzWaveX()-me.x)/500)*4*rm;
   return a?[(Math.random()-.5)*2*a,(Math.random()-.5)*2*a]:[0,0]; }
 // rubble piles anyone can search once each, outside, during and for 10 minutes after
 function dzPiles(sc){ const st=dzRecent(); if(!st||!WX_OUT.includes(sc)||!SCENES[sc]) return []; const W=SCENES[sc].w, out=[]; for(let i=0;i<5;i++) out.push({i,x:Math.round(220+wxRand(st.id+sc+i)*(W-440)),key:st.id+":"+sc+":"+i}); return out; }
 function dzHot(sc){ const st=dzRecent(); if(!st) return []; save.dzLoot=save.dzLoot||{}; const D=DZ[st.k];
-  return dzPiles(sc).filter(p=>!save.dzLoot[p.key]).map(p=>({x:p.x,hw:40,label:st.k==="flood"||st.k==="tsunami"?"Search the flood debris":st.k==="meteor"?"Search the crater":st.k==="wildfire"?"Search the burnt wreckage":st.k==="freeze"?"Search the frozen junk":st.k==="toxic"?"Search the spill (carefully)":st.k==="blackout"?"Search the dark stall":st.k==="hurricane"?"Search the storm wreckage":"Search the rubble",act:()=>{ save.dzLoot[p.key]=Date.now(); for(const k in save.dzLoot) if(Date.now()-save.dzLoot[k]>864e5) delete save.dzLoot[k];
-    const cr=15+Math.floor(Math.random()*46); save.credits+=cr; let msg=`${D.ic} You found ₵${cr}`; if(Math.random()<.55){ const id=rollItem(["meteor","volcano","tsunami","wildfire"].includes(st.k)?.6:.3); addItem(id,1); msg+=` and ${BY[id].n}`; } persist(); hud(); beep(1200,.06); setTimeout(()=>beep(1600,.06),80); toast(msg+"!",D.col); emote("cheer"); }})); }
+  return dzPiles(sc).filter(p=>!save.dzLoot[p.key]).map(p=>({x:p.x,hw:40,label:st.k==="flood"||st.k==="tsunami"?"Search the flood debris":st.k==="meteor"?"Search the crater":st.k==="wildfire"?"Search the burnt wreckage":st.k==="freeze"?"Search the frozen junk":st.k==="toxic"?"Search the spill (carefully)":st.k==="blackout"?"Search the dark stall":st.k==="hurricane"?"Search the storm wreckage":st.k==="kaiju"?"Search the kaiju wreckage":"Search the rubble",act:()=>{ save.dzLoot[p.key]=Date.now(); for(const k in save.dzLoot) if(Date.now()-save.dzLoot[k]>864e5) delete save.dzLoot[k];
+    const cr=15+Math.floor(Math.random()*46); save.credits+=cr; let msg=`${D.ic} You found ₵${cr}`; if(Math.random()<.55){ const id=rollItem(["meteor","volcano","tsunami","wildfire","kaiju"].includes(st.k)?.6:.3); addItem(id,1); msg+=` and ${BY[id].n}`; } persist(); hud(); beep(1200,.06); setTimeout(()=>beep(1600,.06),80); toast(msg+"!",D.col); emote("cheer"); }})); }
 // world-space drawing: outdoor scenes get the full disaster; indoors just the shaking
 function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzOn(), c=ctx, X=camX, k=st.k, out=WX_OUT.includes(me.scene);
   // rubble piles
@@ -14065,12 +14067,14 @@ function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzO
     for(let i=0;i<9;i++){ const y=280+(i%3)*22, x=X+((i*200+T*(12+i*3))%(VW+400))-200; c.fillStyle="rgba(110,255,70,.2)"; c.beginPath(); c.ellipse(x,y,230,26,0,0,7); c.fill(); }
     for(let i=0;i<N2(30);i++){ const p=WXP[i]; const u=(T*.4+p.s)%1; c.strokeStyle=`rgba(170,255,120,${.7*(1-u)})`; c.lineWidth=1; c.beginPath(); c.arc(X+p.x*VW,330-u*80,2+p.s*3,0,7); c.stroke(); }
     for(let i=0;i<3;i++){ const bx=Math.floor(X/700)*700+i*700+300; if(bx<X-40||bx>X+VW+40) continue; c.fillStyle="#d8c020"; c.fillRect(bx-9,296,18,24); c.fillStyle="#111"; c.font="bold 12px monospace"; c.textAlign="center"; c.fillText("☢",bx,313); c.fillStyle="rgba(120,255,70,.6)"; c.beginPath(); c.ellipse(bx+24,322,26,5,0,0,7); c.fill(); } }
+  if(k==="kaiju") try{ drawKaiju(st,T,dt,c,X,out); }catch(e){}
   if(k==="tsunami"&&out){ const W=SCENES[me.scene].w, wx=dzWaveX(); c.fillStyle="rgba(20,60,110,.15)"; c.fillRect(X,0,VW,H);
     const lvl=338-14; c.fillStyle="rgba(40,110,180,.5)"; c.fillRect(X,lvl,VW,H-lvl);
     if(wx>X-300&&wx<X+VW+300){ const g=c.createLinearGradient(0,120,0,340); g.addColorStop(0,"rgba(120,200,255,.95)"); g.addColorStop(1,"rgba(20,70,140,.95)"); c.fillStyle=g; c.beginPath(); c.moveTo(wx-520,340); c.quadraticCurveTo(wx-200,250,wx-40,150); c.quadraticCurveTo(wx+30,110,wx+70,160); c.quadraticCurveTo(wx+40,150,wx+20,190); c.lineTo(wx+60,340); c.closePath(); c.fill();
       c.fillStyle="rgba(240,250,255,.9)"; for(let j=0;j<14;j++){ const a=j/14; c.beginPath(); c.arc(wx-40+a*110+Math.sin(T*8+j)*4,150+Math.sin(a*3)*20-a*10,4+Math.sin(T*6+j)*2,0,7); c.fill(); }
       const d=me.x-wx; if(d>-60&&d<120&&!me.dead){ me.x=clamp(me.x+520*dt,30,W-30); if(!me._dzT||T-me._dzT>4){ me._dzT=T; toast("🌊 The wave sweeps you down the street!","#2a8aff"); } } } }
 }
+// the kaiju battle is drawn by drawKaiju (see KAIJU BATTLE)
 // the tsunami's wave: one sweep across the area every 30 seconds
 function dzWaveX(){ try{ const W=SCENES[me.scene].w, t=(Date.now()/1000)%30; return t<9?-600+(t/9)*(W+1200):-99999; }catch(e){ return -99999; } }
 const N2=n=>Math.round(n*(PERF&&PERF.lvl>=2?.45:PERF&&PERF.lvl>=1?.7:1));
@@ -14490,6 +14494,85 @@ requestAnimationFrame(appLiveTick);
 // the 📱 App button in the immersive view
 { const sb=$("#btnIdle"); if(sb){ const b=el("button",{class:"btn",id:"btnApp",type:"button",title:"Switch to the phone-style app view",text:"📱 App",onclick:()=>appSet(true)}); sb.after(b); } }
 setTimeout(()=>{ if(appPref()==="app") appSet(true,true); },0);
+
+/* ============================================================ KAIJU BATTLE: Slagmaw (a molten rock beast) vs Voltipede (a giant electric centipede)
+   They fight on the skyline over every outdoor area. Everyone sees the same fight: the hits and the winner come from the clock.
+   Players can back a kaiju; back the winner and you get paid when the fight ends. */
+const KJ={s:{n:"Slagmaw",col:"#ff7a2a",ic:"🌋"},v:{n:"Voltipede",col:"#38e8ff",ic:"⚡"}}, KJ_CYC=6;
+function kjWinner(st){ return wxRand("kjw"+st.id)<.5?"s":"v"; }
+// the fight timeline: every 6 seconds Slagmaw spits lava (hits at 3s), then Voltipede strikes with lightning (hits at 5.2s)
+function kjState(st,now){ const dur=Math.max(30,(st.until-st.at)/1000), a=Math.max(0,Math.min(dur,(now-st.at)/1000)), cyc=Math.floor(a/KJ_CYC), ph=a%KJ_CYC, win=kjWinner(st), lose=win==="s"?"v":"s";
+  const hits=n=>{ let s=0, w=0; for(let i=0;i<n;i++){ s+=.6+wxRand("kh"+st.id+i)*.8; } return s; }, tot=hits(Math.floor(dur/KJ_CYC)*2)||1;
+  const done=hits(cyc*2+(ph>=3?1:0)+(ph>=5.2?1:0)), p=Math.min(1,done/tot);
+  const hp={}; hp[lose]=Math.max(0,100*(1-p)); hp[win]=Math.max(18,100*(1-.72*p)); if(a>=dur-3) hp[lose]=0;
+  return {a,ph:a>=dur-3?0.5:ph,cyc,dur,hp,win,over:a>=dur-3}; }
+function drawSlagmaw(c,x,y,t,ph,hit,dir,sz){ sz=sz||1; c.save(); c.translate(x,y); c.scale(dir*sz,sz);
+  const lunge=ph>2&&ph<3?Math.sin((ph-2)*Math.PI)*24:0, mouth=ph>2&&ph<3.1?Math.min(1,(ph-2)*3):0; c.translate(lunge,Math.sin(t*1.4)*2);
+  if(hit){ c.globalAlpha=.6+.4*Math.sin(t*60); }
+  // legs + body
+  c.fillStyle="#24140e"; c.fillRect(-46,-30,24,34); c.fillRect(18,-30,24,34);
+  c.beginPath(); c.ellipse(0,-70,62,56,0,0,7); c.fill(); c.beginPath(); c.ellipse(34,-112,34,26,-.2,0,7); c.fill();
+  // rock spikes on the back
+  c.fillStyle="#3a2418"; for(let i=0;i<6;i++){ const bx=-52+i*14, by=-112+Math.abs(i-2.5)*6; c.beginPath(); c.moveTo(bx-7,by+10); c.lineTo(bx,by-16-(i%2)*6); c.lineTo(bx+7,by+10); c.fill(); }
+  // glowing lava cracks + belly
+  const glow=.6+.4*Math.sin(t*3); c.strokeStyle=`rgba(255,${110+glow*60},30,${.7+.3*glow})`; c.shadowColor="#ff6a1a"; c.shadowBlur=12; c.lineWidth=2.5;
+  c.beginPath(); c.moveTo(-40,-90); c.lineTo(-20,-74); c.lineTo(-30,-52); c.moveTo(-6,-110); c.lineTo(4,-88); c.lineTo(-4,-66); c.moveTo(20,-60); c.lineTo(36,-44); c.stroke();
+  c.fillStyle=`rgba(255,${120+glow*60},30,.55)`; c.beginPath(); c.ellipse(4,-50,30,18,0,0,7); c.fill();
+  // arms
+  c.shadowBlur=0; c.fillStyle="#2c1810"; c.save(); c.translate(30,-80); c.rotate(-.6-lunge/40); c.fillRect(0,-8,40,16); c.restore();
+  // head + mouth
+  c.fillStyle="#24140e"; c.save(); c.translate(52,-118); c.rotate(-mouth*.25); c.fillRect(0,-10,34,14); c.restore(); c.save(); c.translate(52,-108); c.rotate(mouth*.35); c.fillRect(0,-4,32,12); c.restore();
+  if(mouth>0){ c.fillStyle=`rgba(255,200,60,${mouth})`; c.shadowColor="#ffb02a"; c.shadowBlur=18; c.beginPath(); c.ellipse(70,-112,10*mouth,6*mouth,0,0,7); c.fill(); }
+  c.shadowColor="#ffd36a"; c.shadowBlur=10; c.fillStyle="#ffd36a"; c.fillRect(62,-126,6,4); c.restore(); }
+function drawVoltipede(c,x,y,t,ph,hit,dir,sz){ sz=sz||1; c.save(); c.translate(x,y); c.scale(dir*sz,sz);
+  const strike=ph>4.2&&ph<5.4?Math.sin((ph-4.2)/1.2*Math.PI):0; if(hit){ c.globalAlpha=.6+.4*Math.sin(t*60); }
+  // body: segments rearing up from the ground, curling toward the enemy
+  const segs=[]; for(let i=0;i<10;i++){ const u=i/9; segs.push([Math.sin(u*2.2+t*1.2)*10+u*u*(40+strike*40),-u*190+Math.sin(t*2+i)*2]); }
+  for(let i=0;i<segs.length;i++){ const [sx,sy]=segs[i], r=20-i*1.1;
+    c.strokeStyle="#9fd8ff"; c.lineWidth=1.5; for(const s of [-1,1]){ const lg=Math.sin(t*14+i*1.3)*4; c.beginPath(); c.moveTo(sx,sy); c.lineTo(sx+s*(r+12),sy+6+lg); c.lineTo(sx+s*(r+18),sy+16+lg); c.stroke(); }
+    c.fillStyle=i%2?"#1c1640":"#241c52"; c.beginPath(); c.ellipse(sx,sy,r,r*.8,0,0,7); c.fill(); c.strokeStyle=`rgba(56,232,255,${.5+.4*Math.sin(t*5+i)})`; c.shadowColor="#38e8ff"; c.shadowBlur=8; c.lineWidth=2; c.beginPath(); c.ellipse(sx,sy,r,r*.8,0,Math.PI*1.1,Math.PI*1.9); c.stroke(); c.shadowBlur=0; }
+  // head, mandibles, eyes, antennae
+  const [hx,hy]=segs[segs.length-1]; c.fillStyle="#2a2060"; c.beginPath(); c.ellipse(hx+6,hy-6,16,12,0,0,7); c.fill();
+  const mo=.3+strike*.6; c.strokeStyle="#cfeaff"; c.lineWidth=3; for(const s of [-1,1]){ c.beginPath(); c.moveTo(hx+14,hy-2); c.quadraticCurveTo(hx+28,hy-2+s*10*mo,hx+24,hy+s*16*mo); c.stroke(); }
+  c.fillStyle="#7af6ff"; c.shadowColor="#38e8ff"; c.shadowBlur=12; c.fillRect(hx+8,hy-12,4,3); c.fillRect(hx+14,hy-10,3,3);
+  c.strokeStyle="rgba(150,240,255,.9)"; c.lineWidth=1.3; for(const s of [0,1]){ c.beginPath(); c.moveTo(hx+4+s*6,hy-16); c.quadraticCurveTo(hx-10+s*20,hy-50,hx+10+s*24,hy-60+Math.sin(t*8+s)*6); c.stroke(); }
+  if(Math.sin(t*9)>.3){ c.strokeStyle="#e6fbff"; c.beginPath(); c.moveTo(hx+10,hy-60); c.lineTo(hx+16,hy-70); c.lineTo(hx+12,hy-74); c.stroke(); } c.shadowBlur=0; c.restore();
+  return [x+dir*(hx+20)*sz,y+hy*sz]; }
+const KJ_BASE=262, KJ_SZ=.95;
+function drawKaijuBack(st,T,c,X){ const now=Date.now(), K=kjState(st,now), z=KJ_SZ, base=KJ_BASE, Y=o=>base+o*z;
+  const sx=X+VW*.2, vx=X+VW*.8, ph=K.ph;
+  const sHit=ph>5.2&&ph<5.7, vHit=ph>3&&ph<3.5;
+  // dark ground shadows so they stand in the city
+  c.fillStyle="rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(sx,base,80*z,10,0,0,7); c.fill(); c.beginPath(); c.ellipse(vx,base,50*z,8,0,0,7); c.fill();
+  c.save(); drawSlagmaw(c,sx,base,T,ph,sHit,1,z); const vh=drawVoltipede(c,vx,base,T,ph,vHit,-1,z); c.restore();
+  // lava glob: Slagmaw -> Voltipede
+  if(ph>2.6&&ph<3.05){ const q=(ph-2.6)/.45, x0=sx+72*z, y0=Y(-112), x1=vx-10, y1=Y(-120), x=x0+(x1-x0)*q, y=y0+(y1-y0)*q-Math.sin(q*Math.PI)*70;
+    c.save(); c.fillStyle="#ffb02a"; c.shadowColor="#ff6a1a"; c.shadowBlur=20; c.beginPath(); c.arc(x,y,11,0,7); c.fill(); for(let i=1;i<7;i++){ const qq=Math.max(0,q-i*.04), tx=x0+(x1-x0)*qq, ty=y0+(y1-y0)*qq-Math.sin(qq*Math.PI)*70; c.globalAlpha=1-i/7; c.beginPath(); c.arc(tx,ty,9-i,0,7); c.fill(); } c.restore(); }
+  if(vHit){ c.save(); c.globalCompositeOperation="lighter"; c.fillStyle=`rgba(255,140,40,${1-(ph-3)/.5})`; c.beginPath(); c.arc(vx-10,Y(-120),40+(ph-3)*120,0,7); c.fill(); c.restore(); }
+  // lightning: Voltipede -> Slagmaw
+  if(ph>4.9&&ph<5.35){ c.save(); c.strokeStyle="#e6fbff"; c.shadowColor="#38e8ff"; c.shadowBlur=20; c.lineWidth=3; for(let b=0;b<2;b++){ c.beginPath(); let x=vh[0], y=vh[1]; c.moveTo(x,y); const tx=sx+40*z, ty=Y(-90); for(let j=1;j<=9;j++){ const q=j/9; x=vh[0]+(tx-vh[0])*q+(j<9?(wxRand("lb"+b+j+Math.floor(T*20))-.5)*40:0); y=vh[1]+(ty-vh[1])*q+(j<9?(wxRand("lc"+b+j+Math.floor(T*20))-.5)*40:0); c.lineTo(x,y); } c.stroke(); } c.restore();
+    c.fillStyle="rgba(200,240,255,.12)"; c.fillRect(X,0,VW,H); }
+  if(sHit){ c.save(); c.globalCompositeOperation="lighter"; c.fillStyle=`rgba(120,230,255,${1-(ph-5.2)/.5})`; c.beginPath(); c.arc(sx+40*z,Y(-90),40+(ph-5.2)*120,0,7); c.fill(); c.restore(); }
+  return K; }
+function drawKaiju(st,T,dt,c,X,out){ const now=Date.now(), K=kjState(st,now); if(!out) return K; const z=KJ_SZ, base=KJ_BASE, Y=o=>base+o*z, sx=X+VW*.2, vx=X+VW*.8, ph=K.ph;
+  // roars
+  c.save(); c.textAlign="center"; c.font="bold 14px 'Silkscreen',monospace"; if(ph>1.6&&ph<2.4){ c.fillStyle="#ffb02a"; c.globalAlpha=1-Math.abs(ph-2)/.4; c.fillText("GRRAAAWR!",sx+40*z,Y(-160)); } if(ph>3.9&&ph<4.6){ c.fillStyle="#7af6ff"; c.globalAlpha=1-Math.abs(ph-4.25)/.35; c.fillText("SKRRREEEE!",vx-30,Y(-215)); } c.restore();
+  // health bars
+  const bw=Math.min(200,VW*.3); for(const [k,bx,al] of [["s",X+VW/2-bw-14,"left"],["v",X+VW/2+14,"right"]]){ const D=KJ[k]; const by=MOBILE?40:104; c.fillStyle="rgba(0,0,0,.7)"; c.fillRect(bx-2,by,bw+4,16); c.fillStyle=D.col; c.fillRect(al==="left"?bx:bx+bw*(1-K.hp[k]/100),by+2,bw*K.hp[k]/100,12);
+    c.fillStyle="#fff"; c.font="bold 9px 'Silkscreen',monospace"; c.textAlign=al; c.fillText(`${D.ic} ${D.n.toUpperCase()} ${Math.round(K.hp[k])}%`,al==="left"?bx:bx+bw,by-4); } c.fillStyle="#fff"; c.font="bold 11px 'Silkscreen',monospace"; c.textAlign="center"; c.fillText("VS",X+VW/2,(MOBILE?40:104)+12);
+  if(K.over){ c.save(); c.textAlign="center"; c.font="bold 22px 'Silkscreen',monospace"; c.fillStyle=KJ[K.win].col; c.shadowColor=KJ[K.win].col; c.shadowBlur=16; c.fillText(`${KJ[K.win].n.toUpperCase()} WINS!`,X+VW/2,MOBILE?84:152); c.restore(); }
+  return K; }
+function kjShake(st){ const K=kjState(st,Date.now()), ph=K.ph; return (ph>3&&ph<3.4)||(ph>5.2&&ph<5.6)?5:ph>1.6&&ph<2.4?1.5:.4; }
+// backing a kaiju
+function kjBet(st,side){ save.kjBet={id:st.id,side}; persist(); toast(`You're backing ${KJ[side].n}! Win and you get ₵150.`,KJ[side].col); const a=$("#dzAlert"); if(a){ const r=a.querySelector(".kjbet"); if(r) r.replaceChildren(el("span",{style:`color:${KJ[side].col};font-size:12px`,text:`✔ Backing ${KJ[side].n}`})); } }
+setInterval(()=>{ try{ const st=dzState; if(!st||st.k!=="kaiju") return; const now=Date.now(); if(now<st.until) return; if(save.kjDone===st.id) return; if(now-st.until>10*6e4) return;
+    save.kjDone=st.id; const w=kjWinner(st); chatLine(null,`🦖 The kaiju battle is over: ${KJ[w].n} wins! ${KJ[w==="s"?"v":"s"].n} crawls back into the sea.`,"sys");
+    if(save.kjBet&&save.kjBet.id===st.id){ if(save.kjBet.side===w){ save.credits+=150; toast(`🏆 ${KJ[w].n} won! You get ₵150 for backing them.`,KJ[w].col); try{ emote("cheer"); }catch(e){} } else toast(`${KJ[w].n} won. Your kaiju lost. Better luck next time.`,"#9a8cc0"); }
+    persist(); hud(); }catch(e){} },1000);
+{ const _dza=dzAlert; dzAlert=function(st){ _dza(st); try{ if(st.k!=="kaiju") return; const a=$("#dzAlert"); if(!a) return; const col=a.children[1]; const mine=save.kjBet&&save.kjBet.id===st.id?save.kjBet.side:null;
+  const row=el("div",{class:"kjbet",style:"display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"}); if(mine) row.append(el("span",{style:`color:${KJ[mine].col};font-size:12px`,text:`✔ Backing ${KJ[mine].n}`}));
+  else for(const k of ["s","v"]) row.append(el("button",{type:"button",style:`background:rgba(0,0,0,.4);border:1px solid ${KJ[k].col};color:${KJ[k].col};font:600 12px var(--f-ui);padding:8px 10px;min-height:36px;cursor:pointer`,text:`${KJ[k].ic} Back ${KJ[k].n}`,onclick:()=>kjBet(st,k)}));
+  col.append(row); }catch(e){} }; }
 
 /* ============================================================ LEVELS: 1 to 1000
    You earn XP from almost everything: making credits and chips, getting items, Reward Points, doing things around the city,
