@@ -4039,7 +4039,7 @@ const SCENES={
   zerocool:{w:2600, spawn:220},
 };
 // hotspots: x center, half-width, label, act
-function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc),...bytesHot(sc),...zkHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
+function hotspots(sc){ const base=[...(hotspotsBase(sc)||[]),...rpmHot(sc),...bytesHot(sc),...zkHot(sc),...dzHot(sc)]; let npcH=[]; try{ npcH=npcHotspots(sc); }catch(e){} return [...npcH.filter(h=>h.npc.vx),...base,...npcH.filter(h=>!h.npc.vx)]; }
 /* ============================================================ RP EXCHANGE MACHINES: trade credits for Reward Points */
 const RPM_COST=4000, RPM_GET=50, RPM_MAX=10;
 const RPM_SPOTS={street:{x:2150,n:"Sector 9"},byte:{x:2170,n:"Byte Market"},grid:{x:2000,n:"The Grid"},smacked:{x:1185,n:"Smacked Shop"}};
@@ -4467,7 +4467,7 @@ function stepInner(now){
   if(me.scene==="ascend"){ ix=0; iy=0; target=null; if(!me.homeSit||!String(me.homeSit.key).startsWith("star")) showTakeSeat(); }
   if(ix||iy) target=null;
   if(target){ const dx=target.x-me.x, dy=target.y-me.y; const d=Math.hypot(dx,dy); if(d<6){ const u=target.use; target=null; if(u&&$("#overlay").hidden){ beep(880,.05); safeAct(u); } } else { ix=dx/d; iy=dy/d; } }
-  let sp=(buffOn("speed")?195:150)*(1+petTrait("speed")/100); if(me.blocking||(me.slowUntil||0)>T) sp*=.5; if(me.dead) sp=0; me.moving=!!(ix||iy)&&$("#overlay").hidden;
+  let sp=(buffOn("speed")?195:150)*(1+petTrait("speed")/100); if(me.blocking||(me.slowUntil||0)>T) sp*=.5; try{ sp*=dzSpeed(); }catch(e){} if(me.dead) sp=0; me.moving=!!(ix||iy)&&$("#overlay").hidden;
   if(me.seat!=null&&me.moving){ me.seat=null; pushPresence(true); }
   if(me.seat!=null){ me.moving=false; me.x=SEATS[me.seat].x; me.y=SEATS[me.seat].y; }
   if(me.homeSit&&(me.moving||(me.scene!=="home"&&me.scene!=="vip"&&me.scene!=="ascend"&&me.scene!=="line"&&me.scene!=="streamdome"&&me.scene!=="den"))){ me.homeSit=null; pushPresence(true); }
@@ -4490,7 +4490,7 @@ function stepInner(now){
   tickItemCans(T); tickLookCans(T);
 }
 function render(){
-  ctx.setTransform(scale,0,0,scale,-camX*scale,0);
+  let _dzs=[0,0]; try{ _dzs=dzShake(); }catch(e){} ctx.setTransform(scale,0,0,scale,-camX*scale+_dzs[0]*scale,_dzs[1]*scale);
   if(me.scene==="street"){ drawStreet(T); drawSimEntrance(T); } else if(me.scene==="simcity") drawSim(T); else if(me.scene==="zerocool") drawZeroCool(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="nfantasy") drawNfHub(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   drawBytesTerminals(T);
@@ -4515,6 +4515,7 @@ function render(){
   drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ zkDraw(T); }catch(e){} try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); else if(me.scene==="rowin") drawRowInFront(T); }catch(e){}
   // seasons & weather (outdoor areas)
   try{ drawWeather(T,dt); }catch(e){}
+  try{ drawDisaster(T,dt); }catch(e){}
   ctx.setTransform(1,0,0,1,0,0);
 }
 /* ============================================================ IDLE MODE: send your runner to do things on their own, live on screen */
@@ -13809,16 +13810,17 @@ function wxTick(){ const w=wxNow(), key=w.S.k+":"+w.k, pill=$("#wxpill"); if(pil
   wxLast=key; }
 setInterval(()=>{ try{ wxTick(); }catch(e){} },5000);
 let wxWatched=false;
-function wxWatch(db){ if(wxWatched||!db) return; wxWatched=true; try{ db.doc("shopinfo/weather").onSnapshot(s=>{ const d=s&&s.exists?s.data():null; wxLock=d&&typeof d==="object"?{season:WX_SEASONS.some(x=>x.k===d.season)?d.season:"",weather:WX[d.weather]?d.weather:""}:null; wxTick(); },()=>{}); }catch(e){} }
+function wxWatch(db){ try{ dzWatch(db); }catch(e){} if(wxWatched||!db) return; wxWatched=true; try{ db.doc("shopinfo/weather").onSnapshot(s=>{ const d=s&&s.exists?s.data():null; wxLock=d&&typeof d==="object"?{season:WX_SEASONS.some(x=>x.k===d.season)?d.season:"",weather:WX[d.weather]?d.weather:""}:null; wxTick(); },()=>{}); }catch(e){} }
 function openWeather(){ const w=wxNow(); const body=panel("Weather & seasons",`${w.S.ic} ${w.S.n} in Sector 9 · ${w.W.ic} ${w.W.n} right now`); currentView="weather";
   const left=m=>m>=1440?`${Math.round(m/1440)} day${Math.round(m/1440)>1?"s":""}`:m>=60?`${Math.floor(m/60)} h ${m%60} min`:`${m} min`;
   body.append(el("div",{class:"detail",style:`border-color:${w.S.col}`},el("div",{class:"info"},el("strong",{style:`color:${w.S.col}`,text:`${w.S.ic} ${w.S.n}`}),
     el("span",{text:w.seasonEnds?`${WX_SEASONS[(WX_SEASONS.indexOf(w.S)+1)%4].n} starts in ${left(Math.max(1,Math.round((w.seasonEnds-Date.now())/6e4)))}.`:"The owner has locked the season."}),
-    el("span",{class:"sub",text:"Seasons last 7 days and go Spring → Summer → Autumn → Winter. The weather changes every 20 minutes, and every player sees the same sky. You'll see it in every outdoor area."}))));
+    el("span",{class:"sub",text:"Seasons last 7 days and go Spring → Summer → Autumn → Winter. The weather changes every 20 minutes between 21 kinds, and every player sees the same sky. You'll see it in every outdoor area."}))));
   const l=el("div",{class:"list"}); l.append(el("div",{class:"li"},el("span",{class:"tag",style:`color:${w.S.col};border-color:${w.S.col}`,text:"NOW"}),el("div",{class:"grow",text:`${w.W.ic} ${w.W.n}`}),el("span",{class:"sub",text:w.locked&&wxLock.weather?"locked":`until ${new Date(w.until).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`})));
   if(!(wxLock&&wxLock.weather)) for(const f of wxForecast(5)) l.append(el("div",{class:"li"},el("span",{class:"tag",text:new Date(f.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}),el("div",{class:"grow",text:`${f.W.ic} ${f.W.n}`}),f.S!==w.S?el("span",{class:"sub",text:f.S.n}):null));
   body.append(el("strong",{text:"Forecast"}),l);
   const S=w.S; body.append(el("div",{class:"sub",text:`${S.n} can bring: ${Object.keys(S.w).map(k=>WX[k].ic+" "+WX[k].n).join(", ")}.`}));
+  dzPanel(body);
   if(IS_ADMIN&&DB){ const ss=el("select",{"aria-label":"Lock season"},el("option",{value:"",text:"Season: follow the calendar"}),...WX_SEASONS.map(x=>el("option",{value:x.k,text:"Season: "+x.n})));
     const ws=el("select",{"aria-label":"Lock weather"},el("option",{value:"",text:"Weather: follow the season"}),...Object.entries(WX).map(([k,x])=>el("option",{value:k,text:"Weather: "+x.n})));
     ss.value=wxLock&&wxLock.season||""; ws.value=wxLock&&wxLock.weather||"";
@@ -13855,6 +13857,7 @@ function drawWeather(T,dt){ if(!WX_OUT.includes(me.scene)) return; const w=wxNow
   if(k==="aurora"){ c.globalAlpha=fade; for(let b=0;b<3;b++){ c.beginPath(); for(let x=0;x<=VW;x+=16){ const y=40+b*18+Math.sin(x/90+T*.6+b)*16+Math.sin(x/37+T*.9)*6; x?c.lineTo(X+x,y):c.moveTo(X+x,y); } for(let x=VW;x>=0;x-=16){ const y=40+b*18+Math.sin(x/90+T*.6+b)*16+Math.sin(x/37+T*.9)*6+40; c.lineTo(X+x,y); } c.closePath(); const ag=c.createLinearGradient(0,30,0,140); const col=["67,240,164","56,232,255","207,114,255"][b]; ag.addColorStop(0,`rgba(${col},.38)`); ag.addColorStop(1,`rgba(${col},0)`); c.fillStyle=ag; c.fill(); } c.globalAlpha=1;
     c.fillStyle="#f4f8ff"; for(let i=0;i<N(40);i++){ const p=WXP[i]; p.y+=p.v*dt*.06; if(p.y>1) p.y-=1; c.globalAlpha=fade*.6; c.fillRect(X+((p.x*VW+T*6)%VW),p.y*H,1.5,1.5); } c.globalAlpha=1; }
   if(k==="clear"){ c.globalAlpha=fade; for(let i=0;i<N(30);i++){ const p=WXP[i]; if(Math.sin(T*2+p.r*5)<.6) continue; c.fillStyle="#e8e0ff"; c.fillRect(X+p.x*VW,p.y*120,1.4,1.4); } c.globalAlpha=1; }
+  try{ drawWeather2(c,T,dt,k,fade,X,N); }catch(e){}
   c.restore(); }
 
 /* ============================================================ WORLD AWARENESS: residents notice the weather, the season, the news,
@@ -13914,6 +13917,138 @@ function drawUmbrella(c,x,y,s,t,col){ c.save(); c.translate(x,y); c.scale(s,s); 
   c.fillStyle=col; c.beginPath(); c.moveTo(-22,-100); c.quadraticCurveTo(6,-128,34,-100); for(let k=0;k<4;k++){ const a=34-k*14; c.quadraticCurveTo(a-7,-104,a-14,-100); } c.closePath(); c.fill();
   c.fillStyle="rgba(255,255,255,.18)"; c.beginPath(); c.moveTo(-14,-104); c.quadraticCurveTo(6,-122,20,-108); c.quadraticCurveTo(6,-116,-14,-104); c.fill(); c.restore(); }
 const UMB_COLS=["#ff3fa8","#38e8ff","#ffd36a","#43f0a4","#cf72ff","#ff7a45","#1a1a24","#e9e2ff"];
+/* ============================================================ MORE WEATHER (10 new kinds) */
+Object.assign(WX,{drizzle:{n:"Neon drizzle",ic:"🌦"},hail:{n:"Hailstorm",ic:"🧊"},dust:{n:"Dust storm",ic:"🏜"},gale:{n:"Gale winds",ic:"💨"},smog:{n:"Smog",ic:"🏭"},
+  meteor:{n:"Meteor shower",ic:"🌠"},sleet:{n:"Freezing sleet",ic:"💧"},ion:{n:"Ion storm",ic:"⚡"},datarain:{n:"Data rain",ic:"💾"},spores:{n:"Glow spores",ic:"✨"}});
+Object.assign(WX_SEASONS[0].w,{drizzle:2,gale:1,spores:2,hail:1});
+Object.assign(WX_SEASONS[1].w,{dust:2,smog:1,meteor:2,ion:1,hail:1});
+Object.assign(WX_SEASONS[2].w,{gale:2,smog:2,datarain:1,drizzle:2,ion:1});
+Object.assign(WX_SEASONS[3].w,{sleet:2,meteor:1,datarain:1});
+WX_WET.push("drizzle","sleet","hail");
+Object.assign(WX_LINES,{drizzle:["Just a drizzle. The neon makes it pink.","Barely raining. Barely.","I like this kind of rain. Soft."],
+  hail:["Ow! Hail! Get under something!","It's raining ice cubes!","My car's going to have dents."],
+  dust:["Cover your mouth, the dust is everywhere.","Can't see the end of the block in this dust.","Sand in my teeth. Great."],
+  gale:["Hold onto your hat!","This wind almost took my bag.","Someone's laundry just flew past me."],
+  smog:["The air tastes like old batteries today.","Smog's bad. Don't breathe too deep.","The factories are working overtime again."],
+  meteor:["Shooting stars! Make a wish!","Look up, there's another one!","I counted twelve meteors already."],
+  sleet:["Freezing rain. The worst of both worlds.","The sidewalk's pure ice. Careful.","My jacket's frozen stiff."],
+  ion:["My hair's standing up. Is that the ion storm?","Every screen in the city is flickering.","Purple lightning. That's new."],
+  datarain:["Is it raining… numbers?","The sky's leaking code again.","Somebody's hacking the weather, I swear."],
+  spores:["The glow spores are out. So pretty.","They say if a spore lands on you, you get lucky.","The whole street looks like an aquarium."]});
+Object.assign(WX_IN,{drizzle:"Just a drizzle out there.",hail:"Hear that hail on the roof?",dust:"Dust storm outside. Stay in.",gale:"The wind's howling out there.",smog:"The smog's thick today.",meteor:"Meteor shower tonight! Go look!",
+  sleet:"Freezing sleet out there. Careful on the steps.",ion:"Ion storm. The lights keep flickering.",datarain:"They say it's raining data out there.",spores:"The glow spores are out. Go see!"});
+{ const _m=wxMood; wxMood=function(n){ const r=_m(n); if(r) return r; if(!wxOutside()) return null; const k=wxNow().k;
+  return {drizzle:[.05,0,"Doesn't mind a drizzle"],hail:[-.2,.2,"Dodging hail"],dust:[-.15,.05,"Coughing in the dust"],gale:[-.05,.1,"Fighting the wind"],smog:[-.15,0,"Can't breathe in the smog"],meteor:[.3,0,"Wishing on shooting stars"],
+    sleet:[-.2,0,"Freezing in the sleet"],ion:[-.05,.2,"Jumpy in the ion storm"],datarain:[.05,.1,"Watching the sky leak code"],spores:[.3,0,"Loving the glow spores"]}[k]||null; }; }
+// drawing for the new kinds (world space, outdoor only, called from drawWeather)
+function drawWeather2(c,T,dt,k,fade,X,N){
+  if(k==="drizzle"||k==="sleet"){ const n=N(k==="sleet"?150:90); c.globalAlpha=Math.max(.5,fade); c.strokeStyle=k==="sleet"?"rgba(200,230,255,.42)":"rgba(255,150,220,.45)"; c.lineWidth=1; c.beginPath();
+    for(let i=0;i<n;i++){ const p=WXP[i]; p.y+=p.v*dt*(k==="sleet"?1.1:.7); if(p.y>1) p.y-=1; const x=X+((p.x*VW+T*(k==="sleet"?50:16))%VW), y=p.y*H; c.moveTo(x,y); c.lineTo(x-(k==="sleet"?4:1),y+(k==="sleet"?8:5)); } c.stroke();
+    if(k==="sleet"){ c.fillStyle="#f0f8ff"; for(let i=0;i<N(60);i++){ const p=WXP[i+100]; const x=X+((p.x*VW+T*60)%VW); c.fillRect(x,p.y*H,2,2); } c.fillStyle="rgba(190,230,255,.35)"; c.fillRect(X,262,VW,4); }
+    c.globalAlpha=1; }
+  if(k==="hail"){ c.globalAlpha=fade; c.fillStyle="#f4faff"; for(let i=0;i<N(120);i++){ const p=WXP[i]; p.y+=p.v*dt*1.9; if(p.y>1) p.y-=1; const x=X+((p.x*VW+T*20)%VW), y=p.y*300; const s=1.5+p.s*2; c.beginPath(); c.arc(x,y,s,0,7); c.fill(); }
+    for(let i=0;i<N(30);i++){ const p=WXP[i+120], u=(T*2+p.s)%1; if(u<.3){ const x=X+p.x*VW, y=300+p.r*5-Math.sin(u/.3*Math.PI)*8; c.beginPath(); c.arc(x,y,1.6,0,7); c.fill(); } }
+    c.fillStyle="rgba(240,248,255,.4)"; for(let x=Math.floor(X/12)*12;x<X+VW;x+=12) if(wxRand("hl"+x)<.4) c.fillRect(x,296+wxRand("hy"+x)*30,2,2); c.globalAlpha=1; }
+  if(k==="dust"){ c.globalAlpha=fade; c.fillStyle="rgba(200,140,70,.22)"; c.fillRect(X,0,VW,H); for(let i=0;i<6;i++){ const y=90+i*36, x=X+((i*230+T*(120+i*20))%(VW+500))-250; c.fillStyle="rgba(210,150,80,.14)"; c.beginPath(); c.ellipse(x,y,260,30,0,0,7); c.fill(); }
+    c.fillStyle="rgba(230,180,110,.6)"; for(let i=0;i<N(140);i++){ const p=WXP[i]; const x=X+((p.x*VW+T*(260+p.v*160))%VW), y=p.y*H+Math.sin(T*3+p.r)*4; c.fillRect(x,y,2+p.s*3,1); } c.globalAlpha=1; }
+  if(k==="gale"){ c.globalAlpha=fade; c.strokeStyle="rgba(220,230,255,.22)"; c.lineWidth=1.2; for(let i=0;i<N(40);i++){ const p=WXP[i]; const x=X+((p.x*VW+T*(420+p.v*200))%(VW+200))-100, y=p.y*280; c.beginPath(); c.moveTo(x,y); c.quadraticCurveTo(x+40,y-4-Math.sin(T*4+p.r)*4,x+90+p.s*60,y); c.stroke(); }
+    for(let i=0;i<N(14);i++){ const p=WXP[i+60]; const x=X+((p.x*VW+T*(300+p.v*120))%(VW+100))-50, y=120+p.y*170+Math.sin(T*3+p.r)*30; c.save(); c.translate(x,y); c.rotate(T*6+p.r); c.fillStyle=["#e9e2ff","#ffd36a","#9fd8ff","#ff9ad5"][i%4]; c.fillRect(-4,-3,8,6); c.restore(); } c.globalAlpha=1; }
+  if(k==="smog"){ c.globalAlpha=fade; const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,"rgba(120,130,70,.32)"); g.addColorStop(1,"rgba(90,80,50,.18)"); c.fillStyle=g; c.fillRect(X,0,VW,H);
+    for(let i=0;i<8;i++){ const y=60+i*32, x=X+((i*190+T*(6+i*2))%(VW+420))-210; c.fillStyle="rgba(110,110,70,.16)"; c.beginPath(); c.ellipse(x,y,240,28,0,0,7); c.fill(); } c.globalAlpha=1; }
+  if(k==="meteor"){ c.globalAlpha=fade; c.fillStyle="#e8e0ff"; for(let i=0;i<N(40);i++){ const p=WXP[i]; if(Math.sin(T*2+p.r*5)<.4) continue; c.fillRect(X+p.x*VW,p.y*130,1.3,1.3); }
+    for(let i=0;i<5;i++){ const per=3+i*1.3, u=((T+i*1.7)%per)/per; if(u>.35) continue; const q=u/.35, x0=X+wxRand("mt"+i+Math.floor((T+i*1.7)/per))*VW, x=x0-q*220, y=20+q*120;
+      const gr=c.createLinearGradient(x,y,x+70,y-38); gr.addColorStop(0,"rgba(255,255,255,.95)"); gr.addColorStop(1,"rgba(160,200,255,0)"); c.strokeStyle=gr; c.lineWidth=2; c.beginPath(); c.moveTo(x,y); c.lineTo(x+70,y-38); c.stroke(); } c.globalAlpha=1; }
+  if(k==="ion"){ c.globalAlpha=fade; c.fillStyle="rgba(150,70,255,.12)"; c.fillRect(X,0,VW,H); const fl=Math.sin(T*13)>.94; if(fl){ c.fillStyle="rgba(200,140,255,.18)"; c.fillRect(X,0,VW,H); }
+    c.strokeStyle="rgba(210,160,255,.8)"; c.shadowColor="#b070ff"; c.shadowBlur=10; c.lineWidth=1.3; for(let i=0;i<3;i++){ if(Math.sin(T*7+i*2.1)<.5) continue; let x=X+wxRand("ion"+i+Math.floor(T*3))*VW, y=10; c.beginPath(); c.moveTo(x,y); for(let j=0;j<6;j++){ x+=(wxRand("io"+i+j+Math.floor(T*6))-.5)*60; y+=12; c.lineTo(x,y); } c.stroke(); } c.shadowBlur=0;
+    for(let i=0;i<3;i++){ if(Math.sin(T*9+i*3)<.8) continue; c.fillStyle="rgba(180,120,255,.12)"; c.fillRect(X,wxRand("gl"+i+Math.floor(T*8))*H,VW,3+i*2); } c.globalAlpha=1; }
+  if(k==="datarain"){ c.globalAlpha=fade*.7; c.font="11px monospace"; c.textAlign="center"; for(let col=0;col<N(40);col++){ const p=WXP[col], x=X+p.x*VW, sp=60+p.v*80, y0=((T*sp+p.y*H)%(H+100))-50;
+    for(let j=0;j<5;j++){ c.fillStyle=j===0?"rgba(220,255,230,.9)":`rgba(67,240,164,${.5-j*.09})`; c.fillText(String.fromCharCode(0x30A0+((col*7+j*13+Math.floor(T*6))%90)),x,y0-j*12); } } c.globalAlpha=1; }
+  if(k==="spores"){ c.globalAlpha=fade; for(let i=0;i<N(70);i++){ const p=WXP[i]; p.y-=p.v*dt*.03; if(p.y<0) p.y+=1; const x=X+((p.x*VW+Math.sin(T*.6+p.r)*40)%VW), y=40+p.y*260, b=.5+.5*Math.sin(T*2+p.r*4);
+    c.fillStyle=`rgba(${i%3?"120,255,220":"190,255,140"},${.35+.5*b})`; c.shadowColor=i%3?"#78ffdc":"#beff8c"; c.shadowBlur=8; c.beginPath(); c.arc(x,y,1.2+p.s*1.8,0,7); c.fill(); } c.shadowBlur=0; c.globalAlpha=1; }
+}
+
+/* ============================================================ NATURAL DISASTERS (owner-triggered)
+   Earthquake, Tornado, Flash flood, Meteor strike, Volcanic eruption. The owner starts one from the Weather panel; every player
+   gets an alert, the whole city reacts, and rubble piles appear outside that anyone can search for credits and parts. */
+const DZ={quake:{n:"Earthquake",ic:"💥",col:"#ffb84a",d:"The ground shakes in every part of the city. Cracks open in the streets."},
+  tornado:{n:"Tornado",ic:"🌪",col:"#a8b8cc",d:"A twister tears across the outdoor areas. Get too close and it throws you."},
+  flood:{n:"Flash flood",ic:"🌊",col:"#38a8ff",d:"Water floods the streets. Everyone outside moves slower."},
+  meteor:{n:"Meteor strike",ic:"☄",col:"#ff7a3a",d:"Fireballs rain down and leave burning craters."},
+  volcano:{n:"Volcanic eruption",ic:"🌋",col:"#ff3a2a",d:"A volcano erupts on the horizon. The sky turns red and ash falls everywhere."}};
+let dzState=null, dzWatched=false, dzSeen="", dzCraters=[], dzLastShake=0;
+const dzOn=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until?dzState:null;
+const dzRecent=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until+10*6e4?dzState:null;
+function dzWatch(db){ if(dzWatched||!db) return; dzWatched=true; try{ db.doc("shopinfo/disaster").onSnapshot(s=>{ const d=s&&s.exists?s.data():null;
+  dzState=d&&DZ[d.k]&&+d.until>Date.now()-11*6e4?{k:d.k,at:+d.at||0,until:+d.until||0,id:String(d.id||d.at||"")}:null; dzCheck(); },()=>{}); }catch(e){} }
+const DZ_SCARED={quake:["Earthquake! Get away from the windows!","The whole building's shaking!","Hold onto something!"],tornado:["TORNADO! Run!","It's coming this way!","Get inside, now!"],flood:["The water's rising! Get to high ground!","My shoes are gone. The water took them.","Is that a car floating by?!"],
+  meteor:["Something's falling from the sky!","That one hit the next block!","It's the end of the world!"],volcano:["Since when do we have a volcano?!","The sky's on fire!","Don't breathe the ash!"]};
+const DZ_AFTER={quake:"Did you feel that earthquake? My cups all fell.",tornado:"That tornado tore the roof off the noodle stand.",flood:"Everything's still soggy after that flood.",meteor:"There's a crater down the street from the meteor strike.",volcano:"There's ash on everything. Everything."};
+function dzAlert(st){ let a=$("#dzAlert"); if(a) a.remove(); const D=DZ[st.k];
+  a=el("div",{id:"dzAlert",role:"alert",style:`position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;width:min(440px,calc(100vw - 24px));background:rgba(16,8,4,.96);border:1px solid ${D.col};box-shadow:0 0 24px ${D.col}55;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-family:var(--f-ui);color:#fde`});
+  const close=el("button",{type:"button","aria-label":"Close alert",style:"margin-left:auto;background:none;border:1px solid #c9a;color:#fdd;font:600 13px var(--f-ui);min-width:36px;min-height:36px;cursor:pointer;flex:none",text:"✕",onclick:()=>a.remove()});
+  a.append(el("div",{style:"font-size:28px;line-height:1;flex:none",text:D.ic}),el("div",{style:"flex:1;min-width:0"},el("div",{style:`font:700 13px var(--f-display);letter-spacing:.06em;color:${D.col}`,text:"NATURAL DISASTER: "+D.n.toUpperCase()}),el("div",{style:"font-size:13px;margin-top:3px;line-height:1.4",text:D.d}),
+    el("div",{style:"font-size:11px;color:#cba;margin-top:3px",text:`Lasts about ${Math.max(1,Math.round((st.until-Date.now())/6e4))} min. Afterwards, search the rubble outside for credits and parts.`})),close);
+  document.body.append(a); }
+function dzCheck(){ const st=dzOn(); if(st&&dzSeen!==st.id){ dzSeen=st.id; dzCraters=[]; dzAlert(st); chatLine(null,`${DZ[st.k].ic} NATURAL DISASTER: ${DZ[st.k].n}! ${DZ[st.k].d}`,"sys"); dzPanic(); try{ beep(70,1.2,"sawtooth",.05); }catch(e){} }
+  if(!st){ const a=$("#dzAlert"); if(a) a.remove(); } }
+function dzPanic(){ const st=dzOn(); if(!st) return; try{ for(const R of lifeHere(me.scene)){ if(Math.random()<.7){ R.fleeUntil=T+4+Math.random()*4; R.fleeDir=Math.random()<.5?-1:1; } } const L=lifeHere(me.scene); const n=L[(Math.random()*L.length)|0]; if(n) npcSay(n,pickOf(DZ_SCARED[st.k])); }catch(e){} }
+setInterval(()=>{ try{ dzCheck(); if(dzOn()&&Math.random()<.35) dzPanic(); }catch(e){} },6000);
+setInterval(()=>{ try{ if(dzState&&Date.now()>=dzState.until&&Date.now()<dzState.until+2000) chatLine(null,`${DZ[dzState.k].ic} The ${DZ[dzState.k].n.toLowerCase()} is over. Search the rubble outside for anything valuable.`,"sys"); }catch(e){} },1000);
+function dzSpeed(){ const st=dzOn(); return st&&st.k==="flood"&&WX_OUT.includes(me.scene)?.6:1; }
+function dzShake(){ const st=dzOn(); if(!st) return [0,0]; const t=Date.now()/1000, rm=matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches?.3:1; let a=0;
+  if(st.k==="quake") a=(2.2+1.8*Math.max(0,Math.sin(t*.7)))*rm; else if(st.k==="meteor") a=Math.max(0,1-(t*1000-dzLastShake)/600)*5*rm; else if(st.k==="tornado"&&WX_OUT.includes(me.scene)) a=.8*rm; else if(st.k==="volcano") a=Math.max(0,Math.sin(t*.4))*1.2*rm;
+  return a?[(Math.random()-.5)*2*a,(Math.random()-.5)*2*a]:[0,0]; }
+// rubble piles anyone can search once each, outside, during and for 10 minutes after
+function dzPiles(sc){ const st=dzRecent(); if(!st||!WX_OUT.includes(sc)||!SCENES[sc]) return []; const W=SCENES[sc].w, out=[]; for(let i=0;i<5;i++) out.push({i,x:Math.round(220+wxRand(st.id+sc+i)*(W-440)),key:st.id+":"+sc+":"+i}); return out; }
+function dzHot(sc){ const st=dzRecent(); if(!st) return []; save.dzLoot=save.dzLoot||{}; const D=DZ[st.k];
+  return dzPiles(sc).filter(p=>!save.dzLoot[p.key]).map(p=>({x:p.x,hw:40,label:st.k==="flood"?"Search the flood debris":st.k==="meteor"?"Search the crater":"Search the rubble",act:()=>{ save.dzLoot[p.key]=Date.now(); for(const k in save.dzLoot) if(Date.now()-save.dzLoot[k]>864e5) delete save.dzLoot[k];
+    const cr=15+Math.floor(Math.random()*46); save.credits+=cr; let msg=`${D.ic} You found ₵${cr}`; if(Math.random()<.55){ const id=rollItem(st.k==="meteor"||st.k==="volcano"?.6:.3); addItem(id,1); msg+=` and ${BY[id].n}`; } persist(); hud(); beep(1200,.06); setTimeout(()=>beep(1600,.06),80); toast(msg+"!",D.col); emote("cheer"); }})); }
+// world-space drawing: outdoor scenes get the full disaster; indoors just the shaking
+function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzOn(), c=ctx, X=camX, k=st.k, out=WX_OUT.includes(me.scene);
+  // rubble piles
+  if(out){ save.dzLoot=save.dzLoot||{}; for(const p of dzPiles(me.scene)){ if(p.x<X-60||p.x>X+VW+60) continue; const done=!!save.dzLoot[p.key]; c.save(); c.globalAlpha=done?.35:1;
+    if(k==="meteor"){ c.fillStyle="#1a0d08"; c.beginPath(); c.ellipse(p.x,310,34,9,0,0,7); c.fill(); c.fillStyle=done?"#3a2a20":`rgba(255,${90+Math.sin(T*3+p.i)*40},30,.8)`; c.beginPath(); c.ellipse(p.x,309,18,5,0,0,7); c.fill(); }
+    else { const cols=k==="flood"?["#3a4a5a","#5a4a3a","#2a3a2a"]:k==="volcano"?["#3a2a2a","#4a3030","#2a1a1a"]:["#4a4458","#5a5068","#3a3448"]; for(let j=0;j<7;j++){ c.fillStyle=cols[j%3]; c.fillRect(p.x-24+wxRand(p.key+j)*40,300-wxRand(p.key+"h"+j)*16,8+wxRand(p.key+"w"+j)*10,6+wxRand(p.key+"q"+j)*8); } }
+    if(!done){ c.fillStyle="#ffd36a"; c.globalAlpha=.6+.4*Math.sin(T*4+p.i); c.font="bold 10px monospace"; c.textAlign="center"; c.fillText("✦",p.x,280); } c.restore(); } }
+  if(!live) return;
+  const age=(Date.now()-st.at)/1000;
+  if(k==="quake"){ if(out){ c.strokeStyle="rgba(10,6,4,.85)"; c.lineWidth=2; for(let i=0;i<6;i++){ const x0=Math.floor(X/400)*400+i*400+wxRand("ck"+i)*200; if(x0>X+VW+50) break; c.beginPath(); let x=x0,y=270; c.moveTo(x,y); for(let j=0;j<6;j++){ x+=(wxRand("cq"+i+j)-.5)*30; y+=10; c.lineTo(x,y); } c.stroke(); } }
+    c.fillStyle="rgba(200,190,170,.5)"; for(let i=0;i<N2(40);i++){ const p=WXP[i]; p.y+=p.v*dt*.5; if(p.y>1) p.y-=1; c.fillRect(X+p.x*VW,p.y*H,1.5,1.5); } }
+  if(k==="tornado"&&out){ const W=SCENES[me.scene].w, tx=W/2+Math.sin(Date.now()/1000*.08)*W*.42; c.fillStyle="rgba(40,44,56,.28)"; c.fillRect(X,0,VW,H);
+    for(let j=0;j<26;j++){ const y=j*12, w=8+j*3.4+Math.sin(T*5+j)*4, cx=tx+Math.sin(T*2+j*.4)*(26-j)*1.2; c.fillStyle=`rgba(${120+j*2},${125+j*2},${140+j*2},${.55-j*.012})`; c.beginPath(); c.ellipse(cx,312-y,w*1.2,6,0,0,7); c.fill(); }
+    for(let i=0;i<14;i++){ const a=T*4+i, r=30+(i%5)*14, y=300-(i*19+T*60)%280; c.save(); c.translate(tx+Math.cos(a)*r,y); c.rotate(T*8+i); c.fillStyle=["#6a5a4a","#8a8a9a","#4a3a2a"][i%3]; c.fillRect(-4,-3,8,6); c.restore(); }
+    c.strokeStyle="rgba(200,210,230,.2)"; for(let i=0;i<N2(24);i++){ const p=WXP[i]; const x=X+((p.x*VW+T*500)%VW), y=p.y*280; c.beginPath(); c.moveTo(x,y); c.lineTo(x+60,y); c.stroke(); }
+    const d=me.x-tx; if(Math.abs(d)<140&&!me.dead){ me.x=clamp(me.x+Math.sign(d||1)*420*dt,30,W-30); if(!me._dzT||T-me._dzT>4){ me._dzT=T; toast("🌪 The tornado throws you down the street!","#a8b8cc"); } } }
+  if(k==="flood"&&out){ const lvl=Math.min(1,age/30), top=338-lvl*58; c.globalAlpha=.55; const g=c.createLinearGradient(0,top,0,H); g.addColorStop(0,"rgba(60,140,200,.85)"); g.addColorStop(1,"rgba(20,50,90,.9)"); c.fillStyle=g; c.beginPath(); c.moveTo(X,H);
+    for(let x=0;x<=VW;x+=10) c.lineTo(X+x,top+Math.sin((X+x)/40+T*2)*3); c.lineTo(X+VW,H); c.closePath(); c.fill(); c.globalAlpha=1; c.strokeStyle="rgba(200,235,255,.5)"; c.lineWidth=1.5; c.beginPath(); for(let x=0;x<=VW;x+=10){ const y=top+Math.sin((X+x)/40+T*2)*3; x?c.lineTo(X+x,y):c.moveTo(X+x,y); } c.stroke();
+    for(let i=0;i<8;i++){ const x=X+((i*173+T*30)%(VW+80))-40, y=top+2+Math.sin(T*2+i)*2; c.fillStyle=["#6a5030","#3a3a4a","#ff3fa8","#ffd36a"][i%4]; c.fillRect(x,y-3,10+(i%3)*4,4); } }
+  if(k==="meteor"){ const now=Date.now(); if(out){ c.fillStyle="rgba(255,110,40,.1)"; c.fillRect(X,0,VW,H); }
+    for(let i=0;i<4;i++){ const per=2.4+i*.9, ph=((T+i*1.3)%per)/per, seed=Math.floor((T+i*1.3)/per), tx=X+wxRand("mx"+i+seed)*VW;
+      if(ph<.45&&out){ const q=ph/.45, x=tx+(1-q)*160, y=-20+q*320; const gr=c.createLinearGradient(x,y,x+60,y-90); gr.addColorStop(0,"rgba(255,240,180,1)"); gr.addColorStop(.3,"rgba(255,120,30,.8)"); gr.addColorStop(1,"rgba(120,30,10,0)"); c.strokeStyle=gr; c.lineWidth=6; c.beginPath(); c.moveTo(x,y); c.lineTo(x+60,y-90); c.stroke(); c.fillStyle="#fff2c0"; c.beginPath(); c.arc(x,y,5,0,7); c.fill(); }
+      else if(ph<.5){ const key=i+":"+seed; if(!dzCraters.some(z=>z.key===key)){ dzCraters.push({key,x:tx,t:now}); if(dzCraters.length>12) dzCraters.shift(); dzLastShake=now; if(soundOn) try{ beep(60,.5,"sawtooth",.05); }catch(e){} } if(out){ c.fillStyle=`rgba(255,220,150,${(1-(ph-.45)/.05)*.5})`; c.fillRect(X,0,VW,H); } } }
+    if(out) for(const z of dzCraters){ if(z.x<X-60||z.x>X+VW+60) continue; const a=Math.max(0,1-(now-z.t)/25000); c.fillStyle="#140a06"; c.beginPath(); c.ellipse(z.x,314,30,7,0,0,7); c.fill(); if(a>0){ c.fillStyle=`rgba(255,${100+Math.sin(T*6)*40},30,${a*.8})`; c.beginPath(); c.ellipse(z.x,313,16,4,0,0,7); c.fill();
+      for(let j=0;j<4;j++){ const u=(T*.8+j/4)%1; c.fillStyle=`rgba(80,70,70,${(1-u)*.4*a})`; c.beginPath(); c.arc(z.x+Math.sin(j+T)*6,312-u*60,6+u*10,0,7); c.fill(); } } } }
+  if(k==="volcano"&&out){ const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,"rgba(255,50,20,.35)"); g.addColorStop(.6,"rgba(120,20,10,.15)"); g.addColorStop(1,"rgba(40,10,5,.2)"); c.fillStyle=g; c.fillRect(X,0,VW,H);
+    // far away on the horizon: small, high in the sky, half see-through
+    const vx=X+VW*.78, vb=70, vt=26; c.globalAlpha=.75; c.fillStyle="#2a0a06"; c.beginPath(); c.moveTo(vx-90,vb); c.lineTo(vx-14,vt); c.lineTo(vx+14,vt); c.lineTo(vx+90,vb); c.closePath(); c.fill();
+    c.fillStyle="#ff5a1a"; c.shadowColor="#ff5a1a"; c.shadowBlur=14; c.fillRect(vx-12,vt-2,24,3); c.strokeStyle="rgba(255,90,26,.7)"; c.lineWidth=1.5; c.beginPath(); c.moveTo(vx-4,vt); c.lineTo(vx-16,vt+20); c.lineTo(vx-10,vt+34); c.stroke();
+    for(let i=0;i<10;i++){ const u=(T*.7+i/10)%1; c.globalAlpha=(1-u)*.9; c.fillStyle=i%2?"#ff7a2a":"#ffd36a"; c.beginPath(); c.arc(vx+Math.sin(i*2.3)*u*44,vt-u*40+u*u*22,1.6+u,0,7); c.fill(); } c.shadowBlur=0;
+    for(let i=0;i<5;i++){ const u=(T*.15+i/5)%1; c.globalAlpha=1; c.fillStyle=`rgba(60,45,45,${.45*(1-u)})`; c.beginPath(); c.arc(vx+Math.sin(i+T*.3)*10+u*50,vt-6-u*30,10+u*26,0,7); c.fill(); } c.globalAlpha=1;
+    c.fillStyle="rgba(170,160,160,.7)"; for(let i=0;i<N2(110);i++){ const p=WXP[i]; p.y+=p.v*dt*.1; if(p.y>1) p.y-=1; c.fillRect(X+((p.x*VW+Math.sin(T+p.r)*20)%VW),p.y*H,2,2); }
+    for(let i=0;i<N2(20);i++){ const p=WXP[i+150]; const y=320-((T*30*p.v+p.y*300)%300); c.fillStyle=`rgba(255,${120+p.s*100},40,${.8*(y/320)})`; c.fillRect(X+p.x*VW+Math.sin(T*2+p.r)*10,y,2,2); } } }
+const N2=n=>Math.round(n*(PERF&&PERF.lvl>=2?.45:PERF&&PERF.lvl>=1?.7:1));
+async function dzStart(k,mins){ if(!IS_ADMIN||!DB) return; const now=Date.now(), d={k,at:now,until:now+mins*6e4,id:k+now.toString(36),by:myId||""};
+  try{ await DB.doc("shopinfo/disaster").set(d); dzState={k,at:d.at,until:d.until,id:d.id}; dzCheck(); toast(`${DZ[k].ic} ${DZ[k].n} started for everyone.`,DZ[k].col); }catch(e){ toast("Couldn't start it. Only the owner can start disasters."); } }
+async function dzStop(){ if(!IS_ADMIN||!DB) return; try{ const now=Date.now(); await DB.doc("shopinfo/disaster").set({k:dzState&&dzState.k||"",at:dzState&&dzState.at||now,until:now,id:dzState&&dzState.id||"",by:myId||""}); if(dzState) dzState.until=now; dzCheck(); toast("Disaster ended. The rubble stays for 10 minutes."); }catch(e){ toast("Couldn't end it."); } }
+function dzPanel(body){ const st=dzOn();
+  if(st) body.append(el("div",{class:"detail",style:`border-color:${DZ[st.k].col}`},el("div",{class:"info"},el("strong",{style:`color:${DZ[st.k].col}`,text:`${DZ[st.k].ic} ${DZ[st.k].n} happening now`}),el("span",{class:"sub",text:`${DZ[st.k].d} Ends in about ${Math.max(1,Math.round((st.until-Date.now())/6e4))} min.`}))));
+  if(!(IS_ADMIN&&DB)) return; const dur=el("select",{"aria-label":"How long"},...[[3,"3 min"],[5,"5 min"],[10,"10 min"],[15,"15 min"],[30,"30 min"]].map(([v,t])=>el("option",{value:String(v),text:"Lasts "+t}))); dur.value="5";
+  const box=el("div",{class:"detail",style:"border-color:#ff7a3a;flex-direction:column;align-items:stretch"},el("strong",{text:"Owner: natural disasters"}),el("span",{class:"sub",text:"Start one for every player. Everyone gets an alert, the city panics, and rubble piles appear outside with credits and parts to find. They clear 10 minutes after it ends."}),el("div",{class:"row"},dur));
+  const g=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px"}); for(const [k,D] of Object.entries(DZ)) g.append(el("button",{class:"btn",type:"button",style:`border-color:${D.col};text-align:left;min-height:44px`,text:`${D.ic} ${D.n}`,title:D.d,onclick:async()=>{ await dzStart(k,+dur.value); openWeather(); }}));
+  box.append(g); if(st) box.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"■ End the disaster now",onclick:async()=>{ await dzStop(); openWeather(); }}))); body.append(box); }
+// residents talk about the disaster while it happens and afterwards
+{ const _wl=worldLines; worldLines=function(n){ const L=_wl(n); try{ const st=dzOn(); if(st) L.push(...DZ_SCARED[st.k],...DZ_SCARED[st.k]); else { const r=dzRecent(); if(r) L.push(DZ_AFTER[r.k],DZ_AFTER[r.k]); } }catch(e){} return L; }; }
+
 
 setTimeout(()=>{ const p=$("#wxpill"); if(p) p.onclick=()=>openWeather(); try{ wxTick(); }catch(e){} },0);
 /* ============================================================ ZERO COOL: the underground club in Sim City
