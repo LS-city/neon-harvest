@@ -1914,7 +1914,7 @@ function drawBubble(c,cx,baseY,text,border,textCol){ text=String(text==null?"":t
   c.fillStyle=textCol||"#fff"; for(let i=0;i<lines.length;i++) c.fillText(lines[i],tx,top+pad+i*lh+4); c.restore(); }
 function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   // o: {dir, phase, moving, look, emote, say, name, me}
-  const L=fullLook(o.look); const SK=(o.fx==="chrome"||o.fx==="mercury")?`hsl(215,25%,${78+Math.sin(t*4+x*.02)*12}%)`:o.fx==="void"||o.fx==="horizon"?"#e9e2ff":WARD.skin.opts[L.skin][2]==="holo"?`hsl(${(t*60+x*.3)%360},90%,78%)`:WARD.skin.opts[L.skin][2], JC=(o.fx==="shroom"||o.fx==="kaleido"||o.fx==="rave")?`hsl(${(t*120+x*.5)%360},100%,62%)`:COLORS[L.jacket], PC=COLORS[L.pants];
+  const L=fullLook(o.look); const SK=o.zombie?"#86b36e":(o.fx==="chrome"||o.fx==="mercury")?`hsl(215,25%,${78+Math.sin(t*4+x*.02)*12}%)`:o.fx==="void"||o.fx==="horizon"?"#e9e2ff":WARD.skin.opts[L.skin][2]==="holo"?`hsl(${(t*60+x*.3)%360},90%,78%)`:WARD.skin.opts[L.skin][2], JC=(o.fx==="shroom"||o.fx==="kaleido"||o.fx==="rave")?`hsl(${(t*120+x*.5)%360},100%,62%)`:COLORS[L.jacket], PC=COLORS[L.pants];
   const style=WARD.style.opts[L.style][0], vs=WARD.visor.opts[L.visor][0], ht=WARD.hat.opts[L.hat][0], bk=WARD.back.opts[L.back][0], pet=WARD.pet.opts[L.pet][0], aura=WARD.aura.opts[L.aura][0];
   const ft=WARD.feet.opts[L.feet][0], nk=WARD.neck.opts[L.neck][0], hr=WARD.hair.opts[L.hair][0], HC=COLORS[L.hairCol]==="#2a2440"?"#3a3258":COLORS[L.hairCol];
   const dir=o.dir||1; const AC=COLORS[L.accent];
@@ -2409,7 +2409,7 @@ function drawGangBot(c,x,y,s,t,n){ c.save(); c.translate(x,y); c.scale(s,s); con
   if(n.say&&T-n.say.t<4) drawBubble(c,x,y-96*s,n.say.text,"#ff5a4a","#ffd8d0"); }
 function cityEnts(ents){ const L=cityGen(me.scene), wet=wxWet();
   for(const n of L){ if(n.k==="bot"){ if(n.out) continue; ents.push({x:n.x,y:n.y,draw:(c,x,y,s,t)=>drawGangBot(c,x,y,s,t,n)}); continue; }
-    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.life?!!(n.walking||n.vx):!!n.vx&&!(n.pause>0),look:n.look,name:lifeName(n)+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null,sit:!!n.sit,emote:(n.danceUntil>T||(n.life&&n.act&&n.act.mode==="dance"&&!n.goal&&!n.leaving))?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)},umb:wet&&!n.sit?UMB_COLS[hashNum((n.name||"c")+n.k)%UMB_COLS.length]:null}); }
+    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.life?!!(n.walking||n.vx):!!n.vx&&!(n.pause>0),look:n.look,zombie:zbIsR(n),name:(zbIsR(n)?"🧟 ":"")+lifeName(n)+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null,sit:!!n.sit,emote:(n.danceUntil>T||(n.life&&n.act&&n.act.mode==="dance"&&!n.goal&&!n.leaving))?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)},umb:wet&&!n.sit?UMB_COLS[hashNum((n.name||"c")+n.k)%UMB_COLS.length]:null}); }
   // acolytes behind cult leaders (me and peers)
   const acoLook=i=>({jacket:0,pants:0,skin:(i*3)%5,style:1,visor:0,hat:0});
   if(roleIs("cult")&&save.acolytes&&me.scene!=="void"){ const tr=roleTick.acoTrail||[]; for(let i=0;i<save.acolytes;i++){ const p=tr[Math.min(tr.length-1,14+i*12)]||me; ents.push({x:p.x-(me.dir||1)*(22+i*16),y:clamp(p.y+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:me.dir,phase:me.phase+i,moving:me.moving,look:acoLook(i),name:"",rk:"cult",cu:save.myCult?{by:myId,...save.myCult}:null,aco:1}}); } }
@@ -2838,7 +2838,7 @@ function lifeName(n){ return (n.name?n.name+" ":"")+moodEmoji(n); }
 
 /* ---- awareness ---- */
 let lifeG=0, lifeEmT=-9, lifeGossipT=0; const lifePairs={};
-function lifeLine(n){ if(n.life){ if(n.ix===ZK_KILLER&&Math.random()<.4) return zkKillerLine(); const zv=zkVictimLine(n); if(zv&&Math.random()<.6) return zv; } const m=moodOf(n).k; if(["tired","sad","angry","scared","excited","grateful","party"].includes(m)&&Math.random()<.5) return LIFE_LINES[m][(Math.random()*LIFE_LINES[m].length)|0];
+function lifeLine(n){ if(n.life&&zbIsR(n)) return zbGroan(); if(n.life){ if(n.ix===ZK_KILLER&&Math.random()<.4) return zkKillerLine(); const zv=zkVictimLine(n); if(zv&&Math.random()<.6) return zv; } const m=moodOf(n).k; if(["tired","sad","angry","scared","excited","grateful","party"].includes(m)&&Math.random()<.5) return LIFE_LINES[m][(Math.random()*LIFE_LINES[m].length)|0];
   const a=n.life?n.act&&n.act.a:"walk"; let pool=a==="movies"?(thLive()?LIFE_LINES.movies_on:LIFE_LINES.movies_off):a==="work"&&n.job?LIFE_LINES.work.concat(LIFE_JOBLINES[n.job]):LIFE_LINES[a]||LIFE_LINES.walk; return pool[(Math.random()*pool.length)|0]; }
 function lifeGreet(n){ const r=relOf(npcKey(n)), me1=myName||"runner", m=moodOf(n).k;
   if(n.k==="cop") return roleIs("police")?"Evening, officer.":heatStars()?null:["Evening, citizen.","Stay safe out there.","Keep your nose clean."][(Math.random()*3)|0];
@@ -2847,7 +2847,7 @@ function lifeGreet(n){ const r=relOf(npcKey(n)), me1=myName||"runner", m=moodOf(
   try{ if(mayorId()===myId) return `Mayor ${me1}! ${lifeApproves(n)?"Love what you're doing.":"We need to talk about this city."}`; }catch(e){}
   if(roleIs("medic")&&n.hurt) return "Doc! Over here — I'm hurt!";
   if(r>=5&&n.life&&!rcd("gift_"+n.id)&&Math.random()<.5){ setCd("gift_"+n.id,20*36e5); const g=15+Math.floor(Math.random()*26); save.credits+=g; persist(); hud(); toast(`${n.name} slipped you ₵${g}: "Found this, thought of you."`,"#ff9ad5"); return `${me1}! Here, this is for you.`; }
-  if(n.life&&n.ix===ZK_KILLER) return zkKillerLine(); if(n.life){ const zv=zkVictimLine(n); if(zv&&Math.random()<.7) return zv; }
+  if(n.life&&zbIsR(n)) return zbGroan(); if(n.life&&n.ix===ZK_KILLER) return zkKillerLine(); if(n.life){ const zv=zkVictimLine(n); if(zv&&Math.random()<.7) return zv; }
   if(Math.random()<.6){ const nl=lifeNotice(n); if(nl) return nl; }
   if(r>=3) return [`Hey ${me1}! Good to see you.`,`${me1}! How've you been?`,`Look who it is — ${me1}!`][(Math.random()*3)|0];
   if(roleIs("police")) return "Evening, officer.";
@@ -4502,14 +4502,14 @@ function render(){
   // entities sorted by depth
   const ents=[];
   for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:lifeName(n),say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance||n.danceUntil>T?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}});
-  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),lv:p.lv,say:p.say&&!isBlocked(p.by)?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
+  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(zbPeer(p)?"🧟 ":"")+(p.staff?"★ ":"")+nameOf(p.by),lv:p.lv,zombie:zbPeer(p),say:p.say&&!isBlocked(p.by)?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="den") denEnts(ents); if(me.scene==="rowin") rowInEnts(ents);
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(onShift()?"★ ":"")+(myName||"Runner"),me:true,lv:lvNow(),dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(zbMe()?"🧟 ":"")+(onShift()?"★ ":"")+(myName||"Runner"),me:true,lv:lvNow(),zombie:zbMe(),dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   try{ cityEnts(ents); }catch(e){}
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else { if(e.umb){ try{ drawUmbrella(ctx,e.x,e.y,s,T,e.umb); }catch(_e){} } drawStick(ctx,e.x,e.y,s,e.o,T); } if(e.alpha!=null) ctx.restore();
@@ -13983,6 +13983,7 @@ const DZ={quake:{n:"Earthquake",ic:"💥",col:"#ffb84a",d:"The ground shakes in 
   freeze:{n:"Deep freeze",ic:"🥶",col:"#bfe8ff",d:"The temperature crashes. Ice covers everything and everyone outside moves slower."},
   toxic:{n:"Toxic leak",ic:"☢",col:"#7aff4a",d:"A chemical plant leaks. Green fog rolls through the streets. Hold your breath."},
   tsunami:{n:"Tsunami",ic:"🌊",col:"#2a8aff",d:"Giant waves crash through the outdoor areas. Get caught and you're swept down the street."},
+  zombie:{n:"Zombie apocalypse",ic:"🧟",col:"#7aff4a",d:"The dead are walking. Anyone bitten, players and residents, turns into a zombie until it's over. Survive and get paid, or get bitten and start biting."},
   kaiju:{n:"Kaiju battle",ic:"🦖",col:"#ff3fa8",d:"Two giant kaiju, Slagmaw and Voltipede, are fighting on the skyline. The whole city shakes. Back one and win ₵150 if it wins!"}};
 let dzState=null, dzWatched=false, dzSeen="", dzCraters=[], dzLastShake=0;
 const dzOn=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until?dzState:null;
@@ -13993,8 +13994,8 @@ const DZ_SCARED={quake:["Earthquake! Get away from the windows!","The whole buil
   meteor:["Something's falling from the sky!","That one hit the next block!","It's the end of the world!"],volcano:["Since when do we have a volcano?!","The sky's on fire!","Don't breathe the ash!"],
   blackout:["Who turned off the city?!","My phone's dead. Everything's dead.","Stay close, I can't see a thing."],wildfire:["The rooftops are on fire!","Call somebody! Anybody!","I can smell the smoke from here."],
   hurricane:["Hold on to something!","My umbrella's gone. Just gone.","The wind's pushing me down the street!"],freeze:["I can't feel my face.","The fountain froze solid!","Careful, the whole street's ice."],
-  toxic:["Don't breathe the green stuff!","My eyes are burning!","Cover your mouth with something!"],tsunami:["WAVE! Get to high ground!","Here comes another one!","The street's a river!"],kaiju:["KAIJU! Two of them!","Go Voltipede! Zap that rock!","Slagmaw's going to win, look at the size of it!","They're stepping on the train line!"]};
-const DZ_AFTER={quake:"Did you feel that earthquake? My cups all fell.",tornado:"That tornado tore the roof off the noodle stand.",flood:"Everything's still soggy after that flood.",meteor:"There's a crater down the street from the meteor strike.",volcano:"There's ash on everything. Everything.",blackout:"The power's back, but my fridge didn't make it.",wildfire:"Half the rooftop gardens burned in that fire.",hurricane:"That hurricane threw a scooter through my window.",freeze:"Still thawing out from that deep freeze.",toxic:"They say the toxic leak's cleaned up. I'm not so sure.",tsunami:"I found a fish in my mailbox after that tsunami.",kaiju:"There's a kaiju footprint where the noodle stand used to be."};
+  toxic:["Don't breathe the green stuff!","My eyes are burning!","Cover your mouth with something!"],tsunami:["WAVE! Get to high ground!","Here comes another one!","The street's a river!"],zombie:["ZOMBIES! Run!","Don't let them bite you!","Barricade the doors!","Is that… is that my neighbor?!"],kaiju:["KAIJU! Two of them!","Go Voltipede! Zap that rock!","Slagmaw's going to win, look at the size of it!","They're stepping on the train line!"]};
+const DZ_AFTER={quake:"Did you feel that earthquake? My cups all fell.",tornado:"That tornado tore the roof off the noodle stand.",flood:"Everything's still soggy after that flood.",meteor:"There's a crater down the street from the meteor strike.",volcano:"There's ash on everything. Everything.",blackout:"The power's back, but my fridge didn't make it.",wildfire:"Half the rooftop gardens burned in that fire.",hurricane:"That hurricane threw a scooter through my window.",freeze:"Still thawing out from that deep freeze.",toxic:"They say the toxic leak's cleaned up. I'm not so sure.",tsunami:"I found a fish in my mailbox after that tsunami.",kaiju:"There's a kaiju footprint where the noodle stand used to be.",zombie:"I got bitten during the apocalypse. I still crave brains a little."};
 function dzAlert(st){ let a=$("#dzAlert"); if(a) a.remove(); const D=DZ[st.k];
   a=el("div",{id:"dzAlert",role:"alert",style:`position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;width:min(440px,calc(100vw - 24px));background:rgba(16,8,4,.96);border:1px solid ${D.col};box-shadow:0 0 24px ${D.col}55;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-family:var(--f-ui);color:#fde`});
   const close=el("button",{type:"button","aria-label":"Close alert",style:"margin-left:auto;background:none;border:1px solid #c9a;color:#fdd;font:600 13px var(--f-ui);min-width:36px;min-height:36px;cursor:pointer;flex:none",text:"✕",onclick:()=>a.remove()});
@@ -14006,14 +14007,14 @@ function dzCheck(){ const st=dzOn(); if(st&&dzSeen!==st.id){ dzSeen=st.id; dzCra
 function dzPanic(){ const st=dzOn(); if(!st) return; try{ for(const R of lifeHere(me.scene)){ if(Math.random()<.7){ R.fleeUntil=T+4+Math.random()*4; R.fleeDir=Math.random()<.5?-1:1; } } const L=lifeHere(me.scene); const n=L[(Math.random()*L.length)|0]; if(n) npcSay(n,pickOf(DZ_SCARED[st.k])); }catch(e){} }
 setInterval(()=>{ try{ dzCheck(); if(dzOn()&&Math.random()<.35) dzPanic(); }catch(e){} },6000);
 setInterval(()=>{ try{ if(dzState&&Date.now()>=dzState.until&&Date.now()<dzState.until+2000) chatLine(null,`${DZ[dzState.k].ic} The ${DZ[dzState.k].n.toLowerCase()} is over. Search the rubble outside for anything valuable.`,"sys"); }catch(e){} },1000);
-function dzSpeed(){ const st=dzOn(); if(!st||!WX_OUT.includes(me.scene)) return 1; return {flood:.6,freeze:.7,toxic:.85,tsunami:.8}[st.k]||1; }
+function dzSpeed(){ const st=dzOn(); if(st&&st.k==="zombie") return zbMe()?.8:1; if(!st||!WX_OUT.includes(me.scene)) return 1; return {flood:.6,freeze:.7,toxic:.85,tsunami:.8}[st.k]||1; }
 function dzShake(){ const st=dzOn(); if(!st) return [0,0]; const t=Date.now()/1000, rm=matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches?.3:1; let a=0;
   if(st.k==="quake") a=(2.2+1.8*Math.max(0,Math.sin(t*.7)))*rm; else if(st.k==="meteor") a=Math.max(0,1-(t*1000-dzLastShake)/600)*5*rm; else if(st.k==="tornado"&&WX_OUT.includes(me.scene)) a=.8*rm; else if(st.k==="volcano") a=Math.max(0,Math.sin(t*.4))*1.2*rm; else if(st.k==="hurricane"&&WX_OUT.includes(me.scene)) a=1*rm; else if(st.k==="kaiju") a=kjShake(st)*(WX_OUT.includes(me.scene)?1:.5)*rm; else if(st.k==="tsunami"&&WX_OUT.includes(me.scene)) a=Math.max(0,1-Math.abs(dzWaveX()-me.x)/500)*4*rm;
   return a?[(Math.random()-.5)*2*a,(Math.random()-.5)*2*a]:[0,0]; }
 // rubble piles anyone can search once each, outside, during and for 10 minutes after
 function dzPiles(sc){ const st=dzRecent(); if(!st||!WX_OUT.includes(sc)||!SCENES[sc]) return []; const W=SCENES[sc].w, out=[]; for(let i=0;i<5;i++) out.push({i,x:Math.round(220+wxRand(st.id+sc+i)*(W-440)),key:st.id+":"+sc+":"+i}); return out; }
 function dzHot(sc){ const st=dzRecent(); if(!st) return []; save.dzLoot=save.dzLoot||{}; const D=DZ[st.k];
-  return dzPiles(sc).filter(p=>!save.dzLoot[p.key]).map(p=>({x:p.x,hw:40,label:st.k==="flood"||st.k==="tsunami"?"Search the flood debris":st.k==="meteor"?"Search the crater":st.k==="wildfire"?"Search the burnt wreckage":st.k==="freeze"?"Search the frozen junk":st.k==="toxic"?"Search the spill (carefully)":st.k==="blackout"?"Search the dark stall":st.k==="hurricane"?"Search the storm wreckage":st.k==="kaiju"?"Search the kaiju wreckage":"Search the rubble",act:()=>{ save.dzLoot[p.key]=Date.now(); for(const k in save.dzLoot) if(Date.now()-save.dzLoot[k]>864e5) delete save.dzLoot[k];
+  return dzPiles(sc).filter(p=>!save.dzLoot[p.key]).map(p=>({x:p.x,hw:40,label:st.k==="flood"||st.k==="tsunami"?"Search the flood debris":st.k==="meteor"?"Search the crater":st.k==="wildfire"?"Search the burnt wreckage":st.k==="freeze"?"Search the frozen junk":st.k==="toxic"?"Search the spill (carefully)":st.k==="blackout"?"Search the dark stall":st.k==="hurricane"?"Search the storm wreckage":st.k==="kaiju"?"Search the kaiju wreckage":st.k==="zombie"?"Search the abandoned barricade":"Search the rubble",act:()=>{ save.dzLoot[p.key]=Date.now(); for(const k in save.dzLoot) if(Date.now()-save.dzLoot[k]>864e5) delete save.dzLoot[k];
     const cr=15+Math.floor(Math.random()*46); save.credits+=cr; let msg=`${D.ic} You found ₵${cr}`; if(Math.random()<.55){ const id=rollItem(["meteor","volcano","tsunami","wildfire","kaiju"].includes(st.k)?.6:.3); addItem(id,1); msg+=` and ${BY[id].n}`; } persist(); hud(); beep(1200,.06); setTimeout(()=>beep(1600,.06),80); toast(msg+"!",D.col); emote("cheer"); }})); }
 // world-space drawing: outdoor scenes get the full disaster; indoors just the shaking
 function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzOn(), c=ctx, X=camX, k=st.k, out=WX_OUT.includes(me.scene);
@@ -14067,6 +14068,7 @@ function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzO
     for(let i=0;i<9;i++){ const y=280+(i%3)*22, x=X+((i*200+T*(12+i*3))%(VW+400))-200; c.fillStyle="rgba(110,255,70,.2)"; c.beginPath(); c.ellipse(x,y,230,26,0,0,7); c.fill(); }
     for(let i=0;i<N2(30);i++){ const p=WXP[i]; const u=(T*.4+p.s)%1; c.strokeStyle=`rgba(170,255,120,${.7*(1-u)})`; c.lineWidth=1; c.beginPath(); c.arc(X+p.x*VW,330-u*80,2+p.s*3,0,7); c.stroke(); }
     for(let i=0;i<3;i++){ const bx=Math.floor(X/700)*700+i*700+300; if(bx<X-40||bx>X+VW+40) continue; c.fillStyle="#d8c020"; c.fillRect(bx-9,296,18,24); c.fillStyle="#111"; c.font="bold 12px monospace"; c.textAlign="center"; c.fillText("☢",bx,313); c.fillStyle="rgba(120,255,70,.6)"; c.beginPath(); c.ellipse(bx+24,322,26,5,0,0,7); c.fill(); } }
+  if(k==="zombie") try{ drawZombieFx(T,c,X,out); }catch(e){}
   if(k==="kaiju") try{ drawKaiju(st,T,dt,c,X,out); }catch(e){}
   if(k==="tsunami"&&out){ const W=SCENES[me.scene].w, wx=dzWaveX(); c.fillStyle="rgba(20,60,110,.15)"; c.fillRect(X,0,VW,H);
     const lvl=338-14; c.fillStyle="rgba(40,110,180,.5)"; c.fillRect(X,lvl,VW,H-lvl);
@@ -14574,6 +14576,54 @@ setInterval(()=>{ try{ const st=dzState; if(!st||st.k!=="kaiju") return; const n
   else for(const k of ["s","v"]) row.append(el("button",{type:"button",style:`background:rgba(0,0,0,.4);border:1px solid ${KJ[k].col};color:${KJ[k].col};font:600 12px var(--f-ui);padding:8px 10px;min-height:36px;cursor:pointer`,text:`${KJ[k].ic} Back ${KJ[k].n}`,onclick:()=>kjBet(st,k)}));
   col.append(row); }catch(e){} }; }
 
+/* ============================================================ ZOMBIE APOCALYPSE (natural disaster)
+   A couple of residents turn first, then it spreads every 40 seconds. Zombies shamble after people and bite them.
+   Bitten players and residents stay zombies until the disaster ends, then everyone's cured.
+   Survivors get a reward; zombies get paid for every bite. Players can bite players and residents, and see each other's bites. */
+const ZB_STEP=40e3;
+const zbOn=()=>{ const st=dzOn(); return st&&st.k==="zombie"?st:null; };
+const zbMine=new Set(); let zbMineId="", zbContact=0, zbBiteT={}, zbCache={t:0,set:new Set()};
+function zbSpread(st,now){ const set=new Set(), n=LIFE_R.length, r0=seeded(hashNum("zb0"+st.id)); set.add(Math.floor(r0()*n)); set.add(Math.floor(r0()*n));
+  const steps=Math.floor(Math.max(0,now-st.at)/ZB_STEP); for(let k=1;k<=steps;k++){ const r=seeded(hashNum("zb"+st.id)+k*131); for(const i of [...set].sort((a,b)=>a-b)) if(r()<.45) set.add(Math.floor(r()*n)); } return set; }
+function zbSet(){ const st=zbOn(); if(!st) return new Set(); const now=Date.now(); if(now-zbCache.t<500&&zbCache.id===st.id) return zbCache.set;
+  const s=zbSpread(st,now); try{ for(const p of peers.values()) if(p.zbid===st.id&&Array.isArray(p.zbit)) p.zbit.forEach(i=>s.add(i)); }catch(e){} if(zbMineId===st.id) zbMine.forEach(i=>s.add(i));
+  zbCache={t:now,id:st.id,set:s}; return s; }
+function zbIsR(R){ return !!(R&&R.life&&zbOn()&&zbSet().has(R.ix)); }
+function zbMe(){ const st=zbOn(); return !!(st&&save&&save.zb===st.id); }
+function zbPeer(p){ const st=zbOn(); return !!(st&&p&&p.zb&&p.zbid===st.id); }
+const zbGroan=()=>pickOf(["Braaaains…","Mmmrrrgh…","*groans*","Rrrraaah…","Huuuungry…","*shambles closer*"]);
+// the player who got bitten
+function zbBitten(by){ const st=zbOn(); if(!st||zbMe()) return; save.zb=st.id; persist(); pushPresence(true); zbCache.t=0;
+  toast(`🧟 ${by} bit you! You're a zombie until the apocalypse ends.`,"#7aff4a"); chatLine(null,"🧟 You were bitten! Now bite other players and residents. You'll be cured when it's over.","sys");
+  try{ beep(90,.6,"sawtooth",.06); setTimeout(()=>beep(70,.8,"sawtooth",.05),250); }catch(e){} me.emote={e:"cheer",t:T}; zbBanner(); }
+function zbBanner(){ let b=$("#zbBanner"); if(!zbMe()){ if(b) b.remove(); return; } if(b) return;
+  b=el("div",{id:"zbBanner",style:"position:fixed;left:50%;transform:translateX(-50%);bottom:calc(120px + env(safe-area-inset-bottom,0px));z-index:39;background:rgba(10,24,8,.92);border:1px solid #7aff4a;color:#c8ffb0;font:600 12px var(--f-ui);padding:8px 12px;pointer-events:none;text-align:center;box-shadow:0 0 18px rgba(122,255,74,.35);max-width:92vw",text:"🧟 You're a ZOMBIE. Walk into players and residents to bite them. Cured when the apocalypse ends."}); document.body.append(b); }
+// the bite loop: who's touching who
+setInterval(()=>{ try{ const st=zbOn(); if(!st){ zbBanner(); return; } if(zbMineId!==st.id){ zbMineId=st.id; zbMine.clear(); zbBiteT={}; }
+    if(!save.zbSeen||save.zbSeen!==st.id){ save.zbSeen=st.id; }
+    const Z=zbSet(), here=lifeHere(me.scene), dt=.1;
+    // zombie residents chase the closest living person; healthy residents run from zombies
+    for(const R of here){ if(Z.has(R.ix)){ const d=me.x-R.x; if(!zbMe()&&Math.abs(d)<300){ R.fleeUntil=T+.4; R.fleeDir=Math.sign(d)||1; } else { const v=here.find(o=>!Z.has(o.ix)&&Math.abs(o.x-R.x)<260); if(v){ R.fleeUntil=T+.4; R.fleeDir=Math.sign(v.x-R.x)||1; } } }
+      else { const z=here.find(o=>Z.has(o.ix)&&Math.abs(o.x-R.x)<140)||(zbMe()&&Math.abs(me.x-R.x)<140?{x:me.x}:null); if(z){ R.fleeUntil=T+.6; R.fleeDir=Math.sign(R.x-z.x)||1; if(Math.random()<.01) npcSay(R,pickOf(["Zombie! RUN!","Get away from me!","Don't bite me!","Not like this!"])); } } }
+    if(!zbMe()){ // can I get bitten?
+      let by=null; for(const R of here) if(Z.has(R.ix)&&Math.abs(R.x-me.x)<26&&Math.abs(R.y-me.y)<34){ by=R.name.split(" ")[0]; break; }
+      if(!by) for(const p of peers.values()) if(p.s===me.scene&&zbPeer(p)&&Math.abs((p.dx??p.x)-me.x)<26&&Math.abs((p.dy??p.y)-me.y)<24){ by=nameOf(p.by); break; }
+      zbContact=by?zbContact+dt:Math.max(0,zbContact-dt*2); if(by&&zbContact>.9){ zbContact=0; zbBitten(by); } }
+    else { // I'm a zombie: bite residents I touch (other players see they're turned through my presence)
+      for(const R of here){ if(Z.has(R.ix)) continue; if(Math.abs(R.x-me.x)<24&&Math.abs(R.y-me.y)<24){ zbBiteT[R.ix]=(zbBiteT[R.ix]||0)+dt; if(zbBiteT[R.ix]>.6){ zbMine.add(R.ix); zbCache.t=0; save.zbBites=(save.zbBites||0)+1; toast(`🧟 You bit ${R.name}!`,"#7aff4a"); npcSay(R,"AAAH! It bit me!"); beep(110,.3,"sawtooth",.05); pushPresence(true); } } else zbBiteT[R.ix]=0; } }
+    zbBanner();
+  }catch(e){} },100);
+// the cure + payouts, once per apocalypse
+setInterval(()=>{ try{ const st=dzState; if(!st||st.k!=="zombie"||Date.now()<st.until||Date.now()-st.until>10*6e4||save.zbPaid===st.id||save.zbSeen!==st.id) return;
+    save.zbPaid=st.id; const was=save.zb===st.id, bites=Math.min(10,save.zbBites||0); save.zb=""; save.zbBites=0; zbMine.clear(); zbBanner(); pushPresence(true);
+    if(was){ const pay=bites*15; save.credits+=pay; toast(`💉 The cure is here! You're human again.${pay?` +₵${pay} for ${bites} bite${bites>1?"s":""}.`:""}`,"#9fd8ff"); }
+    else { save.credits+=120; toast("🏆 You survived the zombie apocalypse! +₵120","#ffd36a"); try{ emote("cheer"); }catch(e){} }
+    chatLine(null,"💉 The cure has been released. Every zombie in the city is human again.","sys"); persist(); hud(); }catch(e){} },1000);
+// green apocalypse sky and a full moon outside; a green edge when you're a zombie
+function drawZombieFx(T,c,X,out){ if(out){ c.fillStyle="rgba(30,60,20,.22)"; c.fillRect(X,0,VW,H); c.save(); c.fillStyle="#e8ffd8"; c.shadowColor="#b8ff90"; c.shadowBlur=30; c.beginPath(); c.arc(X+VW*.15,60,22,0,7); c.fill(); c.restore();
+    for(let i=0;i<9;i++){ const y=290+(i%3)*18, x=X+((i*210+T*(10+i*2))%(VW+400))-200; c.fillStyle="rgba(120,200,90,.12)"; c.beginPath(); c.ellipse(x,y,220,22,0,0,7); c.fill(); } }
+  if(zbMe()){ const g=c.createRadialGradient(X+VW/2,H/2,H*.3,X+VW/2,H/2,VW*.7); g.addColorStop(0,"rgba(80,200,40,0)"); g.addColorStop(1,`rgba(60,180,30,${.4+.1*Math.sin(T*2)})`); c.fillStyle=g; c.fillRect(X,0,VW,H); } }
+
 /* ============================================================ LEVELS: 1 to 1000
    You earn XP from almost everything: making credits and chips, getting items, Reward Points, doing things around the city,
    and just being active. Every level pays a little, every 10th pays chips, and every 100th is announced to the whole city.
@@ -14642,7 +14692,7 @@ function drawLvBadge(c,x,y,name,lv){ if(!(lv>0)) return; const nw=c.measureText(
 { const b=$("#lvpill"); if(b) b.addEventListener("click",()=>{ beep(900,.04); openLevel(); }); }
 setTimeout(lvHud,1500);
 
-function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,lv:lvNow(),...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
+function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,lv:lvNow(),zb:zbMe()?1:0,zbid:(zbOn()||{}).id||"",zbit:[...zbMine].slice(0,30),...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
@@ -14657,7 +14707,7 @@ function applyPeer(p){ if(isSelf(p)) return false; if(p.kind!=="viewer") return 
   else if(q.pid&&q.pid!==p.peer){ q.dx=x; q.dy=y; } // same player came back in a new tab: move the one figure, don't add another
   q.pid=p.peer; try{ rolePeer(q,p.presence||{}); }catch(e){}
   q.sv=pr.sv===1||pr.sv===2?pr.sv:0; q.sp=clamp(Math.floor(+pr.sp||0),0,999); q.sc=clamp(Math.floor(+pr.sc||0),0,5000); q.rx=pr.rx&&SHOW_RX.some(r=>r[0]===pr.rx.k)&&Number.isFinite(+pr.rx.at)?{k:pr.rx.k,at:Math.min(Date.now(),+pr.rx.at)}:null;
-  Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),lv:Math.max(0,Math.min(1000,Math.floor(+pr.lv||0))),staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,dk:typeof pr.dk==="string"&&DRINK_FX[pr.dk]?pr.dk:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null,hs:pr.hs===1});
+  Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),lv:Math.max(0,Math.min(1000,Math.floor(+pr.lv||0))),zb:pr.zb===1,zbid:typeof pr.zbid==="string"?pr.zbid.slice(0,48):"",zbit:Array.isArray(pr.zbit)?pr.zbit.filter(i=>Number.isInteger(i)&&i>=0&&i<64).slice(0,30):[],staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,dk:typeof pr.dk==="string"&&DRINK_FX[pr.dk]?pr.dk:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null,hs:pr.hs===1});
   if(pr.say&&typeof pr.say.text==="string") q.say={text:pr.say.text.slice(0,80),at:Math.min(Date.now(),+pr.say.at||0)};
   if(pr.emote&&["wave","dance","cheer","pose","use","petpat","petplay","petfeed","petability","game"].includes(pr.emote.e)) q.emote={e:pr.emote.e,at:Math.min(Date.now(),+pr.emote.at||0),it:pr.emote.e==="use"&&BY[pr.emote.it]&&BY[pr.emote.it].t==="trip"?pr.emote.it:pr.emote.e==="game"&&typeof pr.emote.it==="string"&&/^con_[a-z0-9]+\|[0-6]$/.test(pr.emote.it)&&CON_BY[pr.emote.it.split("|")[0]]?pr.emote.it:null}; return fresh; }
 async function resolveNames(ids){ if(!USER) return; try{ const ps=await USER.profiles(ids); for(const id of ids) names[id]=(ps[id]&&ps[id].name)||names[id]||"Runner"; }catch(e){} }
