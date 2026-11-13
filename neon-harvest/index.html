@@ -13974,15 +13974,24 @@ const DZ={quake:{n:"Earthquake",ic:"💥",col:"#ffb84a",d:"The ground shakes in 
   tornado:{n:"Tornado",ic:"🌪",col:"#a8b8cc",d:"A twister tears across the outdoor areas. Get too close and it throws you."},
   flood:{n:"Flash flood",ic:"🌊",col:"#38a8ff",d:"Water floods the streets. Everyone outside moves slower."},
   meteor:{n:"Meteor strike",ic:"☄",col:"#ff7a3a",d:"Fireballs rain down and leave burning craters."},
-  volcano:{n:"Volcanic eruption",ic:"🌋",col:"#ff3a2a",d:"A volcano erupts on the horizon. The sky turns red and ash falls everywhere."}};
+  volcano:{n:"Volcanic eruption",ic:"🌋",col:"#ff3a2a",d:"A volcano erupts on the horizon. The sky turns red and ash falls everywhere."},
+  blackout:{n:"EMP blackout",ic:"🔌",col:"#9fd8ff",d:"An EMP knocks out the power grid. Every area goes dark. You can only see what's right around you."},
+  wildfire:{n:"City fire",ic:"🔥",col:"#ff8a2a",d:"Fires break out across the rooftops. Smoke fills the sky and embers rain down."},
+  hurricane:{n:"Hurricane",ic:"🌀",col:"#6ad0ff",d:"Sideways rain and howling wind. Everyone outside gets pushed along by the storm."},
+  freeze:{n:"Deep freeze",ic:"🥶",col:"#bfe8ff",d:"The temperature crashes. Ice covers everything and everyone outside moves slower."},
+  toxic:{n:"Toxic leak",ic:"☢",col:"#7aff4a",d:"A chemical plant leaks. Green fog rolls through the streets. Hold your breath."},
+  tsunami:{n:"Tsunami",ic:"🌊",col:"#2a8aff",d:"Giant waves crash through the outdoor areas. Get caught and you're swept down the street."}};
 let dzState=null, dzWatched=false, dzSeen="", dzCraters=[], dzLastShake=0;
 const dzOn=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until?dzState:null;
 const dzRecent=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until+10*6e4?dzState:null;
 function dzWatch(db){ if(dzWatched||!db) return; dzWatched=true; try{ db.doc("shopinfo/disaster").onSnapshot(s=>{ const d=s&&s.exists?s.data():null;
   dzState=d&&DZ[d.k]&&+d.until>Date.now()-11*6e4?{k:d.k,at:+d.at||0,until:+d.until||0,id:String(d.id||d.at||"")}:null; dzCheck(); },()=>{}); }catch(e){} }
 const DZ_SCARED={quake:["Earthquake! Get away from the windows!","The whole building's shaking!","Hold onto something!"],tornado:["TORNADO! Run!","It's coming this way!","Get inside, now!"],flood:["The water's rising! Get to high ground!","My shoes are gone. The water took them.","Is that a car floating by?!"],
-  meteor:["Something's falling from the sky!","That one hit the next block!","It's the end of the world!"],volcano:["Since when do we have a volcano?!","The sky's on fire!","Don't breathe the ash!"]};
-const DZ_AFTER={quake:"Did you feel that earthquake? My cups all fell.",tornado:"That tornado tore the roof off the noodle stand.",flood:"Everything's still soggy after that flood.",meteor:"There's a crater down the street from the meteor strike.",volcano:"There's ash on everything. Everything."};
+  meteor:["Something's falling from the sky!","That one hit the next block!","It's the end of the world!"],volcano:["Since when do we have a volcano?!","The sky's on fire!","Don't breathe the ash!"],
+  blackout:["Who turned off the city?!","My phone's dead. Everything's dead.","Stay close, I can't see a thing."],wildfire:["The rooftops are on fire!","Call somebody! Anybody!","I can smell the smoke from here."],
+  hurricane:["Hold on to something!","My umbrella's gone. Just gone.","The wind's pushing me down the street!"],freeze:["I can't feel my face.","The fountain froze solid!","Careful, the whole street's ice."],
+  toxic:["Don't breathe the green stuff!","My eyes are burning!","Cover your mouth with something!"],tsunami:["WAVE! Get to high ground!","Here comes another one!","The street's a river!"]};
+const DZ_AFTER={quake:"Did you feel that earthquake? My cups all fell.",tornado:"That tornado tore the roof off the noodle stand.",flood:"Everything's still soggy after that flood.",meteor:"There's a crater down the street from the meteor strike.",volcano:"There's ash on everything. Everything.",blackout:"The power's back, but my fridge didn't make it.",wildfire:"Half the rooftop gardens burned in that fire.",hurricane:"That hurricane threw a scooter through my window.",freeze:"Still thawing out from that deep freeze.",toxic:"They say the toxic leak's cleaned up. I'm not so sure.",tsunami:"I found a fish in my mailbox after that tsunami."};
 function dzAlert(st){ let a=$("#dzAlert"); if(a) a.remove(); const D=DZ[st.k];
   a=el("div",{id:"dzAlert",role:"alert",style:`position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;width:min(440px,calc(100vw - 24px));background:rgba(16,8,4,.96);border:1px solid ${D.col};box-shadow:0 0 24px ${D.col}55;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-family:var(--f-ui);color:#fde`});
   const close=el("button",{type:"button","aria-label":"Close alert",style:"margin-left:auto;background:none;border:1px solid #c9a;color:#fdd;font:600 13px var(--f-ui);min-width:36px;min-height:36px;cursor:pointer;flex:none",text:"✕",onclick:()=>a.remove()});
@@ -13994,15 +14003,15 @@ function dzCheck(){ const st=dzOn(); if(st&&dzSeen!==st.id){ dzSeen=st.id; dzCra
 function dzPanic(){ const st=dzOn(); if(!st) return; try{ for(const R of lifeHere(me.scene)){ if(Math.random()<.7){ R.fleeUntil=T+4+Math.random()*4; R.fleeDir=Math.random()<.5?-1:1; } } const L=lifeHere(me.scene); const n=L[(Math.random()*L.length)|0]; if(n) npcSay(n,pickOf(DZ_SCARED[st.k])); }catch(e){} }
 setInterval(()=>{ try{ dzCheck(); if(dzOn()&&Math.random()<.35) dzPanic(); }catch(e){} },6000);
 setInterval(()=>{ try{ if(dzState&&Date.now()>=dzState.until&&Date.now()<dzState.until+2000) chatLine(null,`${DZ[dzState.k].ic} The ${DZ[dzState.k].n.toLowerCase()} is over. Search the rubble outside for anything valuable.`,"sys"); }catch(e){} },1000);
-function dzSpeed(){ const st=dzOn(); return st&&st.k==="flood"&&WX_OUT.includes(me.scene)?.6:1; }
+function dzSpeed(){ const st=dzOn(); if(!st||!WX_OUT.includes(me.scene)) return 1; return {flood:.6,freeze:.7,toxic:.85,tsunami:.8}[st.k]||1; }
 function dzShake(){ const st=dzOn(); if(!st) return [0,0]; const t=Date.now()/1000, rm=matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches?.3:1; let a=0;
-  if(st.k==="quake") a=(2.2+1.8*Math.max(0,Math.sin(t*.7)))*rm; else if(st.k==="meteor") a=Math.max(0,1-(t*1000-dzLastShake)/600)*5*rm; else if(st.k==="tornado"&&WX_OUT.includes(me.scene)) a=.8*rm; else if(st.k==="volcano") a=Math.max(0,Math.sin(t*.4))*1.2*rm;
+  if(st.k==="quake") a=(2.2+1.8*Math.max(0,Math.sin(t*.7)))*rm; else if(st.k==="meteor") a=Math.max(0,1-(t*1000-dzLastShake)/600)*5*rm; else if(st.k==="tornado"&&WX_OUT.includes(me.scene)) a=.8*rm; else if(st.k==="volcano") a=Math.max(0,Math.sin(t*.4))*1.2*rm; else if(st.k==="hurricane"&&WX_OUT.includes(me.scene)) a=1*rm; else if(st.k==="tsunami"&&WX_OUT.includes(me.scene)) a=Math.max(0,1-Math.abs(dzWaveX()-me.x)/500)*4*rm;
   return a?[(Math.random()-.5)*2*a,(Math.random()-.5)*2*a]:[0,0]; }
 // rubble piles anyone can search once each, outside, during and for 10 minutes after
 function dzPiles(sc){ const st=dzRecent(); if(!st||!WX_OUT.includes(sc)||!SCENES[sc]) return []; const W=SCENES[sc].w, out=[]; for(let i=0;i<5;i++) out.push({i,x:Math.round(220+wxRand(st.id+sc+i)*(W-440)),key:st.id+":"+sc+":"+i}); return out; }
 function dzHot(sc){ const st=dzRecent(); if(!st) return []; save.dzLoot=save.dzLoot||{}; const D=DZ[st.k];
-  return dzPiles(sc).filter(p=>!save.dzLoot[p.key]).map(p=>({x:p.x,hw:40,label:st.k==="flood"?"Search the flood debris":st.k==="meteor"?"Search the crater":"Search the rubble",act:()=>{ save.dzLoot[p.key]=Date.now(); for(const k in save.dzLoot) if(Date.now()-save.dzLoot[k]>864e5) delete save.dzLoot[k];
-    const cr=15+Math.floor(Math.random()*46); save.credits+=cr; let msg=`${D.ic} You found ₵${cr}`; if(Math.random()<.55){ const id=rollItem(st.k==="meteor"||st.k==="volcano"?.6:.3); addItem(id,1); msg+=` and ${BY[id].n}`; } persist(); hud(); beep(1200,.06); setTimeout(()=>beep(1600,.06),80); toast(msg+"!",D.col); emote("cheer"); }})); }
+  return dzPiles(sc).filter(p=>!save.dzLoot[p.key]).map(p=>({x:p.x,hw:40,label:st.k==="flood"||st.k==="tsunami"?"Search the flood debris":st.k==="meteor"?"Search the crater":st.k==="wildfire"?"Search the burnt wreckage":st.k==="freeze"?"Search the frozen junk":st.k==="toxic"?"Search the spill (carefully)":st.k==="blackout"?"Search the dark stall":st.k==="hurricane"?"Search the storm wreckage":"Search the rubble",act:()=>{ save.dzLoot[p.key]=Date.now(); for(const k in save.dzLoot) if(Date.now()-save.dzLoot[k]>864e5) delete save.dzLoot[k];
+    const cr=15+Math.floor(Math.random()*46); save.credits+=cr; let msg=`${D.ic} You found ₵${cr}`; if(Math.random()<.55){ const id=rollItem(["meteor","volcano","tsunami","wildfire"].includes(st.k)?.6:.3); addItem(id,1); msg+=` and ${BY[id].n}`; } persist(); hud(); beep(1200,.06); setTimeout(()=>beep(1600,.06),80); toast(msg+"!",D.col); emote("cheer"); }})); }
 // world-space drawing: outdoor scenes get the full disaster; indoors just the shaking
 function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzOn(), c=ctx, X=camX, k=st.k, out=WX_OUT.includes(me.scene);
   // rubble piles
@@ -14035,7 +14044,34 @@ function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzO
     for(let i=0;i<10;i++){ const u=(T*.7+i/10)%1; c.globalAlpha=(1-u)*.9; c.fillStyle=i%2?"#ff7a2a":"#ffd36a"; c.beginPath(); c.arc(vx+Math.sin(i*2.3)*u*44,vt-u*40+u*u*22,1.6+u,0,7); c.fill(); } c.shadowBlur=0;
     for(let i=0;i<5;i++){ const u=(T*.15+i/5)%1; c.globalAlpha=1; c.fillStyle=`rgba(60,45,45,${.45*(1-u)})`; c.beginPath(); c.arc(vx+Math.sin(i+T*.3)*10+u*50,vt-6-u*30,10+u*26,0,7); c.fill(); } c.globalAlpha=1;
     c.fillStyle="rgba(170,160,160,.7)"; for(let i=0;i<N2(110);i++){ const p=WXP[i]; p.y+=p.v*dt*.1; if(p.y>1) p.y-=1; c.fillRect(X+((p.x*VW+Math.sin(T+p.r)*20)%VW),p.y*H,2,2); }
-    for(let i=0;i<N2(20);i++){ const p=WXP[i+150]; const y=320-((T*30*p.v+p.y*300)%300); c.fillStyle=`rgba(255,${120+p.s*100},40,${.8*(y/320)})`; c.fillRect(X+p.x*VW+Math.sin(T*2+p.r)*10,y,2,2); } } }
+    for(let i=0;i<N2(20);i++){ const p=WXP[i+150]; const y=320-((T*30*p.v+p.y*300)%300); c.fillStyle=`rgba(255,${120+p.s*100},40,${.8*(y/320)})`; c.fillRect(X+p.x*VW+Math.sin(T*2+p.r)*10,y,2,2); } }
+  if(k==="blackout"){ const fl=Math.random()<.03; const cx=me.x, cy=me.y-50, g=c.createRadialGradient(cx,cy,30,cx,cy,170); g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,`rgba(0,0,4,${fl?.55:.88})`); c.fillStyle=g; c.fillRect(X,0,VW,H);
+    if(Math.sin(T*1.3)>.97){ c.fillStyle="rgba(160,210,255,.12)"; c.fillRect(X,0,VW,H); } c.fillStyle="rgba(255,240,200,.08)"; c.beginPath(); c.moveTo(cx+me.dir*6,cy); c.lineTo(cx+me.dir*190,cy-40); c.lineTo(cx+me.dir*190,cy+60); c.closePath(); c.fill(); }
+  if(k==="wildfire"&&out){ c.fillStyle="rgba(255,110,30,.14)"; c.fillRect(X,0,VW,H);
+    for(let i=0;i<8;i++){ const fx=Math.floor(X/260)*260+i*260+wxRand("wf"+i)*120; if(fx>X+VW+100) break; const by=40+wxRand("wy"+i)*30;
+      for(let j=0;j<7;j++){ const fh=18+Math.sin(T*9+j*1.7+i)*8+j%3*6; c.fillStyle=j%2?"rgba(255,90,20,.85)":"rgba(255,200,60,.8)"; c.beginPath(); c.moveTo(fx+j*7-4,by); c.quadraticCurveTo(fx+j*7,by-fh,fx+j*7+4,by); c.fill(); }
+      for(let j=0;j<4;j++){ const u=(T*.2+j/4+i*.13)%1; c.fillStyle=`rgba(50,40,40,${.45*(1-u)})`; c.beginPath(); c.arc(fx+20+u*40,by-12-u*60,10+u*24,0,7); c.fill(); } }
+    for(let i=0;i<N2(50);i++){ const p=WXP[i]; p.y+=p.v*dt*.08; if(p.y>1) p.y-=1; c.fillStyle=`rgba(255,${140+p.s*100},40,${.5+.5*Math.sin(T*6+p.r)})`; c.fillRect(X+((p.x*VW+Math.sin(T+p.r)*30)%VW),p.y*H,2,2); } }
+  if(k==="hurricane"&&out){ c.fillStyle="rgba(20,30,50,.3)"; c.fillRect(X,0,VW,H); c.strokeStyle="rgba(180,200,240,.4)"; c.lineWidth=1.2; c.beginPath();
+    for(let i=0;i<N2(220);i++){ const p=WXP[i]; p.y+=p.v*dt*1.6; if(p.y>1) p.y-=1; const x=X+((p.x*VW+T*380)%VW), y=p.y*H; c.moveTo(x,y); c.lineTo(x-26,y+8); } c.stroke();
+    for(let i=0;i<10;i++){ const p=WXP[i+200]; const x=X+((p.x*VW+T*(520+p.v*200))%(VW+100))-50, y=100+p.y*200+Math.sin(T*4+p.r)*24; c.save(); c.translate(x,y); c.rotate(T*9+i); c.fillStyle=["#8a7a6a","#ff3fa8","#9fd8ff","#ffd36a"][i%4]; c.fillRect(-6,-3,12,6); c.restore(); }
+    if(!me.dead&&!me.homeSit&&$("#overlay").hidden){ me.x=clamp(me.x+55*dt,30,SCENES[me.scene].w-30); } }
+  if(k==="freeze"){ if(out){ c.fillStyle="rgba(180,220,255,.12)"; c.fillRect(X,0,VW,H); c.fillStyle="rgba(220,240,255,.55)"; c.fillRect(X,262,VW,5);
+      for(let x=Math.floor(X/22)*22;x<X+VW;x+=22){ const h=6+wxRand("ic"+x)*20; c.fillStyle="rgba(210,240,255,.75)"; c.beginPath(); c.moveTo(x,0); c.lineTo(x+7,0); c.lineTo(x+3.5,h); c.fill(); }
+      c.fillStyle="#f4faff"; for(let i=0;i<N2(160);i++){ const p=WXP[i]; p.y+=p.v*dt*.2; if(p.y>1) p.y-=1; c.fillRect(X+((p.x*VW+T*30+Math.sin(T+p.r)*10)%VW),p.y*H,2,2); } }
+    const g=c.createRadialGradient(X+VW/2,H/2,H*.35,X+VW/2,H/2,VW*.7); g.addColorStop(0,"rgba(200,235,255,0)"); g.addColorStop(1,"rgba(200,235,255,.45)"); c.fillStyle=g; c.fillRect(X,0,VW,H); }
+  if(k==="toxic"&&out){ c.fillStyle="rgba(100,255,60,.08)"; c.fillRect(X,0,VW,H);
+    for(let i=0;i<9;i++){ const y=280+(i%3)*22, x=X+((i*200+T*(12+i*3))%(VW+400))-200; c.fillStyle="rgba(110,255,70,.2)"; c.beginPath(); c.ellipse(x,y,230,26,0,0,7); c.fill(); }
+    for(let i=0;i<N2(30);i++){ const p=WXP[i]; const u=(T*.4+p.s)%1; c.strokeStyle=`rgba(170,255,120,${.7*(1-u)})`; c.lineWidth=1; c.beginPath(); c.arc(X+p.x*VW,330-u*80,2+p.s*3,0,7); c.stroke(); }
+    for(let i=0;i<3;i++){ const bx=Math.floor(X/700)*700+i*700+300; if(bx<X-40||bx>X+VW+40) continue; c.fillStyle="#d8c020"; c.fillRect(bx-9,296,18,24); c.fillStyle="#111"; c.font="bold 12px monospace"; c.textAlign="center"; c.fillText("☢",bx,313); c.fillStyle="rgba(120,255,70,.6)"; c.beginPath(); c.ellipse(bx+24,322,26,5,0,0,7); c.fill(); } }
+  if(k==="tsunami"&&out){ const W=SCENES[me.scene].w, wx=dzWaveX(); c.fillStyle="rgba(20,60,110,.15)"; c.fillRect(X,0,VW,H);
+    const lvl=338-14; c.fillStyle="rgba(40,110,180,.5)"; c.fillRect(X,lvl,VW,H-lvl);
+    if(wx>X-300&&wx<X+VW+300){ const g=c.createLinearGradient(0,120,0,340); g.addColorStop(0,"rgba(120,200,255,.95)"); g.addColorStop(1,"rgba(20,70,140,.95)"); c.fillStyle=g; c.beginPath(); c.moveTo(wx-520,340); c.quadraticCurveTo(wx-200,250,wx-40,150); c.quadraticCurveTo(wx+30,110,wx+70,160); c.quadraticCurveTo(wx+40,150,wx+20,190); c.lineTo(wx+60,340); c.closePath(); c.fill();
+      c.fillStyle="rgba(240,250,255,.9)"; for(let j=0;j<14;j++){ const a=j/14; c.beginPath(); c.arc(wx-40+a*110+Math.sin(T*8+j)*4,150+Math.sin(a*3)*20-a*10,4+Math.sin(T*6+j)*2,0,7); c.fill(); }
+      const d=me.x-wx; if(d>-60&&d<120&&!me.dead){ me.x=clamp(me.x+520*dt,30,W-30); if(!me._dzT||T-me._dzT>4){ me._dzT=T; toast("🌊 The wave sweeps you down the street!","#2a8aff"); } } } }
+}
+// the tsunami's wave: one sweep across the area every 30 seconds
+function dzWaveX(){ try{ const W=SCENES[me.scene].w, t=(Date.now()/1000)%30; return t<9?-600+(t/9)*(W+1200):-99999; }catch(e){ return -99999; } }
 const N2=n=>Math.round(n*(PERF&&PERF.lvl>=2?.45:PERF&&PERF.lvl>=1?.7:1));
 async function dzStart(k,mins){ if(!IS_ADMIN||!DB) return; const now=Date.now(), d={k,at:now,until:now+mins*6e4,id:k+now.toString(36),by:myId||""};
   try{ await DB.doc("shopinfo/disaster").set(d); dzState={k,at:d.at,until:d.until,id:d.id}; dzCheck(); toast(`${DZ[k].ic} ${DZ[k].n} started for everyone.`,DZ[k].col); }catch(e){ toast("Couldn't start it. Only the owner can start disasters."); } }
@@ -14043,8 +14079,8 @@ async function dzStop(){ if(!IS_ADMIN||!DB) return; try{ const now=Date.now(); a
 function dzPanel(body){ const st=dzOn();
   if(st) body.append(el("div",{class:"detail",style:`border-color:${DZ[st.k].col}`},el("div",{class:"info"},el("strong",{style:`color:${DZ[st.k].col}`,text:`${DZ[st.k].ic} ${DZ[st.k].n} happening now`}),el("span",{class:"sub",text:`${DZ[st.k].d} Ends in about ${Math.max(1,Math.round((st.until-Date.now())/6e4))} min.`}))));
   if(!(IS_ADMIN&&DB)) return; const dur=el("select",{"aria-label":"How long"},...[[3,"3 min"],[5,"5 min"],[10,"10 min"],[15,"15 min"],[30,"30 min"]].map(([v,t])=>el("option",{value:String(v),text:"Lasts "+t}))); dur.value="5";
-  const box=el("div",{class:"detail",style:"border-color:#ff7a3a;flex-direction:column;align-items:stretch"},el("strong",{text:"Owner: natural disasters"}),el("span",{class:"sub",text:"Start one for every player. Everyone gets an alert, the city panics, and rubble piles appear outside with credits and parts to find. They clear 10 minutes after it ends."}),el("div",{class:"row"},dur));
-  const g=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px"}); for(const [k,D] of Object.entries(DZ)) g.append(el("button",{class:"btn",type:"button",style:`border-color:${D.col};text-align:left;min-height:44px`,text:`${D.ic} ${D.n}`,title:D.d,onclick:async()=>{ await dzStart(k,+dur.value); openWeather(); }}));
+  const box=el("div",{class:"detail",style:"border-color:#ff7a3a;flex-direction:column;align-items:stretch;flex-wrap:nowrap"},el("strong",{text:`Owner: natural disasters (${Object.keys(DZ).length})`}),el("span",{class:"sub",text:"Start one for every player. Everyone gets an alert, the city panics, and rubble piles appear outside with credits and parts to find. They clear 10 minutes after it ends."}),el("div",{class:"row"},dur));
+  const g=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-auto-rows:min-content;align-content:start;gap:6px;flex:none;width:100%"}); for(const [k,D] of Object.entries(DZ)) g.append(el("button",{class:"btn",type:"button",style:`border-color:${D.col};text-align:left;min-height:44px;height:auto`,text:`${D.ic} ${D.n}`,title:D.d,onclick:async()=>{ await dzStart(k,+dur.value); openWeather(); }}));
   box.append(g); if(st) box.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"■ End the disaster now",onclick:async()=>{ await dzStop(); openWeather(); }}))); body.append(box); }
 // residents talk about the disaster while it happens and afterwards
 { const _wl=worldLines; worldLines=function(n){ const L=_wl(n); try{ const st=dzOn(); if(st) L.push(...DZ_SCARED[st.k],...DZ_SCARED[st.k]); else { const r=dzRecent(); if(r) L.push(DZ_AFTER[r.k],DZ_AFTER[r.k]); } }catch(e){} return L; }; }
