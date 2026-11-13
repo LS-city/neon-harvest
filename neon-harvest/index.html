@@ -3690,7 +3690,7 @@ function openTheaterLibrary(){ thLibWatch(); const body=panel("Stream Dome Libra
     if(f&&!/\.(mp4|m4v|webm)$/i.test(f.name)&&!/^video\/(mp4|webm)$/.test(f.type)){ msg.textContent="Upload an MP4 or WebM file."; return; }
     add.disabled=true; msg.style.color="#ffb13f";
     try{ let url=u, aid="";
-      if(f){ msg.textContent="Checking the video…"; const ou=URL.createObjectURL(f); let pr; try{ pr=await thProbe(ou); } finally{ URL.revokeObjectURL(ou); } if(pr.d>TH_MAXH*3600) throw new Error(`Movies can be up to ${TH_MAXH} hours long.`);
+      if(f){ msg.textContent="Checking the video…"; const ac=await thAudioCodec(f); if(ac.bad) throw new Error(`This movie's sound is ${ac.name}, which web browsers can't play, so nobody would hear it. ${TH_FIXTIP}`); const ou=URL.createObjectURL(f); let pr; try{ pr=await thProbe(ou); } finally{ URL.revokeObjectURL(ou); } if(pr.d>TH_MAXH*3600) throw new Error(`Movies can be up to ${TH_MAXH} hours long.`);
         const N=Math.ceil(f.size/THL_PART), us=await thStorageUse(); if(us&&us.maxBytes&&us.bytes+f.size>us.maxBytes) throw new Error(`Not enough storage: this movie is ${thMB(f.size)} and the game has ${thMB(Math.max(0,us.maxBytes-us.bytes))} free. Remove a movie or use a smaller copy.`);
         if(us&&us.maxFiles&&us.files+N>us.maxFiles) throw new Error(`Not enough storage slots: this movie needs ${N} parts and ${Math.max(0,us.maxFiles-us.files)} are free.`);
         const ty=/\.webm$/i.test(f.name)||f.type==="video/webm"?"video/webm":"video/mp4", ctl={stop:false}, t0=Date.now();
@@ -3772,6 +3772,17 @@ function openClassicPlayer(it){ const body=panel(it.t,`${it.g} · ${Math.round(i
 // stop the private player whenever its panel closes
 setInterval(()=>{ if(classicVid&&(!classicVid.isConnected)){ try{ classicVid.pause(); classicVid.removeAttribute("src"); classicVid.load(); }catch(e){} classicVid=null; } },1000);
 
+/* ---- movie sound checks: browsers can't stream Dolby / DTS audio, and phones need a real tap to turn sound on ---- */
+const TH_BADAUDIO={"ac-3":"Dolby Digital (AC-3)","ec-3":"Dolby Digital Plus (E-AC-3)","ac-4":"Dolby AC-4",dtsc:"DTS",dtsh:"DTS-HD",dtsl:"DTS-HD MA",dtse:"DTS Express",mlpa:"Dolby TrueHD"};
+async function thAudioCodec(file){ try{ const MB=8*1024*1024, parts=[file.slice(0,Math.min(file.size,MB))]; if(file.size>MB) parts.push(file.slice(Math.max(MB,file.size-MB)));
+    for(const p of parts){ const u=new Uint8Array(await p.arrayBuffer()); let txt=""; for(let i=0;i<u.length;i+=32768) txt+=String.fromCharCode.apply(null,u.subarray(i,i+32768));
+      let i=txt.indexOf("stsd"); while(i>=0){ const box=txt.slice(i,i+220); for(const k in TH_BADAUDIO) if(box.includes(k)) return {bad:true,name:TH_BADAUDIO[k]}; if(box.includes("mp4a")||box.includes("Opus")) return {bad:false,name:"AAC"}; i=txt.indexOf("stsd",i+4); } } }catch(e){}
+  return {bad:false,name:""}; }
+const TH_FIXTIP="Convert the sound to AAC and try again. The free app HandBrake does it: open the movie, set Audio to AAC, and save as MP4.";
+// if the captured stream came back without sound, route it through Web Audio instead
+async function thEnsureAudio(v,stream){ await new Promise(r=>setTimeout(r,1200)); if(stream.getAudioTracks().length) return true;
+  try{ const AC=window.AudioContext||window.webkitAudioContext, ac=v._ac||new AC(); if(!v._acSrc){ const src=ac.createMediaElementSource(v), dst=ac.createMediaStreamDestination(); src.connect(dst); src.connect(ac.destination); v._acSrc=src; v._ac=ac; dst.stream.getAudioTracks().forEach(t=>stream.addTrack(t)); } if(ac.state==="suspended") ac.resume().catch(()=>{}); }catch(e){}
+  return stream.getAudioTracks().length>0; }
 /* ---- host: play a file from this device and stream it live ---- */
 function thCapture(v){ if(v.captureStream) return v.captureStream();
   // Safari / Firefox: paint the video into a canvas and route the sound through Web Audio
@@ -3784,6 +3795,7 @@ async function thStart(file,title){ if(!DB||!myId) throw new Error("Sign in to r
   const cur=thLive(), swap=!!(thHost&&cur&&cur.by===myId); if(cur&&cur.by!==myId&&!IS_ADMIN) throw new Error("Someone's movie is already playing. Wait for it to finish.");
   if(!swap&&save.chips<TH_FEE) throw new Error(`You need ${TH_FEE} chips.`);
   if(typeof RTCPeerConnection==="undefined") throw new Error("This browser can't stream video. Try Chrome, Edge, Firefox or Safari.");
+  const codec=await thAudioCodec(file);
   const v=thHidden(document.createElement("video")), url=URL.createObjectURL(file); v.preload="auto"; v.volume=thVol; v.src=url;
   const drop=()=>{ try{ v.pause(); }catch(e){} v.remove(); try{ URL.revokeObjectURL(url); }catch(e){} };
   try{ await new Promise((res,rej)=>{ v.onloadedmetadata=res; v.onerror=()=>rej(0); setTimeout(()=>rej(0),15000); }); }catch(e){ drop(); throw new Error("Your browser can't play that file. MP4 (H.264) works best."); }
@@ -3791,13 +3803,15 @@ async function thStart(file,title){ if(!DB||!myId) throw new Error("Sign in to r
   if(isFinite(v.duration)&&v.duration>TH_MAXH*3600){ drop(); throw new Error(`Movies can be up to ${TH_MAXH} hours long.`); }
   try{ await v.play(); }catch(e){ drop(); throw new Error("Couldn't start playback. Tap Start again."); }
   const stream=thCapture(v); for(let k=0;k<20&&!stream.getVideoTracks().length;k++) await new Promise(r=>setTimeout(r,100));
+  const hasSound=!codec.bad&&await thEnsureAudio(v,stream), audioWarn=codec.bad?`This movie's sound is ${codec.name}, which web browsers can't stream, so other players only get the picture. ${TH_FIXTIP}`:hasSound?"":`Other players can't hear this movie: no sound came through from the file. ${TH_FIXTIP}`;
   try{ const s=await DB.doc("club/theater").get(); const c=s.exists?thClean(s.data()):null; if(c&&c.by!==myId&&!IS_ADMIN&&c.until>Date.now()&&c.hb>Date.now()-45e3){ drop(); throw new Error("Someone just started a movie. Wait for it to finish."); } }catch(e){ if(/movie/.test(e.message)) throw e; }
   if(thHost) thStopHost(true,true);
   const now=Date.now(), sid=(Math.random().toString(36).slice(2,10)+now.toString(36)).replace(/[^a-z0-9]/g,"").slice(0,24), t=String(title||"").trim().slice(0,60)||file.name.replace(/\.[^.]+$/,"").slice(0,60)||"Untitled";
   const dur=isFinite(v.duration)?Math.round(v.duration):0, doc={by:myId,sid,title:t,at:now,hb:now,until:now+(dur||7200)*1000+120e3,dur};
   try{ await DB.doc("club/theater").set(doc); }catch(e){ drop(); throw new Error("Couldn't reach the server. Try again."); }
   if(!swap){ save.chips-=TH_FEE; persist(); hud(); }
-  thHost={sid,v,url,stream,title:t,at:now,dur,peers:{},handled:{},hbT:now,live:true,unsub:null};
+  thHost={sid,v,url,stream,title:t,at:now,dur,peers:{},handled:{},hbT:now,live:true,unsub:null,audioWarn};
+  if(audioWarn) setTimeout(()=>{ toast("🔇 Other players can't hear this movie. Open the projection booth to see why.","#ff7a7a"); chatLine(null,"🔇 "+audioWarn,"sys"); },600);
   v.onended=()=>{ if(thHost&&thHost.v===v){ thStopHost(); toast("Your movie finished. Thanks for running the projector!"); } };
   try{ thHost.unsub=DB.collection("club").where("k","==","threq").onSnapshot(qs=>{ const H=thHost; if(!H) return; for(const ch of qs.docChanges()){ const d=ch.doc.data()||{};
       if(ch.type==="removed"){ const by=String(ch.doc.id||"").replace(/^threq_/,""); if(H.peers[by]){ try{ H.peers[by].close(); }catch(e){} delete H.peers[by]; } continue; }
@@ -3846,7 +3860,12 @@ function thPlayVid(){ if(!thVid) return; thVid.volume=thVol; thVid.muted=false;
 function thDisconnect(keepDoc){ const V=thView; if(!V) return; thView=null; try{ V.unsub&&V.unsub(); }catch(e){} try{ V.pc.close(); }catch(e){}
   if(thVid){ try{ thVid.pause(); }catch(e){} thVid.srcObject=null; if(V.lib){ thVid.removeAttribute("src"); try{ thVid.load(); }catch(e){} } } thNeedTap=false; if(!keepDoc&&DB&&myId&&!V.lib) DB.doc("club/threq_"+myId).delete().catch(()=>{}); }
 // one tap or key press anywhere turns the sound on if the browser started the movie muted
-for(const ev of ["pointerdown","keydown"]) addEventListener(ev,()=>{ if(thNeedTap&&thVid&&thView){ thVid.muted=false; thVid.volume=thVol; thVid.play().then(()=>{ thNeedTap=false; }).catch(e=>{ if(e&&e.name==="NotAllowedError") thVid.muted=true; }); } if(thHost&&thHost.v._ac&&thHost.v._ac.state==="suspended") thHost.v._ac.resume().catch(()=>{}); },true);
+function thUnmute(){ if(thNeedTap&&thVid&&thView){ thVid.muted=false; thVid.volume=thVol; thVid.play().then(()=>{ thNeedTap=false; thSoundBtn(); }).catch(e=>{ if(e&&e.name==="NotAllowedError") thVid.muted=true; }); } }
+// a big "tap for sound" button, so phone players always have a real tap to turn the movie's sound on
+function thSoundBtn(){ let b=$("#thSoundBtn"); const need=!!(thNeedTap&&thView&&thVid); if(!need){ if(b) b.remove(); return; } if(b) return;
+  b=el("button",{id:"thSoundBtn",type:"button",style:"position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:41;background:#ffb13f;color:#120a00;border:0;font:700 14px var(--f-ui);padding:12px 18px;min-height:48px;box-shadow:0 0 18px rgba(255,177,63,.5);cursor:pointer",text:"🔊 Tap for movie sound",onclick:()=>{ thUnmute(); setTimeout(thSoundBtn,300); }}); document.body.append(b); }
+setInterval(thSoundBtn,700);
+for(const ev of ["pointerdown","pointerup","touchend","click","keydown"]) addEventListener(ev,()=>{ if(thNeedTap&&thVid&&thView){ thVid.muted=false; thVid.volume=thVol; thVid.play().then(()=>{ thNeedTap=false; }).catch(e=>{ if(e&&e.name==="NotAllowedError") thVid.muted=true; }); } if(thHost&&thHost.v._ac&&thHost.v._ac.state==="suspended") thHost.v._ac.resume().catch(()=>{}); },true);
 function thTick(){ const s=thLive();
   if(thHost&&thHost.lib&&DB&&Date.now()-thHost.hbT>15e3) thLibPush();
   else if(thHost&&DB&&Date.now()-thHost.hbT>15e3){ const H=thHost, v=H.v; H.hbT=Date.now(); const rem=isFinite(v.duration)?Math.max(0,v.duration-v.currentTime):3600;
@@ -3890,6 +3909,7 @@ function openTheaterBooth(){ const s=thLive(), mine=!!thHost;
     body.append(el("div",{class:"detail",style:"border-color:#ffb13f"},el("div",{class:"info"},el("strong",{text:`🎬 Now showing: ${s.title}`}),
       el("span",{class:"sub",text:`${s.lib?"From the Stream Dome Library, started by "+(mine?"you":nameOf(s.by)):"Playing live from "+(mine?"your":nameOf(s.by)+"'s")+" device"}${s.dur?` · about ${thMins(s)} min left`:""}${mine&&!s.lib?` · ${peers} watching right now${joining?`, ${joining} connecting`:""}`:""}`})),
       el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Watch fullscreen",onclick:()=>openTheaterWatch()}))));
+    if(mine&&thHost.audioWarn) body.append(el("div",{class:"detail",style:"border-color:#ff7a7a"},el("div",{class:"info"},el("strong",{style:"color:#ff7a7a",text:"🔇 Other players can't hear this movie"}),el("span",{class:"sub",text:thHost.audioWarn}))));
     if(mine){ const v=thHost.v;
       body.append(el("div",{class:"detail",style:"border-color:var(--amber)"},el("div",{class:"info"},el("strong",{text:"Projector controls"}),el("span",{class:"sub",text:"Pausing or skipping changes it for everyone. Keep this tab open until the movie ends — closing it stops the show."}),
         el("div",{class:"row"},el("button",{class:"btn",type:"button",text:v.paused?"▶ Play":"⏸ Pause",onclick:()=>{ v.paused?v.play().catch(()=>{}):v.pause(); openTheaterBooth(); }}),
