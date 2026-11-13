@@ -39,7 +39,7 @@ canvas#world{display:block;width:100%;height:100%;image-rendering:pixelated;touc
 .stats{display:flex;gap:6px;flex-wrap:wrap}
 .pill{background:rgba(21,14,38,.82);border:1px solid var(--line);padding:4px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill b{font-weight:600}
-.pill.cr b{color:var(--amber)} .pill.rp b{color:var(--c-uncommon)} #rppill{cursor:pointer} #rppill.rpgain{animation:rpgain 1.2s ease} @keyframes rpgain{0%{box-shadow:0 0 0 rgba(67,240,164,0)}25%{box-shadow:0 0 16px rgba(67,240,164,.9);transform:scale(1.12)}100%{box-shadow:0 0 0 rgba(67,240,164,0);transform:none}}
+.pill.cr b{color:var(--amber)} .pill.rp b{color:var(--c-uncommon)} #rppill{cursor:pointer} .pill.lv{cursor:pointer;color:var(--text);font-family:var(--f-ui);background:linear-gradient(90deg,rgba(255,255,255,.14) var(--lp,0%),rgba(21,14,38,.82) var(--lp,0%))} #rppill.rpgain{animation:rpgain 1.2s ease} @keyframes rpgain{0%{box-shadow:0 0 0 rgba(67,240,164,0)}25%{box-shadow:0 0 16px rgba(67,240,164,.9);transform:scale(1.12)}100%{box-shadow:0 0 0 rgba(67,240,164,0);transform:none}}
 .rpbig{display:flex;align-items:baseline;gap:8px}.rpbig b{font-size:34px;color:var(--c-uncommon);font-family:var(--f-display)}.rpbar{height:8px;background:#1b1530;border:1px solid var(--line)}.rpbar i{display:block;height:100%;background:var(--c-uncommon)} .pill.ch b{color:var(--cyan)} .pill.on b{color:var(--c-uncommon)}
 .btn{font-family:var(--f-ui);font-size:12px;background:var(--panel);color:var(--text);border:1px solid var(--line);padding:6px 10px;cursor:pointer}
 .btn:hover{border-color:var(--cyan);color:#fff}
@@ -498,6 +498,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <span class="pill ch">CHIPS <b id="chips">0</b></span>
       <button class="pill rp" id="nrcpill" type="button" hidden title="Neon Row Coins: everyone earns them by playing and spends them at Neon Row. Tap for details." style="cursor:pointer">NRC <b id="nrcv" style="color:#38e8ff">0</b></button>
       <button class="pill rp" id="rppill" type="button" hidden title="Reward Points: earned by members from work, spent at Smacked Shop. Tap for details.">RP <b id="rp">0</b></button>
+      <button class="pill lv" id="lvpill" type="button" hidden title="Your level. Tap for details.">⭐ Lv <b>1</b></button>
       <span class="pill" id="hppill" hidden></span>
       <span class="pill" id="jobpill" hidden></span>
       <span class="pill" id="buffs" hidden></span>
@@ -2183,7 +2184,7 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   // ---- labels (unscaled)
   c.save(); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace";
   const top=MECH?mechTop+4:(ht==="Top hat"||ht==="Crown"||ht==="Antenna"||ht==="Wizard hat"||ht==="Bunny ears"||ht==="Holo crown"||ht==="Prism crown"||ht==="Party hat"||ht==="Pirate hat"||hr==="Liberty spikes"||hr==="Flame hair"||aura==="Rain cloud"||o.fx==="eye"?92:78)-(o.sit?9:0)+(o.fx==="bong"?8:0);
-  if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; if(o.dcc>=0){ c.shadowColor=DCC_SYMS[o.dcc]?DCC_SYMS[o.dcc].c:c.fillStyle; c.shadowBlur=8+3*Math.sin(t*3); c.globalAlpha=1; } c.fillText(o.name,x,y-(top+bob)*s); c.shadowBlur=0; c.globalAlpha=1;
+  if(o.name){ c.fillStyle=COLORS[L.nameCol]==="#2a2440"?"#9a8cc0":COLORS[L.nameCol]; c.globalAlpha=.9; if(o.dcc>=0){ c.shadowColor=DCC_SYMS[o.dcc]?DCC_SYMS[o.dcc].c:c.fillStyle; c.shadowBlur=8+3*Math.sin(t*3); c.globalAlpha=1; } c.fillText(o.name,x,y-(top+bob)*s); c.shadowBlur=0; c.globalAlpha=1; if(o.lv) try{ drawLvBadge(c,x,y-(top+bob)*s,o.name,o.lv); }catch(e){}
     if(o.dcc>=0){ const nw=c.measureText(o.name).width; drawDccSym(c,o.dcc,x-nw/2-9,y-(top+bob)*s-3.5,5.5,t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }
     if(o.role||o.rk){ try{ drawRoleTag(c,x,y-(top+bob)*s,o.role||{rk:o.rk,cu:o.cu||null},t); c.textAlign="center"; c.font="10px 'IBM Plex Mono',monospace"; }catch(e){} } }
   if(o.hp!=null&&!o.dead){ const bw=36, bx=x-bw/2, by2=y-(top+bob)*s+4, r=clamp(o.hp,0,100)/100; c.fillStyle="rgba(0,0,0,.75)"; c.fillRect(bx-1,by2-1,bw+2,6); c.fillStyle=r>.5?"#43f0a4":r>.25?"#ffb84a":"#ff5a4a"; c.fillRect(bx,by2,bw*r,4); }
@@ -4500,19 +4501,19 @@ function render(){
   // entities sorted by depth
   const ents=[];
   for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:lifeName(n),say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance||n.danceUntil>T?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}});
-  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),say:p.say&&!isBlocked(p.by)?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
+  for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(p.staff?"★ ":"")+nameOf(p.by),lv:p.lv,say:p.say&&!isBlocked(p.by)?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="den") denEnts(ents); if(me.scene==="rowin") rowInEnts(ents);
   if(me.scene==="byte") for(const c of bbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="cyberbuys") for(const c of cbCustomers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:cbWantText(c),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="bar") for(const c of customers) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,name:"",say:c.arrived&&!c.leaving?{text:wantText(c.want),t:T}:null,emote:c.happy?{e:"cheer",t:c.happy}:null}});
   if(me.scene==="void") for(const b of bots){ if(b.dead&&T-b.deadT>1.6) continue; const B=BOT_TYPES[b.type]||BOT_TYPES.grunt; ents.push({x:b.x,y:b.y,sc:B.sc||1,alpha:B.blink&&!b.dead?(T-(b.blinkedT||-9)<.5?.35+.65*((T-b.blinkedT)/.5):.85+.15*Math.sin(T*9)):null,o:{dir:b.dir,phase:b.phase,moving:b.moving,look:B.look,name:(b.boss?"☠ ":"")+B.n.toUpperCase(),hp:b.hp/b.max*100,dead:b.dead,hurt:b.hurtT,block:false,emote:b.atkT&&T-b.atkT<.35?{e:"atk",t:b.atkT}:null}}); }
-  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(onShift()?"★ ":"")+(myName||"Runner"),me:true,dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
+  ents.push({x:me.x,y:me.y,o:{dir:me.dir,phase:me.phase,moving:me.moving,look:save.look,role:roleO("me"),name:(onShift()?"★ ":"")+(myName||"Runner"),me:true,lv:lvNow(),dcc:dccSym(myId),petSay:me.petSay,petFetch:me.petFetch,petGlow:petTier()>=3,say:me.say,emote:me.emote,fx:myFx(),dk:myDk(),sit:me.seat!=null||!!me.homeSit,hp:me.scene==="void"?myHP:null,block:!!me.blocking,dead:!!me.dead,hurt:me.hurtT}});
   try{ cityEnts(ents); }catch(e){}
   ents.sort((a,b)=>a.y-b.y);
     for(const e of ents){ const s=(me.scene==="ascend"?.6:(.85+.3*(e.y-LANE.top)/(LANE.bot-LANE.top)))*(e.sc||1); if(e.alpha!=null){ ctx.save(); ctx.globalAlpha=e.alpha; } if(e.draw){ try{ e.draw(ctx,e.x,e.y,s,T); }catch(_e){} } else { if(e.umb){ try{ drawUmbrella(ctx,e.x,e.y,s,T,e.umb); }catch(_e){} } drawStick(ctx,e.x,e.y,s,e.o,T); } if(e.alpha!=null) ctx.restore();
     if(e.cust&&e.cust.arrived&&!e.cust.leaving&&!e.cust.served){ const p=Math.max(0,e.cust.left/e.cust.max), yy=e.y-120*s; ctx.fillStyle="#2a1f44"; ctx.fillRect(e.x-18,yy,36,4); ctx.fillStyle=p>.5?"#43f0a4":p>.25?"#ffb84a":"#ff3fa8"; ctx.fillRect(e.x-18,yy,36*p,4); } }
-  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ zkDraw(T); }catch(e){} try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); else if(me.scene==="rowin") drawRowInFront(T); }catch(e){}
+  drawNpcMarkers(T); drawJobGuide(); drawHeld(); drawClubHeld(); drawVfx(); try{ zkDraw(T); }catch(e){} try{ drawLvFx(T); }catch(e){} try{ drawIdle(); }catch(e){} try{ if(me.scene==="civic") drawCivicFront(T); else if(me.scene==="prison") drawPrisonFront(T); else if(me.scene==="streamdome") drawStreamDomeFront(T); else if(me.scene==="rowin") drawRowInFront(T); }catch(e){}
   // seasons & weather (outdoor areas)
   try{ drawWeather(T,dt); }catch(e){}
   try{ drawDisaster(T,dt); }catch(e){}
@@ -14349,7 +14350,7 @@ function appStatsHtml(){ const p=[]; const add=(t,col)=>p.push(el("span",{class:
   try{ const bf=Object.keys(BUFF_N).filter(buffOn); if(bf.length) add(`⚡ ${bf.length} boost${bf.length>1?"s":""}`,"#ffd36a"); }catch(e){}
   try{ if(myFx()&&myTrip) add(`🌀 ${myTrip.name}`,"#cf72ff"); }catch(e){}
   if(IDLE) add(IDLE.paused?"🤖 Idle paused":"🤖 Idle running","#43f0a4");
-  add(`🟢 ${1+onlinePeers().length} online`,"#43f0a4"); return p; }
+  try{ add(`⭐ Lv ${lvNow()}`,lvCol(lvNow())); }catch(e){} add(`🟢 ${1+onlinePeers().length} online`,"#43f0a4"); return p; }
 function appBuild(){ if(appEl) return; if(!$("#appcss")){ const s=document.createElement("style"); s.id="appcss"; s.textContent=APP_CSS; document.head.append(s); }
   appEl=el("div",{id:"appui",role:"application","aria-label":"NEON HARVEST app"}); const col=el("div",{class:"apcol"});
   const hdr=el("header",{},el("div",{class:"apbrand"},"NEON HARVEST",el("small",{id:"apwhere",text:""})),el("button",{class:"apswitch",type:"button",text:"🖥 Immersive",title:"Switch to the full-screen game view (best on PC or laptop)",onclick:()=>appSet(false)}));
@@ -14406,7 +14407,7 @@ function appMe(main){ const card=el("div",{class:"apme"}); try{ card.append(look
   const un=typeof unreadTotal==="function"?unreadTotal():0; const b=(ic,t,fn,dot)=>el("button",{type:"button",onclick:fn},el("span",{text:ic,"aria-hidden":"true"}),t,dot?el("span",{class:"dot",text:String(dot)}):"");
   main.append(el("h3",{text:"Menu"}),el("div",{class:"apgrid"},
     b("👤","Character",()=>{ tryOn=null; openWardrobe("name"); }),b("🎒","Stash",()=>openStash()),b("💬","Messages",()=>openMessages(),un),b("📜","Quests",()=>openQuestLog()),b("🎯","Goals",()=>openGoals()),b("🐾","Companion",()=>openCompanion()),
-    b("📇","MyDex",()=>openMyDex()),b("🎭","Role",()=>openRoleMenu()),b("💠","Rewards",()=>openRP()),b("🎮","Consoles",()=>openConsoles()),b("🎵","Music",()=>openMusic()),b("🌦","Weather",()=>openWeather()),
+    b("📇","MyDex",()=>openMyDex()),b("🎭","Role",()=>openRoleMenu()),b("💠","Rewards",()=>openRP()),b("🎮","Consoles",()=>openConsoles()),b("🎵","Music",()=>openMusic()),b("🌦","Weather",()=>openWeather()),b("⭐","Level "+lvNow(),()=>openLevel()),
     b(soundOn?"🔊":"🔇",soundOn?"Sound on":"Sound off",()=>{ $("#btnSnd").click(); appRender(true); }),b("❓","How to Play",()=>openGuide()),...(IS_ADMIN?[b("🛡️","Admin",()=>openAdmin())]:[])));
   main.append(el("h3",{text:"View"}),appCard("🖥","Switch to Immersive view","The full-screen game you walk around in. Best on a PC or laptop. You can switch back any time with the 📱 App button.",()=>appSet(false))); }
 /* ---- App view: Store tab for Neon Row storefront owners (orders, codes, NRC rewards and stock, rewarding visitors) */
@@ -14490,7 +14491,75 @@ requestAnimationFrame(appLiveTick);
 { const sb=$("#btnIdle"); if(sb){ const b=el("button",{class:"btn",id:"btnApp",type:"button",title:"Switch to the phone-style app view",text:"📱 App",onclick:()=>appSet(true)}); sb.after(b); } }
 setTimeout(()=>{ if(appPref()==="app") appSet(true,true); },0);
 
-function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
+/* ============================================================ LEVELS: 1 to 1000
+   You earn XP from almost everything: making credits and chips, getting items, Reward Points, doing things around the city,
+   and just being active. Every level pays a little, every 10th pays chips, and every 100th is announced to the whole city.
+   Leveling up plays an animation around your runner that everyone nearby sees. */
+const LV_MAX=1000;
+const lvNeed=L=>Math.floor(40+1.7*L);               // XP to go from level L to L+1
+const LV_TOTAL=(()=>{ const a=[0,0]; for(let L=1;L<LV_MAX;L++) a.push(a[a.length-1]+lvNeed(L)); return a; })(); // LV_TOTAL[L] = XP needed to reach level L
+function lvOf(xp){ xp=Math.max(0,+xp||0); let lo=1, hi=LV_MAX; while(lo<hi){ const m=(lo+hi+1)>>1; if(LV_TOTAL[m]<=xp) lo=m; else hi=m-1; } return lo; }
+function lvNow(){ try{ return lvOf(save.xp||0); }catch(e){ return 1; } }
+function lvProg(){ const L=lvNow(); if(L>=LV_MAX) return {L,cur:1,need:1,p:1}; const cur=(save.xp||0)-LV_TOTAL[L], need=lvNeed(L); return {L,cur,need,p:cur/need}; }
+function lvCol(L){ return L>=1000?"#ffffff":L>=900?"#ffd23a":L>=500?"#cf72ff":L>=200?"#4aa8ff":L>=50?"#43f0a4":"#9fd8ff"; }
+function lvTier(L){ return L>=1000?"Legend":L>=900?"Mythic":L>=500?"Elite":L>=200?"Veteran":L>=50?"Runner":"Rookie"; }
+// ---- earning XP
+let lvXpQ=0;
+function addXp(n,why){ if(!save||!(n>0)) return; const before=lvNow(); save.xp=Math.floor((save.xp||0)+n); lvXpQ+=n; const after=lvNow();
+  if(after>before) lvUp(before+1,after); lvHud(); }
+function lvUp(L0,L){ let cr=0, ch=0; for(let k=L0;k<=L;k++){ cr+=10+k*2; if(k%10===0) ch+=k; } save.credits+=cr; if(ch) save.chips+=ch; lvSt.cr=save.credits; lvSt.ch=save.chips; persist(); hud();
+  lvFx.push({who:"me",L,t:performance.now()}); if(lvFx.length>6) lvFx.shift();
+  toast(`⭐ LEVEL ${L}${L>L0?` (+${L-L0+1} levels)`:""}${L>=LV_MAX?" · MAX LEVEL!":""} · +₵${cr}${ch?` +${ch} chips`:""}`,lvCol(L));
+  try{ const n=[523,659,784,1047,1319]; n.forEach((f,i)=>setTimeout(()=>beep(f,.09,"square",.05),i*85)); setTimeout(()=>beep(1568,.25,"sine",.06),460); }catch(e){}
+  const big=[...Array(L-L0+1)].map((_,i)=>L0+i).filter(k=>k%100===0||k===50).pop(); if(big||L===LV_MAX) try{ broadcastSys(L===LV_MAX?`reached LEVEL 1000, the max level! A true Neon Harvest legend.`:`reached Level ${big}!`); }catch(e){}
+  pushPresence(true); }
+{ const _ai=addItem; addItem=function(id,n){ const r=_ai.apply(this,arguments); try{ const it=BY[id], k=Math.max(1,Math.floor(+n||1)); if(it&&!lvSt.mute) addXp(k*({common:2,uncommon:4,rare:8,epic:20}[it.r]||2),"item"); }catch(e){} return r; }; }
+{ const _er=earnRP; earnRP=function(amount){ const r=_er.apply(this,arguments); try{ if(+amount>0) addXp(Math.min(400,Math.floor(+amount*2)),"rp"); }catch(e){} return r; }; }
+{ const _st=stTrack; stTrack=function(kind,key){ const r=_st.apply(this,arguments); try{ if(kind==="act") addXp(3,"act"); }catch(e){} return r; }; }
+const lvSt={cr:null,ch:null,mute:false,lastIn:Date.now(),min:0};
+for(const ev of ["keydown","pointerdown"]) addEventListener(ev,()=>{ lvSt.lastIn=Date.now(); },{passive:true,capture:true});
+setInterval(()=>{ try{ if(!save||!myId) return; if(lvSt.cr==null){ lvSt.cr=save.credits; lvSt.ch=save.chips; lvHud(); return; }
+    const dc=save.credits-lvSt.cr, dh=save.chips-lvSt.ch; lvSt.cr=save.credits; lvSt.ch=save.chips;
+    if(dc>0) addXp(Math.min(200,Math.max(1,Math.floor(dc/2))),"credits"); if(dh>0) addXp(Math.min(100,Math.floor(dh)),"chips");
+    if(++lvSt.min>=60){ lvSt.min=0; if(document.visibilityState==="visible"&&(Date.now()-lvSt.lastIn<6e4||IDLE)) addXp(2,"active"); }
+  }catch(e){} },1000);
+// ---- the HUD pill and the Level panel
+function lvHud(){ const b=$("#lvpill"); if(!b) return; const P=lvProg(); b.hidden=false; b.style.setProperty("--lp",Math.round(P.p*100)+"%"); b.style.borderColor=lvCol(P.L); b.querySelector("b").textContent=String(P.L); b.querySelector("b").style.color=lvCol(P.L); b.title=P.L>=LV_MAX?"Level 1000: max level!":`Level ${P.L} · ${P.cur} / ${P.need} XP to level ${P.L+1}. Tap for details.`; }
+function openLevel(){ const P=lvProg(), L=P.L; const body=panel(`Level ${L} · ${lvTier(L)}`,L>=LV_MAX?"You've reached the max level. Legend.":`${P.need-P.cur} XP to level ${L+1}`); currentView="level";
+  const bar=el("div",{style:"height:14px;background:#1b1530;border:1px solid var(--line);margin:4px 0"},el("i",{style:`display:block;height:100%;width:${Math.round(P.p*100)}%;background:${lvCol(L)};box-shadow:0 0 10px ${lvCol(L)}`}));
+  body.append(el("div",{class:"detail",style:`border-color:${lvCol(L)}`},el("div",{class:"info"},el("div",{style:"display:flex;align-items:baseline;gap:10px"},el("b",{style:`font:700 40px var(--f-display);color:${lvCol(L)};text-shadow:0 0 12px ${lvCol(L)}`,text:String(L)}),el("span",{class:"sub",text:`of ${LV_MAX} · ${lvTier(L)}`})),bar,
+    el("span",{class:"sub",text:L>=LV_MAX?`${(save.xp||0).toLocaleString()} total XP.`:`${P.cur.toLocaleString()} / ${P.need.toLocaleString()} XP · ${(save.xp||0).toLocaleString()} total XP`}))));
+  body.append(el("strong",{text:"How to earn XP"}),el("div",{class:"list"},...[["💰","Earn credits","1 XP for every ₵2 you make (jobs, selling, digging, idle mode)"],["◆","Earn chips","1 XP per chip"],["📦","Get items","2 / 4 / 8 / 20 XP for common, uncommon, rare and epic"],["💠","Earn Reward Points","2 XP per RP"],["🎯","Do things","3 XP for every job, game, show or shop visit"],["⏱","Play","2 XP every minute you're active"]].map(([i,t,d])=>el("div",{class:"li"},el("span",{style:"font-size:20px;width:28px;text-align:center",text:i}),el("div",{class:"grow"},el("strong",{text:t}),el("div",{class:"sub",text:d}))))));
+  const nx=[]; for(let k=L+1;k<=Math.min(LV_MAX,L+40)&&nx.length<4;k++) if(k%10===0||k===L+1) nx.push(k);
+  body.append(el("strong",{text:"Rewards"}),el("p",{class:"sub",text:"Every level: ₵10 + ₵2 per level. Every 10th level: that many chips too (level 50 = 50 chips). Every 100th level is announced to the whole city."}),
+    el("div",{class:"list"},...nx.map(k=>el("div",{class:"li"},el("span",{class:"tag",style:`color:${lvCol(k)};border-color:${lvCol(k)}`,text:"Lv "+k}),el("div",{class:"grow",text:`₵${10+k*2}${k%10===0?` + ${k} chips`:""}${k%100===0?" + city-wide shout-out":""}`}),el("span",{class:"sub",text:`${(LV_TOTAL[k]-(save.xp||0)).toLocaleString()} XP away`})))));
+  body.append(el("strong",{text:"Badge colors"}),el("div",{class:"row"},...[[1,"Rookie 1–49"],[50,"Runner 50+"],[200,"Veteran 200+"],[500,"Elite 500+"],[900,"Mythic 900+"],[1000,"Legend 1000"]].map(([k,t])=>el("span",{class:"tag",style:`color:${lvCol(k)};border-color:${lvCol(k)}`,text:t}))));
+  if(IS_ADMIN) body.append(el("div",{class:"row"},el("span",{class:"sub",text:"Owner test:"}),el("button",{class:"btn",type:"button",text:"+1 level",onclick:()=>{ addXp(Math.max(1,lvProg().need-lvProg().cur),"test"); openLevel(); }}),el("button",{class:"btn",type:"button",text:"+10 levels",onclick:()=>{ const L0=lvNow(); addXp(Math.max(1,LV_TOTAL[Math.min(LV_MAX,L0+10)]-(save.xp||0)),"test"); openLevel(); }}))); }
+// ---- the level-up animation (world space, around the runner; other players see yours too)
+const lvFx=[]; const lvPeerLv={};
+setInterval(()=>{ try{ for(const p of peers.values()){ if(!p.by||!p.lv) continue; const old=lvPeerLv[p.by]; lvPeerLv[p.by]=p.lv; if(old&&p.lv>old&&p.s===me.scene){ lvFx.push({who:p.by,L:p.lv,t:performance.now()}); if(lvFx.length>6) lvFx.shift(); } } }catch(e){} },500);
+function drawLvFx(T){ const now=performance.now(); for(let i=lvFx.length-1;i>=0;i--){ const f=lvFx[i], a=(now-f.t)/1000; if(a>3){ lvFx.splice(i,1); continue; }
+  let x,y; if(f.who==="me"){ x=me.x; y=me.y; } else { const p=[...peers.values()].find(q=>q.by===f.who); if(!p||p.s!==me.scene) continue; x=p.dx!=null?p.dx:p.x; y=p.dy!=null?p.dy:p.y; }
+  if(x<camX-120||x>camX+VW+120) continue; const col=lvCol(f.L), c=ctx, fade=a<2.4?1:Math.max(0,1-(a-2.4)/.6); c.save();
+  // light pillar
+  const pw=26+Math.sin(a*10)*3, g=c.createLinearGradient(0,y-220,0,y); g.addColorStop(0,"rgba(255,255,255,0)"); g.addColorStop(1,col); c.globalAlpha=.45*fade*Math.min(1,a*4); c.fillStyle=g; c.fillRect(x-pw/2,y-220,pw,220);
+  // rings at the feet
+  c.globalAlpha=fade; for(let k=0;k<3;k++){ const u=((a*1.4)+k/3)%1; c.strokeStyle=col; c.globalAlpha=fade*(1-u); c.lineWidth=2.5; c.beginPath(); c.ellipse(x,y+2,14+u*70,4+u*16,0,0,7); c.stroke(); }
+  // sparks flying up
+  for(let k=0;k<22;k++){ const sa=k*2.4, sp=40+(k*37)%60, life=(a*1.2+k/22)%1, px=x+Math.cos(sa)*(10+life*sp*.6), py=y-20-life*(120+(k%5)*20); c.globalAlpha=fade*(1-life); c.fillStyle=k%3?col:"#ffffff"; c.shadowColor=col; c.shadowBlur=8; c.fillRect(px-1.5,py-1.5,3,3); } c.shadowBlur=0;
+  // the text: pops in, floats up
+  const pop=a<.25?a/.25*1.25:a<.4?1.25-(a-.25)/.15*.25:1, ty=y-130-Math.min(a,2.4)*14; c.globalAlpha=fade; c.textAlign="center";
+  c.save(); c.translate(x,ty); c.scale(pop,pop); c.font="bold 18px 'Silkscreen',monospace"; c.lineWidth=4; c.strokeStyle="#0b0716"; c.strokeText("LEVEL UP!",0,0); c.fillStyle="#fff"; c.shadowColor=col; c.shadowBlur=16; c.fillText("LEVEL UP!",0,0);
+  c.font="bold 26px 'Silkscreen',monospace"; c.strokeText(String(f.L),0,28); c.fillStyle=col; c.fillText(String(f.L),0,28); c.shadowBlur=0;
+  if(f.L>=LV_MAX){ c.font="bold 10px 'Silkscreen',monospace"; c.fillStyle="#ffd23a"; c.fillText("MAX LEVEL · LEGEND",0,44); } c.restore();
+  c.restore(); } }
+// the little level badge next to names
+function drawLvBadge(c,x,y,name,lv){ if(!(lv>0)) return; const nw=c.measureText(name).width, t="Lv"+lv; c.save(); c.font="bold 8px 'IBM Plex Mono',monospace"; const w=c.measureText(t).width+6, bx=x+nw/2+4, by=y-8;
+  const col=lvCol(lv); c.fillStyle="rgba(11,7,22,.85)"; c.fillRect(bx,by,w,10); c.strokeStyle=col; c.lineWidth=1; c.strokeRect(bx+.5,by+.5,w-1,9); c.fillStyle=col; c.textAlign="left"; c.fillText(t,bx+3,by+8); c.restore(); }
+{ const b=$("#lvpill"); if(b) b.addEventListener("click",()=>{ beep(900,.04); openLevel(); }); }
+setTimeout(lvHud,1500);
+
+function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,lv:lvNow(),...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
@@ -14505,7 +14574,7 @@ function applyPeer(p){ if(isSelf(p)) return false; if(p.kind!=="viewer") return 
   else if(q.pid&&q.pid!==p.peer){ q.dx=x; q.dy=y; } // same player came back in a new tab: move the one figure, don't add another
   q.pid=p.peer; try{ rolePeer(q,p.presence||{}); }catch(e){}
   q.sv=pr.sv===1||pr.sv===2?pr.sv:0; q.sp=clamp(Math.floor(+pr.sp||0),0,999); q.sc=clamp(Math.floor(+pr.sc||0),0,5000); q.rx=pr.rx&&SHOW_RX.some(r=>r[0]===pr.rx.k)&&Number.isFinite(+pr.rx.at)?{k:pr.rx.k,at:Math.min(Date.now(),+pr.rx.at)}:null;
-  Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,dk:typeof pr.dk==="string"&&DRINK_FX[pr.dk]?pr.dk:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null,hs:pr.hs===1});
+  Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),lv:Math.max(0,Math.min(1000,Math.floor(+pr.lv||0))),staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,dk:typeof pr.dk==="string"&&DRINK_FX[pr.dk]?pr.dk:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null,hs:pr.hs===1});
   if(pr.say&&typeof pr.say.text==="string") q.say={text:pr.say.text.slice(0,80),at:Math.min(Date.now(),+pr.say.at||0)};
   if(pr.emote&&["wave","dance","cheer","pose","use","petpat","petplay","petfeed","petability","game"].includes(pr.emote.e)) q.emote={e:pr.emote.e,at:Math.min(Date.now(),+pr.emote.at||0),it:pr.emote.e==="use"&&BY[pr.emote.it]&&BY[pr.emote.it].t==="trip"?pr.emote.it:pr.emote.e==="game"&&typeof pr.emote.it==="string"&&/^con_[a-z0-9]+\|[0-6]$/.test(pr.emote.it)&&CON_BY[pr.emote.it.split("|")[0]]?pr.emote.it:null}; return fresh; }
 async function resolveNames(ids){ if(!USER) return; try{ const ps=await USER.profiles(ids); for(const id of ids) names[id]=(ps[id]&&ps[id].name)||names[id]||"Runner"; }catch(e){} }
