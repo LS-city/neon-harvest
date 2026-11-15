@@ -327,7 +327,10 @@ service cloud.firestore {
     match /mdConfig/{id} { allow read: if signedIn(); allow write: if isOwner(); }
     match /mdBans/{uid} { allow get: if signedIn() && (me() == uid || isOwner()); allow list, write: if isOwner(); }
     match /mdOfficial/{id} { allow read: if signedIn(); allow write: if isOwner(); }
-    match /mdVenues/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /mdVenues/{id} { allow read: if signedIn(); allow write: if isOwner();
+      // MyDex business pages: staff listed on a page can edit its content, but not billing, location or staff.
+      allow update: if signedIn() && me() in resource.data.get('staff', [])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'type', 'info', 'hours', 'address', 'logo', 'banner', 'rewards', 'inventory', 'menu', 'at']); }
     match /mdBlocks/{uid} { allow read, write: if signedIn() && me() == uid; }
 
     // Public player cards. Only 21+ ages, and picture sizes are capped.
