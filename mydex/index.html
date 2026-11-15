@@ -117,6 +117,13 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 .qrbox img{display:block;width:260px;height:260px}
 .linkbtn{display:flex;align-items:center;justify-content:center;text-decoration:none}
 .copyfield{width:100%;min-height:44px;border-radius:12px;border:1px solid #3A3F63;background:#0A0B14;color:var(--text);padding:8px 12px;font-size:14px}
+.stars{display:inline-flex;gap:1px;letter-spacing:0;line-height:1}.stars i{font-style:normal;color:#4a4f73}.stars i.on{color:var(--biz)}.stars i.half{color:#b8913a}
+.ratebtn{background:none;border:0;padding:4px 0;display:flex;align-items:center;gap:6px;color:var(--text);text-align:left;min-height:32px}
+.revsum{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#2A2310}
+.revform{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #5a4a1c;border-radius:12px}
+.starpick{display:flex;gap:4px}.starpick button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--sur);color:#4a4f73;font-size:24px;line-height:1}
+.starpick button.on{color:var(--biz);border-color:var(--biz)}
+.item.rev{align-items:flex-start}
 .msg{color:#ff7a85;min-height:1em;margin:8px 0}
 #sheet{position:fixed;inset:0;z-index:20;background:rgba(5,6,12,.7);display:flex;align-items:flex-end;justify-content:center}
 .sheet-card{width:min(520px,100%);max-height:88vh;overflow-y:auto;background:#10121F;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 18px calc(22px + var(--sb));display:flex;flex-direction:column;gap:12px}
@@ -155,7 +162,7 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 </div>
 <div id="sheet" hidden></div>
 <div id="install" hidden><span id="instxt">Add MyDex to your home screen</span><button class="go" id="instgo" type="button">Install</button><button class="no" id="instno" type="button">Later</button></div>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 <script>
 (function(){
   if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));

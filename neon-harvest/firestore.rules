@@ -327,6 +327,22 @@ service cloud.firestore {
     match /mdConfig/{id} { allow read: if signedIn(); allow write: if isOwner(); }
     match /mdBans/{uid} { allow get: if signedIn() && (me() == uid || isOwner()); allow list, write: if isOwner(); }
     match /mdOfficial/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    // MyDex business reviews: one per player per business (id = <businessId>_<uid>), 1-5 stars, up to 500 characters.
+    // Players edit or delete their own; Rassir (owner) can remove any.
+    match /mdReviews/{id} {
+      allow read: if signedIn();
+      allow create, update: if mdOk()
+        && request.resource.data.keys().hasOnly(['v', 'uid', 'name', 'stars', 'text', 'at'])
+        && request.resource.data.uid == me()
+        && request.resource.data.v is string && id == request.resource.data.v + '_' + me()
+        && exists(/databases/$(database)/documents/mdVenues/$(request.resource.data.v))
+        && request.resource.data.stars is number && request.resource.data.stars >= 1 && request.resource.data.stars <= 5
+        && request.resource.data.text is string && request.resource.data.text.size() <= 500
+        && request.resource.data.name is string && request.resource.data.name.size() <= 24
+        && request.resource.data.at is number;
+      allow delete: if signedIn() && (resource.data.uid == me() || isOwner());
+    }
+
     match /mdVenues/{id} { allow read: if signedIn(); allow write: if isOwner();
       // MyDex business pages: staff listed on a page can edit its content, but not billing, location or staff.
       allow update: if signedIn() && me() in resource.data.get('staff', [])
