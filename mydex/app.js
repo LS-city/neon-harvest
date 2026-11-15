@@ -37,6 +37,14 @@ function shrink(file,max,q){ return new Promise((res,rej)=>{ const img=new Image
 function pickFile(){ return new Promise(res=>{ const i=document.createElement("input"); i.type="file"; i.accept="image/*"; i.onchange=()=>res(i.files&&i.files[0]||null); i.click(); }); }
 function getPos(){ return new Promise((res,rej)=>{ if(!navigator.geolocation) return rej(new Error("no gps")); navigator.geolocation.getCurrentPosition(p=>{ S.pos={lat:p.coords.latitude,lng:p.coords.longitude}; res(S.pos); },rej,{enableHighAccuracy:false,timeout:15000,maximumAge:120000}); }); }
 
+/* Tap-twice confirm (no browser pop-ups: some phones and installed apps block them). */
+function armed(el,label){ if(!el) return true; if(el.dataset.armed==="1") return true; const o=el.textContent; el.dataset.armed="1"; el.textContent=label||"Tap again to confirm"; el.classList.add("warn");
+  setTimeout(()=>{ if(el.isConnected&&el.dataset.armed==="1"){ el.dataset.armed=""; el.textContent=o; el.classList.remove("warn"); } },4000); return false; }
+const today0=()=>{ const d=new Date(); d.setHours(0,0,0,0); return d.getTime(); };
+const dayOf=s=>{ const t=Date.parse(String(s||"")+"T00:00:00"); return isFinite(t)?t:null; };
+const fmtDay=s=>{ const t=dayOf(s); return t?new Date(t).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}):""; };
+const liveSpecials=v=>(v.specials||[]).filter(it=>!it.until||dayOf(it.until)>=today0());
+const liveEvents=v=>(v.events||[]).filter(it=>!it.date||dayOf(it.date)>=today0()).sort((a,b)=>(dayOf(a.date)||9e15)-(dayOf(b.date)||9e15));
 /* ---------------- sheet (pop-up panel) ---------------- */
 function sheet(html,onOpen){ const s=$("#sheet"); s.innerHTML=`<div class="sheet-card" role="dialog" aria-modal="true"><button class="x" data-a="closeSheet" aria-label="Close">Close</button>${html}</div>`; s.hidden=false; if(onOpen) onOpen(s); }
 function closeSheet(){ $("#sheet").hidden=true; $("#sheet").innerHTML=""; }
@@ -67,8 +75,13 @@ function bizCard(v,pageNo){ return `<section class="card biz">
     <div class="row between"><span class="biztag">${bizIcon(14)} BUSINESS</span>${pageNo?`<span class="small" style="color:#e8d9a8">Saved to page ${pageNo}</span>`:""}</div>
     <div class="row">${v.logo?`<img class="logo" src="${esc(v.logo)}" alt="">`:`<div class="logo">${bizIcon(26)}</div>`}<div class="col"><div class="nm">${esc(v.name)}</div><div class="small" style="color:#e8d9a8">${esc(v.type||"Local business")}</div></div></div>
     ${v.info?`<p class="bio" style="color:#efe3bd">${esc(v.info)}</p>`:""}
+    ${bizHighlights(v)}
     <button class="btn gold" data-a="biz" data-v="${esc(v.id)}">Open business page</button>
   </section>`; }
+function bizHighlights(v){ const sp=liveSpecials(v), ev=liveEvents(v); let h="";
+  if(ev[0]) h+=`<button class="hl" data-a="bizTab" data-v="${esc(v.id)}" data-t="events"><span class="hlk">NEXT EVENT</span><b>${esc(ev[0].name)}</b><span class="small">${esc(fmtDay(ev[0].date))}${ev[0].time?" · "+esc(ev[0].time):""}</span></button>`;
+  if(sp[0]) h+=`<button class="hl" data-a="bizTab" data-v="${esc(v.id)}" data-t="specials"><span class="hlk">SPECIAL${sp.length>1?"S ("+sp.length+")":""}</span><b>${esc(sp[0].name)}</b>${sp[0].price?`<span class="small">${esc(sp[0].price)}</span>`:""}</button>`;
+  return h; }
 function playerMini(c,id,pageNo){ return `<section class="card">
     <div class="row between"><span class="small dim">PLAYER</span>${pageNo?`<span class="small dim">Saved to page ${pageNo}</span>`:""}</div>
     <div class="row">${c&&c.photo?`<img class="av" style="width:64px;height:64px" src="${esc(c.photo)}" alt="">`:`<div class="av" style="width:64px;height:64px">${esc((c&&c.name||"?").slice(0,1))}</div>`}
@@ -105,11 +118,14 @@ function addToPage(t,id){ for(let n=4;n<=PAGES;n++){ const e=S.dex.pages[n]; if(
 
 /* ---------------- business page (player view) ---------------- */
 function openBiz(id,tab){ const v=S.venues.find(x=>x.id===id); if(!v) return; tab=tab||"info";
-  const tabs=[["info","Info"],["rewards","Rewards"],["inventory","Inventory"],["menu","Menu"]].filter(([k])=>k==="info"||(v[k]&&v[k].length));
+  const sp=liveSpecials(v), ev=liveEvents(v);
+  const tabs=[["info","Info"],["specials","Specials"],["events","Events"],["rewards","Rewards"],["inventory","Inventory"],["menu","Menu"]].filter(([k])=>k==="info"||(k==="specials"?sp.length:k==="events"?ev.length:(v[k]&&v[k].length)));
   let saved=0; for(let n=4;n<=PAGES;n++){ const e=S.dex.pages[n]; if(e&&e.t==="biz"&&e.id===id) saved=n; }
   const d=S.pos&&v.lat!=null?km(S.pos,{lat:v.lat,lng:v.lng}):null;
   const list=k=>(v[k]||[]).map(it=>`<div class="item"><div class="col"><b>${esc(it.name)}</b>${it.note?`<span class="dim small">${esc(it.note)}</span>`:""}</div>${it.price?`<span class="mono" style="color:#e8d9a8">${esc(it.price)}</span>`:""}</div>`).join("");
   const body=tab==="info"?`${v.info?`<p class="bio">${esc(v.info)}</p>`:""}${v.hours?`<div class="item"><b>Hours</b><span>${esc(v.hours)}</span></div>`:""}${v.address?`<div class="item"><b>Address</b><span>${esc(v.address)}</span></div>`:""}${d!=null?`<div class="item"><b>Distance</b><span>${distTxt(d)}</span></div>`:""}`
+    :tab==="specials"?sp.map(it=>`<div class="item"><div class="col"><b>${esc(it.name)}</b>${it.note?`<span class="dim small">${esc(it.note)}</span>`:""}${it.until?`<span class="small" style="color:#ffb27a">Ends ${esc(fmtDay(it.until))}</span>`:""}</div>${it.price?`<span class="mono" style="color:#e8d9a8">${esc(it.price)}</span>`:""}</div>`).join("")
+    :tab==="events"?ev.map(it=>`<div class="item ev"><div class="evdate">${it.date?`<b>${esc(new Date(dayOf(it.date)).getDate())}</b><span>${esc(new Date(dayOf(it.date)).toLocaleDateString(undefined,{month:"short"}))}</span>`:"<b>TBA</b>"}</div><div class="col" style="flex:1"><b>${esc(it.name)}</b><span class="small" style="color:#e8d9a8">${esc(fmtDay(it.date))}${it.time?" · "+esc(it.time):""}</span>${it.note?`<span class="dim small">${esc(it.note)}</span>`:""}</div>${it.price?`<span class="mono" style="color:#e8d9a8">${esc(it.price)}</span>`:""}</div>`).join("")
     :tab==="rewards"?list("rewards")+`<p class="dim small">Show your MyDex at the counter to claim a reward.</p>`:list(tab);
   sheet(`<div class="bizhead">${v.banner?`<img src="${esc(v.banner)}" alt="">`:""}<span class="biztag">${bizIcon(14)} BUSINESS</span></div>
     <div class="row" style="margin-top:-30px;position:relative">${v.logo?`<img class="logo" src="${esc(v.logo)}" alt="">`:`<div class="logo">${bizIcon(26)}</div>`}<div class="col"><div class="nm">${esc(v.name)}</div><div class="small" style="color:#e8d9a8">${esc(v.type||"Local business")}</div></div></div>
@@ -174,7 +190,7 @@ async function setBg(key,val){ const ref=DB.doc("data/users/"+ME+"/dexbg/"+key);
 const myBiz=()=>S.venues.filter(v=>v.biz&&(v.staff||[]).includes(ME));
 function renderBizTab(){ const v=$("#view"), mine=ADMIN?S.venues.filter(x=>x.biz):myBiz();
   v.innerHTML=`<div class="pad"><h1 style="color:${BIZ}">My business</h1>${mine.length?mine.map(b=>`<section class="card biz"><div class="row between"><b>${esc(b.name)}</b><span class="small" style="color:${isActive(b)?"#3dff9a":"#ff9a3d"}">${isActive(b)?"Live":"Not live"}</span></div>
-      <div class="stats"><div><span class="dim small">Saved on pages</span><b>${b.saves||0}</b></div><div><span class="dim small">Rewards</span><b>${(b.rewards||[]).length}</b></div><div><span class="dim small">Menu items</span><b>${(b.menu||[]).length}</b></div></div>
+      <div class="stats"><div><span class="dim small">Specials</span><b>${liveSpecials(b).length}</b></div><div><span class="dim small">Upcoming events</span><b>${liveEvents(b).length}</b></div></div>
       ${b.paidUntil?`<div class="small" style="color:#e8d9a8">Plan: $${BIZ_PRICE}/mo · paid through ${new Date(b.paidUntil).toLocaleDateString()}</div>`:""}
       <div class="btns"><button class="btn gold" data-a="editBiz" data-v="${esc(b.id)}">Edit page</button><button class="btn" data-a="biz" data-v="${esc(b.id)}">Preview</button></div></section>`).join("")
     :`<p class="dim">You're not set up as staff on a business page yet.</p>`}</div>`; }
@@ -186,8 +202,8 @@ function renderAdmin(){ const v=$("#view"), all=S.venues, biz=all.filter(x=>x.bi
     ${all.length>biz.length?`<h2>Check-in venues (classic)</h2>${all.filter(x=>!x.biz).map(b=>`<button class="lrow" data-a="editBiz" data-v="${esc(b.id)}"><b>${esc(b.name)}</b><span class="dim small" style="margin-left:auto">Tap to turn into a business page</span></button>`).join("")}`:""}
     <h2>More tools</h2><div class="btns"><button class="btn" data-a="classicAdmin">Classic MyDex admin (bans, badges, reports)</button></div>
     <p class="dim small">Businesses pay you $${BIZ_PRICE} a month. When a payment comes in, open their page and set "Paid through" one month ahead. Pages past their paid date drop off Radar and Discover automatically.</p></div>`; }
-function itemsEditor(k,label,arr){ return `<h2>${label}</h2><div id="ed_${k}">${(arr||[]).map((it,i)=>itemRow(k,i,it)).join("")}</div><button class="btn" data-a="addItem" data-v="${k}">+ Add ${label.toLowerCase().replace(/s$/,"")}</button>`; }
-const itemRow=(k,i,it)=>`<div class="erow" data-k="${k}"><input aria-label="Name" placeholder="Name" value="${esc(it.name||"")}" class="i_name"><input aria-label="Price or points" placeholder="${k==="rewards"?"Points / cost":"Price"}" value="${esc(it.price||"")}" class="i_price"><input aria-label="Details" placeholder="Details (optional)" value="${esc(it.note||"")}" class="i_note"><button class="btn sm" data-a="delItem" aria-label="Remove">Remove</button></div>`;
+function itemsEditor(k,label,arr){ return `<h2>${label}</h2>${k==="specials"?`<p class="dim small">Deals and limited-time offers. Add an end date and it disappears on its own after that day.</p>`:k==="events"?`<p class="dim small">Tournaments, game nights, launches. Past events hide themselves.</p>`:""}<div id="ed_${k}">${(arr||[]).map((it,i)=>itemRow(k,i,it)).join("")}</div><button class="btn" data-a="addItem" data-v="${k}">+ Add ${label.toLowerCase().replace(/s$/,"")}</button>`; }
+const itemRow=(k,i,it)=>`<div class="erow" data-k="${k}"><input aria-label="Name" placeholder="${k==="events"?"Event name":k==="specials"?"Special (e.g. 2-for-1 drinks)":"Name"}" value="${esc(it.name||"")}" class="i_name"><input aria-label="Price or points" placeholder="${k==="rewards"?"Points / cost":k==="events"?"Entry fee":"Price"}" value="${esc(it.price||"")}" class="i_price">${k==="events"?`<label class="mini">Date<input type="date" class="i_date" value="${esc(it.date||"")}"></label><label class="mini">Time<input class="i_time" placeholder="e.g. 8 PM" maxlength="20" value="${esc(it.time||"")}"></label>`:k==="specials"?`<label class="mini">Ends (optional)<input type="date" class="i_date" value="${esc(it.until||"")}"></label><span></span>`:""}<input aria-label="Details" placeholder="Details (optional)" value="${esc(it.note||"")}" class="i_note"><button class="btn sm" data-a="delItem" aria-label="Remove">Remove</button></div>`;
 function editBiz(id){ const v=id?S.venues.find(x=>x.id===id):null, b=v||{name:"",info:"",radius:150,staff:[],biz:true,active:true};
   const staffNames=(b.staff||[]).map(u=>(S.cards[u]&&S.cards[u].name)||u).join(", ");
   const paid=b.paidUntil?new Date(b.paidUntil).toISOString().slice(0,10):"";
@@ -203,13 +219,14 @@ function editBiz(id){ const v=id?S.venues.find(x=>x.id===id):null, b=v||{name:""
     <h2>Billing</h2><label class="fld">Paid through<input id="b_paid" type="date" value="${paid}"></label><button class="btn sm" data-a="bMonth">+1 month from today ($${BIZ_PRICE})</button>
     <label class="toggle"><input type="checkbox" id="b_active" ${b.active!==false?"checked":""}> Live on MyDex</label>
     <label class="fld">Staff who can edit (MyDex names, comma separated)<input id="b_staff" value="${esc(staffNames)}"></label>`:""}
-    ${itemsEditor("rewards","Rewards",b.rewards)}${itemsEditor("inventory","Inventory",b.inventory)}${itemsEditor("menu","Menu",b.menu)}
+    ${itemsEditor("specials","Specials",b.specials)}${itemsEditor("events","Events",b.events)}${itemsEditor("rewards","Rewards",b.rewards)}${itemsEditor("inventory","Inventory",b.inventory)}${itemsEditor("menu","Menu",b.menu)}
     <div class="msg" id="b_msg" role="status"></div>
     <div class="btns"><button class="btn gold" data-a="bSave">Save page</button>${ADMIN&&id?`<button class="btn" data-a="bDelete">Delete</button>`:""}</div>`); }
 async function saveBiz(){ const id=S.edit.id, old=id?S.venues.find(x=>x.id===id)||{}:{}; const val=s=>($(s)?$(s).value.trim():"");
-  const items=k=>[...document.querySelectorAll(`#ed_${k} .erow`)].map(r=>({name:r.querySelector(".i_name").value.trim().slice(0,40),price:r.querySelector(".i_price").value.trim().slice(0,20),note:r.querySelector(".i_note").value.trim().slice(0,80)})).filter(x=>x.name).slice(0,40);
+  const items=k=>[...document.querySelectorAll(`#ed_${k} .erow`)].map(r=>{ const o={name:r.querySelector(".i_name").value.trim().slice(0,40),price:r.querySelector(".i_price").value.trim().slice(0,20),note:r.querySelector(".i_note").value.trim().slice(0,120)};
+    const d=r.querySelector(".i_date"), t=r.querySelector(".i_time"); if(k==="events"){ o.date=d?d.value:""; o.time=t?t.value.trim().slice(0,20):""; } if(k==="specials"&&d&&d.value) o.until=d.value; return o; }).filter(x=>x.name).slice(0,40);
   const msg=$("#b_msg"); const name=val("#b_name"); if(!name){ msg.textContent="Give the business a name."; return; }
-  const body={...old,name,type:val("#b_type"),info:val("#b_info"),hours:val("#b_hours"),address:val("#b_addr"),logo:S.edit.logo,banner:S.edit.banner,rewards:items("rewards"),inventory:items("inventory"),menu:items("menu"),biz:true,at:Date.now()};
+  const body={...old,name,type:val("#b_type"),info:val("#b_info"),hours:val("#b_hours"),address:val("#b_addr"),logo:S.edit.logo,banner:S.edit.banner,specials:items("specials"),events:items("events"),rewards:items("rewards"),inventory:items("inventory"),menu:items("menu"),biz:true,at:Date.now()};
   delete body.id;
   if(ADMIN){ const la=parseFloat(val("#b_lat")), ln=parseFloat(val("#b_lng")); if(!isFinite(la)||!isFinite(ln)){ msg.textContent="Add the business location so it shows on Radar."; return; }
     body.lat=la; body.lng=ln; body.radius=old.radius||150; body.active=$("#b_active").checked; const p=val("#b_paid"); body.paidUntil=p?new Date(p+"T23:59:59").getTime():null;
@@ -240,8 +257,9 @@ const ACT={
   pagePicker, biz:v=>openBiz(v), bizTab:(v,el)=>openBiz(v,el.dataset.t), player:v=>openPlayer(v),
   addBiz:v=>{ const n=addToPage("biz",v); if(n){ const b=S.venues.find(x=>x.id===v); openBiz(v); } },
   addPlayer:v=>{ addToPage("player",v); openPlayer(v); },
-  removePage:v=>{ if(!confirm("Remove this from page "+v+"?")) return; delete S.dex.pages[v]; save(); renderPages(); },
-  movePage:v=>{ const to=parseInt(prompt("Move to which page? (4 to 50)",""),10); if(!(to>=4&&to<=PAGES)||to===+v) return; const a=S.dex.pages[v], b=S.dex.pages[to]; S.dex.pages[to]=a; if(b) S.dex.pages[v]=b; else delete S.dex.pages[v]; save(); renderPages(); setTimeout(()=>goPage(to),50); },
+  removePage:(v,el)=>{ if(!armed(el,"Tap again to remove")) return; delete S.dex.pages[v]; save(); renderPages(); toast("Removed from page "+v); },
+  movePage:v=>{ let h=`<h2>Move page ${v} to...</h2><div class="pgrid">`; for(let n=4;n<=PAGES;n++){ const e=S.dex.pages[n]; h+=`<button class="pg ${e?"used":""} ${e&&e.t==="biz"?"isbiz":""}" data-a="moveTo" data-v="${v}:${n}" ${n===+v?"disabled":""} aria-label="Page ${n}">${n}</button>`; } sheet(h+`</div><p class="dim small">If the page you pick already has something, the two swap.</p>`); },
+  moveTo:v=>{ const [from,to]=v.split(":").map(Number); const a=S.dex.pages[from], b=S.dex.pages[to]; S.dex.pages[to]=a; if(b) S.dex.pages[from]=b; else delete S.dex.pages[from]; save(); closeSheet(); renderPages(); setTimeout(()=>goPage(to),50); toast("Moved to page "+to); },
   radarOn:async()=>{ try{ await getPos(); watchPres(); pushPres(); render(); }catch(e){ toast("Allow location access to use Radar."); } },
   radarKm:v=>{ S.radarKm=+v; renderRadar(); },
   visible:(v,el)=>{ S.dex.radarOn=el.checked; save(); if(el.checked) pushPres(); else { clearTimeout(presT); DB.doc("mdPres/"+ME).delete().catch(()=>{}); } },
@@ -250,9 +268,9 @@ const ACT={
   bgFit:async v=>{ const p=S.bgPage||S.page||1, k=S.bgs["p"+p]?"p"+p:"all"; await setBg(k,{...S.bgs[k],fit:v}); render(); },
   bgAll:async()=>{ const p=S.bgPage||S.page||1, b=S.bgs["p"+p]; if(!b) return; await setBg("all",b); for(const k of Object.keys(S.bgs)) if(k!=="all") await setBg(k,null); toast("Using this image on all 50 pages."); render(); },
   bgRemove:async()=>{ const p=S.bgPage||S.page||1; await setBg("p"+p,null); render(); }, bgRemoveAll:async()=>{ await setBg("all",null); render(); },
-  signout:()=>{ if(confirm("Sign out of MyDex?")) window.claude.signOut().then(()=>location.reload()); },
+  signout:(v,el)=>{ if(!armed(el,"Tap again to sign out")) return; window.claude.signOut().then(()=>location.reload()); },
   editBiz:v=>editBiz(v||null), bSave:saveBiz,
-  bDelete:async()=>{ if(!confirm("Delete this business page for good?")) return; try{ await DB.doc("mdVenues/"+S.edit.id).delete(); closeSheet(); toast("Deleted."); }catch(e){ toast("Couldn't delete."); } },
+  bDelete:async(v,el)=>{ if(!armed(el,"Tap again to delete for good")) return; try{ await DB.doc("mdVenues/"+S.edit.id).delete(); closeSheet(); toast("Deleted."); }catch(e){ toast("Couldn't delete."); } },
   bHere:async()=>{ try{ const p=await getPos(); $("#b_lat").value=p.lat.toFixed(6); $("#b_lng").value=p.lng.toFixed(6); }catch(e){ toast("Allow location access first."); } },
   bMonth:()=>{ const d=new Date(); d.setMonth(d.getMonth()+1); $("#b_paid").value=d.toISOString().slice(0,10); $("#b_active").checked=true; },
   bLogo:async(v,el)=>{ const f=await pickFile(); if(!f) return; S.edit.logo=await shrink(f,256,.8); el.textContent="Logo added"; },

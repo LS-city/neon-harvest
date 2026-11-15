@@ -1,6 +1,6 @@
 // MyDex service worker: makes the app installable and keeps the app shell available offline.
 // Live data (cards, fights, radar) always comes from the network.
-const CACHE = "mydex-shell-v3";
+const CACHE = "mydex-shell-v4";
 const SHELL = ["./", "./index.html", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
