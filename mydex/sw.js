@@ -1,6 +1,6 @@
 // MyDex service worker: makes the app installable and keeps the app shell available offline.
 // Live data (cards, fights, radar) always comes from the network.
-const CACHE = "mydex-shell-v5";
+const CACHE = "mydex-shell-v6";
 const SHELL = ["./", "./index.html", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -16,7 +16,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   // Network first so updates show up right away; fall back to the cached shell when offline.
   e.respondWith(
-    fetch(req).then(res => {
+    // no-cache: always ask GitHub if there's a newer version, so updates show up on the next open.
+    fetch(req, { cache: "no-cache" }).then(res => {
       if (res.ok && SHELL.some(p => new URL(p, self.registration.scope).href === req.url)) {
         const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy));
       }
