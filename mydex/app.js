@@ -46,6 +46,18 @@ const dayOf=s=>{ const t=Date.parse(String(s||"")+"T00:00:00"); return isFinite(
 const fmtDay=s=>{ const t=dayOf(s); return t?new Date(t).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}):""; };
 const liveSpecials=v=>(v.specials||[]).filter(it=>!it.until||dayOf(it.until)>=today0());
 const liveEvents=v=>(v.events||[]).filter(it=>!it.date||dayOf(it.date)>=today0()).sort((a,b)=>(dayOf(a.date)||9e15)-(dayOf(b.date)||9e15));
+/* Share links: ?p=<player id> opens a player's card, ?b=<business id> opens a business page. */
+const appUrl=()=>location.origin+location.pathname;
+const linkFor=(t,id)=>appUrl()+"?"+t+"="+encodeURIComponent(id);
+const qrSrc=url=>"https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=16&data="+encodeURIComponent(url);
+async function shareLink(url,text){ try{ if(navigator.share){ await navigator.share({title:"MyDex",text,url}); return; } }catch(e){ if(e&&e.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(url); toast("Link copied. Paste it anywhere."); }catch(e){ sheet(`<h2>Your link</h2><p class="dim">Copy this link:</p><input class="copyfield" readonly value="${esc(url)}" aria-label="Share link">`,s=>{ const i=s.querySelector(".copyfield"); i.focus(); i.select(); }); } }
+function showQR(t,id,name){ const url=linkFor(t,id);
+  sheet(`<h2>${t==="b"?"QR code for "+esc(name):"Your MyDex QR code"}</h2>
+    <p class="dim">${t==="b"?"Print it and put it at the counter. Scanning it opens your business page so players can add it to their MyDex.":"Anyone who scans this opens your card and can add you to their MyDex."}</p>
+    <div class="qrbox"><img src="${esc(qrSrc(url))}" alt="QR code linking to ${esc(name)} on MyDex" width="260" height="260"></div>
+    <div class="mono small" style="word-break:break-all">${esc(url)}</div>
+    <div class="btns"><a class="btn pri linkbtn" href="${esc(qrSrc(url))}" target="_blank" rel="noopener">Open QR to save or print</a><button class="btn" data-a="shareLink" data-v="${t}:${esc(id)}">Share link</button></div>`); }
 /* ---------------- sheet (pop-up panel) ---------------- */
 function sheet(html,onOpen){ const s=$("#sheet"); s.innerHTML=`<div class="sheet-card" role="dialog" aria-modal="true"><button class="x" data-a="closeSheet" aria-label="Close">Close</button>${html}</div>`; s.hidden=false; if(onOpen) onOpen(s); }
 function closeSheet(){ $("#sheet").hidden=true; $("#sheet").innerHTML=""; }
@@ -63,7 +75,7 @@ function infoPage(){ const c=S.card, nm=c&&c.name||NAME, mood=MOODS[c&&c.mood]||
     ${facts.length?`<ul class="facts">${facts.map(f=>`<li>${esc(f)}</li>`).join("")}</ul>`:""}
     <div class="dim small">Encountered ${+(c&&c.met)||0} people</div>
   </section>
-  <div class="btns"><button class="btn pri" data-a="classic">Edit card</button><button class="btn" data-a="share">Share MyDex</button></div>`; }
+  <div class="btns"><button class="btn pri" data-a="classic">Edit card</button><button class="btn" data-a="share">Share my card</button><button class="btn" data-a="myQR">My QR code</button></div>`; }
 function gamesPage(title,doc,list,findLbl){ const games=doc&&doc.games||[], plats=(doc&&doc.plats||[]).map(p=>PLATS[p]||p);
   return `<section class="card" style="${frameStyle()}"><h2>${title}</h2>
     ${plats.length?`<div class="chips">${plats.map(p=>`<span class="chipx">${esc(p)}</span>`).join("")}</div>`:""}
@@ -130,11 +142,11 @@ function openBiz(id,tab){ const v=S.venues.find(x=>x.id===id); if(!v) return; ta
     :tab==="rewards"?list("rewards")+`<p class="dim small">Show your MyDex at the counter to claim a reward.</p>`:list(tab);
   sheet(`<div class="bizhead">${v.banner?`<img src="${esc(v.banner)}" alt="">`:""}<span class="biztag">${bizIcon(14)} BUSINESS</span></div>
     <div class="row" style="margin-top:-30px;position:relative">${v.logo?`<img class="logo" src="${esc(v.logo)}" alt="">`:`<div class="logo">${bizIcon(26)}</div>`}<div class="col"><div class="nm">${esc(v.name)}</div><div class="small" style="color:#e8d9a8">${esc(v.type||"Local business")}</div></div></div>
-    ${saved?`<button class="btn" data-a="goPageClose" data-v="${saved}">On your page ${saved}</button>`:`<button class="btn gold" data-a="addBiz" data-v="${esc(id)}">+ Add to page</button>`}
+    <div class="btns">${saved?`<button class="btn" data-a="goPageClose" data-v="${saved}">On your page ${saved}</button>`:`<button class="btn gold" data-a="addBiz" data-v="${esc(id)}">+ Add to page</button>`}<button class="btn" data-a="shareLink" data-v="b:${esc(id)}">Share</button></div>
     <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" class="${k===tab?"on":""}" data-a="bizTab" data-v="${esc(id)}" data-t="${k}">${l}</button>`).join("")}</div>
     <div class="tabbody">${body||`<p class="dim">Nothing here yet.</p>`}</div>`); }
 function openPlayer(id){ loadCard(id).then(()=>{ const c=S.cards[id]; let saved=0; for(let n=4;n<=PAGES;n++){ const e=S.dex.pages[n]; if(e&&e.t==="player"&&e.id===id) saved=n; }
-  sheet(playerMini(c,id,0)+(id===ME?`<p class="dim">This is you.</p>`:saved?`<button class="btn" data-a="goPageClose" data-v="${saved}">On your page ${saved}</button>`:`<button class="btn pri" data-a="addPlayer" data-v="${esc(id)}">+ Add to page</button>`)); }); }
+  sheet(playerMini(c,id,0)+`<div class="btns">${id===ME?`<p class="dim">This is you.</p>`:saved?`<button class="btn" data-a="goPageClose" data-v="${saved}">On your page ${saved}</button>`:`<button class="btn pri" data-a="addPlayer" data-v="${esc(id)}">+ Add to page</button>`}<button class="btn" data-a="shareLink" data-v="p:${esc(id)}">Share</button></div>`); }); }
 async function loadCard(id){ if(S.cards[id]!==undefined) return; S.cards[id]=null; try{ const s=await DB.doc("mdCards/"+id).get(); S.cards[id]=s.exists?s.data():{name:"Unknown player"}; }catch(e){ S.cards[id]={name:"Unknown player"}; } if(S.tab==="pages") renderPages(); }
 
 /* ---------------- radar ---------------- */
@@ -194,7 +206,7 @@ function renderBizTab(){ const v=$("#view"), mine=ADMIN?S.venues.filter(x=>x.biz
   v.innerHTML=`<div class="pad"><h1 style="color:${BIZ}">My business</h1>${mine.length?mine.map(b=>`<section class="card biz"><div class="row between"><b>${esc(b.name)}</b><span class="small" style="color:${isActive(b)?"#3dff9a":"#ff9a3d"}">${isActive(b)?"Live":"Not live"}</span></div>
       <div class="stats"><div><span class="dim small">Specials</span><b>${liveSpecials(b).length}</b></div><div><span class="dim small">Upcoming events</span><b>${liveEvents(b).length}</b></div></div>
       ${b.paidUntil?`<div class="small" style="color:#e8d9a8">Plan: $${BIZ_PRICE}/mo · paid through ${new Date(b.paidUntil).toLocaleDateString()}</div>`:""}
-      <div class="btns"><button class="btn gold" data-a="editBiz" data-v="${esc(b.id)}">Edit page</button><button class="btn" data-a="biz" data-v="${esc(b.id)}">Preview</button></div></section>`).join("")
+      <div class="btns"><button class="btn gold" data-a="editBiz" data-v="${esc(b.id)}">Edit page</button><button class="btn" data-a="biz" data-v="${esc(b.id)}">Preview</button><button class="btn" data-a="bizQR" data-v="${esc(b.id)}">QR code</button><button class="btn" data-a="shareLink" data-v="b:${esc(b.id)}">Share link</button></div></section>`).join("")
     :`<p class="dim">You're not set up as staff on a business page yet.</p>`}</div>`; }
 function renderAdmin(){ const v=$("#view"), all=S.venues, biz=all.filter(x=>x.biz), live=biz.filter(isActive);
   v.innerHTML=`<div class="pad"><div class="row between"><h1 style="color:#b98bff">Admin</h1><span class="pill" style="background:#b98bff">OWNER ONLY</span></div>
@@ -223,7 +235,7 @@ function editBiz(id){ const v=id?S.venues.find(x=>x.id===id):null, b=v||{name:""
     <label class="fld">Staff who can edit (MyDex names, comma separated)<input id="b_staff" value="${esc(staffNames)}"></label>`:""}
     ${itemsEditor("specials","Specials",b.specials)}${itemsEditor("events","Events",b.events)}${itemsEditor("rewards","Rewards",b.rewards)}${itemsEditor("inventory","Inventory",b.inventory)}${itemsEditor("menu","Menu",b.menu)}
     <div class="msg" id="b_msg" role="status"></div>
-    <div class="btns"><button class="btn gold" data-a="bSave">Save page</button>${ADMIN&&id?`<button class="btn" data-a="bDelete">Delete</button>`:""}</div>`); }
+    <div class="btns"><button class="btn gold" data-a="bSave">Save page</button>${id?`<button class="btn" data-a="bizQR" data-v="${esc(id)}">QR code</button>`:""}${ADMIN&&id?`<button class="btn" data-a="bDelete">Delete</button>`:""}</div>`); }
 async function saveBiz(){ const id=S.edit.id, old=id?S.venues.find(x=>x.id===id)||{}:{}; const val=s=>($(s)?$(s).value.trim():"");
   const items=k=>[...document.querySelectorAll(`#ed_${k} .erow`)].map(r=>{ const o={name:r.querySelector(".i_name").value.trim().slice(0,40),price:r.querySelector(".i_price").value.trim().slice(0,20),note:r.querySelector(".i_note").value.trim().slice(0,120)};
     const d=r.querySelector(".i_date"), t=r.querySelector(".i_time"); if(k==="events"){ o.date=d?d.value:""; o.time=t?t.value.trim().slice(0,20):""; } if(k==="specials"&&d&&d.value) o.until=d.value; return o; }).filter(x=>x.name).slice(0,40);
@@ -254,7 +266,11 @@ function render(){ document.documentElement.style.setProperty("--acc",accent());
 const ACT={
   tab:v=>{ S.tab=v; closeSheet(); if(v==="radar"&&S.pos) watchPres(); if(v==="admin"&&S.allCards===null) renderDiscoverPreload(); render(); $("#view").scrollTop=0; },
   closeSheet, classic:()=>openClassic(), classicAdmin:()=>openClassic("admin"),
-  share:async()=>{ const url=location.origin+location.pathname; const t="Find me on MyDex: "+(S.card&&S.card.name||NAME); try{ if(navigator.share) await navigator.share({title:"MyDex",text:t,url}); else { await navigator.clipboard.writeText(t+" "+url); toast("Link copied."); } }catch(e){} },
+  share:()=>shareLink(linkFor("p",ME),"Add me on MyDex: "+(S.card&&S.card.name||NAME)),
+  myQR:()=>showQR("p",ME,S.card&&S.card.name||NAME),
+  shareLink:v=>{ const k=v.indexOf(":"), t=v.slice(0,k), id=v.slice(k+1); const nm=t==="b"?((S.venues.find(x=>x.id===id)||{}).name||"this business"):((S.cards[id]&&S.cards[id].name)||"this player");
+    shareLink(linkFor(t,id),t==="b"?"Check out "+nm+" on MyDex":(id===ME?"Add me on MyDex: "+nm:"Check out "+nm+" on MyDex")); },
+  bizQR:v=>{ const b=S.venues.find(x=>x.id===v); showQR("b",v,b?b.name:"this business"); },
   goPage:v=>{ closeSheet(); goPage(+v); }, goPageClose:v=>{ closeSheet(); S.tab="pages"; render(); setTimeout(()=>goPage(+v),50); },
   pagePicker, biz:v=>openBiz(v), bizTab:(v,el)=>openBiz(v,el.dataset.t), player:v=>openPlayer(v),
   addBiz:v=>{ const n=addToPage("biz",v); if(n){ const b=S.venues.find(x=>x.id===v); openBiz(v); } },
@@ -291,6 +307,10 @@ document.addEventListener("input",e=>{ if(e.target.id==="q"){ S.q=e.target.value
 $("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet(); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#classic")) closeClassic(); else closeSheet(); } });
 
+function openDeepLink(){ const q=new URLSearchParams(location.search), b=q.get("b"), p=q.get("p"); if(!b&&!p) return;
+  history.replaceState(null,"",appUrl());
+  if(p){ if(p===ME){ S.tab="pages"; render(); goPage(1); } else openPlayer(p); return; }
+  let tries=0; const go=()=>{ if(S.venues.some(x=>x.id===b)) return openBiz(b); if(++tries<20) return setTimeout(go,300); toast("That business isn't on MyDex anymore."); }; go(); }
 /* ---------------- start ---------------- */
 async function start(){
   if(!window.claude||!window.claude.use){ $("#bootmsg").textContent="MyDex couldn't connect. Check your internet and reload."; return; }
@@ -313,6 +333,7 @@ async function start(){
   $("#boot").hidden=true; $("#app").hidden=false; render();
   $("#pages").addEventListener("scroll",()=>{ clearTimeout(S.scT); S.scT=setTimeout(updIndicator,60); },{passive:true});
   if(S.dex.radarOn) getPos().then(()=>{ watchPres(); pushPres(); }).catch(()=>{});
+  openDeepLink();
 }
 start().catch(e=>{ console.error(e); $("#bootmsg").textContent="Something went wrong loading MyDex. Reload to try again."; });
 })();
