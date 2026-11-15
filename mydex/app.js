@@ -34,7 +34,8 @@ const bizList=()=>S.venues.filter(v=>v.biz&&isActive(v));
 function isActive(v){ return v.active!==false && (!v.paidUntil || v.paidUntil>=Date.now()-864e5); }
 function shrink(file,max,q){ return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>{ let s=Math.min(1,max/Math.max(img.width,img.height)); const draw=(qq)=>{ const c=document.createElement("canvas"); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s); c.getContext("2d").drawImage(img,0,0,c.width,c.height); return c.toDataURL("image/jpeg",qq); };
     let out=draw(q), qq=q; while(out.length>850000&&qq>.35){ qq-=.1; out=draw(qq); } while(out.length>850000&&s>.2){ s*=.8; out=draw(qq); } URL.revokeObjectURL(img.src); res(out); }; img.onerror=()=>rej(new Error("bad image")); img.src=URL.createObjectURL(file); }); }
-function pickFile(){ return new Promise(res=>{ const i=document.createElement("input"); i.type="file"; i.accept="image/*"; i.onchange=()=>res(i.files&&i.files[0]||null); i.click(); }); }
+function pickFile(){ return new Promise(res=>{ const i=document.createElement("input"); i.type="file"; i.accept="image/*"; i.style.cssText="position:fixed;left:-9999px;opacity:0";
+  document.body.append(i); i.onchange=()=>{ const f=i.files&&i.files[0]||null; i.remove(); res(f); }; i.click(); }); }
 function getPos(){ return new Promise((res,rej)=>{ if(!navigator.geolocation) return rej(new Error("no gps")); navigator.geolocation.getCurrentPosition(p=>{ S.pos={lat:p.coords.latitude,lng:p.coords.longitude}; res(S.pos); },rej,{enableHighAccuracy:false,timeout:15000,maximumAge:120000}); }); }
 
 /* Tap-twice confirm (no browser pop-ups: some phones and installed apps block them). */
@@ -184,7 +185,8 @@ function renderMe(){ const v=$("#view"), L=S.dex.look, p=S.bgPage||S.page||1, bg
     <p class="dim small">Your image only sits behind your cards. Cards, buttons and text stay in place on top.</p>
     <h2>Page name</h2><label class="fld"><span class="sr">Name for page ${p}</span><input id="pname" maxlength="24" placeholder="Name page ${p}" value="${esc(S.dex.pnames[p]||"")}"></label>
     <h2>Account</h2><div class="btns"><button class="btn" data-a="classic">Classic MyDex (badges, vault, goals)</button><button class="btn" data-a="signout">Sign out</button></div></div>`; }
-async function setBg(key,val){ const ref=DB.doc("data/users/"+ME+"/dexbg/"+key); if(val){ S.bgs[key]=val; await ref.set(val); } else { delete S.bgs[key]; await ref.delete(); } }
+// Each background is its own document next to the player's save: data/users/{uid}/dexbg_p1 ... dexbg_p50, dexbg_all.
+async function setBg(key,val){ const ref=DB.doc("data/users/"+ME+"/dexbg_"+key); if(val){ S.bgs[key]=val; await ref.set(val); } else { delete S.bgs[key]; await ref.delete(); } }
 
 /* ---------------- business owner + admin ---------------- */
 const myBiz=()=>S.venues.filter(v=>v.biz&&(v.staff||[]).includes(ME));
@@ -264,7 +266,7 @@ const ACT={
   radarKm:v=>{ S.radarKm=+v; renderRadar(); },
   visible:(v,el)=>{ S.dex.radarOn=el.checked; save(); if(el.checked) pushPres(); else { clearTimeout(presT); DB.doc("mdPres/"+ME).delete().catch(()=>{}); } },
   color:v=>{ S.dex.look.color=v; save(); render(); }, frame:v=>{ S.dex.look.frame=v; save(); render(); }, symbol:v=>{ S.dex.look.symbol=v; save(); render(); },
-  bgUpload:async()=>{ const f=await pickFile(); if(!f) return; toast("Uploading..."); try{ const img=await shrink(f,1280,.75); const p=S.bgPage||S.page||1, cur=S.bgs["p"+p]||S.bgs.all; await setBg("p"+p,{img,fit:cur?cur.fit:"cover",dim:cur?cur.dim:40}); toast("Background set for page "+p); render(); }catch(e){ toast("Couldn't use that image."); } },
+  bgUpload:async()=>{ const f=await pickFile(); if(!f) return; toast("Uploading..."); try{ const img=await shrink(f,1280,.75); const p=S.bgPage||S.page||1, cur=S.bgs["p"+p]||S.bgs.all; await setBg("p"+p,{img,fit:cur?cur.fit:"cover",dim:cur?cur.dim:40}); toast("Background set for page "+p); render(); }catch(e){ console.error(e); toast(e&&e.message==="bad image"?"That file isn't an image MyDex can read. Try a JPG or PNG.":"Couldn't save that image. Check your connection and try again."); } },
   bgFit:async v=>{ const p=S.bgPage||S.page||1, k=S.bgs["p"+p]?"p"+p:"all"; await setBg(k,{...S.bgs[k],fit:v}); render(); },
   bgAll:async()=>{ const p=S.bgPage||S.page||1, b=S.bgs["p"+p]; if(!b) return; await setBg("all",b); for(const k of Object.keys(S.bgs)) if(k!=="all") await setBg(k,null); toast("Using this image on all 50 pages."); render(); },
   bgRemove:async()=>{ const p=S.bgPage||S.page||1; await setBg("p"+p,null); render(); }, bgRemoveAll:async()=>{ await setBg("all",null); render(); },
@@ -299,7 +301,7 @@ async function start(){
   try{ const s=await db.doc("data/users/"+ME+"/save").get(); if(s.exists&&s.data().name) NAME=String(s.data().name); }catch(e){}
   if(NAME==="Runner") NAME=(await u.name())||"Runner";
   try{ const s=await db.doc("data/users/"+ME+"/dex2").get(); if(s.exists){ const d=s.data(); S.dex={...S.dex,...d,look:{...S.dex.look,...(d.look||{})},pages:d.pages||{},pnames:d.pnames||{}}; } }catch(e){}
-  try{ const s=await db.collection("data/users/"+ME+"/dexbg").get(); s.docs.forEach(d=>{ S.bgs[d.id]=d.data(); }); }catch(e){}
+  try{ const s=await db.collection("data/users/"+ME).get(); s.docs.forEach(d=>{ if(d.id.startsWith("dexbg_")){ const b=d.data(); if(b&&b.img) S.bgs[d.id.slice(6)]=b; } }); }catch(e){}
   // Bridge for the classic MyDex editor (same as inside NEON HARVEST).
   window.NHMYDEX={ nameIssue:n=>{ const c=String(n||"").replace(/\s+/g," ").trim(); const l=Array.from(c).length; if(l<3) return "Use at least 3 characters."; if(l>16) return "Keep it to 16 characters or fewer."; if(["vex","admin","staff","system","moderator","owner","anthropic","claude"].includes(c.toLowerCase())||(c.toLowerCase()==="rassir"&&!ADMIN)) return "That name is reserved."; return null; },
     db:()=>DB, uid:()=>ME, name:()=>NAME, isAdmin:()=>ADMIN, close:closeClassic, toast, art:()=>"",
