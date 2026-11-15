@@ -113,6 +113,10 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 .mini{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--dim)}
 .mini input{width:100%;min-height:44px;border-radius:12px;border:1px solid #3A3F63;background:#0A0B14;padding:8px 12px;font-size:16px;color:var(--text)}
 .pg:disabled{opacity:.35}
+.qrbox{align-self:center;background:#fff;padding:12px;border-radius:16px}
+.qrbox img{display:block;width:260px;height:260px}
+.linkbtn{display:flex;align-items:center;justify-content:center;text-decoration:none}
+.copyfield{width:100%;min-height:44px;border-radius:12px;border:1px solid #3A3F63;background:#0A0B14;color:var(--text);padding:8px 12px;font-size:14px}
 .msg{color:#ff7a85;min-height:1em;margin:8px 0}
 #sheet{position:fixed;inset:0;z-index:20;background:rgba(5,6,12,.7);display:flex;align-items:flex-end;justify-content:center}
 .sheet-card{width:min(520px,100%);max-height:88vh;overflow-y:auto;background:#10121F;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 18px calc(22px + var(--sb));display:flex;flex-direction:column;gap:12px}
@@ -151,7 +155,7 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 </div>
 <div id="sheet" hidden></div>
 <div id="install" hidden><span id="instxt">Add MyDex to your home screen</span><button class="go" id="instgo" type="button">Install</button><button class="no" id="instno" type="button">Later</button></div>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 <script>
 (function(){
   if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
