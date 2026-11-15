@@ -332,6 +332,18 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 .rslegfx .rsl1{font-size:14px;animation:rspop .8s both}.rslegfx .rsl3{animation:rspop .8s both .5s}
 .rsring{position:absolute;width:min(70vw,420px);aspect-ratio:1;border-radius:50%;border:3px dashed var(--rc);box-shadow:0 0 40px var(--rc),inset 0 0 40px var(--rc);animation:rsspin 6s linear infinite,rspop 1s both;opacity:.6}
 @keyframes rsspin{to{transform:rotate(360deg)}} @keyframes rspop{from{transform:scale(.3);opacity:0}} @keyframes rsfade{0%,85%{opacity:1}100%{opacity:0}}
+#zkStalk{position:fixed;inset:0;pointer-events:none;z-index:24;opacity:0;transition:opacity 1.4s ease;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 38%,rgba(90,0,8,.22) 74%,rgba(150,0,14,.46) 100%);box-shadow:inset 0 0 80px rgba(200,0,20,.32)}
+#zkStalk.on{opacity:1;animation:zkpulse 1.5s ease-in-out infinite}
+#zkStalk::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,0,30,.035) 0 2px,transparent 2px 4px);mix-blend-mode:screen}
+@keyframes zkpulse{0%,100%{filter:brightness(.85)}12%{filter:brightness(1.35)}24%{filter:brightness(.95)}36%{filter:brightness(1.2)}}
+#zkWarn{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:41;width:min(420px,calc(100vw - 24px));background:rgba(18,2,6,.94);border:1px solid #ff2a3a;box-shadow:0 0 28px rgba(255,20,40,.45);padding:12px 44px 12px 14px;color:#fde;font-family:var(--f-ui);animation:zkwin .6s ease both}
+#zkWarn .zkw1{font:700 14px var(--f-display);letter-spacing:.12em;color:#ff4a5a;animation:zkflick 2.2s steps(1) infinite}
+#zkWarn .zkw2{font-size:13px;margin-top:4px;line-height:1.4}
+#zkWarn button{position:absolute;right:8px;top:8px;background:none;border:1px solid #ff8a8a;color:#ffbaba;min-width:32px;min-height:32px;cursor:pointer}
+@keyframes zkwin{from{opacity:0;transform:translate(-50%,-10px)}} @keyframes zkflick{0%,100%{opacity:1}47%{opacity:.35}49%{opacity:1}83%{opacity:.6}}
+.zknote{position:relative;background:#efe8d8;color:#2a1a1a;padding:18px 20px 26px;margin:8px auto 10px;max-width:420px;transform:rotate(-1.2deg);box-shadow:0 6px 18px rgba(0,0,0,.5);font:italic 17px/1.5 Georgia,'Times New Roman',serif;background-image:repeating-linear-gradient(0deg,transparent 0 25px,rgba(120,90,60,.18) 25px 26px)}
+.zkns{position:absolute;right:14px;bottom:6px;font-style:normal;font-size:16px;filter:grayscale(.3)}
+.zknote::before{content:"";position:absolute;left:50%;top:-8px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#9a1020;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .icard{background:var(--panel);border:1px solid var(--mag);box-shadow:0 0 18px rgba(255,63,168,.25);padding:10px;display:flex;flex-direction:column;gap:8px;font-size:12px}
 .ttt{display:grid;grid-template-columns:repeat(3,minmax(0,84px));gap:6px;justify-content:center}
 .ttt .cell{aspect-ratio:1;max-width:100%;background:#0d0818;border:1px solid var(--line);color:var(--text);font-family:var(--f-display);font-size:34px;cursor:pointer}
@@ -2826,6 +2838,7 @@ function lifePlace(R,a,now){ R.akey=a.key; R.sit=false; R.walking=false; R.leavi
 function lifeArrive(R){ const a=R.act; if(!a) return; if(R.leaving){ R.leftKey=a.key; R.here=false; return; } if(a.mode==="seat") R.sit=true; if(a.mode==="walk") R.pause=2+Math.random()*5; }
 function lifeTick(dt){ const now=Date.now(); if(DB&&!elWatched) try{ elWatch(); }catch(e){}
   for(const R of lifeHere(me.scene)){ const a=R.act;
+    if(R.ix===ZK_KILLER&&zkMove(R,dt)) continue;
     if(R.vx){ R.vxT=R.vxT||now; if(now-R.vxT>2500){ R.vx=0; R.vxT=0; } else continue; }
     if(!R.leaving&&a.end-now<20e3&&a.a!=="vote"||(!R.leaving&&a.a==="vote"&&a.end-now<15e3)){ R.leaving=true; R.sit=false; R.goal={x:lifeEntryX(a.sc),y:R.y}; }
     if((R.fleeUntil||0)>T){ R.sit=false; R.walking=true; const sp=95*dt; R.x=clamp(R.x+R.fleeDir*sp,R.min,R.max); R.dir=R.fleeDir; R.phase+=dt*10; continue; }
@@ -3010,7 +3023,7 @@ const pickOfS=(r,L)=>L[Math.floor(r()*L.length)];
 const lifeActBase=lifeAct;
 lifeAct=function(R,now){ const d=zkDeadPlan(R,now);
   if(d){ const key="zkdead|"+d.at; if(!R.act||R.act.key!==key) R.act={key,a:"dead",sc:null,mode:"stand",x:null,ic:"🕯",l:`dead. Found at ${sceneName(d.sc)}. The Clinic is bringing them back`,start:d.at,end:d.back}; R.actT=now; return R.act; }
-  if(R.ix===ZK_KILLER){ const p=zkKillerPlan(now), A=p?{key:"zkwalk|"+p.at,a:"walk",sc:p.sc,mode:"walk",x:[Math.max(80,p.x-140),p.x+140],ic:"🚶",l:"out for a walk",start:p.at-8*6e4,end:p.at+2*6e4}:zkRoamAct(now);
+  if(R.ix===ZK_KILLER){ const p=zkKillerPlan(now), A=p?{key:"zkwalk|"+p.at,a:"walk",sc:p.sc,mode:"walk",x:[Math.max(80,p.x-140),p.x+140],ic:"🚶",l:"out for a walk",start:p.at-8*6e4,end:p.at+2*6e4}:(zkStalkAct(now)||zkRoamAct(now));
     if(!R.act||R.act.key!==A.key) R.act=A; R.actT=now; return R.act; }
   return lifeActBase(R,now); };
 // ---- what people say
@@ -3072,6 +3085,88 @@ setInterval(()=>{ try{ if(!save) return; const now=Date.now(), K=LIFE_R[ZK_KILLE
       if(now>=p.back&&now-p.back<3*6e4&&!zkSt.announced["b"+p.at]){ zkSt.announced["b"+p.at]=1; chatLine(null,`📰 ${N} is back from the dead. They remember dying, but not who did it.`,"sys"); const a=$("#zkAlert"); if(a&&a.textContent.includes(N)) a.remove(); } }
   }catch(e){ console.error("zk",e); } },1000);
 function o_busy(){ return !$("#overlay").hidden; }
+// ---- STALKING: between murders Silas picks a runner and shadows them, carefully.
+//  He follows you between places (a little later, never right on your heels), keeps behind you, freezes and turns away
+//  when you look at him, hides among other people, keeps his distance when it's quiet, and slips away if you come at him.
+//  He leaves creepy notes on the ground and slips them into your pocket in crowds. When he stalks you in a crowd,
+//  the screen pulses a subtle red and you're warned.
+var zkSk={on:false,until:0,next:Date.now()+(90+Math.random()*120)*1e3,sc:"",start:0,pend:null,tx:null,sp:0,face:1,seen:0,spooked:0,pocket:0,warned:0,crowd:0,stalked:false,hbT:0,lineT:0};
+var zkNotes=[]; // ground notes {id,sc,x,y,text,t}
+function zkPublic(sc){ try{ return zkRoam().includes(sc); }catch(e){ return false; } }
+function zkCanStalk(now){ const K=LIFE_R[ZK_KILLER]; if(!save||!K||me.dead||jailed()) return false; if(zkKillerPlan(now)||zkDeadPlan(K,now)) return false;
+  try{ if(typeof IDLE!=="undefined"&&IDLE) return false; }catch(e){} try{ if(zbIsR(K)) return false; }catch(e){} return true; }
+function zkStalkStart(force){ const now=Date.now(); if(!force&&(!zkCanStalk(now)||!zkPublic(me.scene))) return false;
+  Object.assign(zkSk,{on:true,until:now+(4+Math.random()*3)*6e4,sc:me.scene,start:now+(12+Math.random()*18)*1e3,pend:null,tx:null,seen:0,spooked:0,pocket:0,warned:0,stalked:false}); zkSk.sc=me.scene; return true; }
+function zkStalkEnd(note){ const K=LIFE_R[ZK_KILLER]; if(note&&K&&K.here&&me.scene===zkSk.sc&&zkSk.start<Date.now()) zkDropNote(K.x,K.y);
+  zkSk.on=false; zkSk.tx=null; zkSk.next=Date.now()+(4+Math.random()*6)*6e4; zkStalkFx(false); }
+// what he's "doing" while stalking: in your scene (after a delay), walking
+function zkStalkAct(now){ if(!zkSk.on) return null; if(zkSk.pend&&now>=zkSk.pend.at){ zkSk.sc=zkSk.pend.sc; zkSk.start=zkSk.pend.at; zkSk.pend=null; }
+  const W=(SCENES[zkSk.sc]||{w:2000}).w; return {key:"zkstalk|"+zkSk.start+"|"+zkSk.sc,a:"walk",sc:zkSk.sc,mode:"walk",x:[160,W-160],ic:"🔑",l:"out for a walk",start:Math.min(now,zkSk.start),end:zkSk.until+6e4}; }
+// people around you he can hide among
+function zkCrowd(K){ let N=[]; try{ N=lifeHere(me.scene).filter(o=>o!==K); }catch(e){} try{ N=N.concat(cityGen(me.scene).filter(n=>n.k==="civ"||n.k==="cop")); }catch(e){}
+  try{ for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) N.push({x:p.dx,y:p.dy,peer:1}); }catch(e){} return N; }
+// the brain: 4 times a second
+setInterval(()=>{ try{ const now=Date.now(), K=LIFE_R[ZK_KILLER]; if(!save||!K) return;
+  if(!zkSk.on){ zkStalkFx(false); if(now>zkSk.next){ zkSk.next=now+(60+Math.random()*90)*1e3; if(Math.random()<.65) zkStalkStart(); } return; }
+  if(now>zkSk.until||!zkCanStalk(now)){ zkStalkEnd(true); return; }
+  // you moved: he follows to public places, later
+  if(me.scene!==zkSk.sc&&(!zkSk.pend||zkSk.pend.sc!==me.scene)){ if(zkPublic(me.scene)) zkSk.pend={sc:me.scene,at:now+(15+Math.random()*25)*1e3}; else zkSk.pend=null; }
+  if(me.scene!==zkSk.sc||!K.here){ zkSk.tx=null; zkStalkFx(false); return; }
+  const d=K.x-me.x, ad=Math.abs(d), facing=Math.sign(d)===Math.sign(me.dir||1), C=zkCrowd(K), crowd=C.filter(o=>Math.abs(o.x-me.x)<260).length; zkSk.crowd=crowd;
+  // you're looking right at him
+  if(facing&&ad<300){ zkSk.seen+=.25; } else zkSk.seen=Math.max(0,zkSk.seen-.1);
+  let tx, sp=46, face=Math.sign(me.x-K.x)||1;
+  if(ad<110&&facing&&me.moving){ // you're coming at him: calm retreat, and a line
+    tx=me.x+Math.sign(d||1)*340; sp=58; face=Math.sign(d||1); if(now-zkSk.lineT>2e4){ zkSk.lineT=now; npcSay(K,pickOf(["Can I help you?","Excuse me. Just passing through.","*avoids your eyes*","Lovely night for a walk."])); } }
+  else if(zkSk.seen>3.2&&!zkSk.spooked){ zkSk.spooked=1; npcSay(K,pickOf(["*looks away and checks a lock that isn't there*","Hm.","*pretends to read a sign*"])); zkStalkEnd(true); toast("👁 The man you caught staring slipped away. He left something behind.","#ff5a6a"); return; }
+  else if(facing&&ad<380){ // you look his way: freeze, turn away, blend into the nearest person
+    const cov=C.filter(o=>Math.abs(o.x-K.x)<120).sort((a,b)=>Math.abs(a.x-K.x)-Math.abs(b.x-K.x))[0]; tx=cov?cov.x+(K.x>cov.x?14:-14):K.x; sp=22; face=-Math.sign(me.x-K.x)||1; }
+  else { // you're looking away: close in from behind; nearer in crowds, far back when it's quiet
+    const want=crowd>=3?150+((zkSk.start/1000)%60):crowd>=1?260:420; tx=me.x-(me.dir||1)*want; const cov=C.filter(o=>Math.abs(o.x-tx)<70)[0]; if(cov) tx=cov.x+(me.x>cov.x?-16:16);
+    sp=Math.abs(tx-K.x)>500?78:me.moving?60:38;
+    // a note in your pocket: only in a crowd, only from behind, only once
+    if(crowd>=3&&ad<70&&!zkSk.pocket&&!me.moving){ zkSk.pocket=1; zkPocketNote(); } }
+  const W=(SCENES[me.scene]||{w:2000}).w; zkSk.tx=clamp(tx,80,W-80); zkSk.sp=sp; zkSk.face=face;
+  // stalked in a crowd: the eerie red pulse + warning
+  zkSk.stalked=crowd>=3&&ad<460; zkStalkFx(zkSk.stalked);
+}catch(e){} },250);
+// moves him smoothly (called from lifeTick)
+function zkMove(R,dt){ if(!zkSk.on||zkSk.tx==null||zkSk.sc!==me.scene) return false; R.sit=false; R.goal=null; const dx=zkSk.tx-R.x, s=zkSk.sp*dt;
+  if(Math.abs(dx)<=s+2){ R.walking=false; R.dir=zkSk.face; } else { R.x+=Math.sign(dx)*s; R.dir=Math.sign(dx); R.walking=true; R.phase+=dt*6; } return true; }
+// ---- the eerie screen
+function zkStalkFx(on){ let v=$("#zkStalk"); if(!v){ v=el("div",{id:"zkStalk","aria-hidden":"true"}); document.body.append(v); }
+  v.classList.toggle("on",!!on); if(!on) return; const now=Date.now();
+  if(now-zkSk.hbT>1500){ zkSk.hbT=now; try{ beep(55,.12,"sine",.07); setTimeout(()=>beep(48,.16,"sine",.06),220); }catch(e){} }
+  if(!zkSk.warned){ zkSk.warned=1; zkStalkWarn(); } }
+function zkStalkWarn(){ let a=$("#zkWarn"); if(a) a.remove();
+  a=el("div",{id:"zkWarn",role:"alert"},el("div",{class:"zkw1",text:"👁 YOU'RE BEING STALKED"}),el("div",{class:"zkw2",text:"Someone in this crowd has been following you. Don't let them get close."}),
+    el("button",{type:"button","aria-label":"Close warning",text:"✕",onclick:()=>a.remove()})); document.body.append(a); setTimeout(()=>{ if(a.isConnected) a.remove(); },9000);
+  chatLine(null,"👁 You feel eyes on the back of your neck. Someone in the crowd is following you.","sys"); }
+// ---- notes
+function zkNoteText(){ const nm=myName||"runner", t=new Date(), hr=t.getHours(), L=[];
+  L.push(`${nm}. You walk faster when you're nervous. You were walking fast today.`,`I like the way you never look behind you, ${nm}.`,`You stood right next to me. You even said excuse me.`,`Do you lock your door at night, ${nm}? Check again.`,`I know your face now. I'm very good with faces.`,`Everyone in this city has a routine. I'm learning yours.`,`Don't worry. Not tonight.`);
+  try{ L.push(`You were at ${sceneName(me.scene)} at ${t.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}. So was I.`); }catch(e){}
+  try{ const prev=[...meTrail].reverse().find(s=>s!==me.scene&&!TRAIL_SKIP.includes(s)); if(prev) L.push(`${sceneName(prev)}, then here. You're easy to follow, ${nm}.`); }catch(e){}
+  try{ const ls=zkSt.lastSay; if(ls&&Date.now()-ls.t<20*6e4&&ls.text.length>3) L.push(`"${ls.text.slice(0,60)}" — I heard you say that. I was closer than you think.`); }catch(e){}
+  try{ const R=ROLES[pRole()]; if(R) L.push(`A ${R.n.toLowerCase()}. Interesting choice. People notice a ${R.n.toLowerCase()}. I notice everyone.`); }catch(e){}
+  try{ const c=COLORS_N&&COLORS_N[save.look.jacket]; if(c) L.push(`The ${c.toLowerCase()} jacket suits you. It makes you easy to find.`); }catch(e){}
+  if(hr>=22||hr<5) L.push(`It's late, ${nm}. Shouldn't you be home? I'll walk you. You won't even see me.`);
+  if(save.credits>800) L.push(`₵${Math.floor(save.credits).toLocaleString()}. You carry it like it can protect you.`);
+  return pickOf(L); }
+function zkNotesSaved(){ try{ return JSON.parse(localStorage.getItem("nh_zknotes")||"[]"); }catch(e){ return []; } }
+function zkKeepNote(text){ try{ const L=zkNotesSaved(); L.push({t:Date.now(),text}); localStorage.setItem("nh_zknotes",JSON.stringify(L.slice(-15))); }catch(e){} }
+function zkDropNote(x,y){ zkNotes=zkNotes.filter(n=>Date.now()-n.t<15*6e4).slice(-4); zkNotes.push({id:Math.random().toString(36).slice(2),sc:me.scene,x:clamp(x,90,(SCENES[me.scene]||{w:2000}).w-90),y:clamp(y||LANE.bot-10,LANE.top+10,LANE.bot),text:zkNoteText(),t:Date.now()}); }
+function zkPocketNote(){ const text=zkNoteText(); zkKeepNote(text); beep(1400,.03,"sine",.03); toast("✉ Someone brushed past you. There's a note in your pocket.","#ff5a6a"); setTimeout(()=>zkReadNote(text,"Found in your pocket"),900); }
+function zkReadNote(text,where){ const body=panel("A folded note",where||""); currentView=null;
+  body.append(el("div",{class:"zknote"},el("div",{class:"zknt",text}),el("div",{class:"zkns",text:"🔑"})),el("div",{class:"sub",text:"No name. The handwriting is very neat. Too neat."}));
+  const all=zkNotesSaved(); if(all.length>1) body.append(el("details",{},el("summary",{text:`All the notes you've found (${all.length})`}),el("div",{class:"list"},...all.slice().reverse().map(n=>el("div",{class:"li"},el("div",{class:"grow",text:n.text}),el("span",{class:"sub",text:new Date(n.t).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}))))));
+  try{ beep(300,.2,"triangle",.03); }catch(e){} }
+{ const _hot=zkHot; zkHot=function(sc){ const H=_hot(sc); for(const n of zkNotes) if(n.sc===sc&&Date.now()-n.t<15*6e4) H.push({x:n.x,hw:40,label:"✉ A folded note on the ground",act:()=>{ zkNotes=zkNotes.filter(o=>o!==n); zkKeepNote(n.text); zkReadNote(n.text,"Left on the ground at "+sceneName(sc)); }}); return H; };
+  const _draw=zkDraw; zkDraw=function(t){ _draw(t); for(const n of zkNotes){ if(n.sc!==me.scene||Date.now()-n.t>15*6e4) continue; if(n.x<camX-60||n.x>camX+VW+60) continue; const y=n.y;
+    ctx.save(); ctx.translate(n.x,y); ctx.globalAlpha=.25+.15*Math.sin(t*3); ctx.fillStyle="#ff2a3a"; ctx.beginPath(); ctx.ellipse(0,2,16,4,0,0,7); ctx.fill(); ctx.globalAlpha=1;
+    ctx.rotate(-.18); ctx.fillStyle="#efe8d8"; ctx.fillRect(-9,-6,18,11); ctx.strokeStyle="#bdb4a0"; ctx.lineWidth=.8; ctx.beginPath(); ctx.moveTo(-9,-6); ctx.lineTo(0,0); ctx.lineTo(9,-6); ctx.stroke();
+    ctx.fillStyle="#9a1020"; ctx.beginPath(); ctx.arc(0,0,2.4,0,7); ctx.fill(); ctx.restore(); } }; }
+
 // ---- crime scenes: the body lies there for 10 minutes, with chalk, tape and an evidence marker
 function zkHot(sc){ return zkScenes(Date.now()).filter(p=>p.sc===sc).map(p=>({x:p.x,hw:70,label:Date.now()<p.back?`Crime scene: ${p.V.name}'s body`:`Crime scene: where ${p.V.name} was found`,act:()=>zkInspect(p)})); }
 function zkInspect(p){ zkSt.sceneAt=Date.now(); if(!zkSt["seen"+p.at]){ zkSt["seen"+p.at]=1; zkSt.scenes++; } const now=Date.now(), dead=now<p.back; const body=panel("Crime scene",`${p.V.name}, ${LIFE_JOB[p.V.job]?LIFE_JOB[p.V.job].n.toLowerCase():"resident"}`); currentView="zkscene";
