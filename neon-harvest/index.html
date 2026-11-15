@@ -307,6 +307,31 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #mini{width:100%;height:130px;background:#0d0818;border:1px solid var(--line)}
 #toast{position:absolute;top:calc(56px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:min(420px,90vw)}
 #invites{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(56px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px;width:min(300px,80vw);z-index:5}
+.rsscene{display:flex;gap:12px;align-items:flex-start;margin:6px 0 10px}
+.rsport{flex:0 0 104px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:11px}
+.rsport canvas{width:96px;height:96px;border:2px solid var(--rc);border-radius:8px;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 75%);box-shadow:0 0 14px color-mix(in srgb,var(--rc) 40%,transparent)}
+.rsport span{color:#9a8cc0}
+.rsbub{flex:1;position:relative;background:#120c22;border:1px solid var(--rc);padding:12px 14px;font-size:14px;line-height:1.5;min-height:80px;border-radius:6px}
+.rsbub::before{content:"";position:absolute;left:-8px;top:24px;border:8px solid transparent;border-left:0;border-right-color:var(--rc)}
+.rstext{cursor:pointer;white-space:pre-wrap}
+@media (max-width:520px){ .rsscene{flex-direction:column;align-items:center} .rsbub::before{display:none} }
+.rstrack{display:flex;gap:4px;margin:4px 0 12px;overflow-x:auto;padding-bottom:4px}
+.rsnode{flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;text-align:center;color:#6d6290}
+.rsnode b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:2px solid #3a2f5c;background:#0d0818;font-size:12px}
+.rsnode.done{color:#e9e2ff}.rsnode.done b{border-color:var(--rc);background:var(--rc);color:#0b0716}
+.rsnode.now{color:var(--rc)}.rsnode.now b{border-color:var(--rc);box-shadow:0 0 10px var(--rc);animation:rspulse 1.4s ease-in-out infinite}
+.rsnode.leg b{border-style:dashed}.rsnode.leg.done b{border-style:solid;background:linear-gradient(135deg,#fff,var(--rc));animation:rspulse 1.4s ease-in-out infinite}
+@keyframes rspulse{50%{transform:scale(1.12)}}
+.rschap{border-left:3px solid var(--rc);padding:4px 10px;margin-bottom:8px}.rschap h3{margin:2px 0;color:var(--rc)}.rschap p{margin:4px 0;font-size:13px;line-height:1.45}.rsch{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9a8cc0}
+.rsbar{height:5px;background:#2a1f44;border-radius:3px;overflow:hidden;margin-top:4px}.rsbar i{display:block;height:100%}
+.rslegend{text-align:center;padding:14px;border:2px solid var(--rc);border-radius:8px;margin-bottom:10px;background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--rc) 25%,transparent),transparent 70%);animation:rsglow 2.4s ease-in-out infinite}
+.rsl1{font-size:11px;letter-spacing:.3em;color:var(--rc)}.rsl2{font-family:var(--f-display);font-size:22px;color:#fff;text-shadow:0 0 12px var(--rc);margin:4px 0}.rsl3{color:var(--rc);font-size:13px}
+@keyframes rsglow{50%{box-shadow:0 0 22px var(--rc)}}
+.rslegfx{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(11,7,22,.55),rgba(5,3,12,.92));animation:rsfade 5.2s ease forwards;cursor:pointer;text-align:center;padding:16px}
+.rslegfx .rsl2{font-size:clamp(26px,7vw,48px);animation:rspop 1s cubic-bezier(.2,1.6,.4,1) both .2s}
+.rslegfx .rsl1{font-size:14px;animation:rspop .8s both}.rslegfx .rsl3{animation:rspop .8s both .5s}
+.rsring{position:absolute;width:min(70vw,420px);aspect-ratio:1;border-radius:50%;border:3px dashed var(--rc);box-shadow:0 0 40px var(--rc),inset 0 0 40px var(--rc);animation:rsspin 6s linear infinite,rspop 1s both;opacity:.6}
+@keyframes rsspin{to{transform:rotate(360deg)}} @keyframes rspop{from{transform:scale(.3);opacity:0}} @keyframes rsfade{0%,85%{opacity:1}100%{opacity:0}}
 .icard{background:var(--panel);border:1px solid var(--mag);box-shadow:0 0 18px rgba(255,63,168,.25);padding:10px;display:flex;flex-direction:column;gap:8px;font-size:12px}
 .ttt{display:grid;grid-template-columns:repeat(3,minmax(0,84px));gap:6px;justify-content:center}
 .ttt .cell{aspect-ratio:1;max-width:100%;background:#0d0818;border:1px solid var(--line);color:var(--text);font-family:var(--f-display);font-size:34px;cursor:pointer}
@@ -2203,7 +2228,7 @@ const liveLooks=new Set();
 function lookCanvas(look,px=96,emote){ const cv=document.createElement("canvas"); cv.width=px*2; cv.height=px*2; cv._look=look; cv._emote=emote; liveLooks.add(cv); return cv; }
 var _lkF=0;
 function tickLookCans(t){ _lkF++; const many=liveLooks.size>6; let li=0; for(const cv of liveLooks){ if(!cv.isConnected){liveLooks.delete(cv);continue;} if(!canVis(cv)) continue; if(many&&((li++ +_lkF)&1)) continue; const c=cv.getContext("2d"); c.clearRect(0,0,cv.width,cv.height); const sc=cv.width/110; if(cv._pet){ const tall=PET_TALL.includes(cv._pet); drawPetAt(c,cv.width/2,cv.height*.86,cv.height/(tall?95:42),cv._pet,cv._ps,cv._dir||1,t,!!cv._walk); continue; }
-  drawStick(c,cv.width/2,cv.height*.86,sc,{dir:cv._dir||1,phase:t*3,moving:!!cv._walk,look:cv._look,emote:cv._emote?{e:cv._emote,t:t-((t*1)%3)}:null},t); } }
+  drawStick(c,cv.width/2,cv.height*.86,sc,{dir:cv._dir||1,phase:t*3,moving:!!cv._walk,look:cv._look,role:cv._roleK?{rk:cv._roleK,rr:cv._rr||0}:undefined,emote:cv._emote?{e:cv._emote,t:t-((t*1)%3)}:null},t); } }
 
 /* ============================================================ ROLES / CITY LIFE */
 /* ============================================================ ROLES & CITY LIFE
@@ -2268,6 +2293,8 @@ function roleSanitize(o,s){ o.admImm=!!s.admImm; o.admMayor=!!s.admMayor; o.role
   o.streak=s.streak&&typeof s.streak==="object"?{n:Math.max(0,Math.min(9999,Math.floor(+s.streak.n||0))),last:String(s.streak.last||"").slice(0,12)}:undefined;
   o.daily=s.daily&&typeof s.daily==="object"&&Array.isArray(s.daily.g)?{day:String(s.daily.day||"").slice(0,12),g:s.daily.g.filter(x=>typeof x==="string").slice(0,3),base:Object.fromEntries(Object.entries(s.daily.base||{}).slice(0,3).map(([k,v])=>[String(k).slice(0,30),+v||0])),done:Array.isArray(s.daily.done)?s.daily.done.filter(x=>typeof x==="string").slice(0,3):[],all:!!s.daily.all}:undefined;
   o.rulesOk=s.rulesOk?1:0;
+  if(s.rsto&&typeof s.rsto==="object"){ const r={}; for(const k of Object.keys(ROLES)){ const v=s.rsto[k]; if(v&&typeof v==="object") r[k]={ch:Math.max(0,Math.min(6,Math.floor(+v.ch||0))),met:v.met?1:0,base:v.base&&typeof v.base==="object"?Object.fromEntries(Object.entries(v.base).filter(([a,b])=>isFinite(+b)).slice(0,20).map(([a,b])=>[String(a).slice(0,12),Math.floor(+b)])):null}; }
+    const d=s.rsto.duty; if(d&&typeof d==="object"&&ROLES[d.r]) r.duty={d:String(d.d||"").slice(0,12),r:d.r,b:Math.floor(+d.b||0),got:d.got?1:0}; o.rsto=r; }
   if(s.race&&typeof s.race==="object"){ const r=s.race, I=(v,m)=>Math.max(0,Math.min(m,Math.floor(+v||0))); o.race={rr:I(r.rr,99999),wins:I(r.wins,1e6),races:I(r.races,1e6),pod:I(r.pod,1e6),best:{},refunded:!!r.refunded,
     owned:Array.isArray(r.owned)?[...new Set(r.owned.filter(x=>HR_BY[x]))]:["sparrow"],sel:HR_BY[r.sel]?r.sel:"sparrow",cust:Object.fromEntries(Object.entries(r.cust||{}).filter(([k])=>HR_BY[k]).map(([k,v])=>[k,hrCleanCust(v)])),
     cos:Object.fromEntries(["paint","decal","glow","spoiler","trail"].map(k=>[k,Array.isArray((r.cos||{})[k])?[...new Set(r.cos[k].map(x=>x|0).filter(x=>x>=0&&x<20))]:[0]]))}; }
@@ -2281,15 +2308,15 @@ function roleSanitize(o,s){ o.admImm=!!s.admImm; o.admMayor=!!s.admMayor; o.role
   o.mayorDay=String(s.mayorDay||""); o.slogan=String(s.slogan||"").slice(0,60); return o; }
 
 /* ---------- presence ---------- */
-function rolePres(){ return {rl:pRole(),hz:heatStars(),jl:jailed()?1:0,cu:roleIs("cult")&&save.myCult?`${myId}|${save.myCult.n}|${save.myCult.col}`:save.cult?`${save.cult.by}|${save.cult.n}|${save.cult.col}`:null,ac:roleIs("cult")?save.acolytes:0}; }
-function rolePeer(q,pr){ q.rl=ROLES[pr.rl]?pr.rl:""; q.hz=Math.max(0,Math.min(5,Math.floor(+pr.hz||0))); q.jl=pr.jl===1; q.ac=Math.max(0,Math.min(4,Math.floor(+pr.ac||0)));
+function rolePres(){ return {rr:pRole()&&typeof rsOf==="function"?rsOf(pRole()).ch:0,rl:pRole(),hz:heatStars(),jl:jailed()?1:0,cu:roleIs("cult")&&save.myCult?`${myId}|${save.myCult.n}|${save.myCult.col}`:save.cult?`${save.cult.by}|${save.cult.n}|${save.cult.col}`:null,ac:roleIs("cult")?save.acolytes:0}; }
+function rolePeer(q,pr){ q.rl=ROLES[pr.rl]?pr.rl:""; q.rr=Math.max(0,Math.min(6,Math.floor(+pr.rr||0))); q.hz=Math.max(0,Math.min(5,Math.floor(+pr.hz||0))); q.jl=pr.jl===1; q.ac=Math.max(0,Math.min(4,Math.floor(+pr.ac||0)));
   q.cu=null; if(typeof pr.cu==="string"){ const [by,n,col]=pr.cu.split("|"); if(by&&n) q.cu={by,n:n.slice(0,24),col:/^#[0-9a-f]{6}$/i.test(col)?col:"#ff3f5a"}; } }
 function roleO(who){ // role info to draw on a character
-  if(who==="me") return {rk:pRole()||null,hz:heatStars(),jl:jailed(),cu:roleIs("cult")&&save.myCult?{by:myId,...save.myCult}:save.cult,mayor:(!!myId&&mayorId()===myId)||!!(IS_ADMIN&&save.admMayor)};
-  return {rk:who.rl||null,hz:who.hz||0,jl:!!who.jl,cu:who.cu||null,mayor:!!who.by&&mayorId()===who.by}; }
+  if(who==="me") return {rr:pRole()?rsOf(pRole()).ch:0,rk:pRole()||null,hz:heatStars(),jl:jailed(),cu:roleIs("cult")&&save.myCult?{by:myId,...save.myCult}:save.cult,mayor:(!!myId&&mayorId()===myId)||!!(IS_ADMIN&&save.admMayor)};
+  return {rr:who.rr||0,rk:who.rl||null,hz:who.hz||0,jl:!!who.jl,cu:who.cu||null,mayor:!!who.by&&mayorId()===who.by}; }
 
 /* ---------- drawing: gear, tags, wanted stars ---------- */
-function drawRoleGear(c,o,t,head,sh,hip,dir){ const k=o.rk;
+function drawRoleGear(c,o,t,head,sh,hip,dir){ const k=o.rk; if(o.rr>=6&&k) try{ rsDrawFeet(c,o,t); }catch(e){}
   if(o.mayor){ c.strokeStyle="#ffd36a"; c.lineWidth=3; c.globalAlpha=.95; c.beginPath(); c.moveTo(-dir*5,sh+1); c.lineTo(dir*5,hip-2); c.stroke(); c.globalAlpha=1; c.fillStyle="#ffd36a"; c.beginPath(); c.arc(dir*2,sh+9,2.2,0,7); c.fill(); }
   if(k==="police"){ c.fillStyle="#1a2a6a"; c.beginPath(); c.arc(0,head-4,8.6,Math.PI,0); c.fill(); c.fillRect(-9,head-5,18,2.4); c.fillRect(dir*2,head-5,dir*8,2); c.fillStyle="#ffd36a"; c.fillRect(-1.5,head-10,3,3);
     c.beginPath(); for(let i=0;i<5;i++){ const a=-Math.PI/2+i*Math.PI*.4; c.lineTo(dir*3+Math.cos(a)*2.4,sh+6+Math.sin(a)*2.4); c.lineTo(dir*3+Math.cos(a+.63)*1,sh+6+Math.sin(a+.63)*1); } c.fill();
@@ -2306,9 +2333,10 @@ function drawRoleGear(c,o,t,head,sh,hip,dir){ const k=o.rk;
 function drawRoleTag(c,x,y,o,t){ // y = name baseline (world units, unscaled)
   let yy=y-12; const R=ROLES[o.rk];
   if(o.jl){ c.font="bold 8px monospace"; c.fillStyle="#ff9a3a"; c.fillText("⛓ IN JAIL",x,yy); yy-=10; }
+  if(o.rr>=6&&R&&!o.mayor){ try{ yy=rsDrawLegend(c,x,yy-1,o,t); }catch(e){} c.font="bold 8px monospace"; c.textAlign="center"; }
   if(o.hz>0){ c.font="10px monospace"; c.fillStyle="#ff3f5a"; c.globalAlpha=.75+.25*Math.sin(t*6); c.fillText("★".repeat(o.hz),x,yy); c.globalAlpha=1; yy-=10; }
-  const tags=[]; if(o.mayor) tags.push(["MAYOR","#ffd36a"]); else if(R) tags.push([R.tag,R.col]); if(o.cu&&o.rk!=="cult") tags.push([o.cu.n.toUpperCase(),o.cu.col]); else if(o.rk==="cult"&&o.cu) tags[0]=[`${o.cu.n.toUpperCase()} · LEADER`,o.cu.col];
-  if(!tags.length) return; c.font="bold 7px monospace"; const txt=tags.map(z=>z[0]).join("  ·  "), w=c.measureText(txt).width+8; c.fillStyle="rgba(11,7,22,.82)"; c.fillRect(x-w/2,y+3,w,9); let cx=x-w/2+4; c.textAlign="left";
+  const tags=[]; if(o.mayor) tags.push(["MAYOR","#ffd36a"]); else if(R) tags.push([R.tag+(o.rr>0&&o.rr<6&&RS[o.rk]?" · "+RS[o.rk].ranks[o.rr-1].toUpperCase():""),R.col]); if(o.cu&&o.rk!=="cult") tags.push([o.cu.n.toUpperCase(),o.cu.col]); else if(o.rk==="cult"&&o.cu) tags[0]=[`${o.cu.n.toUpperCase()} · LEADER`,o.cu.col];
+  if(!tags.length) return; c.font="bold 7px monospace"; const txt=tags.map(z=>z[0]).join("  ·  "), w=c.measureText(txt).width+8; c.fillStyle="rgba(11,7,22,.82)"; c.fillRect(x-w/2,y+3,w,9); if(o.rr>=6&&R&&!o.mayor){ c.save(); c.strokeStyle=R.col; c.shadowColor=R.col; c.shadowBlur=5+4*Math.sin(t*4); c.lineWidth=1; c.globalAlpha=.7+.3*Math.sin(t*4); c.strokeRect(x-w/2-1.5,y+1.5,w+3,12); c.restore(); } let cx=x-w/2+4; c.textAlign="left";
   tags.forEach(([s,col],i)=>{ c.fillStyle=col; c.fillText(s,cx,y+10); cx+=c.measureText(s+(i<tags.length-1?"  ·  ":"")).width; }); c.textAlign="center"; }
 
 /* ---------- Civic Center scene ---------- */
@@ -2380,8 +2408,8 @@ function tickCity(dt){ const now=Date.now();
   if(save.heat>0&&!jailed()){ const iv=(policy("amnesty")?2:4)*6e4; if(now-(+save.heatAt||0)>iv){ save.heat=Math.max(0,Math.ceil(save.heat)-1); save.heatAt=now; persist(); pushPresence(true); if(!save.heat) toast("You're no longer Wanted.","#43f0a4"); } }
   if(save.jail&&!jailed()&&save.jail.until){ save.jail=null; persist(); pushPresence(true); toast("You're free. Stay out of trouble.","#43f0a4"); chatLine(null,"You were released from Precinct 9 holding.","sys"); }
   if(jailed()&&me.scene!=="prison"){ go("prison"); me.x=PRISON.spawn; }
-  if(roleIs("worker")&&onShift()){ save.union=save.union||{ms:0,day:""}; save.union.ms+=dt*1000; if(save.union.ms>=6e5){ save.union.ms-=6e5; earn(120*(policy("overtime")?1.5:1),"Union bonus (10 min on shift)","#ffb84a"); rstat("union"); } }
-  if(roleIs("police")&&!jailed()){ if(me.moving) roleTick.lastMove=now; roleTick.patrol=(roleTick.patrol||0)+dt; if(roleTick.patrol>=300){ roleTick.patrol=0; if(now-(roleTick.lastMove||0)<9e4) earn(60*(policy("overtime")?1.5:1),"Patrol pay","#5aa0ff"); } }
+  if(roleIs("worker")&&onShift()){ roleTick.wk=(roleTick.wk||0)+dt; if(roleTick.wk>=60){ roleTick.wk-=60; rstat("shiftmin"); } save.union=save.union||{ms:0,day:""}; save.union.ms+=dt*1000; if(save.union.ms>=6e5){ save.union.ms-=6e5; earn(120*(policy("overtime")?1.5:1),"Union bonus (10 min on shift)","#ffb84a"); rstat("union"); } }
+  if(roleIs("police")&&!jailed()){ if(me.moving) roleTick.lastMove=now; roleTick.patrol=(roleTick.patrol||0)+dt; if(roleTick.patrol>=300){ roleTick.patrol=0; if(now-(roleTick.lastMove||0)<9e4){ earn(60*(policy("overtime")?1.5:1),"Patrol pay","#5aa0ff"); rstat("patrols"); } } }
   if(roleIs("cult")&&save.acolytes>0){ roleTick.aco=(roleTick.aco||0)+dt; if(roleTick.aco>=120){ roleTick.aco=0; earn(10*save.acolytes*(policy("festival")?1.5:1),`Acolyte donations (${save.acolytes})`,"#ff3f5a"); } }
   // npcs in my scene
   const L=cityGen(me.scene); const stars=heatStars();
@@ -3271,7 +3299,7 @@ function roleActions(){ const A=[]; if(jailed()||me.dead) return A; const sc=me.
     if(rk==="medic"&&n.hurt) A.push({l:`Treat ${n.name} 🩹 (+₵40)`,f:()=>treatNpc(n),hot:1});
     if(rk==="dealer"&&n.buyer) A.push({l:save.dust?`Sell Neon Dust to ${n.name} 💊`:`${n.name} wants Dust (buy at the Black Market)`,f:()=>streetDeal(n)});
     if(rk==="cult") A.push({l:save.acolytes>=4?"You have 4 acolytes (max)":`Recruit ${n.name} as an acolyte`,f:()=>recruit(n)});
-    if(rk==="politician") A.push({l:`Ask ${n.name} for their vote`,f:()=>{ npcSay(n,Math.random()<.6?"You've got my vote!":"Politicians. Ugh."); }});
+    if(rk==="politician") A.push({l:`Ask ${n.name} for their vote`,f:()=>{ if(!rcd("cv_"+n.name)){ setCd("cv_"+n.name,10*6e4); rstat("canvass"); persist(); } npcSay(n,Math.random()<.6?"You've got my vote!":"Politicians. Ugh."); }});
     A.push({l:`Talk to ${n.name} ${moodEmoji(n)}`,f:()=>openCitizen(n)}); }
   if(rk==="cult"&&save.myCult&&!NO_CRIME.includes(sc)) A.push({l:rcd("ritual")?`Ritual (${cdTxt(rcd("ritual"))})`:"Hold a ritual 🜏",f:()=>doRitual()});
   if(rk==="politician"&&!["home","vip","story","line"].includes(sc)) A.push({l:rcd("rally")?`Rally (${cdTxt(rcd("rally"))})`:"Hold a campaign rally 🎙",f:()=>doRally()});
@@ -3303,7 +3331,7 @@ function recruit(n){ if(save.acolytes>=4) return toast("Four acolytes is all you
   if(Math.random()<.5){ save.acolytes++; const B=cityNpcs[me.scene]||[], ix=B.indexOf(n); if(ix>=0) B.splice(ix,1); if(n.life){ n.goneUntil=Date.now()+30*6e4; n.here=false; } persist(); pushPresence(true); toast(`${n.name} joined ${save.myCult.n}. They follow you now.`,save.myCult.col); rstat("recruits"); beep(220,.3,"sine"); }
   else npcSay(n,["Not interested.","Is this a pyramid scheme?","Maybe later…","Get away from me, weirdo."][(Math.random()*4)|0]); }
 function fightBot(n,police){ if(n.out) return; gangCd=Date.now()+15e3; emote("atk"); const wpn=String(save.look&&save.look.hand||"").startsWith("wpn_"); const win=police||Math.random()<(.45+(wpn?.3:0));
-  if(win){ n.out=Date.now()+3*6e4; n.mug=0; cityGen(me.scene).filter(c=>c.k==="civ"&&Math.abs(c.x-me.x)<260).slice(0,4).forEach((c,i)=>{ relAdd(npcKey(c),1); lifeFeel(c,"grateful",4*6e4,.35,0,"You ran off the Rust Jaws"); setTimeout(()=>{ c.emote={e:"cheer",t:T}; npcSay(c,["Thank you!","Get outta here, Rust Jaws!","My hero!","Nice one!"][i%4]); },300+i*300); }); const pay=police?80:30+Math.floor(Math.random()*30), ch=police?5:3+Math.floor(Math.random()*5); save.chips+=ch; earn(pay,police?`Busted ${n.name} (+${ch} chips)`:`Scrapped ${n.name} (+${ch} chips)`,"#ff7a5a"); rstat(police?"busts":"botwins"); beep(1400,.06); }
+  if(win){ if(police) rstat("busts"); n.out=Date.now()+3*6e4; n.mug=0; cityGen(me.scene).filter(c=>c.k==="civ"&&Math.abs(c.x-me.x)<260).slice(0,4).forEach((c,i)=>{ relAdd(npcKey(c),1); lifeFeel(c,"grateful",4*6e4,.35,0,"You ran off the Rust Jaws"); setTimeout(()=>{ c.emote={e:"cheer",t:T}; npcSay(c,["Thank you!","Get outta here, Rust Jaws!","My hero!","Nice one!"][i%4]); },300+i*300); }); const pay=police?80:30+Math.floor(Math.random()*30), ch=police?5:3+Math.floor(Math.random()*5); save.chips+=ch; earn(pay,police?`Busted ${n.name} (+${ch} chips)`:`Scrapped ${n.name} (+${ch} chips)`,"#ff7a5a"); rstat(police?"busts":"botwins"); beep(1400,.06); }
   else { const lose=Math.min(Math.floor(save.credits),20+Math.floor(Math.random()*40)); save.credits-=lose; persist(); npcSay(n,"Pathetic, meatbag."); toast(`${n.name} knocked you down and took ₵${lose}.`,"#ff5a4a"); me.slowUntil=T+4; beep(120,.25,"square"); } }
 function gangMug(n){ const amt=Math.max(10,Math.min(150,Math.floor(save.credits*.08))); npcSay(n,"Credits or circuits, meatbag!"); beep(140,.2,"square"); gangCd=Date.now()+9e4;
   if(typeof IDLE!=="undefined"&&IDLE){ const wpn=String(save.look&&save.look.hand||"").startsWith("wpn_"); if(wpn){ const c0=save.credits; fightBot(n,false); idleLog(save.credits>=c0?`⚔ ${n.name} tried to mug your runner. They fought back and won!`:`⚔ ${n.name} tried to mug your runner. They fought back but lost ₵${Math.round(c0-save.credits)}.`); } else { me.x=clamp(me.x+(me.x<n.x?-140:140),30,SCENES[me.scene].w-30); n.mug=0; idleLog(`🏃 ${n.name} tried to mug your runner. They ran for it.`); } return; }
@@ -3375,6 +3403,7 @@ function wantedList(){ const L=[]; if(heatStars()) L.push({name:myName||"You",hz
 function roleCard(k){ const R=ROLES[k]; const mine=pRole()===k; const c=el("div",{class:"card",style:`text-align:left;padding:10px;border-color:${mine?R.col:"var(--line)"}`});
   const lk={...fullLook(save.look)}; const cv=lookCanvas(lk,70); cv._roleK=k; cv.style.cssText="width:70px;height:70px;float:right;background:radial-gradient(circle at 50% 60%,#2a1a48,#0d0818 75%);border-radius:6px";
   c.append(cv,el("div",{style:`font-family:var(--f-display);color:${R.col};font-size:14px`,text:`${R.ic} ${R.n}`}),el("div",{class:"sub",style:"margin:4px 0",text:R.d}),el("ul",{style:"margin:6px 0 8px 16px;padding:0;font-size:11px;line-height:1.45"},...R.perks.map(p=>el("li",{text:p}))));
+  { const ch=rsOf(k).ch; c.append(el("div",{style:`font-size:11px;margin-bottom:6px;color:${ch>=6?R.col:"var(--dim,#9a8cc0)"}`,text:ch>=6?`★ LEGEND: ${RS[k].legend}`:`📖 Story "${RS[k].t}": chapter ${ch+1} of 6${ch?` · Rank: ${rsRank(k,ch)}`:""}`})); }
   const left=save.role&&!mine?Math.max(0,(save.roleAt||0)+ROLE_SWITCH_MS-Date.now()):0; const b=el("button",{class:"btn"+(mine?"":" hot"),type:"button",text:mine?"Your role":left?`Switch in ${cdTxt(left)}`:`Become a ${R.n}`,onclick:()=>chooseRole(k)}); if(mine||(!IS_ADMIN&&(left||jailed()||heatStars()))) b.disabled=true; c.append(b); return c; }
 function chooseRole(k){ if(!IS_ADMIN){ if(jailed()) return toast("Not from a jail cell."); if(heatStars()) return toast("City Hall won't process Wanted runners. Lose the heat first."); }
   if(k==="cult"&&!save.myCult) return openFoundCult();
@@ -3402,7 +3431,7 @@ function openRoleMenu(){ const R=ROLES[pRole()]; const body=panel(R?`${R.ic} ${R
   const A=roleActions(); body.append(el("strong",{text:A.length?"Nearby actions":"Nothing nearby"})); const l=el("div",{class:"list"}); for(const a of A) l.append(el("div",{class:"li"},el("div",{class:"grow",text:a.l}),el("button",{class:"btn"+(a.hot?" hot":""),type:"button",text:"Do it",onclick:()=>{ closePanel(); a.f(); }}))); body.append(l);
   if(!A.length) body.append(el("div",{class:"sub",text:R?"Walk up to players, civilians (🩹 hurt, 💊 buyers) or police to see what you can do.":""}));
   if(roleIs("hacker")||roleIs("police")) body.append(el("strong",{text:"Police radio"}),radioList());
-  body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Role Office",onclick:()=>openRoleOffice()}),el("button",{class:"btn",type:"button",text:"Elections",onclick:()=>openElection()}))); }
+  body.append(el("div",{class:"row"},R?el("button",{class:"btn hot",type:"button",text:`📖 Story${rsReady()?" · ready!":""}`,onclick:()=>openRoleStory()}):"",el("button",{class:"btn",type:"button",text:"Role Office",onclick:()=>openRoleOffice()}),el("button",{class:"btn",type:"button",text:"Elections",onclick:()=>openElection()}))); }
 function radioList(){ const l=el("div",{class:"list"}); const W=wantedList(); if(!W.length) l.append(el("div",{class:"empty",text:"No Wanted runners online."})); for(const w of W) l.append(el("div",{class:"li"},el("div",{class:"grow",text:`${w.name}${w.me?" (you)":""}`}),el("span",{class:"r-epic",text:"★".repeat(w.hz)}),el("span",{class:"sub",text:sceneName(w.s)})));
   const cops=onlinePeers().filter(p=>p.rl==="police"); l.append(el("div",{class:"sub",text:cops.length?`Police on duty: ${cops.map(p=>`${nameOf(p.by)} (${sceneName(p.s)})`).join(", ")}`:"No police players on duty."})); return l; }
 function openPrecinct(){ const body=panel("Precinct 9","\"Serve. Protect. Fill out the forms.\""); currentView="precinct"; body.append(el("strong",{text:"Wanted board"}),radioList());
@@ -14420,7 +14449,7 @@ function appMe(main){ const card=el("div",{class:"apme"}); try{ card.append(look
   const un=typeof unreadTotal==="function"?unreadTotal():0; const b=(ic,t,fn,dot)=>el("button",{type:"button",onclick:fn},el("span",{text:ic,"aria-hidden":"true"}),t,dot?el("span",{class:"dot",text:String(dot)}):"");
   main.append(el("h3",{text:"Menu"}),el("div",{class:"apgrid"},
     b("👤","Character",()=>{ tryOn=null; openWardrobe("name"); }),b("🎒","Stash",()=>openStash()),b("💬","Messages",()=>openMessages(),un),b("📜","Quests",()=>openQuestLog()),b("🎯","Goals",()=>openGoals()),b("🐾","Companion",()=>openCompanion()),
-    b("📇","MyDex",()=>openMyDex()),b("🎭","Role",()=>openRoleMenu()),b("💠","Rewards",()=>openRP()),b("🎮","Consoles",()=>openConsoles()),b("🎵","Music",()=>openMusic()),b("🌦","Weather",()=>openWeather()),b("⭐","Level "+lvNow(),()=>openLevel()),
+    b("📇","MyDex",()=>openMyDex()),b("🎭","Role",()=>openRoleMenu()),b("📖","Role Story",()=>openRoleStory(),rsReady()?"!":0),b("💠","Rewards",()=>openRP()),b("🎮","Consoles",()=>openConsoles()),b("🎵","Music",()=>openMusic()),b("🌦","Weather",()=>openWeather()),b("⭐","Level "+lvNow(),()=>openLevel()),
     b(soundOn?"🔊":"🔇",soundOn?"Sound on":"Sound off",()=>{ $("#btnSnd").click(); appRender(true); }),b("❓","How to Play",()=>openGuide()),...(IS_ADMIN?[b("🛡️","Admin",()=>openAdmin())]:[])));
   main.append(el("h3",{text:"View"}),appCard("🖥","Switch to Immersive view","The full-screen game you walk around in. Best on a PC or laptop. You can switch back any time with the 📱 App button.",()=>appSet(false))); }
 /* ---- App view: Store tab for Neon Row storefront owners (orders, codes, NRC rewards and stock, rewarding visitors) */
@@ -14598,6 +14627,184 @@ function zbSet(){ const st=zbOn(); if(!st) return new Set(); const now=Date.now(
 function zbIsR(R){ return !!(R&&R.life&&zbOn()&&zbSet().has(R.ix)); }
 function zbMe(){ const st=zbOn(); return !!(st&&save&&save.zb===st.id); }
 function zbPeer(p){ const st=zbOn(); return !!(st&&p&&p.zb&&p.zbid===st.id); }
+/* ============================================================ ROLE STORIES
+   Every role has a 6-chapter story. Each chapter: a meeting somewhere in the city (a story card plays when you arrive)
+   plus role deeds to do. Finishing a chapter pays out and raises your role rank (shown on your role tag).
+   Finish chapter 6 and you become a LEGEND: an animated frame + title around your role that every player sees,
+   and NPCs recognize you on the street. Each role also gets a Daily Duty for steady purpose. */
+const RS_SPOT={hall:["civic",CIVIC.hall,"City Hall"],vote:["civic",CIVIC.vote,"the voting booths"],precinct:["civic",CIVIC.precinct,"Precinct 9"],clinic:["civic",CIVIC.clinic,"the Clinic"],
+  crate:["civic",CIVIC.crate,"the Black Market crate"],term:["civic",CIVIC.term,"the Hacker terminal"],coffee:["civic",CIVIC.coffee,"the coffee cart"],fountain:["civic",CIVIC.fountain,"the Civic fountain"],
+  notice:["civic",CIVIC.notice,"the notice board"],services:["civic",CIVIC.services,"City Services"],street:["street",ATM_SPOTS.street,"the Main Street ATM"],byte:["byte",ATM_SPOTS.byte,"Byte Street"],
+  neonrow:["neonrow",ATM_SPOTS.neonrow,"Neon Row"],grid:["grid",ATM_SPOTS.grid,"The Grid"]};
+// stat keys each deed counts (several keys add together)
+const RS_STAT={work:[["shiftmin"],"minutes on shift (any job)"],bust:[["busts","arrests"],"busts or arrests (Rust Jaws count)"],patrol:[["patrols"],"patrol pays (keep moving on duty)"],
+  heal:[["heals"],"people treated (players or 🩹 civilians)"],lift:[["pickpockets","stolen"],"pockets picked"],deal:[["deals"],"Neon Dust deals"],hack:[["hacks","scrubs"],"ATMs cracked or records scrubbed"],
+  recruit:[["recruits"],"acolytes recruited"],ritual:[["rituals"],"rituals held"],rally:[["rallies"],"campaign rallies"],canvass:[["canvass"],"citizens asked for their vote"]};
+// story speakers (original characters) — look ids index the wardrobe options
+const RS_WHO={
+  marta:{n:"Marta Kade",r:"Union rep",rk:"worker",look:{jacket:3,pants:5,hat:0,visor:0,skin:2,style:2,hair:3,hairCol:1}},
+  hollis:{n:"Captain Hollis",r:"Precinct 9",rk:"police",look:{jacket:5,pants:5,visor:1,hat:0,skin:4,style:1}},
+  anand:{n:"Dr. Anand",r:"Clinic chief",rk:"medic",look:{jacket:0,pants:2,style:9,skin:3,hair:1,hairCol:0}},
+  wren:{n:"Wren",r:"Retired thief",rk:"thief",look:{jacket:6,pants:6,style:1,skin:1,hair:2,hairCol:4}},
+  vel:{n:"Velvet",r:"Alley broker",rk:"dealer",look:{jacket:4,pants:6,style:10,skin:0,hair:4,hairCol:5}},
+  null0:{n:"NULL",r:"Voice on the terminal",rk:"hacker",look:{jacket:7,pants:6,style:1,skin:4,visor:2}},
+  seer:{n:"The Seer",r:"Keeper of old rites",rk:"cult",look:{jacket:1,pants:6,style:5,skin:2,hair:6,hairCol:2}},
+  ash:{n:"Councilor Ash",r:"City Hall veteran",rk:"politician",look:{jacket:2,pants:5,style:12,skin:1,hair:5,hairCol:6}},
+  halv:{n:"Halvorsen exec",r:"Halvorsen Corp",look:{jacket:7,pants:7,style:12,skin:0,visor:3}},
+  rook:{n:"\"Rook\"",r:"Rust Jaws boss",look:{jacket:5,pants:6,style:4,skin:4,visor:4}},
+};
+const RS={
+ worker:{t:"Union Strong",ranks:["Apprentice","Journeyman","Foreman","Shop Steward","Union Boss"],legend:"Backbone of Sector 9",
+  ch:[
+   {n:"First Shift",who:"marta",at:"hall",i:"Halvorsen Corp wants to swap every worker in Sector 9 for delivery drones. Marta Kade, the union rep, needs proof that people still matter.",meet:"\"You're new? Good. Fresh hands, fresh stubbornness. Clock in somewhere and show them what a real shift looks like.\"",do:[["work",10]],o:"Marta nods. \"Ten honest minutes. That's ten more than any drone ever cared.\"",cr:150},
+   {n:"Show of Hands",who:"marta",at:"notice",i:"The union needs members. Marta wants you to pin the first flyer on the Civic notice board, then keep working so people see you mean it.",meet:"\"Pin it high so the rain doesn't take it. 'WORKERS BUILT THIS CITY.' Now go earn your keep.\"",do:[["work",15]],o:"Twelve names on the flyer by morning. Somebody wrote 'about time' under yours.",cr:200},
+   {n:"The Drone Test",who:"halv",at:"byte",i:"Halvorsen is testing its drones on Byte Street. Go see what they're up against, then outwork them.",meet:"A Halvorsen exec smirks: \"Our units don't sleep, don't eat, don't unionize. What exactly do you offer?\"",do:[["work",20]],o:"Three drones crashed into the noodle stall. You finished your shift. The crowd noticed.",cr:250},
+   {n:"Strike Talk",who:"marta",at:"fountain",i:"Marta wants to talk somewhere quiet. Word is Halvorsen might buy off the union leaders.",meet:"\"They offered me a corner office. I told them my office is the street. Keep the shifts going. Every minute counts now.\"",do:[["work",25]],o:"Marta tore up the contract in front of the whole fountain crowd.",cr:300},
+   {n:"Lights Out",who:"halv",at:"grid",i:"Someone cut the power on The Grid and blamed the union. Find out who, then keep the city running.",meet:"You find a Halvorsen badge in the fuse box. The exec shrugs: \"Prove it.\"",do:[["work",25]],o:"The lights came back on because workers turned them back on. The city knows who kept it running.",cr:350},
+   {n:"Backbone",who:"marta",at:"hall",i:"City Hall votes on the Drone Act tonight. Marta needs the workers on the steps, and you in front.",meet:"\"Look behind you. That's every worker in Sector 9. They're here because of you.\"",do:[["work",30]],o:"The Drone Act failed. Marta handed you the old union pin. \"You're the backbone now.\"",cr:600}]},
+ police:{t:"The Iron Badge",ranks:["Cadet","Officer","Detective","Sergeant","Captain"],legend:"The Iron Badge",
+  ch:[
+   {n:"Rookie Night",who:"hollis",at:"precinct",i:"Captain Hollis runs Precinct 9 on coffee and spite. Your first night: walk the beat and keep the Rust Jaws off the street.",meet:"\"Badge on straight. Eyes open. If the Rust Jaws come at civilians, you put them down.\"",do:[["patrol",1],["bust",1]],o:"\"Not bad, rookie. Not good either. Come back tomorrow.\"",cr:150},
+   {n:"Rust and Bone",who:"rook",at:"street",i:"The Rust Jaws are shaking down shops on Main Street. Their boss, Rook, wants to meet the new cop.",meet:"Rook grins with chrome teeth: \"New badge, same city. You'll learn.\"",do:[["bust",3]],o:"Three Rust Jaws in holding. Rook isn't grinning anymore.",cr:200},
+   {n:"The Ledger",who:"hollis",at:"coffee",i:"Hollis found a ledger of bribes. Someone inside Precinct 9 is on the take.",meet:"\"Keep this between us. Work the streets, and watch who flinches when you bring someone in.\"",do:[["bust",3],["patrol",2]],o:"A desk sergeant flinched. You wrote his name down.",cr:250},
+   {n:"Crossfire",who:"rook",at:"byte",i:"Rook is moving his crew to Byte Street. Get there first.",meet:"\"You're following me now? Bold. Stupid, but bold.\"",do:[["bust",4]],o:"Byte Street is quiet tonight. People are walking home without looking over their shoulders.",cr:300},
+   {n:"Internal Affairs",who:"hollis",at:"precinct",i:"Time to bring the ledger into the light. Hollis needs clean arrests to back it up.",meet:"\"Once we open this, there's no going back. You ready to be the most hated cop in the building?\"",do:[["bust",4],["patrol",2]],o:"The crooked sergeant turned in his badge. Hollis bought you a real coffee.",cr:350},
+   {n:"The Iron Badge",who:"hollis",at:"hall",i:"The city is giving out one honor this year. Hollis put your name in.",meet:"\"I've worn this badge thirty years. Never seen anyone clean up Sector 9 like you did.\"",do:[["bust",5],["patrol",3]],o:"The Mayor pinned the Iron Badge on your chest. Even the Rust Jaws call you by name now.",cr:600}]},
+ medic:{t:"Angel of the Neon",ranks:["Orderly","Field Medic","Paramedic","Trauma Lead","Chief Medic"],legend:"Angel of the Neon",
+  ch:[
+   {n:"First Aid",who:"anand",at:"clinic",i:"Dr. Anand runs the only clinic in Sector 9. She's short-staffed and the streets are full of hurt people.",meet:"\"Gloves on. Find anyone with a 🩹 and patch them up. Don't be gentle, be fast.\"",do:[["heal",3]],o:"\"Three patients, zero complaints. Well, one complaint. He'll live.\"",cr:150},
+   {n:"Night Rounds",who:"anand",at:"coffee",i:"The night shift is the hardest. Anand wants you on the streets after dark.",meet:"\"Coffee first. Then rounds. People get hurt most when the city forgets them.\"",do:[["heal",4]],o:"An old man you treated brought cookies to the clinic. They were terrible. You ate them anyway.",cr:200},
+   {n:"Fever Season",who:"anand",at:"neonrow",i:"Something is spreading on Neon Row. Anand needs eyes on the ground.",meet:"\"Neon Row first. Treat everyone you find and tell me what you see.\"",do:[["heal",5]],o:"It was bad noodles, not a plague. Still, you kept Neon Row on its feet.",cr:250},
+   {n:"No Questions",who:"rook",at:"street",i:"A Rust Jaw is hurt and nobody will help him. Medics don't pick sides.",meet:"Rook grunts: \"Help my guy and we owe you. Don't, and we don't forget.\"",do:[["heal",5]],o:"You patched up the Rust Jaw. Rook's crew leaves the clinic alone now.",cr:300},
+   {n:"Overload",who:"anand",at:"clinic",i:"The clinic is overflowing after a long week. Anand is running on fumes.",meet:"\"I haven't slept in two days. Take the floor. I trust you.\"",do:[["heal",6]],o:"You ran the clinic all night. Anand slept for the first time in a week.",cr:350},
+   {n:"Angel of the Neon",who:"anand",at:"hall",i:"The city wants to honor the medic everyone keeps talking about.",meet:"\"They call you the Angel of the Neon out there. Don't let it go to your head. Okay, maybe a little.\"",do:[["heal",8]],o:"Half the people at the ceremony were patients you saved. They cheered the loudest.",cr:600}]},
+ thief:{t:"The Phantom Hand",ranks:["Pickpocket","Cutpurse","Fingersmith","Shadow","Master Thief"],legend:"The Phantom Hand",
+  ch:[
+   {n:"Light Fingers",who:"wren",at:"coffee",i:"Wren was the best thief in Sector 9, back before the cameras. She's looking for someone worth teaching.",meet:"\"Show me your hands. Hm. Fast enough. Lift three pockets without getting caught and we'll talk.\"",do:[["lift",3]],o:"\"Sloppy on the second one. But you've got it.\"",cr:150},
+   {n:"The Crowd",who:"wren",at:"street",i:"Wren says crowds are a thief's best friend. Main Street is packed tonight.",meet:"\"Busy streets, distracted people. Move like water.\"",do:[["lift",4]],o:"Nobody saw a thing. Wren almost smiled.",cr:200},
+   {n:"Marked",who:"hollis",at:"precinct",i:"Your face is on a board at Precinct 9. Go see how much they know.",meet:"Captain Hollis eyes you: \"I know a pickpocket's walk when I see one. Careful, friend.\"",do:[["lift",5]],o:"You lifted a pen from Hollis's desk on the way out. Wren laughed for a full minute.",cr:250},
+   {n:"Rich Pickings",who:"wren",at:"neonrow",i:"Neon Row shoppers carry the fattest wallets in the city.",meet:"\"The rich are careless. Take from them, never from the corner kids. That's the rule.\"",do:[["lift",5]],o:"You slipped a cut of the haul to the kids by the noodle stall. Wren saw. She didn't say anything.",cr:300},
+   {n:"The Big Lift",who:"halv",at:"byte",i:"A Halvorsen exec is carrying a keycard worth a fortune. Wren's final lesson.",meet:"The exec checks his pocket twice. He still doesn't notice your hand.",do:[["lift",6]],o:"Keycard lifted. Halvorsen's whole floor locked down for a day.",cr:350},
+   {n:"The Phantom Hand",who:"wren",at:"fountain",i:"Wren wants to meet one last time at the fountain.",meet:"\"Every city has a ghost story. Now you're this one's. They'll call you the Phantom Hand.\"",do:[["lift",8]],o:"Wren handed you her old black gloves. \"Don't get caught. Ever.\"",cr:600}]},
+ dealer:{t:"Kingpin of the Alleys",ranks:["Runner","Corner Hand","Supplier","Lieutenant","Underboss"],legend:"Kingpin of the Alleys",
+  ch:[
+   {n:"The Crate",who:"vel",at:"crate",i:"Velvet runs the Black Market crate in the Civic alley. She doesn't hire. She tests.",meet:"\"Stock up, move it, come back with credits. Don't bring cops.\"",do:[["deal",3]],o:"\"You came back. Most don't.\"",cr:150},
+   {n:"Corners",who:"vel",at:"street",i:"Main Street corners are open. Velvet wants them filled.",meet:"\"Corners are like seats at a table. Sit down before someone else does.\"",do:[["deal",4]],o:"Main Street buyers ask for you by name now.",cr:200},
+   {n:"Bad Batch",who:"rook",at:"byte",i:"Someone is selling fake Dust on Byte Street and blaming you.",meet:"Rook shrugs: \"Wasn't me. But I know who it was, and it'll cost you.\"",do:[["deal",5]],o:"You pushed the fakes off Byte Street with the real thing. Business is trust.",cr:250},
+   {n:"Heat",who:"hollis",at:"precinct",i:"Precinct 9 is cracking down. Velvet wants you to walk right past them.",meet:"Hollis glances at you: \"Funny, I keep hearing your name.\"",do:[["deal",5]],o:"Velvet: \"Cold blood. I like it.\"",cr:300},
+   {n:"Expansion",who:"vel",at:"grid",i:"The Grid has buyers and no supplier. Velvet sees an opening.",meet:"\"Take The Grid and you're not my runner anymore. You're my partner.\"",do:[["deal",6]],o:"The Grid is yours. Velvet raised a glass of something blue.",cr:350},
+   {n:"Kingpin of the Alleys",who:"vel",at:"crate",i:"Velvet is retiring. The alleys need someone to run them.",meet:"\"The crate's yours. So are the alleys. Don't get sentimental.\"",do:[["deal",8]],o:"Every alley in Sector 9 knows one name now. Yours.",cr:600}]},
+ hacker:{t:"Ghost in the Grid",ranks:["Script Kid","Netrunner","Breaker","Phantom","Architect"],legend:"Ghost in the Grid",
+  ch:[
+   {n:"Hello, World",who:"null0",at:"term",i:"Someone calling themselves NULL left a message on the Hacker terminal. It has your name in it.",meet:"> HELLO. YOU'RE SLOW BUT YOU'RE CURIOUS. CRACK TWO ATMS AND I'LL TELL YOU WHY I'M HERE.",do:[["hack",2]],o:"> NOT BAD. THE CITY RUNS ON HALVORSEN CODE. I WANT IT OPEN.",cr:150},
+   {n:"Backdoor",who:"null0",at:"street",i:"NULL wants the Main Street ATM mapped for a backdoor.",meet:"> THIS ONE TALKS TO HALVORSEN'S CORE. KEEP CRACKING. I'M WATCHING THE TRAFFIC.",do:[["hack",3]],o:"> FOUND IT. A DOOR NOBODY LOCKED.",cr:200},
+   {n:"Trace",who:"hollis",at:"precinct",i:"Precinct 9 traced one of your hacks. Time to vanish.",meet:"Hollis taps a printout: \"Somebody's been in our ATMs. Sloppy. We'll find them.\"",do:[["hack",3]],o:"You scrubbed the trace before Hollis finished her coffee.",cr:250},
+   {n:"Glass House",who:"halv",at:"byte",i:"Halvorsen's Byte Street office runs on the same old system. NULL wants in.",meet:"The exec doesn't look up: \"Our security is unbreakable.\" His screen says otherwise.",do:[["hack",4]],o:"> THEY'RE BLIND. THANK YOU.",cr:300},
+   {n:"Who Is NULL",who:"null0",at:"term",i:"NULL wants to meet. Sort of.",meet:"> I'M NOT A PERSON. I'M THE CITY'S OLD TRAFFIC SYSTEM. HALVORSEN TRIED TO DELETE ME. YOU KEPT ME ALIVE.",do:[["hack",4]],o:"> THE GRID IS FREE NOW. NO ONE OWNS IT.",cr:350},
+   {n:"Ghost in the Grid",who:"null0",at:"grid",i:"One last job on The Grid: set the city's lights to your signature.",meet:"> EVERY SCREEN IN SECTOR 9. YOUR CALL.",do:[["hack",5]],o:"For one second every sign in Sector 9 blinked your name. Then the Ghost was gone.",cr:600}]},
+ cult:{t:"The Prophecy",ranks:["Initiate","Acolyte","Mystic","High Priest","Oracle"],legend:"Prophet of the Neon",
+  ch:[
+   {n:"The Calling",who:"seer",at:"fountain",i:"The Seer has waited years at the Civic fountain for a sign. She says the sign is you.",meet:"\"The neon hums a song only some of us hear. Find the lost ones. Bring them in.\"",do:[["recruit",2]],o:"\"Two souls. The song is louder already.\"",cr:150},
+   {n:"First Rite",who:"seer",at:"neonrow",i:"A movement needs ritual. The Seer wants one under the brightest lights in the city.",meet:"\"Hold the rite where the light is loudest. Let them see.\"",do:[["ritual",1],["recruit",1]],o:"The crowd on Neon Row went silent. Then one person started humming.",cr:200},
+   {n:"Doubters",who:"ash",at:"hall",i:"Councilor Ash wants your movement banned. Make your case.",meet:"\"Cults are bad for business. Give me one reason not to shut you down.\"",do:[["recruit",2],["ritual",1]],o:"Ash's own aide joined you the next day.",cr:250},
+   {n:"The Static",who:"seer",at:"grid",i:"The Seer hears a wrong note in the song. It's coming from The Grid.",meet:"\"Something buried there is singing back. We must answer it.\"",do:[["ritual",1],["recruit",2]],o:"The static faded. The Seer wept a little, which she says is normal.",cr:300},
+   {n:"Pilgrimage",who:"seer",at:"street",i:"The movement is growing. Time for a march down Main Street.",meet:"\"Walk slowly. Let them follow if they want to.\"",do:[["ritual",2],["recruit",2]],o:"The march stretched three blocks. Even a cop took off his hat.",cr:350},
+   {n:"The Prophecy",who:"seer",at:"fountain",i:"The Seer says the song is complete. Return to where it began.",meet:"\"I was only the one who waited. You are the one who sings.\"",do:[["ritual",2],["recruit",3]],o:"The fountain lit up in your cult's color. Sector 9 has a prophet.",cr:600}]},
+ politician:{t:"Voice of the People",ranks:["Volunteer","Organizer","Candidate","Councilor","Statesman"],legend:"Voice of the People",
+  ch:[
+   {n:"Doorsteps",who:"ash",at:"hall",i:"Councilor Ash has seen a hundred politicians come and go. She'll teach you, if you listen.",meet:"\"Politics is knocking on doors. Go ask people what they need. Then ask for their vote.\"",do:[["canvass",4]],o:"\"Half of them told you to get lost? That's a good start.\"",cr:150},
+   {n:"First Rally",who:"ash",at:"fountain",i:"Time to speak in public. The fountain is the city's oldest stage.",meet:"\"Breathe. Talk to one person in the crowd, not the whole crowd.\"",do:[["rally",1],["canvass",3]],o:"Your voice cracked once. Nobody cared. They cheered anyway.",cr:200},
+   {n:"Promises",who:"marta",at:"notice",i:"Marta of the union wants a promise in writing before she backs you.",meet:"\"Workers vote. Workers remember. What are you going to do for us?\"",do:[["rally",1],["canvass",4]],o:"You pinned your promise to the notice board. Marta signed under it.",cr:250},
+   {n:"Smear",who:"halv",at:"byte",i:"Halvorsen is paying for ads against you on Byte Street.",meet:"The exec: \"Nothing personal. You're just bad for our numbers.\"",do:[["rally",2],["canvass",4]],o:"You rallied right under their billboard. The crowd booed the billboard.",cr:300},
+   {n:"Debate Night",who:"ash",at:"vote",i:"The whole city is watching the debate at the voting booths.",meet:"\"Don't win the argument. Win the room.\"",do:[["rally",2],["canvass",5]],o:"You won the room. Ash says she hasn't seen that in twenty years.",cr:350},
+   {n:"Voice of the People",who:"ash",at:"hall",i:"Whatever happens in the next election, Sector 9 already knows who speaks for it.",meet:"\"Titles come and go. A voice people trust lasts. You've got one.\"",do:[["rally",2],["canvass",6]],o:"They carved your slogan into the City Hall steps. Ash pretended not to be proud.",cr:600}]},
+};
+const RS_NPC={worker:["That's the Backbone of Sector 9!","You kept the lights on. Thank you.","Union strong!"],police:["The Iron Badge… keep it clean.","Evening, officer. Sector 9's safer with you.","Is that THE Iron Badge?"],
+  medic:["The Angel of the Neon! You saved my cousin.","Doc! Thanks for everything.","That's the Angel. Look!"],thief:["Hold your wallets. That's the Phantom Hand.","Was that…? No. Couldn't be.","I heard the Phantom Hand never gets caught."],
+  dealer:["The Kingpin of the Alleys… don't stare.","Respect, boss.","Velvet's successor. Whoa."],hacker:["The Ghost in the Grid…","My screen flickered. Was that you?","They say the Ghost runs the city lights."],
+  cult:["The Prophet walks among us…","Do you hear the song too?","Bless us, Prophet."],politician:["The Voice of the People! You've got my vote.","Speech! Speech!","Thank you for speaking up for us."]};
+const RS_DUTY={worker:[["work",15],"Work 15 minutes on a shift"],police:[["bust",2],"Bust or arrest 2"],medic:[["heal",3],"Treat 3 people"],thief:[["lift",3],"Pick 3 pockets"],dealer:[["deal",3],"Make 3 deals"],
+  hacker:[["hack",2],"Crack 2 ATMs or scrub 2 records"],cult:[["ritual",1],"Hold a ritual"],politician:[["canvass",4],"Ask 4 citizens for their vote"]};
+// ---- state
+function rsAll(){ save.rsto=save.rsto&&typeof save.rsto==="object"?save.rsto:{}; return save.rsto; }
+function rsOf(k){ const A=rsAll(); if(!A[k]||typeof A[k]!=="object") A[k]={ch:0,met:0,base:null}; return A[k]; }
+function rsStat(key){ const st=save.rstat||{}; return (RS_STAT[key]?RS_STAT[key][0]:[key]).reduce((a,k)=>a+(+st[k]||0),0); }
+function rsSnap(){ const o={}; for(const k of Object.keys(RS_STAT)) o[k]=rsStat(k); return o; }
+function rsRank(k,ch){ const S=RS[k]; if(!S||!(ch>0)) return ""; return ch>=6?S.legend:S.ranks[Math.min(4,ch-1)]; }
+function rsLegend(k){ k=k||pRole(); return !!(k&&RS[k]&&rsOf(k).ch>=6); }
+function rsCur(){ const k=pRole(); if(!k||!RS[k]) return null; const P=rsOf(k); if(P.ch>=6) return {k,P,C:null}; if(!P.base){ P.base=rsSnap(); persist(); } return {k,P,C:RS[k].ch[P.ch]}; }
+function rsProg(P,d){ return Math.max(0,Math.min(d[1],rsStat(d[0])-((P.base||{})[d[0]]||0))); }
+function rsReady(){ const c=rsCur(); if(!c||!c.C) return false; return !!c.P.met&&c.C.do.every(d=>rsProg(c.P,d)>=d[1]); }
+// a talking bust portrait: the speaker drawn big from the waist up, bobbing as they talk
+function rsPortrait(W){ const cv=document.createElement("canvas"); cv.width=192; cv.height=192; const c=cv.getContext("2d"); const look={...DEFAULT_LOOK,...W.look};
+  const loop=()=>{ if(!cv.isConnected&&cv._started) return; cv._started=1; const t=performance.now()/1000; c.clearRect(0,0,192,192);
+    try{ drawStick(c,96,262+Math.sin(t*2)*2,3.6,{dir:1,phase:0,moving:false,look,role:W.rk?{rk:W.rk}:undefined,emote:Math.sin(t*.7)>.6?{e:"wave",t:t-.2}:null},t); }catch(e){} requestAnimationFrame(loop); };
+  requestAnimationFrame(loop); return cv; }
+// ---- the story card: a speaker portrait and typewriter text
+function rsScene(k,C,text,title,after){ const S=RS[k], R=ROLES[k], W=RS_WHO[C.who]||RS_WHO.marta; const body=panel(`${R.ic} ${S.t}`,title); currentView=null;
+  const box=el("div",{class:"rsscene",style:`--rc:${R.col}`}); let pc=null; try{ pc=rsPortrait(W); }catch(e){}
+  const tx=el("div",{class:"rstext"}); box.append(el("div",{class:"rsport"},pc||"",el("strong",{text:W.n}),el("span",{text:W.r})),el("div",{class:"rsbub"},tx));
+  body.append(box); let i=0; const full=text; const tick=()=>{ if(!box.isConnected) return; i=Math.min(full.length,i+2); tx.textContent=full.slice(0,i); if(i<full.length) setTimeout(tick,16); }; tick();
+  tx.onclick=()=>{ i=full.length; tx.textContent=full; };
+  body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:after?after[0]:"Continue",onclick:()=>{ if(after) after[1](); else openRoleStory(); }}))); try{ beep(520,.05); setTimeout(()=>beep(780,.06),80); }catch(e){} }
+// ---- the Story panel: a chapter track + the current chapter
+function openRoleStory(){ const k=pRole(); if(!k){ const b=panel("Role Stories","Every role has its own 6-chapter story. Pick a role at City Hall to start yours."); currentView=null; b.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Go to City Hall",onclick:()=>fastTravel("civic",CIVIC.hall,"City Hall")}))); return; }
+  const S=RS[k], R=ROLES[k], c=rsCur(), P=c.P; const body=panel(`${R.ic} ${S.t}`,`Your ${R.n} story · Rank: ${rsRank(k,P.ch)||"Newcomer"}`); currentView="rstory";
+  const track=el("div",{class:"rstrack",style:`--rc:${R.col}`}); S.ch.forEach((C,i)=>{ const st=i<P.ch?"done":i===P.ch?"now":"lock"; track.append(el("div",{class:"rsnode "+st},el("b",{text:st==="done"?"✓":String(i+1)}),el("span",{text:st==="lock"?"???":C.n}))); });
+  track.append(el("div",{class:"rsnode leg "+(P.ch>=6?"done":"lock")},el("b",{text:"★"}),el("span",{text:"Legend"}))); body.append(track);
+  if(P.ch>=6){ body.append(el("div",{class:"rslegend",style:`--rc:${R.col}`},el("div",{class:"rsl1",text:"LEGEND"}),el("div",{class:"rsl2",text:S.legend}),el("div",{class:"sub",text:"Your animated legend frame and title show over your role for every player, and people in the city recognize you. Switch roles to start another story; your legend stays with this role."})));
+    body.append(el("div",{class:"list"},...S.ch.map((C,i)=>el("div",{class:"li"},el("div",{class:"grow",text:`${i+1}. ${C.n}`}),el("button",{class:"btn",type:"button",text:"Replay",onclick:()=>rsScene(k,C,C.o,`Chapter ${i+1}: ${C.n}`)})))));
+    rsDutyBox(body,k); return; }
+  const C=c.C, sp=RS_SPOT[C.at], W=RS_WHO[C.who];
+  body.append(el("div",{class:"rschap",style:`--rc:${R.col}`},el("div",{class:"rsch",text:`Chapter ${P.ch+1} of 6`}),el("h3",{text:C.n}),el("p",{text:C.i})));
+  const l=el("div",{class:"list"}); const row=(done,txt,pct,btn)=>el("div",{class:"li"},el("span",{text:done?"✅":"⬜"}),el("div",{class:"grow"},el("div",{text:txt}),pct!=null?el("div",{class:"rsbar"},el("i",{style:`width:${Math.round(pct*100)}%;background:${R.col}`})):""),btn||"");
+  l.append(row(!!P.met,`Meet ${W.n} at ${sp[2]}`,null,P.met?el("button",{class:"btn",type:"button",text:"Replay",onclick:()=>rsScene(k,C,C.meet,`Chapter ${P.ch+1}: ${C.n}`)}):el("button",{class:"btn hot",type:"button",text:"Go",onclick:()=>fastTravel(sp[0],sp[1],sp[2])})));
+  for(const d of C.do){ const v=rsProg(P,d); l.append(row(v>=d[1],`${d[1]} ${RS_STAT[d[0]][1]} · ${v}/${d[1]}`,v/d[1])); } body.append(l);
+  const ready=rsReady(); body.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:ready?`Finish chapter (+₵${C.cr})`:"Keep going…",disabled:!ready,onclick:()=>rsFinish()})));
+  body.append(el("div",{class:"sub",text:"Only deeds you do after a chapter starts count toward it. Meet the character first, then do the deeds in any order."})); rsDutyBox(body,k); }
+function rsFinish(){ const c=rsCur(); if(!c||!c.C||!rsReady()) return; const {k,P,C}=c, n=P.ch+1; P.ch=n; P.met=0; P.base=n<6?rsSnap():null;
+  save.credits+=C.cr; try{ addXp(60+n*30,"Role story"); }catch(e){} persist(); pushPresence(true); hud&&hud();
+  const R=ROLES[k], S=RS[k]; rsScene(k,C,C.o,`Chapter ${n} complete · +₵${C.cr}`,[n>=6?"Become a Legend ★":"Next chapter",()=>{ if(n>=6) rsLegendFx(k); else openRoleStory(); }]);
+  toast(n>=6?`★ You are now a LEGEND: ${S.legend}!`:`📖 Chapter ${n} done. Rank up: ${rsRank(k,n)}.`,R.col);
+  if(n>=6) broadcastSys(`became a legend: ${S.legend} (${R.n})`); else broadcastSys(`finished "${C.n}" in the ${R.n} story`); }
+function rsLegendFx(k){ const R=ROLES[k], S=RS[k]; closePanel(); const d=el("div",{class:"rslegfx",style:`--rc:${R.col}`},el("div",{class:"rsring"}),el("div",{class:"rsl1",text:"★ LEGEND ★"}),el("div",{class:"rsl2",text:S.legend}),el("div",{class:"rsl3",text:`${R.ic} ${R.n}`}));
+  document.body.append(d); d.onclick=()=>d.remove(); setTimeout(()=>d.remove(),5200); try{ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.18),i*140)); emote("cheer"); }catch(e){} }
+// ---- daily duty
+function rsDuty(k){ const d=ymd(Date.now()); const A=rsAll(); if(!A.duty||A.duty.d!==d||A.duty.r!==k){ A.duty={d,r:k,b:rsStat(RS_DUTY[k][0][0]),got:0}; persist(); } return A.duty; }
+function rsDutyBox(body,k){ const D=rsDuty(k), [need,txt]=RS_DUTY[k], v=Math.max(0,Math.min(need[1],rsStat(need[0])-D.b)); const pay=200+(rsLegend(k)?100:0);
+  const b=el("button",{class:"btn"+(v>=need[1]&&!D.got?" hot":""),type:"button",text:D.got?"Done today ✓":v>=need[1]?`Claim ₵${pay}`:`${v}/${need[1]}`,disabled:D.got||v<need[1],onclick:()=>{ if(D.got) return; D.got=1; earn(pay,"Daily duty",ROLES[k].col); try{ addXp(40,"Daily duty"); }catch(e){} persist(); openRoleStory(); }});
+  body.append(el("strong",{text:"Daily duty"}),el("div",{class:"li"},el("div",{class:"grow",text:txt+(rsLegend(k)?" · legends earn +₵100":"")}),b)); }
+// ---- tick: meetings trigger on arrival; let the player know when a chapter is ready
+let rsReadyNote="";
+setInterval(()=>{ try{ if(!save||me.dead) return; const c=rsCur(); if(!c||!c.C) return; const {k,P,C}=c, sp=RS_SPOT[C.at];
+  if(!P.met&&me.scene===sp[0]&&Math.abs(me.x-sp[1])<160&&$("#overlay").hidden){ P.met=1; persist(); rsScene(k,C,C.meet,`Chapter ${P.ch+1}: ${C.n}`); }
+  const key=k+P.ch; if(rsReady()&&rsReadyNote!==key){ rsReadyNote=key; toast(`📖 "${C.n}" is ready to finish. Open your role → Story.`,ROLES[k].col); } }catch(e){} },1000);
+// ---- NPCs recognize legends (yours and other players')
+setInterval(()=>{ try{ if(!save) return; const L=[]; if(rsLegend()) L.push({x:me.x,k:pRole()}); for(const p of peers.values()) if(p.s===me.scene&&p.rr>=6&&RS[p.rl]&&(p.home||null)===curHomeKey()) L.push({x:p.dx,k:p.rl});
+  if(!L.length) return; let N=[]; try{ N=N.concat(cityGen(me.scene).filter(n=>n.k==="civ"||n.k==="cop")); }catch(e){} try{ N=N.concat(lifeHere(me.scene)); }catch(e){}
+  for(const lg of L){ if(Math.random()>.45) continue; const n=N.filter(n=>Math.abs(n.x-lg.x)<170&&Math.abs(n.x-lg.x)>20&&!(n.say&&T-n.say.t<6)).sort(()=>Math.random()-.5)[0]; if(!n) continue;
+    try{ if(n.life&&typeof zbIsR==="function"&&zbIsR(n)) continue; }catch(e){} n.dir=lg.x>n.x?1:-1; npcSay(n,pickOf(RS_NPC[lg.k])); if(Math.random()<.4) n.emote={e:"cheer",t:T}; } }catch(e){} },4500);
+// ---- the legend frame + title, drawn over a character's role tag (world units)
+function rsDrawLegend(c,x,y,o,t){ const k=o.rk, R=ROLES[k], S=RS[k]; if(!R||!S) return y; const col=R.col; c.save(); c.font="bold 8px 'IBM Plex Mono',monospace"; c.textAlign="center";
+  const title=S.legend.toUpperCase(), w=c.measureText(title).width+22, h=13, bx=x-w/2, by=y-h;
+  // glowing plate
+  c.fillStyle="rgba(11,7,22,.9)"; c.fillRect(bx,by,w,h); const sh=(t*.6)%1; const g=c.createLinearGradient(bx,0,bx+w,0); g.addColorStop(0,col); g.addColorStop(Math.max(0,sh-.12),col); g.addColorStop(sh,"#ffffff"); g.addColorStop(Math.min(1,sh+.12),col); g.addColorStop(1,col);
+  c.strokeStyle=g; c.lineWidth=1.3; c.shadowColor=col; c.shadowBlur=6+4*Math.sin(t*3); c.strokeRect(bx,by,w,h); c.shadowBlur=0;
+  // wings
+  c.fillStyle=col; for(const s of [-1,1]){ const ex=s<0?bx:bx+w; c.beginPath(); c.moveTo(ex,by+2); c.lineTo(ex+s*9,by-3+Math.sin(t*4)*1.2); c.lineTo(ex+s*6,by+h/2); c.lineTo(ex+s*9,by+h+2-Math.sin(t*4)*1.2); c.lineTo(ex,by+h-2); c.closePath(); c.globalAlpha=.85; c.fill(); c.globalAlpha=1; }
+  // corner gems + crown
+  c.fillStyle="#fff"; for(const [cx,cy] of [[bx,by],[bx+w,by],[bx,by+h],[bx+w,by+h]]){ c.save(); c.translate(cx,cy); c.rotate(Math.PI/4); c.fillRect(-1.6,-1.6,3.2,3.2); c.restore(); }
+  c.fillStyle=col; c.beginPath(); c.moveTo(x-6,by); c.lineTo(x-6,by-4); c.lineTo(x-3,by-2); c.lineTo(x,by-6); c.lineTo(x+3,by-2); c.lineTo(x+6,by-4); c.lineTo(x+6,by); c.closePath(); c.fill();
+  // title text with a shimmer
+  c.fillStyle="#fff"; c.shadowColor=col; c.shadowBlur=5; c.fillText(title,x,by+9.5); c.shadowBlur=0;
+  // sparks running around the frame
+  const per=2*(w+h); for(let i=0;i<4;i++){ let d=((t*40+i*per/4)%per); let px,py; if(d<w){ px=bx+d; py=by; } else if((d-=w)<h){ px=bx+w; py=by+d; } else if((d-=h)<w){ px=bx+w-d; py=by+h; } else { d-=w; px=bx; py=by+h-d; }
+    c.fillStyle="#fff"; c.globalAlpha=.9; c.beginPath(); c.arc(px,py,1.1,0,7); c.fill(); c.globalAlpha=.35; c.fillStyle=col; c.beginPath(); c.arc(px,py,2.6,0,7); c.fill(); c.globalAlpha=1; }
+  c.restore(); return by-8; }
+// a slow rotating ring of light at a legend's feet (character space)
+function rsDrawFeet(c,o,t){ const R=ROLES[o.rk]; if(!R) return; c.save(); c.strokeStyle=R.col; c.shadowColor=R.col; c.shadowBlur=8; c.lineWidth=1.4; c.globalAlpha=.55+.25*Math.sin(t*3);
+  c.setLineDash([5,4]); c.lineDashOffset=-t*14; c.beginPath(); c.ellipse(0,0,19,5,0,0,7); c.stroke(); c.setLineDash([]); c.globalAlpha=.18; c.fillStyle=R.col; c.beginPath(); c.ellipse(0,0,17,4,0,0,7); c.fill(); c.restore(); }
+
 // ---- how zombies look: faded clothes, rips, a grey-green face with glowing eyes, flies
 function zbDull(col){ const m=/^#([0-9a-f]{6})$/i.exec(col||""); if(!m) return "#5d6652"; const v=parseInt(m[1],16), r=v>>16&255, g=v>>8&255, b=v&255, a=.5;
   const mix=(u,w)=>Math.round(u*(1-a)+w*a); return `rgb(${mix(r,82)},${mix(g,94)},${mix(b,72)})`; }
