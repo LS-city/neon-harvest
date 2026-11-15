@@ -19,7 +19,7 @@ const two=n=>String(n).padStart(2,"0");
 
 let USER=null, DB=null, ME=null, ADMIN=false, NAME="Runner";
 const S={dex:{look:{color:"cyan",frame:"solid",symbol:""},pages:{},pnames:{},radarOn:false}, bgs:{}, card:null, fc:null, sc:null,
-  venues:[], pres:[], cards:{}, allCards:null, pos:null, page:1, tab:"pages", radarKm:5};
+  venues:[], pres:[], cards:{}, reviews:{}, allCards:null, pos:null, page:1, tab:"pages", radarKm:5};
 let saveT=0, presT=0, unsubPres=null;
 
 /* ---------------- helpers ---------------- */
@@ -58,6 +58,20 @@ function showQR(t,id,name){ const url=linkFor(t,id);
     <div class="qrbox"><img src="${esc(qrSrc(url))}" alt="QR code linking to ${esc(name)} on MyDex" width="260" height="260"></div>
     <div class="mono small" style="word-break:break-all">${esc(url)}</div>
     <div class="btns"><a class="btn pri linkbtn" href="${esc(qrSrc(url))}" target="_blank" rel="noopener">Open QR to save or print</a><button class="btn" data-a="shareLink" data-v="${t}:${esc(id)}">Share link</button></div>`); }
+/* Reviews: mdReviews/<businessId>_<uid> = {v, uid, name, stars 1-5, text, at}. */
+const revsFor=id=>(S.reviews[id]||[]).slice().sort((a,b)=>b.at-a.at);
+function ratingOf(id){ const r=S.reviews[id]||[]; if(!r.length) return null; return {avg:r.reduce((n,x)=>n+(+x.stars||0),0)/r.length,n:r.length}; }
+const starRow=(n,size)=>{ let h=`<span class="stars" style="font-size:${size||14}px" aria-label="${(+n).toFixed(1)} out of 5 stars">`; for(let i=1;i<=5;i++) h+=`<i class="${n>=i-.25?"on":n>=i-.75?"half":""}">&#9733;</i>`; return h+"</span>"; };
+const ratingTxt=id=>{ const r=ratingOf(id); return r?`${starRow(r.avg,13)} <span class="small">${r.avg.toFixed(1)} (${r.n})</span>`:`<span class="dim small">No reviews yet</span>`; };
+function reviewsTab(id){ const list=revsFor(id), mine=list.find(r=>r.uid===ME), rt=ratingOf(id);
+  const form=`<div class="revform"><b>${mine?"Edit your review":"Write a review"}</b>
+    <div class="starpick" role="radiogroup" aria-label="Your rating">${[1,2,3,4,5].map(n=>`<button role="radio" aria-checked="${S.revStars===n}" aria-label="${n} star${n>1?"s":""}" class="${(S.revStars||0)>=n?"on":""}" data-a="revStar" data-v="${n}" data-b="${esc(id)}">&#9733;</button>`).join("")}</div>
+    <label class="fld"><span class="sr">Your review</span><textarea id="revtext" maxlength="500" rows="3" placeholder="What was it like? (optional)">${esc(S.revText!=null?S.revText:(mine?mine.text:""))}</textarea></label>
+    <div class="msg" id="revmsg" role="status"></div>
+    <div class="btns"><button class="btn gold" data-a="revSave" data-v="${esc(id)}">${mine?"Update review":"Post review"}</button>${mine?`<button class="btn" data-a="revDel" data-v="${esc(id)}">Delete my review</button>`:""}</div></div>`;
+  return `${rt?`<div class="revsum">${starRow(rt.avg,22)}<div><b style="font-size:20px">${rt.avg.toFixed(1)}</b> <span class="dim">out of 5 · ${rt.n} review${rt.n>1?"s":""}</span></div></div>`:`<p class="dim">No reviews yet. Be the first.</p>`}
+    ${form}
+    ${list.map(r=>`<div class="item rev"><div class="col" style="flex:1"><div class="row between"><b>${esc(r.name||"Player")}${r.uid===ME?" (you)":""}</b>${starRow(r.stars,13)}</div>${r.text?`<span style="white-space:pre-line">${esc(r.text)}</span>`:""}<span class="dim small">${new Date(r.at).toLocaleDateString()}</span></div>${ADMIN&&r.uid!==ME?`<button class="btn sm" data-a="revMod" data-v="${esc(id+"_"+r.uid)}">Remove</button>`:""}</div>`).join("")}`; }
 /* ---------------- sheet (pop-up panel) ---------------- */
 function sheet(html,onOpen){ const s=$("#sheet"); s.innerHTML=`<div class="sheet-card" role="dialog" aria-modal="true"><button class="x" data-a="closeSheet" aria-label="Close">Close</button>${html}</div>`; s.hidden=false; if(onOpen) onOpen(s); }
 function closeSheet(){ $("#sheet").hidden=true; $("#sheet").innerHTML=""; }
@@ -86,7 +100,7 @@ function gamesPage(title,doc,list,findLbl){ const games=doc&&doc.games||[], plat
   <div class="btns"><button class="btn pri" data-a="classic">Edit / fights</button><button class="btn" data-a="tab" data-v="discover">${findLbl}</button></div>`; }
 function bizCard(v,pageNo){ return `<section class="card biz">
     <div class="row between"><span class="biztag">${bizIcon(14)} BUSINESS</span>${pageNo?`<span class="small" style="color:#e8d9a8">Saved to page ${pageNo}</span>`:""}</div>
-    <div class="row">${v.logo?`<img class="logo" src="${esc(v.logo)}" alt="">`:`<div class="logo">${bizIcon(26)}</div>`}<div class="col"><div class="nm">${esc(v.name)}</div><div class="small" style="color:#e8d9a8">${esc(v.type||"Local business")}</div></div></div>
+    <div class="row">${v.logo?`<img class="logo" src="${esc(v.logo)}" alt="">`:`<div class="logo">${bizIcon(26)}</div>`}<div class="col"><div class="nm">${esc(v.name)}</div><div class="small" style="color:#e8d9a8">${esc(v.type||"Local business")}</div><button class="ratebtn" data-a="bizTab" data-v="${esc(v.id)}" data-t="reviews">${ratingTxt(v.id)}</button></div></div>
     ${v.info?`<p class="bio" style="color:#efe3bd">${esc(v.info)}</p>`:""}
     ${bizHighlights(v)}
     <button class="btn gold" data-a="biz" data-v="${esc(v.id)}">Open business page</button>
@@ -131,17 +145,19 @@ function addToPage(t,id){ for(let n=4;n<=PAGES;n++){ const e=S.dex.pages[n]; if(
 
 /* ---------------- business page (player view) ---------------- */
 function openBiz(id,tab){ const v=S.venues.find(x=>x.id===id); if(!v) return; tab=tab||"info";
+  if(S.revFor!==id){ S.revFor=id; const m=(S.reviews[id]||[]).find(r=>r.uid===ME); S.revStars=m?+m.stars:0; S.revText=null; } S.bizTabNow=tab;
   const sp=liveSpecials(v), ev=liveEvents(v);
-  const tabs=[["info","Info"],["specials","Specials"],["events","Events"],["rewards","Rewards"],["inventory","Inventory"],["menu","Menu"]].filter(([k])=>k==="info"||(k==="specials"?sp.length:k==="events"?ev.length:(v[k]&&v[k].length)));
+  const tabs=[["info","Info"],["specials","Specials"],["events","Events"],["rewards","Rewards"],["inventory","Inventory"],["menu","Menu"],["reviews","Reviews"]].filter(([k])=>k==="info"||k==="reviews"||(k==="specials"?sp.length:k==="events"?ev.length:(v[k]&&v[k].length)));
   let saved=0; for(let n=4;n<=PAGES;n++){ const e=S.dex.pages[n]; if(e&&e.t==="biz"&&e.id===id) saved=n; }
   const d=S.pos&&v.lat!=null?km(S.pos,{lat:v.lat,lng:v.lng}):null;
   const list=k=>(v[k]||[]).map(it=>`<div class="item"><div class="col"><b>${esc(it.name)}</b>${it.note?`<span class="dim small">${esc(it.note)}</span>`:""}</div>${it.price?`<span class="mono" style="color:#e8d9a8">${esc(it.price)}</span>`:""}</div>`).join("");
   const body=tab==="info"?`${v.info?`<p class="bio">${esc(v.info)}</p>`:""}${v.hours?`<div class="item"><b>Hours</b><span>${esc(v.hours)}</span></div>`:""}${v.address?`<div class="item"><b>Address</b><span>${esc(v.address)}</span></div>`:""}${d!=null?`<div class="item"><b>Distance</b><span>${distTxt(d)}</span></div>`:""}`
     :tab==="specials"?sp.map(it=>`<div class="item"><div class="col"><b>${esc(it.name)}</b>${it.note?`<span class="dim small">${esc(it.note)}</span>`:""}${it.until?`<span class="small" style="color:#ffb27a">Ends ${esc(fmtDay(it.until))}</span>`:""}</div>${it.price?`<span class="mono" style="color:#e8d9a8">${esc(it.price)}</span>`:""}</div>`).join("")
     :tab==="events"?ev.map(it=>`<div class="item ev"><div class="evdate">${it.date?`<b>${esc(new Date(dayOf(it.date)).getDate())}</b><span>${esc(new Date(dayOf(it.date)).toLocaleDateString(undefined,{month:"short"}))}</span>`:"<b>TBA</b>"}</div><div class="col" style="flex:1"><b>${esc(it.name)}</b><span class="small" style="color:#e8d9a8">${esc(fmtDay(it.date))}${it.time?" · "+esc(it.time):""}</span>${it.note?`<span class="dim small">${esc(it.note)}</span>`:""}</div>${it.price?`<span class="mono" style="color:#e8d9a8">${esc(it.price)}</span>`:""}</div>`).join("")
+    :tab==="reviews"?reviewsTab(id)
     :tab==="rewards"?list("rewards")+`<p class="dim small">Show your MyDex at the counter to claim a reward.</p>`:list(tab);
   sheet(`<div class="bizhead">${v.banner?`<img src="${esc(v.banner)}" alt="">`:""}<span class="biztag">${bizIcon(14)} BUSINESS</span></div>
-    <div class="row" style="margin-top:-30px;position:relative">${v.logo?`<img class="logo" src="${esc(v.logo)}" alt="">`:`<div class="logo">${bizIcon(26)}</div>`}<div class="col"><div class="nm">${esc(v.name)}</div><div class="small" style="color:#e8d9a8">${esc(v.type||"Local business")}</div></div></div>
+    <div class="row" style="margin-top:-30px;position:relative">${v.logo?`<img class="logo" src="${esc(v.logo)}" alt="">`:`<div class="logo">${bizIcon(26)}</div>`}<div class="col"><div class="nm">${esc(v.name)}</div><div class="small" style="color:#e8d9a8">${esc(v.type||"Local business")}</div><button class="ratebtn" data-a="bizTab" data-v="${esc(id)}" data-t="reviews">${ratingTxt(id)}</button></div></div>
     <div class="btns">${saved?`<button class="btn" data-a="goPageClose" data-v="${saved}">On your page ${saved}</button>`:`<button class="btn gold" data-a="addBiz" data-v="${esc(id)}">+ Add to page</button>`}<button class="btn" data-a="shareLink" data-v="b:${esc(id)}">Share</button></div>
     <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" class="${k===tab?"on":""}" data-a="bizTab" data-v="${esc(id)}" data-t="${k}">${l}</button>`).join("")}</div>
     <div class="tabbody">${body||`<p class="dim">Nothing here yet.</p>`}</div>`); }
@@ -176,7 +192,7 @@ async function renderDiscover(){ const v=$("#view"); const q=(S.q||"").toLowerCa
   const pl=(S.allCards||[]).filter(c=>c.id!==ME&&(!q||String(c.name||"").toLowerCase().includes(q))).slice(0,40);
   const had=document.activeElement&&document.activeElement.id==="q";
   v.innerHTML=`<div class="pad"><h1>Discover</h1><label class="srch"><span class="sr">Search</span><input id="q" type="search" placeholder="Search businesses and players" value="${esc(S.q||"")}"></label>
-    <h2 style="color:${BIZ}">Businesses</h2>${bz.length?bz.map(b=>`<button class="lrow bizrow" data-a="biz" data-v="${esc(b.id)}"><span class="dia sm"></span><b>${esc(b.name)}</b><span class="dim small">${esc(b.type||"")}</span></button>`).join(""):`<p class="dim">${q?"No businesses match.":"No businesses on MyDex yet."}</p>`}
+    <h2 style="color:${BIZ}">Businesses</h2>${bz.length?bz.map(b=>`<button class="lrow bizrow" data-a="biz" data-v="${esc(b.id)}"><span class="dia sm"></span><b>${esc(b.name)}</b><span class="dim small">${esc(b.type||"")}</span><span style="margin-left:auto">${ratingOf(b.id)?`&#9733; ${ratingOf(b.id).avg.toFixed(1)}`:""}</span></button>`).join(""):`<p class="dim">${q?"No businesses match.":"No businesses on MyDex yet."}</p>`}
     <h2>Players</h2>${pl.length?pl.map(c=>`<button class="lrow" data-a="player" data-v="${esc(c.id)}">${c.photo?`<img class="av" style="width:32px;height:32px" src="${esc(c.photo)}" alt="">`:`<i class="dot" style="background:${accent()}"></i>`}<b>${esc(c.name)}</b></button>`).join(""):`<p class="dim">${S.allCards&&S.allCards.length?"No players match.":"Loading players..."}</p>`}</div>`;
   if(had){ const i=$("#q"); i.focus(); i.setSelectionRange(i.value.length,i.value.length); } }
 
@@ -204,6 +220,7 @@ async function setBg(key,val){ const ref=DB.doc("data/users/"+ME+"/dexbg_"+key);
 const myBiz=()=>S.venues.filter(v=>v.biz&&(v.staff||[]).includes(ME));
 function renderBizTab(){ const v=$("#view"), mine=ADMIN?S.venues.filter(x=>x.biz):myBiz();
   v.innerHTML=`<div class="pad"><h1 style="color:${BIZ}">My business</h1>${mine.length?mine.map(b=>`<section class="card biz"><div class="row between"><b>${esc(b.name)}</b><span class="small" style="color:${isActive(b)?"#3dff9a":"#ff9a3d"}">${isActive(b)?"Live":"Not live"}</span></div>
+      <div class="row" style="gap:8px">${ratingTxt(b.id)}<button class="btn sm" data-a="bizTab" data-v="${esc(b.id)}" data-t="reviews" style="margin-left:auto">Read reviews</button></div>
       <div class="stats"><div><span class="dim small">Specials</span><b>${liveSpecials(b).length}</b></div><div><span class="dim small">Upcoming events</span><b>${liveEvents(b).length}</b></div></div>
       ${b.paidUntil?`<div class="small" style="color:#e8d9a8">Plan: $${BIZ_PRICE}/mo · paid through ${new Date(b.paidUntil).toLocaleDateString()}</div>`:""}
       <div class="btns"><button class="btn gold" data-a="editBiz" data-v="${esc(b.id)}">Edit page</button><button class="btn" data-a="biz" data-v="${esc(b.id)}">Preview</button><button class="btn" data-a="bizQR" data-v="${esc(b.id)}">QR code</button><button class="btn" data-a="shareLink" data-v="b:${esc(b.id)}">Share link</button></div></section>`).join("")
@@ -270,6 +287,13 @@ const ACT={
   myQR:()=>showQR("p",ME,S.card&&S.card.name||NAME),
   shareLink:v=>{ const k=v.indexOf(":"), t=v.slice(0,k), id=v.slice(k+1); const nm=t==="b"?((S.venues.find(x=>x.id===id)||{}).name||"this business"):((S.cards[id]&&S.cards[id].name)||"this player");
     shareLink(linkFor(t,id),t==="b"?"Check out "+nm+" on MyDex":(id===ME?"Add me on MyDex: "+nm:"Check out "+nm+" on MyDex")); },
+  revStar:(v,el)=>{ const t=$("#revtext"); if(t) S.revText=t.value; S.revStars=+v; openBiz(el.dataset.b,"reviews"); },
+  revSave:async v=>{ const t=$("#revtext"), msg=$("#revmsg"); const text=(t?t.value:"").trim().slice(0,500); if(!S.revStars){ msg.textContent="Tap the stars to pick a rating."; return; }
+    const nm=String(S.card&&S.card.name||NAME).slice(0,24);
+    S.revText=null; try{ await DB.doc("mdReviews/"+v+"_"+ME).set({v,uid:ME,name:nm,stars:S.revStars,text,at:Date.now()}); toast("Review posted. Thanks!"); openBiz(v,"reviews"); }
+    catch(e){ S.revText=text; msg.textContent=e&&e.code==="permission-denied"?"MyDex couldn't post this review. If you were removed from MyDex you can't post reviews.":"Couldn't post. Check your connection."; } },
+  revDel:async(v,el)=>{ if(!armed(el,"Tap again to delete")) return; try{ await DB.doc("mdReviews/"+v+"_"+ME).delete(); S.revStars=0; S.revText=null; toast("Review deleted."); }catch(e){ toast("Couldn't delete."); } },
+  revMod:async(v,el)=>{ if(!armed(el,"Tap again")) return; try{ await DB.doc("mdReviews/"+v).delete(); toast("Review removed."); }catch(e){ toast("Couldn't remove."); } },
   bizQR:v=>{ const b=S.venues.find(x=>x.id===v); showQR("b",v,b?b.name:"this business"); },
   goPage:v=>{ closeSheet(); goPage(+v); }, goPageClose:v=>{ closeSheet(); S.tab="pages"; render(); setTimeout(()=>goPage(+v),50); },
   pagePicker, biz:v=>openBiz(v), bizTab:(v,el)=>openBiz(v,el.dataset.t), player:v=>openPlayer(v),
@@ -329,6 +353,8 @@ async function start(){
   DB.doc("mdCards/"+ME).onSnapshot(s=>{ S.card=s.exists?s.data():null; if(S.card) S.cards[ME]=S.card; if(S.tab==="pages"||S.tab==="me") render(); },()=>{});
   DB.doc("hfcCards/"+ME).onSnapshot(s=>{ S.fc=s.exists?s.data():null; if(S.tab==="pages") renderPages(); },()=>{});
   DB.doc("cscCards/"+ME).onSnapshot(s=>{ S.sc=s.exists?s.data():null; if(S.tab==="pages") renderPages(); },()=>{});
+  DB.collection("mdReviews").onSnapshot(s=>{ const g={}; s.docs.forEach(d=>{ const r=d.data(); if(r&&r.v){ (g[r.v]=g[r.v]||[]).push(r); } }); S.reviews=g;
+    if(!$("#sheet").hidden&&S.revFor&&S.bizTabNow==="reviews"&&!(document.activeElement&&document.activeElement.id==="revtext")) openBiz(S.revFor,"reviews"); if(S.tab!=="me") render(); },()=>{});
   DB.collection("mdVenues").onSnapshot(s=>{ S.venues=s.docs.map(d=>({id:d.id,...d.data()})); render(); },()=>{});
   $("#boot").hidden=true; $("#app").hidden=false; render();
   $("#pages").addEventListener("scroll",()=>{ clearTimeout(S.scT); S.scT=setTimeout(updIndicator,60); },{passive:true});
