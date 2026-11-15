@@ -104,6 +104,15 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 .pill{font-size:11px;font-weight:700;color:#120A20;padding:4px 10px;border-radius:999px}
 .erow{display:grid;grid-template-columns:1fr 100px;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
 .erow .i_note{grid-column:1/-1}.erow button{grid-column:1/-1}
+.btn.warn{background:#ff4a5a;border-color:#ff4a5a;color:#fff}
+.hl{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid #5a4a1c;background:#2A2310;color:var(--text)}
+.hlk{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--biz)}
+.item.ev{justify-content:flex-start}
+.evdate{flex:none;width:48px;height:52px;border-radius:10px;background:#2A2310;border:1px solid var(--biz);color:var(--biz);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.evdate b{font:700 20px "Space Grotesk",system-ui}.evdate span{font-size:11px;text-transform:uppercase}
+.mini{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--dim)}
+.mini input{width:100%;min-height:44px;border-radius:12px;border:1px solid #3A3F63;background:#0A0B14;padding:8px 12px;font-size:16px;color:var(--text)}
+.pg:disabled{opacity:.35}
 .msg{color:#ff7a85;min-height:1em;margin:8px 0}
 #sheet{position:fixed;inset:0;z-index:20;background:rgba(5,6,12,.7);display:flex;align-items:flex-end;justify-content:center}
 .sheet-card{width:min(520px,100%);max-height:88vh;overflow-y:auto;background:#10121F;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 18px calc(22px + var(--sb));display:flex;flex-direction:column;gap:12px}
@@ -111,7 +120,8 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 .bizhead{position:relative;height:130px;border-radius:14px;background:#2A2310;border-bottom:3px solid var(--biz);overflow:hidden;flex:none}
 .bizhead img{width:100%;height:100%;object-fit:cover}
 .bizhead .biztag{position:absolute;left:12px;top:12px}
-.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border-bottom:1px solid var(--line)}
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(86px,1fr);overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
 .tabs button{min-height:44px;background:none;border:0;border-bottom:2px solid transparent;color:var(--dim)}
 .tabs button.on{border-color:var(--biz);color:var(--biz);font-weight:600}
 .tabbody{display:flex;flex-direction:column;gap:8px}
@@ -141,7 +151,7 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 </div>
 <div id="sheet" hidden></div>
 <div id="install" hidden><span id="instxt">Add MyDex to your home screen</span><button class="go" id="instgo" type="button">Install</button><button class="no" id="instno" type="button">Later</button></div>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 <script>
 (function(){
   if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
