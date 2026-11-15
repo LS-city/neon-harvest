@@ -42,6 +42,8 @@ select{background:#0b0221;color:var(--text);border:1px solid var(--line);border-
 .hype{display:flex;align-items:center;gap:6px}.hype i{display:block;width:90px;height:8px;border-radius:4px;background:#1c0b3a;overflow:hidden}.hype i b{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--acc),#ffd319);transition:width .1s}
 .hype.od{border-color:#ffd319;color:#ffd319;box-shadow:0 0 12px #ffd319}
 .stage{will-change:transform}
+.stage.recording .status,.stage.recording .focusbar{display:none!important}
+.stage.clean canvas{visibility:hidden}
 .err{color:#ff6b8a;font-size:13px;min-height:16px;margin-top:4px}
 .small{color:var(--muted);font-size:13px}
 .kb{margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:center}
@@ -119,8 +121,9 @@ select{background:#0b0221;color:var(--text);border:1px solid var(--line);border-
       <div class="row">
         <span class="t">Video</span>
         <select id="recMode">
-          <option value="visuals">Visuals + beat</option>
-          <option value="screen">Whole screen (with game)</option>
+          <option value="game">Game only (no effects)</option>
+          <option value="screen">Game + effects</option>
+          <option value="visuals">Synthwave visuals only</option>
         </select>
         <button id="recBtn">● RECORD VIDEO</button>
       </div>
@@ -375,7 +378,7 @@ focusbar.onclick=()=>{frame.blur();window.focus();focusbar.style.display='none';
 window.addEventListener('focus',()=>focusbar.style.display='none');
 
 /* ================= RECORDING ================= */
-let recorder=null,chunks=[],recStart=0,recTimer=null,dispStream=null,recs=[],recN=0;
+let recClean=false,recCropped=false,recorder=null,chunks=[],recStart=0,recTimer=null,dispStream=null,recs=[],recN=0;
 const recBtn=document.getElementById('recBtn'),recChip=document.getElementById('recChip');
 function pickMime(){const opts=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];return opts.find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';}
 recBtn.onclick=async()=>{
@@ -384,8 +387,13 @@ recBtn.onclick=async()=>{
   const mode=document.getElementById('recMode').value;let stream;
   if(mode==='visuals'){setView('visuals');stream=new MediaStream([...cv.captureStream(60).getVideoTracks(),...recDest.stream.getAudioTracks()]);}
   else{
+    if(!frame.src){alertBox('Load your game first (SHOW ON SCREEN), then record.');return;}
+    setView('game');
     try{dispStream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:60},audio:true,preferCurrentTab:true,selfBrowserSurface:'include'});}
     catch(err){alertBox('Screen recording was cancelled or isn\'t allowed. Pick "This tab" when your browser asks.');return;}
+    recCropped=false;const vt=dispStream.getVideoTracks()[0];
+    try{if(window.CropTarget&&vt.cropTo){await vt.cropTo(await CropTarget.fromElement(stageEl));recCropped=true;}}catch(_){}
+    recClean=mode==='game';stageEl.classList.add('recording');if(recClean)stageEl.classList.add('clean');
     const aud=dispStream.getAudioTracks().length?dispStream.getAudioTracks():recDest.stream.getAudioTracks();
     stream=new MediaStream([...dispStream.getVideoTracks(),...aud]);
     dispStream.getVideoTracks()[0].addEventListener('ended',()=>{if(recorder)recorder.stop();});
@@ -395,9 +403,10 @@ recBtn.onclick=async()=>{
   recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
   recorder.onstop=()=>{const type=recorder.mimeType||mime||'video/webm';const blob=new Blob(chunks,{type});const dur=(performance.now()-recStart)/1000;
     addRec(blob,type,dur);recorder=null;clearInterval(recTimer);recChip.style.display='none';recBtn.textContent='● RECORD VIDEO';recBtn.classList.remove('recon');
-    if(dispStream){dispStream.getTracks().forEach(t=>t.stop());dispStream=null;}};
+    if(dispStream){dispStream.getTracks().forEach(t=>t.stop());dispStream=null;}
+    recClean=false;stageEl.classList.remove('recording','clean');};
   recorder.start(500);recStart=performance.now();recChip.style.display='inline';recBtn.textContent='■ STOP VIDEO';recBtn.classList.add('recon');
-  recTimer=setInterval(()=>{const s=Math.floor((performance.now()-recStart)/1000);recChip.textContent='● REC '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0');},250);
+  recTimer=setInterval(()=>{const s=Math.floor((performance.now()-recStart)/1000);const tm=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');recChip.textContent='● REC '+tm;recBtn.textContent='■ STOP VIDEO '+tm;},250);
 };
 function alertBox(msg){linkErr.style.color='#ff6b8a';linkErr.textContent=msg;}
 function addRec(blob,type,dur){recN++;const ext=type.includes('mp4')?'.mp4':'.webm';
@@ -530,10 +539,10 @@ function draw(now){
     const vy=(now/12)%(H+120)-60;const vg=g.createLinearGradient(0,vy-40,0,vy+40);vg.addColorStop(0,'rgba(255,255,255,0)');vg.addColorStop(.5,'rgba(255,255,255,.05)');vg.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=vg;g.fillRect(0,vy-40,W,80);
     g.fillStyle='rgba(0,0,0,.12)';for(let y=0;y<H;y+=3)g.fillRect(0,y,W,1);}
   /* shake the whole stage (game too), hype meter, overdrive */
-  const sh=fx.shake*8*fxMul;stageEl.style.transform=sh>.3?'translate('+rnd(-sh,sh)+'px,'+rnd(-sh,sh)+'px)':'';
+  const sh=recClean?0:fx.shake*8*fxMul;stageEl.style.transform=sh>.3?'translate('+rnd(-sh,sh)+'px,'+rnd(-sh,sh)+'px)':'';
   hype=Math.max(0,hype-dt*.12);hypeBar.style.width=(hype*100)+'%';
   const wasOd=od;od=hype>.7;if(od&&!wasOd)pops.push({t:'OVERDRIVE!',life:1,y:H*.42});hypeChip.classList.toggle('od',od);
-  frame.style.filter=od&&fxOver?'hue-rotate('+((now/15)%360)+'deg) saturate(1.4)':(fx.glitch>.5&&fxOver?'contrast(1.3) saturate(1.6)':'');
+  frame.style.filter=recClean?'':od&&fxOver?'hue-rotate('+((now/15)%360)+'deg) saturate(1.4)':(fx.glitch>.5&&fxOver?'contrast(1.3) saturate(1.6)':'');
   fx.shake=Math.max(0,fx.shake-dt*6);fx.glitch=Math.max(0,fx.glitch-dt*3.5);
   fx.kick=Math.max(0,fx.kick-dt*4);fx.bass=Math.max(0,fx.bass-dt*5);fx.flash=Math.max(0,fx.flash-dt*1.6);
   requestAnimationFrame(draw);
