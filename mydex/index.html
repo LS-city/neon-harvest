@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MyDex</title>
-<meta name="description" content="MyDex: your gamer card, Fight Card and Cyber Soldier Card in one place. Find players, trade badges, and discover local spots on Radar.">
-<meta name="theme-color" content="#080c1c">
+<meta name="description" content="MyDex: your gamer card, Fight Card and Cyber Soldier Card in one place. Save local businesses and players to your pages and find them on Radar.">
+<meta name="theme-color" content="#0A0B14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,20 +13,117 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-:root{color-scheme:dark}
+:root{color-scheme:dark;--bg:#0A0B14;--sur:#141626;--sur2:#1E2240;--line:#262A44;--text:#EDEFFA;--dim:#9AA0C3;--acc:#7ceaff;--biz:#FFC24B;--adm:#b98bff;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:#080c1c;color:#eef2ff;font:15px system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
-#dex{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}
-#boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
-#boot b{font:700 34px system-ui;letter-spacing:.14em;color:#7ceaff}
-#boot p{margin:0;color:#b8c2e8;max-width:320px;line-height:1.5}
-#boot[hidden]{display:none}
-#install{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;display:flex;gap:8px;align-items:center;background:#111a3a;border:1px solid #7ceaff;color:#eef2ff;padding:10px 12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:calc(100% - 24px)}
-#install[hidden]{display:none}
-#install button{font:600 14px system-ui;border-radius:8px;padding:9px 12px;border:0;cursor:pointer;min-height:40px}
-#install .go{background:#7ceaff;color:#080c1c}
-#install .no{background:transparent;color:#b8c2e8;border:1px solid #33407a}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+[hidden]{display:none!important}
+h1{font:700 26px "Space Grotesk",system-ui;margin:0 0 10px}
+h2{font:700 16px "Space Grotesk",system-ui;margin:18px 0 8px}
+p{margin:0 0 10px}
+.dim{color:var(--dim)} .small{font-size:12px} .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
+#boot b{font:700 34px "Space Grotesk",system-ui;letter-spacing:.08em}#boot b span{color:var(--acc)}
+#boot p{color:var(--dim);max-width:320px}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;max-width:520px;margin:0 auto;padding-top:var(--st)}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 18px 8px}
+.logo-t{font:700 22px "Space Grotesk",system-ui}.logo-t span{color:var(--acc)}
+#pagebar{display:flex;flex-direction:column;align-items:flex-end;background:none;border:0;padding:4px 0;text-align:right}
+#pgnum{font:500 13px "JetBrains Mono",monospace;color:var(--dim)}#pgnum b{color:var(--text);font-weight:500}
+#pgname{font-size:12px;color:var(--acc);min-height:1em}
+main{position:relative;min-height:0}
+#pages{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
+#pages::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;height:100%;scroll-snap-align:start;position:relative;overflow-y:auto}
+.bgimg{position:absolute;inset:0;background-position:center;background-repeat:no-repeat;pointer-events:none}
+.bgdim{position:absolute;inset:0;pointer-events:none}
+.pin{position:relative;padding:8px 18px 24px;display:flex;flex-direction:column;gap:14px}
+#view{position:absolute;inset:0;overflow-y:auto}
+.pad{padding:8px 18px 28px}
+.card{background:var(--sur);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.card h2{margin:0}
+.card.biz{background:#1A1608;border:2px solid var(--biz)}
+.row{display:flex;gap:12px;align-items:center}.row.between{justify-content:space-between}.row.gap{gap:8px}
+.col{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nm{font:700 22px "Space Grotesk",system-ui;word-break:break-word}
+.av{border-radius:16px;background:var(--sur2);border:2px solid var(--acc);display:flex;align-items:center;justify-content:center;font:700 26px "Space Grotesk",system-ui;object-fit:cover;flex:none}
+.logo{width:64px;height:64px;border-radius:14px;background:#2A2310;border:2px solid var(--biz);color:var(--biz);display:flex;align-items:center;justify-content:center;object-fit:cover;flex:none}
+.mood{display:flex;align-items:center;gap:6px;font-size:12px}.mood i{width:9px;height:9px;border-radius:50%}
+.bio{color:#C9CDE6;white-space:pre-line}
+.facts{margin:0;padding-left:18px;color:#C9CDE6}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chipx{padding:5px 10px;border-radius:999px;background:var(--sur2);font-size:12px}
+.game,.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;background:var(--sur2);border-radius:12px}
+.biztag{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;background:var(--biz);color:#1A1608;font-size:11px;font-weight:700;letter-spacing:1px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{flex:1 1 140px;min-height:46px;border-radius:14px;border:1px solid var(--line);background:var(--sur);font-weight:600;padding:0 14px}
+.card>.btn,.sheet-card>.btn,.pad>.btn{flex:none}
+.btn.sm{flex:0 0 auto;min-height:40px;font-size:13px}
+.btn.pri{background:var(--acc);color:#0A0B14;border-color:var(--acc)}
+.btn.gold{background:var(--biz);color:#1A1608;border-color:var(--biz)}
+.empty{border:1px dashed #3A3F63;border-radius:20px;padding:24px;text-align:center;display:flex;flex-direction:column;gap:10px;background:rgba(10,11,20,.55)}
+.empty h2{margin:0}
+nav{display:grid;border-top:1px solid var(--line);background:#0F1120;padding:6px 6px calc(8px + var(--sb))}
+nav button{min-height:50px;background:none;border:0;color:var(--dim);font-size:12px;font-weight:600}
+nav button.on{color:var(--acc)} nav button.adm{color:var(--adm)} nav button.bz{color:var(--biz)}
+nav button.on{text-decoration:underline;text-underline-offset:6px}
+.radar{position:relative;margin:10px auto;border-radius:50%;background:#0F1426;border:1px solid var(--line);max-width:100%}
+.ring{position:absolute;border-radius:50%;border:1px solid var(--line)}
+.me{position:absolute;left:calc(50% - 8px);top:calc(50% - 8px);width:16px;height:16px;border-radius:50%;background:var(--text);box-shadow:0 0 0 6px rgba(237,239,250,.15)}
+.mk{position:absolute;border:0;padding:0}
+.mk.pl{width:16px;height:16px;border-radius:50%}
+.mk.bz{width:30px;height:30px;background:var(--biz);transform:rotate(45deg);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#1A1608}
+.mk.bz span{transform:rotate(-45deg);display:flex}
+.legend{display:flex;justify-content:center;gap:18px;font-size:12px;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.dia{display:inline-block;width:10px;height:10px;background:var(--biz);transform:rotate(45deg);flex:none}.dia.sm{width:9px;height:9px}
+.lrow{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;padding:8px 12px;margin-bottom:8px;border-radius:12px;background:var(--sur);border:1px solid var(--line);text-align:left}
+.lrow.bizrow{background:#1A1608;border-color:#5a4a1c}
+.seg{display:flex;gap:6px}.seg.wrap{flex-wrap:wrap}
+.seg button{min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--sur)}
+.seg button.on{border-color:var(--acc);color:var(--acc)}
+.toggle{display:flex;align-items:center;gap:10px;margin:12px 0;min-height:44px}
+.toggle input{width:22px;height:22px;accent-color:var(--acc)}
+.srch input,.fld input,.fld select,.fld textarea,.row input,.erow input{width:100%;min-height:44px;border-radius:12px;border:1px solid #3A3F63;background:#0A0B14;padding:8px 12px;font-size:16px}
+.fld{display:flex;flex-direction:column;gap:6px;margin:10px 0;font-size:13px;color:var(--dim)}
+.fld input[type=range]{padding:0;min-height:30px;accent-color:var(--acc)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:44px;height:44px;border-radius:50%;border:1px solid var(--line)}.sw.on{border:3px solid var(--text)}
+.bgprev{position:relative;height:160px;border-radius:16px;border:1px solid var(--line);background-color:var(--sur);background-position:center;background-repeat:no-repeat;overflow:hidden;margin-bottom:10px;display:flex;align-items:flex-end}
+.bgprev span{position:relative;margin:10px;font-size:12px;background:rgba(10,11,20,.7);padding:4px 8px;border-radius:6px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0 12px}
+.stats>div{background:var(--sur);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column}
+.stats b{font:500 18px "JetBrains Mono",monospace}
+.pill{font-size:11px;font-weight:700;color:#120A20;padding:4px 10px;border-radius:999px}
+.erow{display:grid;grid-template-columns:1fr 100px;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+.erow .i_note{grid-column:1/-1}.erow button{grid-column:1/-1}
+.msg{color:#ff7a85;min-height:1em;margin:8px 0}
+#sheet{position:fixed;inset:0;z-index:20;background:rgba(5,6,12,.7);display:flex;align-items:flex-end;justify-content:center}
+.sheet-card{width:min(520px,100%);max-height:88vh;overflow-y:auto;background:#10121F;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 18px calc(22px + var(--sb));display:flex;flex-direction:column;gap:12px}
+.sheet-card .x{align-self:flex-end;background:none;border:1px solid var(--line);border-radius:10px;min-height:38px;padding:0 12px;color:var(--dim)}
+.bizhead{position:relative;height:130px;border-radius:14px;background:#2A2310;border-bottom:3px solid var(--biz);overflow:hidden;flex:none}
+.bizhead img{width:100%;height:100%;object-fit:cover}
+.bizhead .biztag{position:absolute;left:12px;top:12px}
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border-bottom:1px solid var(--line)}
+.tabs button{min-height:44px;background:none;border:0;border-bottom:2px solid transparent;color:var(--dim)}
+.tabs button.on{border-color:var(--biz);color:var(--biz);font-weight:600}
+.tabbody{display:flex;flex-direction:column;gap:8px}
+.pgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.pg{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--sur)}
+.pg.used{border-color:var(--acc);color:var(--acc)}.pg.isbiz{border-color:var(--biz);color:var(--biz)}
+.toast{position:fixed;left:50%;top:calc(14px + var(--st));transform:translateX(-50%);z-index:40;background:#111a3a;border:1px solid var(--acc);padding:10px 14px;border-radius:10px;font-size:14px;max-width:90%}
+#classic{position:fixed;inset:0;z-index:30;background:var(--bg)}
+#classic iframe{width:100%;height:100%;border:0;display:block}
+#install{position:fixed;left:50%;bottom:calc(76px + var(--sb));transform:translateX(-50%);z-index:25;display:flex;gap:8px;align-items:center;background:#111a3a;border:1px solid var(--acc);padding:10px 12px;border-radius:12px;max-width:calc(100% - 24px);font-size:14px}
+#install button{border-radius:8px;padding:0 12px;min-height:40px;border:0;font-weight:600}
+#install .go{background:var(--acc);color:#0A0B14}#install .no{background:transparent;border:1px solid #33407a;color:var(--dim)}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -36,47 +133,17 @@ html,body{margin:0;height:100%;background:#080c1c;color:#eef2ff;font:15px system
 <script src="../neon-harvest/nh-firebase.js"></script>
 </head>
 <body>
-<div id="boot" role="status"><b>MYDEX</b><p id="bootmsg">Loading your MyDex…</p></div>
-<div id="install" hidden><span id="instxt">Add MyDex to your home screen</span><button class="go" id="instgo" type="button">Install</button><button class="no" id="instno" type="button" aria-label="Not now">Later</button></div>
+<div id="boot" role="status"><b>My<span>Dex</span></b><p id="bootmsg">Loading your MyDex...</p></div>
+<div id="app" hidden>
+  <header><div class="logo-t">My<span>Dex</span></div><button id="pagebar" data-a="pagePicker" aria-label="Choose a page"><span id="pgnum">PAGE <b>01</b> / 50</span><span id="pgname"></span></button></header>
+  <main><div id="pages" aria-label="Your MyDex pages. Swipe to turn pages."></div><div id="view" hidden></div></main>
+  <nav id="nav" aria-label="MyDex"></nav>
+</div>
+<div id="sheet" hidden></div>
+<div id="install" hidden><span id="instxt">Add MyDex to your home screen</span><button class="go" id="instgo" type="button">Install</button><button class="no" id="instno" type="button">Later</button></div>
+<script src="app.js?v=3"></script>
 <script>
 (function(){
-  "use strict";
-  // Same account as NEON HARVEST: your card, badges and fights are shared between the game and this app.
-  const RESERVED=["vex","admin","staff","system","depot clerk","moderator","owner","anthropic","claude"];
-  const cleanName=s=>Array.from(String(s||"").normalize("NFC").replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]]/g,"").replace(/\s+/g," ").trim()).slice(0,16).join("");
-  const nameProblem=n=>{const l=Array.from(n).length;if(l<3)return"Use at least 3 characters.";if(l>16)return"Keep it to 16 characters or fewer.";if(RESERVED.includes(n.toLowerCase()))return"That name is reserved.";if(!/[\p{L}\p{N}]/u.test(n))return"Include at least one letter or number.";return null};
-  const toast=t=>{const d=document.createElement("div");d.textContent=t;d.setAttribute("role","status");d.style.cssText="position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:9;background:#111a3a;border:1px solid #7ceaff;color:#eef2ff;padding:10px 14px;border-radius:10px;font:14px system-ui;max-width:90%";document.body.append(d);setTimeout(()=>d.remove(),2600)};
-
-  async function start(){
-    if(!window.claude||!window.claude.use){ document.getElementById("bootmsg").textContent="MyDex couldn't connect. Check your internet and reload."; return; }
-    const [u,db]=await Promise.all([window.claude.use("user"),window.claude.use("db")]);
-    const id=u?await u.id():null;
-    if(!u||!db||!id){ document.getElementById("bootmsg").textContent="Sign in to open your MyDex."; return; }
-    let name="";
-    try{ const s=await db.doc("data/users/"+id+"/save").get(); if(s.exists) name=String(s.data().name||""); }catch(e){}
-    if(!name) name=(await u.name())||"Runner";
-    let admin=false; try{ admin=!!(await u.isOwner()); }catch(e){}
-    window.NHMYDEX={
-      nameIssue:n=>{const c=cleanName(n);if(c!==String(n).trim())return"Remove the unusual characters from that name.";if(c.toLowerCase()==="rassir"&&!admin)return"That name is reserved.";return nameProblem(c)},
-      db:()=>db, uid:()=>id, name:()=>name, isAdmin:()=>admin,
-      close:()=>{ if(confirm("Sign out of MyDex?")) window.claude.signOut().then(()=>location.reload()); },
-      toast:t=>toast(t), art:()=>"",
-      forgeList:()=>({items:[],weapons:[],wardrobe:[],vehicles:[],parts:[],pcs:[],drugs:[],pets:[]}),
-      online:()=>[], forgeCan:()=>false, forgePay:()=>{}
-    };
-    const fr=document.createElement("iframe");
-    fr.id="dex"; fr.title="MyDex"; fr.setAttribute("allow","geolocation");
-    fr.src="../neon-harvest/mydex.html?v=20&app=1"+(location.hash||"");
-    fr.addEventListener("load",()=>{
-      document.getElementById("boot").hidden=true;
-      // In the app there is no game to go back to, so the "Back to NEON HARVEST" button is hidden.
-      try{ const st=fr.contentDocument.createElement("style"); st.textContent='.top [data-a="closeDex"]{display:none!important}'; fr.contentDocument.head.append(st); }catch(e){}
-    });
-    document.body.append(fr);
-  }
-  start().catch(()=>{ document.getElementById("bootmsg").textContent="Something went wrong loading MyDex. Reload to try again."; });
-
-  // Installable app.
   if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
   const bar=document.getElementById("install"); let ev=null;
   const dismissed=()=>{try{return localStorage.getItem("mydex_install_no")==="1"}catch(e){return false}};
@@ -84,7 +151,7 @@ html,body{margin:0;height:100%;background:#080c1c;color:#eef2ff;font:15px system
   document.getElementById("instgo").onclick=async()=>{ bar.hidden=true; if(ev){ ev.prompt(); try{ await ev.userChoice; }catch(e){} ev=null; } };
   document.getElementById("instno").onclick=()=>{ bar.hidden=true; try{localStorage.setItem("mydex_install_no","1")}catch(e){} };
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent), standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
-  if(ios&&!standalone&&!dismissed()){ document.getElementById("instxt").textContent="Install: tap Share, then “Add to Home Screen”"; document.getElementById("instgo").hidden=true; bar.hidden=false; }
+  if(ios&&!standalone&&!dismissed()){ document.getElementById("instxt").textContent="Install: tap Share, then Add to Home Screen"; document.getElementById("instgo").hidden=true; bar.hidden=false; }
 })();
 </script>
 </body>
