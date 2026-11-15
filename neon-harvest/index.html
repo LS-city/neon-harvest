@@ -344,6 +344,9 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 .zknote{position:relative;background:#efe8d8;color:#2a1a1a;padding:18px 20px 26px;margin:8px auto 10px;max-width:420px;transform:rotate(-1.2deg);box-shadow:0 6px 18px rgba(0,0,0,.5);font:italic 17px/1.5 Georgia,'Times New Roman',serif;background-image:repeating-linear-gradient(0deg,transparent 0 25px,rgba(120,90,60,.18) 25px 26px)}
 .zkns{position:absolute;right:14px;bottom:6px;font-style:normal;font-size:16px;filter:grayscale(.3)}
 .zknote::before{content:"";position:absolute;left:50%;top:-8px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#9a1020;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.wxlist,.wxpick{display:flex;flex-wrap:wrap;gap:5px}
+.wxchip{background:#120c22;border:1px solid var(--line);color:#e9e2ff;font:12px var(--f-ui);padding:6px 9px;min-height:34px;cursor:pointer;border-radius:4px}
+.wxchip.on{border-color:#38e8ff;color:#bff7ff;background:rgba(56,232,255,.1)}
 .icard{background:var(--panel);border:1px solid var(--mag);box-shadow:0 0 18px rgba(255,63,168,.25);padding:10px;display:flex;flex-direction:column;gap:8px;font-size:12px}
 .ttt{display:grid;grid-template-columns:repeat(3,minmax(0,84px));gap:6px;justify-content:center}
 .ttt .cell{aspect-ratio:1;max-width:100%;background:#0d0818;border:1px solid var(--line);color:var(--text);font-family:var(--f-display);font-size:34px;cursor:pointer}
@@ -13928,14 +13931,20 @@ const WX={clear:{n:"Clear night",ic:"🌙"},rain:{n:"Rain",ic:"🌧"},storm:{n:"
 const WX_SEASON_MS=7*864e5, WX_SLOT_MS=20*6e4, WX_EPOCH=Date.UTC(2026,0,5,5);
 const WX_OUT=["street","byte","grid","neonrow","civic","prison","hhomes","racers","linx","clash","story","nfantasy","line","smacked"];
 let wxLock=null, wxLast="", wxFlash=0, wxBolt=null, wxNextBolt=0;
+// owner-set cycle: mode season|random|list, how often it changes, how long a season lasts
+let wxCfg={mode:"season",slotMin:20,list:[],seasonH:168};
+const wxSlotMs=()=>Math.max(1,Math.min(1440,+wxCfg.slotMin||20))*6e4, wxSeasonMs=()=>Math.max(1,Math.min(24*60,+wxCfg.seasonH||168))*36e5;
+function wxCleanCfg(c){ c=c&&typeof c==="object"?c:{}; const list=Array.isArray(c.list)?c.list.filter(k=>WX[k]).slice(0,40):[]; return {mode:["season","random","list"].includes(c.mode)&&(c.mode!=="list"||list.length)?c.mode:"season",slotMin:Math.max(1,Math.min(1440,Math.round(+c.slotMin||20))),list,seasonH:Math.max(1,Math.min(1440,Math.round(+c.seasonH||168)))}; }
 function wxRand(s){ let h=2166136261; for(const ch of String(s)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return (h>>>0)/4294967296; }
-function wxSeasonAt(ts){ if(wxLock&&wxLock.season){ const S=WX_SEASONS.find(x=>x.k===wxLock.season); if(S) return S; } return WX_SEASONS[((Math.floor((ts-WX_EPOCH)/WX_SEASON_MS)%4)+4)%4]; }
-function wxNow(ts){ ts=ts||Date.now(); const S=wxSeasonAt(ts), slot=Math.floor(ts/WX_SLOT_MS); let k;
+function wxSeasonAt(ts){ if(wxLock&&wxLock.season){ const S=WX_SEASONS.find(x=>x.k===wxLock.season); if(S) return S; } return WX_SEASONS[((Math.floor((ts-WX_EPOCH)/wxSeasonMs())%4)+4)%4]; }
+function wxNow(ts){ ts=ts||Date.now(); const S=wxSeasonAt(ts), SL=wxSlotMs(), slot=Math.floor(ts/SL); let k;
   if(wxLock&&wxLock.weather&&WX[wxLock.weather]) k=wxLock.weather;
+  else if(wxCfg.mode==="list"&&wxCfg.list.length) k=wxCfg.list[((slot%wxCfg.list.length)+wxCfg.list.length)%wxCfg.list.length];
+  else if(wxCfg.mode==="random"){ const K=Object.keys(WX); k=K[Math.floor(wxRand("wxr"+slot)*K.length)]; }
   else { const e=Object.entries(S.w), tot=e.reduce((a,[,v])=>a+v,0); let r=wxRand("wx"+slot+S.k)*tot; k=e[0][0]; for(const [kk,v] of e){ if((r-=v)<0){ k=kk; break; } } }
-  const seasonEnds=wxLock&&wxLock.season?0:WX_EPOCH+(Math.floor((ts-WX_EPOCH)/WX_SEASON_MS)+1)*WX_SEASON_MS;
-  return {S,k,W:WX[k],start:slot*WX_SLOT_MS,until:(slot+1)*WX_SLOT_MS,seasonEnds,locked:!!(wxLock&&(wxLock.season||wxLock.weather))}; }
-function wxForecast(n){ const out=[]; let ts=Date.now(); for(let i=0;i<n;i++){ ts=Math.floor(ts/WX_SLOT_MS)*WX_SLOT_MS+WX_SLOT_MS; out.push({at:ts,...wxNow(ts)}); } return out; }
+  const seasonEnds=wxLock&&wxLock.season?0:WX_EPOCH+(Math.floor((ts-WX_EPOCH)/wxSeasonMs())+1)*wxSeasonMs();
+  return {S,k,W:WX[k],start:slot*SL,until:(slot+1)*SL,seasonEnds,locked:!!(wxLock&&(wxLock.season||wxLock.weather))}; }
+function wxForecast(n){ const out=[]; let ts=Date.now(); for(let i=0;i<n;i++){ ts=Math.floor(ts/wxSlotMs())*wxSlotMs()+wxSlotMs(); out.push({at:ts,...wxNow(ts)}); } return out; }
 function wxLabel(w){ return `${w.S.ic} ${w.S.n} · ${w.W.ic} ${w.W.n}`; }
 // HUD pill + announcements
 function wxTick(){ const w=wxNow(), key=w.S.k+":"+w.k, pill=$("#wxpill"); if(pill){ pill.hidden=false; pill.innerHTML=""; pill.append(document.createTextNode(w.S.ic+" "),el("b",{style:`color:${w.S.col}`,text:w.W.n})); pill.title=`${w.S.n} · ${w.W.n}. Tap for the forecast.`; }
@@ -13943,12 +13952,12 @@ function wxTick(){ const w=wxNow(), key=w.S.k+":"+w.k, pill=$("#wxpill"); if(pil
   wxLast=key; }
 setInterval(()=>{ try{ wxTick(); }catch(e){} },5000);
 let wxWatched=false;
-function wxWatch(db){ try{ dzWatch(db); }catch(e){} if(wxWatched||!db) return; wxWatched=true; try{ db.doc("shopinfo/weather").onSnapshot(s=>{ const d=s&&s.exists?s.data():null; wxLock=d&&typeof d==="object"?{season:WX_SEASONS.some(x=>x.k===d.season)?d.season:"",weather:WX[d.weather]?d.weather:""}:null; wxTick(); },()=>{}); }catch(e){} }
+function wxWatch(db){ try{ dzWatch(db); }catch(e){} if(wxWatched||!db) return; wxWatched=true; try{ db.doc("shopinfo/weather").onSnapshot(s=>{ const d=s&&s.exists?s.data():null; wxCfg=wxCleanCfg(d&&d.cycle); wxLock=d&&typeof d==="object"?{season:WX_SEASONS.some(x=>x.k===d.season)?d.season:"",weather:WX[d.weather]?d.weather:""}:null; wxTick(); },()=>{}); }catch(e){} }
 function openWeather(){ const w=wxNow(); const body=panel("Weather & seasons",`${w.S.ic} ${w.S.n} in Sector 9 · ${w.W.ic} ${w.W.n} right now`); currentView="weather";
   const left=m=>m>=1440?`${Math.round(m/1440)} day${Math.round(m/1440)>1?"s":""}`:m>=60?`${Math.floor(m/60)} h ${m%60} min`:`${m} min`;
   body.append(el("div",{class:"detail",style:`border-color:${w.S.col}`},el("div",{class:"info"},el("strong",{style:`color:${w.S.col}`,text:`${w.S.ic} ${w.S.n}`}),
     el("span",{text:w.seasonEnds?`${WX_SEASONS[(WX_SEASONS.indexOf(w.S)+1)%4].n} starts in ${left(Math.max(1,Math.round((w.seasonEnds-Date.now())/6e4)))}.`:"The owner has locked the season."}),
-    el("span",{class:"sub",text:"Seasons last 7 days and go Spring → Summer → Autumn → Winter. The weather changes every 20 minutes between 21 kinds, and every player sees the same sky. You'll see it in every outdoor area."}))));
+    el("span",{class:"sub",text:`Seasons last ${wxDur(wxCfg.seasonH*60)} and go Spring → Summer → Autumn → Winter. The weather changes every ${wxDur(wxCfg.slotMin)}${wxCfg.mode==="list"?", in an order the owner set":wxCfg.mode==="random"?", picked at random from all 21 kinds":" between 21 kinds"}, and every player sees the same sky. You'll see it in every outdoor area.`}))));
   const l=el("div",{class:"list"}); l.append(el("div",{class:"li"},el("span",{class:"tag",style:`color:${w.S.col};border-color:${w.S.col}`,text:"NOW"}),el("div",{class:"grow",text:`${w.W.ic} ${w.W.n}`}),el("span",{class:"sub",text:w.locked&&wxLock.weather?"locked":`until ${new Date(w.until).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`})));
   if(!(wxLock&&wxLock.weather)) for(const f of wxForecast(5)) l.append(el("div",{class:"li"},el("span",{class:"tag",text:new Date(f.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}),el("div",{class:"grow",text:`${f.W.ic} ${f.W.n}`}),f.S!==w.S?el("span",{class:"sub",text:f.S.n}):null));
   body.append(el("strong",{text:"Forecast"}),l);
@@ -13958,7 +13967,68 @@ function openWeather(){ const w=wxNow(); const body=panel("Weather & seasons",`$
     const ws=el("select",{"aria-label":"Lock weather"},el("option",{value:"",text:"Weather: follow the season"}),...Object.entries(WX).map(([k,x])=>el("option",{value:k,text:"Weather: "+x.n})));
     ss.value=wxLock&&wxLock.season||""; ws.value=wxLock&&wxLock.weather||"";
     body.append(el("div",{class:"detail",style:"border-color:#43f0a4;flex-direction:column;align-items:stretch"},el("strong",{text:"Owner: lock the weather"}),el("span",{class:"sub",text:"Pick a season or a weather to hold it for every player, for events or showing off the game. Set both back to “follow” to return to the normal cycle."}),
-      el("div",{class:"row"},ss,ws,el("button",{class:"btn hot",type:"button",text:"Save",onclick:async()=>{ try{ await DB.doc("shopinfo/weather").set({season:ss.value,weather:ws.value,at:Date.now()}); wxLock={season:ss.value,weather:ws.value}; wxTick(); toast("Weather saved for everyone.","#43f0a4"); openWeather(); }catch(e){ toast("Couldn't save. Only the owner can change the weather."); } }})))); } }
+      el("div",{class:"row"},ss,ws,el("button",{class:"btn hot",type:"button",text:"Save",onclick:async()=>{ try{ await DB.doc("shopinfo/weather").set({season:ss.value,weather:ws.value,cycle:wxCfg,at:Date.now()}); wxLock={season:ss.value,weather:ws.value}; wxTick(); toast("Weather saved for everyone.","#43f0a4"); openWeather(); }catch(e){ toast("Couldn't save. Only the owner can change the weather."); } }})))); wxCyclePanel(body); } }
+
+/* ---- owner: how the weather cycles */
+function wxDur(min){ min=Math.round(min); const d=Math.floor(min/1440), h=Math.floor(min%1440/60), m=min%60; return [d?`${d} day${d>1?"s":""}`:"",h?`${h} h`:"",m?`${m} min`:""].filter(Boolean).join(" ")||"0 min"; }
+function wxCyclePanel(body){ const C={...wxCfg,list:[...wxCfg.list]};
+  const num=(v,max,lab)=>el("input",{type:"number",min:"0",max:String(max),value:String(v),"aria-label":lab,style:"width:70px;padding:6px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit"});
+  const mode=el("select",{"aria-label":"Weather cycle"},el("option",{value:"season",text:"Follow the season (normal)"}),el("option",{value:"random",text:"Random: any weather"}),el("option",{value:"list",text:"My order: rotate my list"})); mode.value=C.mode;
+  const eh=num(Math.floor(C.slotMin/60),24,"Hours between changes"), em=num(C.slotMin%60,59,"Minutes between changes");
+  const sd=num(Math.floor(C.seasonH/24),60,"Season days"), sh=num(C.seasonH%24,23,"Season hours");
+  const lw=el("div",{class:"wxlist"}), pick=el("div",{class:"wxpick"});
+  const drawList=()=>{ lw.replaceChildren(...(C.list.length?C.list.map((k,i)=>el("button",{type:"button",class:"wxchip on",title:"Tap to remove",text:`${i+1}. ${WX[k].ic} ${WX[k].n} ✕`,onclick:()=>{ C.list.splice(i,1); drawList(); }})):[el("span",{class:"sub",text:"Tap weathers below to add them in order. The cycle repeats from the top."})])); };
+  for(const [k,W] of Object.entries(WX)) pick.append(el("button",{type:"button",class:"wxchip",text:`${W.ic} ${W.n}`,onclick:()=>{ if(C.list.length<40){ C.list.push(k); drawList(); } }}));
+  const lbox=el("div",{style:"display:flex;flex-direction:column;gap:6px"},el("strong",{text:"Your weather order"}),lw,pick); const sync=()=>{ lbox.hidden=mode.value!=="list"; }; mode.onchange=sync; drawList(); sync();
+  const prev=el("div",{class:"sub"}); const upd=()=>{ const m=(+eh.value||0)*60+(+em.value||0), h=(+sd.value||0)*24+(+sh.value||0); prev.textContent=`Weather changes every ${wxDur(Math.max(1,m))}. Each season lasts ${wxDur(Math.max(1,h)*60)}.`; };
+  [eh,em,sd,sh].forEach(i=>i.oninput=upd); upd();
+  body.append(el("div",{class:"detail",style:"border-color:#38e8ff;flex-direction:column;align-items:stretch;flex-wrap:nowrap"},el("strong",{text:"Owner: weather cycle"}),el("span",{class:"sub",text:"Choose how the weather changes and how often. Every player follows the same cycle, even when you're offline."}),
+    el("div",{class:"row"},mode),el("div",{class:"row",style:"align-items:center"},el("span",{text:"Change every"}),eh,el("span",{text:"h"}),em,el("span",{text:"min"})),
+    el("div",{class:"row",style:"align-items:center"},el("span",{text:"Season lasts"}),sd,el("span",{text:"days"}),sh,el("span",{text:"h"})),prev,lbox,
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Save cycle",onclick:async()=>{ const m=(+eh.value||0)*60+(+em.value||0), h=(+sd.value||0)*24+(+sh.value||0);
+      if(m<1) return toast("Pick at least 1 minute between changes."); if(mode.value==="list"&&!C.list.length) return toast("Add at least one weather to your order.");
+      const cyc=wxCleanCfg({mode:mode.value,slotMin:m,list:C.list,seasonH:Math.max(1,h)});
+      try{ await DB.doc("shopinfo/weather").set({season:wxLock&&wxLock.season||"",weather:wxLock&&wxLock.weather||"",cycle:cyc,at:Date.now()}); wxCfg=cyc; wxTick(); toast("Weather cycle saved for everyone.","#38e8ff"); openWeather(); }catch(e){ toast("Couldn't save. Only the owner can change the weather."); } }}),
+      el("button",{class:"btn",type:"button",text:"Reset to normal",onclick:async()=>{ const cyc=wxCleanCfg({}); try{ await DB.doc("shopinfo/weather").set({season:wxLock&&wxLock.season||"",weather:wxLock&&wxLock.weather||"",cycle:cyc,at:Date.now()}); wxCfg=cyc; wxTick(); openWeather(); }catch(e){ toast("Couldn't save."); } }})))); }
+/* ---- scheduled disasters: set a time (once, daily or weekly). Every player's game starts it on time, even when the owner is offline. */
+let dzManual=null, dzSched={list:[],skip:[]}, dzSchedWatched=false;
+const DZ_REP={once:0,daily:864e5,weekly:7*864e5};
+function dzCleanSched(d){ d=d&&typeof d==="object"?d:{}; const list=(Array.isArray(d.list)?d.list:[]).filter(e=>e&&DZ[e.k]&&+e.at>0).slice(0,30).map(e=>({id:String(e.id||"").slice(0,24)||Math.random().toString(36).slice(2,10),k:e.k,at:+e.at,mins:Math.max(1,Math.min(120,Math.round(+e.mins||5))),rep:DZ_REP[e.rep]!=null?e.rep:"once",warn:e.warn!==false}));
+  return {list,skip:(Array.isArray(d.skip)?d.skip:[]).filter(x=>typeof x==="string").slice(-60)}; }
+// every occurrence near a time: {k,at,until,id,sched:1,entry}
+function dzOccur(e,from,to){ const out=[], P=DZ_REP[e.rep]; if(!P){ if(e.at<=to&&e.at+e.mins*6e4>=from) out.push(e.at); return out; }
+  const n0=Math.max(0,Math.floor((from-e.at-e.mins*6e4)/P)); for(let n=n0;n<n0+400;n++){ const t=e.at+n*P; if(t>to) break; if(t+e.mins*6e4>=from) out.push(t); } return out; }
+function dzSchedAt(now){ let best=null; for(const e of dzSched.list) for(const t of dzOccur(e,now-11*6e4,now)){ const id="s"+e.id+"_"+t.toString(36); if(dzSched.skip.includes(id)) continue; const o={k:e.k,at:t,until:t+e.mins*6e4,id,sched:1,entry:e.id}; if(!best||o.at>best.at) best=o; } return best; }
+function dzUpcoming(n,ahead){ const now=Date.now(), out=[]; for(const e of dzSched.list) for(const t of dzOccur(e,now,now+(ahead||7*864e5))){ const id="s"+e.id+"_"+t.toString(36); if(t>now&&!dzSched.skip.includes(id)) out.push({e,t,id}); } return out.sort((a,b)=>a.t-b.t).slice(0,n||8); }
+function dzResolve(){ const now=Date.now(), m=dzManual&&now<dzManual.until?dzManual:null, s=dzSchedAt(now), sAct=s&&now>=s.at&&now<s.until?s:null;
+  const pick=m||sAct||[dzManual,s].filter(x=>x&&now<x.until+11*6e4).sort((a,b)=>b.until-a.until)[0]||null;
+  if((pick&&pick.id)!==(dzState&&dzState.id)||(pick&&dzState&&pick.until!==dzState.until)){ dzState=pick; dzCheck(); } }
+setInterval(()=>{ try{ dzResolve(); dzWarnTick(); }catch(e){} },1000);
+// a heads-up a few minutes before a scheduled one
+const dzWarned={};
+function dzWarnTick(){ const now=Date.now(); for(const u of dzUpcoming(3,6*6e4)){ if(!u.e.warn||dzWarned[u.id]) continue; const mins=Math.ceil((u.t-now)/6e4); if(mins<=5){ dzWarned[u.id]=1; const D=DZ[u.e.k];
+  toast(`⚠ ${D.ic} ${D.n} warning: it hits Sector 9 in ${mins} min.`,D.col); chatLine(null,`⚠ Emergency broadcast: ${D.ic} ${D.n} expected in ${mins} minute${mins>1?"s":""}. Find somewhere safe.`,"sys"); try{ beep(440,.15,"square",.04); setTimeout(()=>beep(440,.15,"square",.04),300); }catch(e){} } } }
+function dzSchedWatch(db){ if(dzSchedWatched||!db) return; dzSchedWatched=true; try{ db.doc("shopinfo/dzsched").onSnapshot(s=>{ dzSched=dzCleanSched(s&&s.exists?s.data():null); dzResolve(); },()=>{}); }catch(e){} }
+async function dzSchedSave(next){ next=dzCleanSched(next); await DB.doc("shopinfo/dzsched").set({...next,at:Date.now()}); dzSched=next; dzResolve(); }
+function dzSchedPanel(body){ const box=el("div",{class:"detail",style:"border-color:#ffd36a;flex-direction:column;align-items:stretch;flex-wrap:nowrap"},el("strong",{text:"Owner: schedule a disaster"}),el("span",{class:"sub",text:"Pick a disaster and a time. It starts on its own for every player, even when you're offline. Players get a warning 5 minutes before (unless you turn it off)."}));
+  const k=el("select",{"aria-label":"Which disaster"},...Object.entries(DZ).map(([kk,D])=>el("option",{value:kk,text:`${D.ic} ${D.n}`})));
+  const pad=n=>String(n).padStart(2,"0"), d0=new Date(Date.now()+60*6e4); d0.setMinutes(0,0,0);
+  const when=el("input",{type:"datetime-local","aria-label":"When",value:`${d0.getFullYear()}-${pad(d0.getMonth()+1)}-${pad(d0.getDate())}T${pad(d0.getHours())}:${pad(d0.getMinutes())}`,style:"padding:6px;background:#0d0818;color:#e9e2ff;border:1px solid var(--line);font:inherit;color-scheme:dark"});
+  const dur=el("select",{"aria-label":"How long"},...[[3,"3 min"],[5,"5 min"],[10,"10 min"],[15,"15 min"],[30,"30 min"],[60,"1 hour"],[120,"2 hours"]].map(([v,t])=>el("option",{value:String(v),text:"Lasts "+t}))); dur.value="10";
+  const rep=el("select",{"aria-label":"Repeat"},el("option",{value:"once",text:"Just once"}),el("option",{value:"daily",text:"Every day at this time"}),el("option",{value:"weekly",text:"Every week at this time"}));
+  const warn=el("input",{type:"checkbox",checked:true,id:"dzWarnCk"});
+  box.append(el("div",{class:"row"},k,dur,rep),el("div",{class:"row",style:"align-items:center"},when,el("label",{for:"dzWarnCk",style:"display:flex;gap:6px;align-items:center"},warn,"Warn players 5 min before")),
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"＋ Schedule it",onclick:async()=>{ const at=new Date(when.value).getTime(); if(!(at>0)) return toast("Pick a date and time.");
+      if(rep.value==="once"&&at+(+dur.value)*6e4<Date.now()) return toast("That time has already passed.");
+      try{ await dzSchedSave({list:[...dzSched.list,{id:Math.random().toString(36).slice(2,10),k:k.value,at,mins:+dur.value,rep:rep.value,warn:warn.checked}],skip:dzSched.skip}); toast(`${DZ[k.value].ic} Scheduled for ${new Date(at).toLocaleString([],{weekday:"short",hour:"numeric",minute:"2-digit"})}.`,"#ffd36a"); openWeather(); }catch(e){ toast("Couldn't save. Only the owner can schedule disasters."); } }})));
+  const L=el("div",{class:"list"}); const now=Date.now();
+  for(const e of dzSched.list){ const nx=dzOccur(e,now,now+(DZ_REP[e.rep]||0)+864e5*8).find(t=>t>now); const D=DZ[e.k], done=e.rep==="once"&&e.at+e.mins*6e4<now;
+    L.append(el("div",{class:"li"},el("span",{style:"font-size:20px",text:D.ic}),el("div",{class:"grow"},el("div",{text:`${D.n} · ${wxDur(e.mins)}${e.rep!=="once"?` · ${e.rep}`:""}`}),el("div",{class:"sub",text:done?"Already happened":nx?`Next: ${new Date(nx).toLocaleString([],{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}`:"Happening now"})),
+      el("button",{class:"btn",type:"button",text:"Delete","aria-label":`Delete scheduled ${D.n}`,onclick:async()=>{ try{ await dzSchedSave({list:dzSched.list.filter(x=>x!==e),skip:dzSched.skip}); openWeather(); }catch(err){ toast("Couldn't delete."); } }}))); }
+  if(dzSched.list.length) box.append(el("strong",{text:"Scheduled"}),L); body.append(box); }
+// what players see: upcoming announced disasters in the weather panel
+function dzForecastBox(body){ const U=dzUpcoming(4,2*864e5).filter(u=>u.e.warn); if(!U.length) return;
+  body.append(el("strong",{text:"⚠ Disaster warnings"}),el("div",{class:"list"},...U.map(u=>el("div",{class:"li"},el("span",{class:"tag",style:`color:${DZ[u.e.k].col};border-color:${DZ[u.e.k].col}`,text:new Date(u.t).toLocaleString([],{weekday:"short",hour:"numeric",minute:"2-digit"})}),el("div",{class:"grow",text:`${DZ[u.e.k].ic} ${DZ[u.e.k].n} expected`}),el("span",{class:"sub",text:wxDur(u.e.mins)}))))); }
 
 /* ---- drawing (world space, front layer, outdoor scenes only) ---- */
 const WXP=Array.from({length:260},(_,i)=>({x:Math.random(),y:Math.random(),v:.6+Math.random()*.7,s:Math.random(),r:Math.random()*6.28,i}));
@@ -14021,7 +14091,7 @@ function worldLines(n){ const nm=myName||"runner", L=[]; const w=(()=>{ try{ ret
   if(w){ const l=wxLine(); if(l) L.push(l,l);
     const f=wxForecast?wxForecast(2):[]; const nx=f.find(x=>x.k!==w.k); if(nx&&!(wxLock&&wxLock.weather)) L.push(`Forecast says ${nx.W.n.toLowerCase()} by ${new Date(nx.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}.`);
     if(w.seasonEnds&&w.seasonEnds-Date.now()<864e5) L.push(`${WX_SEASONS[(WX_SEASONS.indexOf(w.S)+1)%4].n} starts tomorrow. Can you feel it?`);
-    if(w.seasonEnds&&WX_SEASON_MS-(w.seasonEnds-Date.now())<6*36e5) L.push(`First day of ${w.S.n.toLowerCase()}! ${w.S.ic}`); }
+    if(w.seasonEnds&&wxSeasonMs()-(w.seasonEnds-Date.now())<Math.min(6*36e5,wxSeasonMs()/4)) L.push(`First day of ${w.S.n.toLowerCase()}! ${w.S.ic}`); }
   // where you've been
   const prev=[...meTrail].reverse().find(s=>s!==me.scene&&!TRAIL_SKIP.includes(s)); if(prev) L.push(prev==="simcity"?`You smell like the underground. Been down in Sim City?`:prev==="club"?"Back from The Third Eye? Your ears must be ringing.":prev==="void"?"You look like you just came out of The Void. Rough one?":`Back from ${sceneName(prev)}?`);
   // Sim City and the black market
@@ -14119,8 +14189,8 @@ const DZ={quake:{n:"Earthquake",ic:"💥",col:"#ffb84a",d:"The ground shakes in 
 let dzState=null, dzWatched=false, dzSeen="", dzCraters=[], dzLastShake=0;
 const dzOn=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until?dzState:null;
 const dzRecent=()=>dzState&&dzState.k&&DZ[dzState.k]&&Date.now()>=dzState.at&&Date.now()<dzState.until+10*6e4?dzState:null;
-function dzWatch(db){ if(dzWatched||!db) return; dzWatched=true; try{ db.doc("shopinfo/disaster").onSnapshot(s=>{ const d=s&&s.exists?s.data():null;
-  dzState=d&&DZ[d.k]&&+d.until>Date.now()-11*6e4?{k:d.k,at:+d.at||0,until:+d.until||0,id:String(d.id||d.at||"")}:null; dzCheck(); },()=>{}); }catch(e){} }
+function dzWatch(db){ try{ dzSchedWatch(db); }catch(e){} if(dzWatched||!db) return; dzWatched=true; try{ db.doc("shopinfo/disaster").onSnapshot(s=>{ const d=s&&s.exists?s.data():null;
+  dzManual=d&&DZ[d.k]&&+d.until>Date.now()-11*6e4?{k:d.k,at:+d.at||0,until:+d.until||0,id:String(d.id||d.at||"")}:null; dzResolve(); },()=>{}); }catch(e){} }
 const DZ_SCARED={quake:["Earthquake! Get away from the windows!","The whole building's shaking!","Hold onto something!"],tornado:["TORNADO! Run!","It's coming this way!","Get inside, now!"],flood:["The water's rising! Get to high ground!","My shoes are gone. The water took them.","Is that a car floating by?!"],
   meteor:["Something's falling from the sky!","That one hit the next block!","It's the end of the world!"],volcano:["Since when do we have a volcano?!","The sky's on fire!","Don't breathe the ash!"],
   blackout:["Who turned off the city?!","My phone's dead. Everything's dead.","Stay close, I can't see a thing."],wildfire:["The rooftops are on fire!","Call somebody! Anybody!","I can smell the smoke from here."],
@@ -14212,14 +14282,15 @@ function drawDisaster(T,dt){ const st=dzRecent(); if(!st) return; const live=dzO
 function dzWaveX(){ try{ const W=SCENES[me.scene].w, t=(Date.now()/1000)%30; return t<9?-600+(t/9)*(W+1200):-99999; }catch(e){ return -99999; } }
 const N2=n=>Math.round(n*(PERF&&PERF.lvl>=2?.45:PERF&&PERF.lvl>=1?.7:1));
 async function dzStart(k,mins){ if(!IS_ADMIN||!DB) return; const now=Date.now(), d={k,at:now,until:now+mins*6e4,id:k+now.toString(36),by:myId||""};
-  try{ await DB.doc("shopinfo/disaster").set(d); dzState={k,at:d.at,until:d.until,id:d.id}; dzCheck(); toast(`${DZ[k].ic} ${DZ[k].n} started for everyone.`,DZ[k].col); }catch(e){ toast("Couldn't start it. Only the owner can start disasters."); } }
-async function dzStop(){ if(!IS_ADMIN||!DB) return; try{ const now=Date.now(); await DB.doc("shopinfo/disaster").set({k:dzState&&dzState.k||"",at:dzState&&dzState.at||now,until:now,id:dzState&&dzState.id||"",by:myId||""}); if(dzState) dzState.until=now; dzCheck(); toast("Disaster ended. The rubble stays for 10 minutes."); }catch(e){ toast("Couldn't end it."); } }
+  try{ await DB.doc("shopinfo/disaster").set(d); dzManual={k,at:d.at,until:d.until,id:d.id}; dzResolve(); toast(`${DZ[k].ic} ${DZ[k].n} started for everyone.`,DZ[k].col); }catch(e){ toast("Couldn't start it. Only the owner can start disasters."); } }
+async function dzStop(){ if(!IS_ADMIN||!DB) return; if(dzState&&dzState.sched&&!(dzManual&&Date.now()<dzManual.until)){ try{ await dzSchedSave({list:dzSched.list,skip:[...dzSched.skip,dzState.id]}); dzState.until=Date.now(); dzCheck(); toast("Scheduled disaster ended early. The rubble stays for 10 minutes."); }catch(e){ toast("Couldn't end it."); } return; } try{ const now=Date.now(); await DB.doc("shopinfo/disaster").set({k:dzState&&dzState.k||"",at:dzState&&dzState.at||now,until:now,id:dzState&&dzState.id||"",by:myId||""}); if(dzManual) dzManual.until=now; if(dzState) dzState.until=now; dzCheck(); toast("Disaster ended. The rubble stays for 10 minutes."); }catch(e){ toast("Couldn't end it."); } }
 function dzPanel(body){ const st=dzOn();
   if(st) body.append(el("div",{class:"detail",style:`border-color:${DZ[st.k].col}`},el("div",{class:"info"},el("strong",{style:`color:${DZ[st.k].col}`,text:`${DZ[st.k].ic} ${DZ[st.k].n} happening now`}),el("span",{class:"sub",text:`${DZ[st.k].d} Ends in about ${Math.max(1,Math.round((st.until-Date.now())/6e4))} min.`}))));
+  dzForecastBox(body);
   if(!(IS_ADMIN&&DB)) return; const dur=el("select",{"aria-label":"How long"},...[[3,"3 min"],[5,"5 min"],[10,"10 min"],[15,"15 min"],[30,"30 min"]].map(([v,t])=>el("option",{value:String(v),text:"Lasts "+t}))); dur.value="5";
   const box=el("div",{class:"detail",style:"border-color:#ff7a3a;flex-direction:column;align-items:stretch;flex-wrap:nowrap"},el("strong",{text:`Owner: natural disasters (${Object.keys(DZ).length})`}),el("span",{class:"sub",text:"Start one for every player. Everyone gets an alert, the city panics, and rubble piles appear outside with credits and parts to find. They clear 10 minutes after it ends."}),el("div",{class:"row"},dur));
   const g=el("div",{style:"display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-auto-rows:min-content;align-content:start;gap:6px;flex:none;width:100%"}); for(const [k,D] of Object.entries(DZ)) g.append(el("button",{class:"btn",type:"button",style:`border-color:${D.col};text-align:left;min-height:44px;height:auto`,text:`${D.ic} ${D.n}`,title:D.d,onclick:async()=>{ await dzStart(k,+dur.value); openWeather(); }}));
-  box.append(g); if(st) box.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"■ End the disaster now",onclick:async()=>{ await dzStop(); openWeather(); }}))); body.append(box); }
+  box.append(g); if(st) box.append(el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"■ End the disaster now",onclick:async()=>{ await dzStop(); openWeather(); }}))); body.append(box); dzSchedPanel(body); }
 // residents talk about the disaster while it happens and afterwards
 { const _wl=worldLines; worldLines=function(n){ const L=_wl(n); try{ const st=dzOn(); if(st) L.push(...DZ_SCARED[st.k],...DZ_SCARED[st.k]); else { const r=dzRecent(); if(r) L.push(DZ_AFTER[r.k],DZ_AFTER[r.k]); } }catch(e){} return L; }; }
 
