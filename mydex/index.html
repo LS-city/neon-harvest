@@ -151,10 +151,10 @@ nav button.on{text-decoration:underline;text-underline-offset:6px}
 </div>
 <div id="sheet" hidden></div>
 <div id="install" hidden><span id="instxt">Add MyDex to your home screen</span><button class="go" id="instgo" type="button">Install</button><button class="no" id="instno" type="button">Later</button></div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 <script>
 (function(){
-  if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}));
   const bar=document.getElementById("install"); let ev=null;
   const dismissed=()=>{try{return localStorage.getItem("mydex_install_no")==="1"}catch(e){return false}};
   addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); ev=e; if(!dismissed()) bar.hidden=false; });
