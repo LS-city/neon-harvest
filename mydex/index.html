@@ -43,7 +43,7 @@ html,body{margin:0;height:100%;background:#080c1c;color:#eef2ff;font:15px system
   "use strict";
   // Same account as NEON HARVEST: your card, badges and fights are shared between the game and this app.
   const RESERVED=["vex","admin","staff","system","depot clerk","moderator","owner","anthropic","claude"];
-  const cleanName=s=>Array.from(String(s||"").normalize("NFC").replace(/[\u0000-\u001f\u007f-\u009f­​-‏ -‮⁠-⁯﻿]/g,"").replace(/\s+/g," ").trim()).slice(0,16).join("");
+  const cleanName=s=>Array.from(String(s||"").normalize("NFC").replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]]/g,"").replace(/\s+/g," ").trim()).slice(0,16).join("");
   const nameProblem=n=>{const l=Array.from(n).length;if(l<3)return"Use at least 3 characters.";if(l>16)return"Keep it to 16 characters or fewer.";if(RESERVED.includes(n.toLowerCase()))return"That name is reserved.";if(!/[\p{L}\p{N}]/u.test(n))return"Include at least one letter or number.";return null};
   const toast=t=>{const d=document.createElement("div");d.textContent=t;d.setAttribute("role","status");d.style.cssText="position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:9;background:#111a3a;border:1px solid #7ceaff;color:#eef2ff;padding:10px 14px;border-radius:10px;font:14px system-ui;max-width:90%";document.body.append(d);setTimeout(()=>d.remove(),2600)};
 
