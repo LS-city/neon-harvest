@@ -355,6 +355,50 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #prompt .hphint{font-size:10px;color:#7fa9b8;margin-right:2px}
 #game.mobile #prompt.multi{flex-direction:column;align-items:stretch}
 #game.mobile #prompt .hpchip{min-height:38px;font-size:12px}
+#gnf.nfd .nfdmain{flex:1;min-height:0;display:flex;position:relative}
+#gnf.nfd .nfdcvb{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden}
+#gnf.nfd .nfdcv{border:2px solid #3c2367;border-radius:4px;background:#000;display:block;touch-action:none;cursor:pointer}
+#gnf.nfd .nfdside{width:290px;flex:none;display:flex;flex-direction:column;border-left:1px solid #3c2367;background:#0d0724;padding:8px;gap:6px;min-height:0}
+#gnf.nfd .nfdhero{display:flex;flex-direction:column;gap:3px;font-size:12px}
+#gnf.nfd .nfdhn{font:700 13px var(--f-display)}
+#gnf.nfd .nfdlh{font-size:11px;color:#9a8cc0;letter-spacing:.08em;text-transform:uppercase}
+#gnf.nfd .nfdlog{flex:1;min-height:0;overflow:auto;font:12px/1.45 'IBM Plex Mono',monospace;display:flex;flex-direction:column;gap:2px}
+#gnf.nfd .nfdbar{display:flex;align-items:center;gap:8px;padding:6px max(10px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px));border-top:1px solid #3c2367;background:#120830;flex-wrap:wrap}
+#gnf.nfd .nfdvit{display:flex;flex-direction:column;gap:4px;width:170px;flex:none}
+#gnf.nfd .nfdhp{position:relative;height:16px;background:#3a0a14;border:1px solid #6a2a3a}
+#gnf.nfd .nfdhp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#5aff9a,#1fa860)}
+#gnf.nfd .nfdhp span{position:relative;display:block;text-align:center;font:600 11px 'IBM Plex Mono',monospace;color:#fff;line-height:14px;text-shadow:0 1px 0 #000}
+#gnf.nfd .nfdap{display:flex;gap:4px}#gnf.nfd .nfdap i{width:18px;height:8px;border-radius:2px;background:#2a2050;border:1px solid #4a3a7a}#gnf.nfd .nfdap i.on{background:#38e8ff;border-color:#9ff4ff;box-shadow:0 0 6px #38e8ff}
+#gnf.nfd .nfdacts{display:flex;gap:5px;flex:1;min-width:0;overflow-x:auto;padding-bottom:2px}
+#gnf.nfd .nfdab{position:relative;flex:none;min-width:74px;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:#1a0f3a;border:1px solid #5a3a9a;color:#e9e2ff;border-radius:4px;cursor:pointer;padding:3px 6px;font:11px var(--f-ui)}
+#gnf.nfd .nfdab b{font-size:18px;line-height:1}#gnf.nfd .nfdab small{color:#38e8ff;font-size:10px}#gnf.nfd .nfdab kbd{position:absolute;top:1px;left:3px;font-size:9px;color:#7a6aa8}
+#gnf.nfd .nfdab:hover:not([disabled]){border-color:#cf72ff;background:#2a1650}#gnf.nfd .nfdab.sel{border-color:#ffd36a;box-shadow:0 0 10px rgba(255,211,106,.5)}#gnf.nfd .nfdab[disabled]{opacity:.38;cursor:default}
+#gnf.nfd .nfdend{min-height:52px;flex:none;padding:0 16px}
+#gnf.nfd .nfdmodal{position:absolute;inset:0;z-index:5;background:rgba(4,2,12,.72);display:flex;align-items:center;justify-content:center;padding:12px}
+#gnf.nfd .nfdmodal[hidden]{display:none}
+#gnf.nfd .nfdmc{background:#120a2c;border:2px solid #6b4fb0;border-radius:8px;padding:16px 18px;max-width:560px;width:100%;max-height:100%;overflow:auto;box-shadow:0 0 40px rgba(124,92,255,.35)}
+#gnf.nfd .nfdmodal.wide .nfdmc{max-width:980px}
+#gnf.nfd .nfdmc h3{margin:0 0 8px;font-family:var(--f-display);color:#ffd36a;letter-spacing:.06em}
+#gnf.nfd .nfdmb{margin-top:12px;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+#gnf.nfd .nfdcls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0}
+#gnf.nfd .nfdcard{border:1px solid var(--cc);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:5px;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent)}
+#gnf.nfd .nfdcard strong{color:var(--cc);font-family:var(--f-display)}#gnf.nfd .nfdcard p{margin:0;font-size:12px;line-height:1.4}#gnf.nfd .nfdcard.lock{opacity:.7}#gnf.nfd .nfdcard .btn{margin-top:auto}
+#gnf.nfd .nfdpv{width:100%;max-width:160px;height:auto;align-self:center}
+#gnf.nfd .nfdaltar{border:1px solid #cf72ff;border-radius:6px;padding:10px;margin-top:6px}
+#gnf.nfd .nfdstats{flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+#gnf.nfd .nfdpicks{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:6px}
+#gnf.nfd .nfdpick{background:#1a0f3a;border:1px solid #5a3a9a;border-radius:6px;color:#e9e2ff;padding:10px;display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;font:12px var(--f-ui)}
+#gnf.nfd .nfdpick b{color:#ffd36a;font-size:13px}#gnf.nfd .nfdpick.on{border-color:#ffd36a;box-shadow:0 0 12px rgba(255,211,106,.4)}
+#gnf.nfd .nfdevt{font-size:15px;line-height:1.5;font-style:italic;color:#e9e2ff}
+#gnf.nfd .nfdopts{display:flex;flex-direction:column;gap:6px}#gnf.nfd .nfdopt{text-align:left;min-height:44px;height:auto;white-space:normal}
+#gnf.nfd .nfdres p{margin:6px 0;line-height:1.45}#gnf.nfd .nfdres p:first-child{color:#ffd36a}
+#gnf.nfd .nfddie{font:700 64px Silkscreen,monospace;text-align:center;color:#fff;padding:20px;border:3px solid #6b4fb0;width:130px;margin:10px auto;border-radius:16px;transform:rotate(-4deg)}
+#gnf.nfd .nfddie.ok{color:#43f0a4;border-color:#43f0a4;box-shadow:0 0 24px rgba(67,240,164,.5)}#gnf.nfd .nfddie.no{color:#ff5a5a;border-color:#ff5a5a;box-shadow:0 0 24px rgba(255,90,90,.5)}
+#gnf.nfd .nfdgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}#gnf.nfd .nfdst{border:1px solid #4a3a7a;border-radius:4px;padding:6px;text-align:center;display:flex;flex-direction:column}#gnf.nfd .nfdst b{color:#9a8cc0;font-size:11px}#gnf.nfd .nfdst span{font:700 20px var(--f-display);color:#fff}#gnf.nfd .nfdst i{font-style:normal;color:#38e8ff;font-size:11px}
+#gnf.nfd .nfdhelp p{margin:5px 0;font-size:13px;line-height:1.45}
+@media (max-aspect-ratio:3/4){ #gnf.nfd .nfdbar{flex-wrap:wrap!important} #gnf.nfd .nfdacts{order:3;flex-basis:100%} #gnf.nfd .nfdvit{flex:1} }
+#gnf.nfd .nfdmodal.death .nfdmc{border-color:#ff5a5a}#gnf.nfd .nfdmodal.win .nfdmc{border-color:#ffd36a}
+@media (max-width:900px){ #gnf.nfd .nfdside{position:absolute;left:8px;top:8px;width:min(330px,60%);max-height:78px;background:rgba(10,6,24,.55);border:none;pointer-events:none;padding:4px 6px} #gnf.nfd .nfdhero,#gnf.nfd .nfdlh{display:none} #gnf.nfd .nfdlog{font-size:10px;overflow:hidden;justify-content:flex-end} #gnf.nfd .nfdvit{width:118px} #gnf.nfd .nfdbar{flex-wrap:nowrap;gap:6px} #gnf.nfd .nfdab{min-width:58px;min-height:46px;padding:2px 4px;font-size:10px} #gnf.nfd .nfdab b{font-size:15px} #gnf.nfd .nfdend{min-height:46px;padding:0 10px;font-size:12px} #gnf.nfd .g1sub{display:none} #gnf.nfd .g1bar .btn{min-height:36px;padding:0 8px} }
 .icard{background:var(--panel);border:1px solid var(--mag);box-shadow:0 0 18px rgba(255,63,168,.25);padding:10px;display:flex;flex-direction:column;gap:8px;font-size:12px}
 .ttt{display:grid;grid-template-columns:repeat(3,minmax(0,84px));gap:6px;justify-content:center}
 .ttt .cell{aspect-ratio:1;max-width:100%;background:#0d0818;border:1px solid var(--line);color:var(--text);font-family:var(--f-display);font-size:34px;cursor:pointer}
@@ -8232,10 +8276,11 @@ function nfJournalUI(body){ const S=nfS(); const parts=[]; if(S.jr.includes("pro
   if(!parts.length){ body.append(el("div",{class:"empty",text:"Step through the Gate to begin the story."})); return; }
   for(const [h,L] of parts){ body.append(el("strong",{text:h,style:"display:block;margin-top:8px;color:#ffd36a"})); for(const [who,t] of L) body.append(el("p",{class:"sub",style:"margin:4px 0",text:`${who==="lyra"?"Lyra":"???"}: ${t}`})); } }
 // ---------- hub (in the city)
-const NFH={camp:760,gate:1500,hall:2240,stone:2760};
-function nfHot(){ return [{x:140,hw:60,label:"Take the metro",act:()=>openMetro()},{x:NFH.camp,hw:100,label:"Lyra's Camp: potions, gear and loot",act:()=>openNfCamp()},{x:NFH.gate,hw:130,label:"The Gate of Aethernet: start an adventure",act:()=>openNfGate()},
+const NFH={camp:760,gate:1500,depths:1900,hall:2240,stone:2760};
+function nfHot(){ return [{x:140,hw:60,label:"Take the metro",act:()=>openMetro()},{x:NFH.camp,hw:100,label:"Lyra's Camp: potions, gear and loot",act:()=>openNfCamp()},{x:NFH.gate,hw:130,label:"The Gate of Aethernet: start an adventure",act:()=>openNfGate()},{x:NFH.depths,hw:90,label:"The Depths: turn-based CRPG roguelike",act:()=>openNfDepths()},
   {x:NFH.hall,hw:100,label:"Hall of Heroes: top adventurers",act:()=>openNfHall()},{x:NFH.stone,hw:70,label:"Story Stone: the tale so far",act:()=>{ const b=panel("Story Stone","Everything Lyra has told you so far."); currentView="nfstory"; nfJournalUI(b); }}]; }
 function openNfGate(){ const S=nfS(); const body=panel("The Gate of Aethernet","An RPG dungeon crawler. Beat the boss at the end of each dungeon to restore a Glow Core and unlock the next chapter."); currentView="nfgate"; let tier=0;
+  { const M=nfdS(); body.append(el("div",{class:"detail",style:"border-color:#cf72ff"},el("div",{class:"info"},el("strong",{style:"color:#cf72ff",text:"⬇ NEW: The Depths · turn-based CRPG roguelike"}),el("span",{class:"sub",text:`Pick a class and descend 10 random floors. Tactical turn-based combat with action points and dice rolls, skill-check events, loot, level-ups and permadeath. Best depth ${M.best}/10 · ${M.echo} Echoes.`}),el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:M.run?`Continue run (floor ${M.run.floor}) ▶`:"Enter The Depths ▶",onclick:()=>openNfDepths()}))))); }
   const st=nfStats(); body.append(el("div",{class:"detail"},el("div",{class:"info"},el("strong",{text:`Level ${S.lv} adventurer · ${S.gold.toLocaleString()} gold · ${S.pots}/${S.belt} potions`}),el("span",{class:"sub",text:`ATK ${st.atk} · DEF ${st.def} · HP ${st.hp} · ${NF_WEAP[st.wt].n} (${NF_WEAP[st.wt].sk})`}))));
   if(S.ngMax>0){ const r=el("div",{class:"row",style:"flex-wrap:wrap;gap:6px;align-items:center"},el("span",{class:"sub",text:"Difficulty:"})); const draw=()=>{ [...r.querySelectorAll("button")].forEach(b=>b.remove()); for(let i=0;i<=S.ngMax;i++) r.append(el("button",{class:"btn"+(tier===i?" hot":""),type:"button",text:i?`Nightmare ${i}`:"Normal",onclick:()=>{ tier=i; draw(); }})); }; draw(); body.append(r); }
   const lst=el("div",{class:"list"}); NF_CH.forEach((C,i)=>{ const n=i+1, open=n<=S.unl, done=S.clr[i]; lst.append(el("div",{class:"li",style:open?"":"opacity:.5"},el("div",{style:`font:700 20px Silkscreen,monospace;width:34px;text-align:center;color:${C.pal.ac}`,text:String(n)}),
@@ -8275,6 +8320,13 @@ function drawNfHub(t){ const W=SCENES.nfantasy.w, X0=camX, X1=camX+VW;
     for(const o of [-68,68]){ ctx.fillStyle=o<0?"#ff3fa8":"#38e8ff"; ctx.fillRect(x+o-12,140,24,46); ctx.beginPath(); ctx.moveTo(x+o-12,186); ctx.lineTo(x+o,176); ctx.lineTo(x+o+12,186); ctx.fillStyle="#1d1434"; ctx.fill(); } neonText("HALL OF HEROES",x,84,10,"#ffd36a",1); }
   // story stone
   if(X0<NFH.stone+100&&X1>NFH.stone-100){ const x=NFH.stone; ctx.fillStyle="#3a3a50"; ctx.beginPath(); ctx.moveTo(x-30,262); ctx.lineTo(x-24,180); ctx.lineTo(x,166); ctx.lineTo(x+24,180); ctx.lineTo(x+30,262); ctx.fill(); ctx.fillStyle="#43f0a4"; ctx.globalAlpha=.5+.3*Math.sin(t*2); for(let i=0;i<5;i++) ctx.fillRect(x-14,192+i*12,28-(i%2)*8,2); ctx.globalAlpha=1; neonText("STORY STONE",x,156,8,"#43f0a4",1); }
+  // the Depths: a glowing stairway down into the ground
+  if(X0<NFH.depths+160&&X1>NFH.depths-160){ const x=NFH.depths; ctx.fillStyle="#2a2440"; ctx.fillRect(x-74,150,148,112); ctx.fillStyle="#3a3258"; ctx.beginPath(); ctx.moveTo(x-82,154); ctx.quadraticCurveTo(x,96,x+82,154); ctx.lineTo(x+74,164); ctx.quadraticCurveTo(x,112,x-74,164); ctx.fill();
+    const g2=ctx.createLinearGradient(0,160,0,262); g2.addColorStop(0,"#0a0618"); g2.addColorStop(1,"#000"); ctx.fillStyle=g2; ctx.beginPath(); ctx.moveTo(x-52,262); ctx.lineTo(x-52,176); ctx.quadraticCurveTo(x,132,x+52,176); ctx.lineTo(x+52,262); ctx.fill();
+    for(let i=0;i<6;i++){ const y=200+i*11, w=96-i*12; ctx.fillStyle=`rgba(207,114,255,${.08+i*.04})`; ctx.fillRect(x-w/2,y,w,3); }
+    ctx.fillStyle="rgba(207,114,255,.25)"; ctx.beginPath(); ctx.ellipse(x,236,40+Math.sin(t*2)*4,10,0,0,7); ctx.fill();
+    for(let i=0;i<8;i++){ const a=t*.8+i*.785; ctx.fillStyle=["#cf72ff","#38e8ff","#43f0a4"][i%3]; ctx.globalAlpha=.6+.4*Math.sin(t*3+i); ctx.fillRect(x+Math.cos(a)*64-2,160+Math.sin(a)*10-2,4,4); } ctx.globalAlpha=1;
+    neonText("THE DEPTHS",x,92,11,"#cf72ff",flick(13,t)); neonText("TURN-BASED · ROGUELIKE",x,108,7,"#38e8ff",1); }
   // ground
   ctx.fillStyle="#141a2a"; ctx.fillRect(camX,262,VW,80); for(let x=Math.floor(X0/36)*36;x<X1;x+=36){ ctx.fillStyle=(x/36)%2?"#18203a":"#121830"; ctx.fillRect(x,262,34,80); } ctx.fillStyle="#43f0a4"; ctx.globalAlpha=.25; ctx.fillRect(camX,262,VW,2); ctx.globalAlpha=1; ctx.fillStyle="#0e0a18"; ctx.fillRect(camX,342,VW,18);
   if(X0<260){ ctx.fillStyle="#0a0712"; ctx.fillRect(80,190,120,72); ctx.fillStyle="#38e8ff"; ctx.fillRect(76,180,128,8); neonText("◉ METRO",140,172,12,"#38e8ff",1); } }
@@ -8285,6 +8337,554 @@ function drawHHGarage(t){ const X0=camX, X1=camX+VW; if(X1<HH_GAR.deal-200||X0>H
     try{ const cyc=Math.floor(Date.now()/8000), C=HR_CARS[cyc%HR_CARS.length]; hrDrawSide(ctx,x,226,C.id,{paint:2+(cyc%9),decal:cyc%HR_DECAL.length,glow:1+(cyc%5),spoiler:cyc%HR_SPOIL.length,trail:0},1,t); }catch(e){} }
   { const x=HH_GAR.gar; ctx.fillStyle="#1a1230"; ctx.fillRect(x-110,120,220,142); ctx.strokeStyle="#ffb13f"; ctx.lineWidth=2; ctx.strokeRect(x-109,121,218,140); ctx.lineWidth=1; ctx.fillStyle="#2a1f44"; for(let y=134;y<262;y+=14) ctx.fillRect(x-100,y,200,7); neonText("RESIDENT GARAGE",x,112,11,"#ffb13f",1);
     try{ const R=hrSave(); hrDrawSide(ctx,x,238,R.sel,hrCust(R.sel),.9,t); }catch(e){} } }
+/* ============================================================ NEON FANTASY: THE DEPTHS (a turn-based CRPG roguelike)
+   A second Neon Fantasy mode beside the action game. Pick a class, then descend 10 randomly built floors of the Aethernet.
+   - Exploring is step by step. When foes see you, combat starts: everyone rolls initiative and takes turns.
+   - Your turn: spend Action Points (AP) to move tile by tile, attack, use abilities and items. Every attack is a real roll
+     (hit chance shown before you commit), with dice damage and crits, all written to the combat log.
+   - Rooms hold chests, merchants, traps and events with choices and skill checks (d20 + your stat vs a difficulty).
+   - Level up to raise a stat and learn a new ability or perk. Die and the run is over (permadeath),
+     but you keep Echoes to spend on permanent upgrades and new classes. Floors 5 and 10 have bosses.
+   Main-game rewards are small and capped: a few credits per run a day, plus one-time milestone bonuses. */
+const NFD_TS=48, NFD_W=44, NFD_H=30, NFD_FLOORS=10, NFD_VIEW=8;
+const NFD_STATS=["STR","AGI","INT","VIT"];
+const NFD_CLS={
+  knight:{n:"Blade Knight",ic:"🛡",col:"#ffb84a",d:"Armored front-liner. Cleaves crowds, stuns with a shield bash, rallies to steady itself.",st:{STR:16,AGI:10,INT:8,VIT:15},hp:16,ap:4,def:2,wk:["sword","axe"],ab:["cleave","bash","rally"],learn:["charge","ironwill"],look:{jacket:4,style:4}},
+  rogue:{n:"Shadow Rogue",ic:"🗡",col:"#ff3fa8",d:"Fast and deadly. Extra AP, backstabs, poison and smoke to slip away.",st:{STR:10,AGI:16,INT:11,VIT:11},hp:11,ap:5,def:1,wk:["dagger","sword"],ab:["backstab","poison","smoke"],learn:["shadowstep","fan"],cost:60},
+  mage:{n:"Hex Mage",ic:"✦",col:"#cf72ff",d:"Ranged spellcaster. Bolts from afar, frost novas up close, lightning that chains.",st:{STR:8,AGI:11,INT:17,VIT:11},hp:9,ap:4,def:0,wk:["staff"],ab:["bolt","frost","chain"],learn:["fireball","blink"],cost:90},
+  ranger:{n:"Neon Ranger",ic:"🏹",col:"#43f0a4",d:"Bow at range 6. Marks prey, snares charging foes and looses volleys.",st:{STR:10,AGI:16,INT:10,VIT:12},hp:11,ap:4,def:1,wk:["bow"],ab:["volley","snare","mark"],learn:["pierce","evade"],cost:90}};
+const NFD_WEAP={sword:{n:"Sword",d:[1,8],s:"STR",r:1},axe:{n:"Axe",d:[1,10],s:"STR",r:1,hit:-1},dagger:{n:"Dagger",d:[1,6],s:"AGI",r:1,crit:6},staff:{n:"Staff",d:[1,6],s:"INT",r:1},bow:{n:"Bow",d:[1,8],s:"AGI",r:6}};
+// abilities: ap cost, cooldown (turns), target: e=enemy, s=self, t=tile, a=area around you
+const NFD_AB={
+  cleave:{n:"Cleave",ic:"⚔",ap:2,cd:2,tg:"e",rng:1,d:"Hit a foe and every other foe next to you (80% damage)."},
+  bash:{n:"Shield Bash",ic:"🛡",ap:2,cd:3,tg:"e",rng:1,d:"Half damage, 75% chance to stun for a turn."},
+  rally:{n:"Rally",ic:"✚",ap:1,cd:4,tg:"s",d:"+3 defense for 2 turns and heal 1d8 + VIT."},
+  charge:{n:"Charge",ic:"➤",ap:2,cd:3,tg:"e",rng:5,d:"Rush up to 5 tiles to a foe and hit it for +4 damage."},
+  ironwill:{n:"Iron Will",ic:"♥",pas:1,d:"Passive: +15 max HP and +1 defense."},
+  backstab:{n:"Backstab",ic:"🗡",ap:2,cd:2,tg:"e",rng:1,d:"+60% damage and +25% crit chance."},
+  poison:{n:"Venom Edge",ic:"☠",ap:1,cd:3,tg:"s",d:"Your next 2 hits poison (3 damage a turn for 3 turns)."},
+  smoke:{n:"Smoke Bomb",ic:"☁",ap:1,cd:4,tg:"s",d:"Vanish in smoke: foes have −40% to hit you until your next turn."},
+  shadowstep:{n:"Shadowstep",ic:"✧",ap:1,cd:3,tg:"t",rng:4,d:"Teleport to a tile you can see within 4."},
+  fan:{n:"Fan of Knives",ic:"✶",ap:3,cd:3,tg:"a",rng:2,d:"Hit every foe within 2 tiles for 1d6 + AGI."},
+  bolt:{n:"Neon Bolt",ic:"✦",ap:2,cd:0,tg:"e",rng:7,d:"Ranged spell: 2d6 + INT."},
+  frost:{n:"Frost Nova",ic:"❄",ap:3,cd:3,tg:"a",rng:2,d:"1d8 + INT to all foes within 2 tiles and slow them (−2 AP)."},
+  chain:{n:"Arc Chain",ic:"ϟ",ap:3,cd:3,tg:"e",rng:6,d:"2d8 + INT, then jumps to 2 more foes for half."},
+  fireball:{n:"Fireball",ic:"🔥",ap:3,cd:4,tg:"t",rng:7,d:"3d6 + INT to everything in a 3×3 area, and burns."},
+  blink:{n:"Blink",ic:"✧",ap:1,cd:3,tg:"t",rng:5,d:"Teleport to a tile you can see within 5."},
+  volley:{n:"Volley",ic:"➶",ap:3,cd:3,tg:"a",rng:6,d:"Shoot up to 3 foes in range for 75% damage."},
+  snare:{n:"Snare Shot",ic:"⊗",ap:2,cd:3,tg:"e",rng:6,d:"1d6 damage and roots the foe for 2 turns."},
+  mark:{n:"Hunter's Mark",ic:"◎",ap:1,cd:2,tg:"e",rng:8,d:"The foe takes +50% damage for 2 turns."},
+  pierce:{n:"Piercing Shot",ic:"➹",ap:2,cd:2,tg:"e",rng:7,d:"Hits every foe in a line to the target."},
+  evade:{n:"Evasion",ic:"≋",pas:1,d:"Passive: +2 defense and +1 AP."},
+  wind:{n:"Second Wind",ic:"❦",ap:1,cd:6,tg:"s",d:"Heal 35% of your max HP."}};
+const NFD_PERK={tough:{n:"Tough",d:"+14 max HP"},precise:{n:"Precise",d:"+1 to hit"},brutal:{n:"Brutal",d:"+2 damage"},lucky:{n:"Lucky",d:"+6% crit chance"},skin:{n:"Thick Skin",d:"+1 defense"},scav:{n:"Scavenger",d:"+35% gold found"},quick:{n:"Quick",d:"+1 AP (once)"}};
+const NFD_BIOME=[
+  {n:"Overgrown Server Ruins",floors:[1,2,3],foes:["slime","rat","sprout","skel"],pal:{bg:"#050b07",fl:"#12241a",fl2:"#163020",wall:"#0a170e",top:"#2f8a4a",ac:"#43f0a4"}},
+  {n:"The Drowned Arcade",floors:[4,5,6],foes:["skel","spider","mage","wraith"],pal:{bg:"#040818",fl:"#0f1a36",fl2:"#132244",wall:"#08102a",top:"#2a6ad0",ac:"#38e8ff"}},
+  {n:"The Ember Vaults",floors:[7,8,9],foes:["knight","imp","cult","golem","wraith"],pal:{bg:"#120503",fl:"#2a1410",fl2:"#331a12",wall:"#1a0a06",top:"#c8542a",ac:"#ff7a45"}},
+  {n:"The Null Throne",floors:[10],foes:["knight","cult","golem","wraith"],pal:{bg:"#060608",fl:"#1a1a22",fl2:"#20202a",wall:"#0c0c12",top:"#6a6a88",ac:"#e9e2ff"}}];
+// foes: hp, def, hit bonus, damage dice+bonus, AP, range, xp, gold
+const NFD_FOE={
+  slime:{n:"Glitch Slime",hp:12,def:9,hit:2,dmg:[1,6,0],ap:3,rng:1,xp:6,g:3,col:"#43f0a4",sh:"blob"},
+  rat:{n:"Neon Rat",hp:9,def:11,hit:3,dmg:[1,4,1],ap:5,rng:1,xp:5,g:2,col:"#ff8ad8",sh:"rat"},
+  sprout:{n:"Static Sprout",hp:10,def:10,hit:3,dmg:[1,6,0],ap:3,rng:5,xp:7,g:3,col:"#9cff6a",sh:"sprout",still:1},
+  skel:{n:"Byte Skeleton",hp:18,def:12,hit:4,dmg:[1,8,1],ap:4,rng:1,xp:10,g:5,col:"#e9e2ff",sh:"skull"},
+  spider:{n:"Wire Spider",hp:15,def:12,hit:4,dmg:[1,6,2],ap:5,rng:1,xp:10,g:4,col:"#38e8ff",sh:"spider",web:1},
+  mage:{n:"Hex Mage",hp:16,def:11,hit:5,dmg:[2,6,0],ap:4,rng:6,xp:13,g:7,col:"#cf72ff",sh:"robe"},
+  wraith:{n:"Static Wraith",hp:22,def:14,hit:5,dmg:[1,10,2],ap:4,rng:1,xp:15,g:6,col:"#8fa3ff",sh:"ghost",drain:1},
+  knight:{n:"Rust Knight",hp:34,def:15,hit:6,dmg:[1,10,3],ap:4,rng:1,xp:20,g:10,col:"#ffb84a",sh:"knight"},
+  imp:{n:"Ember Imp",hp:18,def:13,hit:6,dmg:[2,6,1],ap:4,rng:5,xp:16,g:8,col:"#ff7a45",sh:"imp",burn:1},
+  cult:{n:"Null Cultist",hp:22,def:12,hit:5,dmg:[1,8,2],ap:4,rng:5,xp:18,g:9,col:"#ff3fa8",sh:"robe",healer:1},
+  golem:{n:"Shard Golem",hp:48,def:15,hit:6,dmg:[2,8,3],ap:3,rng:1,xp:28,g:14,col:"#9aa4b8",sh:"golem"},
+  warden:{n:"The Wire Warden",hp:120,def:14,hit:7,dmg:[2,8,3],ap:5,rng:1,xp:120,g:80,col:"#38e8ff",sh:"boss1",boss:1,summon:"spider"},
+  tyrant:{n:"The Aether Tyrant",hp:230,def:16,hit:9,dmg:[2,10,5],ap:5,rng:1,xp:300,g:200,col:"#e9e2ff",sh:"boss2",boss:1,summon:"cult",nova:1}};
+const NFD_RAR=[["Common","#e9e2ff"],["Rare","#38e8ff"],["Epic","#cf72ff"],["Legendary","#ffd36a"]];
+const NFD_AFX=[["hit","+%v to hit",1,2],["dmg","+%v damage",1,3],["crit","+%v% crit",3,8],["hp","+%v max HP",5,12],["def","+%v defense",1,2],["STR","+%v STR",1,2],["AGI","+%v AGI",1,2],["INT","+%v INT",1,2],["VIT","+%v VIT",1,2],["leech","%v% lifesteal",5,12]];
+const NFD_MAT=["Rusty","Iron","Glowsteel","Prismite","Voidglass"];
+const NFD_ARM=[["Padded vest",1],["Neon coat",2],["Circuit plate",3]];
+const NFD_TRK=["Ring","Amulet","Sigil"];
+const NFD_CONS={tonic:{n:"Health Tonic",ic:"🧪",d:"Heal 2d8 + 4 (1 AP in combat)."},bomb:{n:"Shock Bomb",ic:"💣",d:"Throw within 5 tiles: 2d6 to a 3×3 area (2 AP)."},elixir:{n:"Aether Elixir",ic:"✨",d:"Full heal and cleanse (1 AP)."},map:{n:"Scroll of Mapping",ic:"📜",d:"Reveal this whole floor."}};
+const NFD_UP={hp:{n:"Hardier",d:"+6 max HP per rank",max:5,cost:l=>30+l*25},pot:{n:"Extra tonic",d:"+1 starting Health Tonic per rank",max:3,cost:l=>40+l*40},gold:{n:"Fortune",d:"+15% gold per rank",max:3,cost:l=>40+l*35},
+  start:{n:"Heirloom",d:"Start every run with a Rare weapon",max:1,cost:()=>150},reroll:{n:"Second Chance",d:"Once per run, a failed skill check is rerolled",max:1,cost:()=>120}};
+// ---- save
+function nfdS(){ let s=save.nfd; if(!s||typeof s!=="object") s=save.nfd={};
+  s.echo=Math.max(0,Math.floor(+s.echo||0)); s.up=s.up&&typeof s.up==="object"?s.up:{}; for(const k in NFD_UP) s.up[k]=Math.max(0,Math.min(NFD_UP[k].max,Math.floor(+s.up[k]||0)));
+  s.cls=s.cls&&typeof s.cls==="object"?s.cls:{}; s.cls.knight=1; s.best=Math.max(0,Math.min(NFD_FLOORS,Math.floor(+s.best||0))); s.runs=Math.floor(+s.runs||0); s.wins=Math.floor(+s.wins||0);
+  s.day=s.day&&typeof s.day==="object"?s.day:{d:"",n:0}; s.firsts=s.firsts&&typeof s.firsts==="object"?s.firsts:{}; s.hist=Array.isArray(s.hist)?s.hist.slice(0,8):[]; if(s.run&&typeof s.run!=="object") s.run=null; return s; }
+// ---- dice + helpers
+const nfdR=n=>Math.floor(Math.random()*n);
+function nfdRoll(n,d){ let t=0; for(let i=0;i<n;i++) t+=1+nfdR(d); return t; }
+const nfdMod=v=>Math.floor((v-10)/2);
+const nfdK=(x,y)=>x+","+y;
+let NFD=null;
+// ---- the hero's numbers (base class + level + gear + perks)
+function nfdHero(){ return NFD&&NFD.hero; }
+function nfdStat(h,k){ let v=h.st[k]; for(const it of Object.values(h.eq)) if(it) for(const [a,x] of it.a) if(a===k) v+=x; return v; }
+function nfdGear(h,k){ let v=0; for(const it of Object.values(h.eq)) if(it){ if(k==="def"&&it.k==="a") v+=it.b; for(const [a,x] of it.a) if(a===k) v+=x; } return v; }
+function nfdMaxHp(h){ const C=NFD_CLS[h.cls]; return C.hp+8+h.lv*(Math.ceil(C.hp/2)+1)+nfdMod(nfdStat(h,"VIT"))*h.lv+nfdGear(h,"hp")+(h.perk.tough||0)*14+(h.ab.includes("ironwill")?15:0)+(NFD.meta.up.hp||0)*6; }
+function nfdApMax(h){ return NFD_CLS[h.cls].ap+(h.perk.quick?1:0)+(h.ab.includes("evade")?1:0); }
+function nfdDef(h){ return 10+NFD_CLS[h.cls].def+nfdGear(h,"def")+Math.max(0,nfdMod(nfdStat(h,"AGI")))+(h.perk.skin||0)+(h.ab.includes("ironwill")?1:0)+(h.ab.includes("evade")?2:0)+(h.fx.rally?3:0); }
+function nfdWeap(h){ const w=h.eq.w; return w?NFD_WEAP[w.t]:NFD_WEAP[NFD_CLS[h.cls].wk[0]]; }
+function nfdHitB(h){ const W=nfdWeap(h); return nfdMod(nfdStat(h,W.s))+Math.floor(h.lv/2)+2+nfdGear(h,"hit")+(h.perk.precise||0)+(W.hit||0)+(h.eq.w?h.eq.w.p:0); }
+function nfdDmgB(h){ const W=nfdWeap(h); return nfdMod(nfdStat(h,W.s))+nfdGear(h,"dmg")+(h.perk.brutal||0)*2+(h.eq.w?h.eq.w.p:0); }
+function nfdCrit(h){ const W=nfdWeap(h); return 5+(W.crit||0)+Math.max(0,nfdMod(nfdStat(h,"AGI")))*2+nfdGear(h,"crit")+(h.perk.lucky||0)*6; }
+function nfdRange(h){ return nfdWeap(h).r; }
+// chance to hit, 5..95
+const nfdChance=(hit,def)=>Math.max(5,Math.min(95,50+(hit+10-def)*5));
+// ---- items
+function nfdItem(lv,kind,rar,cls){ rar=rar==null?(Math.random()<.02+lv*.004?3:Math.random()<.1+lv*.01?2:Math.random()<.35?1:0):rar; kind=kind||pickOf(["w","w","a","t"]);
+  const it={id:Math.random().toString(36).slice(2,9),k:kind,r:rar,lv,a:[],p:0}; const m=NFD_MAT[Math.min(4,Math.floor(lv/2.2)+(rar>=2?1:0))];
+  if(kind==="w"){ const ks=NFD_CLS[cls||NFD.hero.cls].wk; it.t=pickOf(ks); it.p=Math.floor(lv/3)+(rar>=2?1:0); it.n=`${m} ${NFD_WEAP[it.t].n}`; }
+  else if(kind==="a"){ const A=NFD_ARM[Math.min(2,nfdR(3))]; it.b=A[1]+Math.floor(lv/4); it.n=`${m} ${A[0]}`; }
+  else { it.n=`${m} ${pickOf(NFD_TRK)}`; it.a.push(["hp",4+lv*2]); }
+  const pool=NFD_AFX.slice(); for(let i=0;i<rar;i++){ const f=pool.splice(nfdR(pool.length),1)[0]; it.a.push([f[0],f[2]+nfdR(f[3]-f[2]+1)+Math.floor(lv/4)]); }
+  if(rar===3){ it.n=pickOf(["Starfall","Nullbane","Emberheart","Tidewhisper","Prismfang","Wirecutter"])+" "+(kind==="w"?NFD_WEAP[it.t].n:kind==="a"?"Aegis":"Relic"); }
+  it.v=Math.round((10+lv*6)*(1+rar*1.2)); return it; }
+function nfdItemLines(it){ const L=[]; if(it.k==="w"){ const W=NFD_WEAP[it.t]; L.push(`${W.d[0]}d${W.d[1]}${it.p?"+"+it.p:""} ${W.s}${W.r>1?` · range ${W.r}`:""}`); } if(it.k==="a") L.push(`+${it.b} defense`);
+  for(const [k,v] of it.a){ const f=NFD_AFX.find(x=>x[0]===k); L.push(f?f[1].replace("%v",v):`${k} ${v}`); } return L; }
+function nfdPower(it){ if(!it) return 0; let p=(it.p||0)*3+(it.b||0)*3; for(const [k,v] of it.a) p+=k==="hp"?v*.3:k==="crit"||k==="leech"?v*.4:v*2; if(it.k==="w") p+=NFD_WEAP[it.t].d[1]*.6; return Math.round(p*10)/10; }
+// ---- floor generation
+function nfdBiome(f){ return NFD_BIOME.find(b=>b.floors.includes(f))||NFD_BIOME[0]; }
+function nfdGen(seed,floor){ const r=seeded(seed*31+floor*977), ri=n=>Math.floor(r()*n), g=Array.from({length:NFD_H},()=>Array(NFD_W).fill(1)), rooms=[];
+  const boss=floor===5||floor===10;
+  for(let tries=0;tries<220&&rooms.length<(boss?8:11);tries++){ const w=5+ri(6), h=4+ri(4), x=1+ri(NFD_W-w-2), y=1+ri(NFD_H-h-2); if(rooms.some(o=>x<o.x+o.w+1&&x+w+1>o.x&&y<o.y+o.h+1&&y+h+1>o.y)) continue; rooms.push({x,y,w,h}); }
+  if(boss){ const w=11,h=8, x=NFD_W-w-2, y=Math.floor(NFD_H/2-h/2); for(let i=rooms.length-1;i>=0;i--){ const o=rooms[i]; if(x<o.x+o.w+1&&x+w+1>o.x&&y<o.y+o.h+1&&y+h+1>o.y) rooms.splice(i,1); } rooms.push({x,y,w,h,boss:1}); }
+  for(const R of rooms){ R.cx=R.x+Math.floor(R.w/2); R.cy=R.y+Math.floor(R.h/2); for(let y=R.y;y<R.y+R.h;y++) for(let x=R.x;x<R.x+R.w;x++) g[y][x]=0; }
+  const dig=(a,b)=>{ let x=a.cx,y=a.cy; const hx=r()<.5; const stepX=()=>{ while(x!==b.cx){ x+=Math.sign(b.cx-x); g[y][x]=0; } }, stepY=()=>{ while(y!==b.cy){ y+=Math.sign(b.cy-y); g[y][x]=0; } }; if(hx){ stepX(); stepY(); } else { stepY(); stepX(); } };
+  const order=rooms.filter(R=>!R.boss).sort((a,b)=>a.cx-b.cx); for(let i=1;i<order.length;i++) dig(order[i-1],order[i]); for(let k=0;k<2;k++) dig(order[ri(order.length)],order[ri(order.length)]);
+  const bossR=rooms.find(R=>R.boss); if(bossR) dig(order[order.length-1],bossR);
+  const start=order[0]; // farthest room from start for the stairs
+  const dist=nfdBfs(g,start.cx,start.cy); let far=order[order.length-1], fd=-1; for(const R of order){ const d=dist[nfdK(R.cx,R.cy)]; if(d>fd&&R!==start){ fd=d; far=R; } }
+  const F={g,rooms,start,seed,floor,boss:!!bossR,feat:{},foes:[],seen:new Set(),bossR};
+  const put=(R,k,extra)=>{ for(let t=0;t<30;t++){ const x=R.x+1+ri(Math.max(1,R.w-2)), y=R.y+1+ri(Math.max(1,R.h-2)); const key=nfdK(x,y); if(F.feat[key]||(x===start.cx&&y===start.cy)) continue; F.feat[key]={k,...(extra||{})}; return key; } return null; };
+  if(!bossR) put(far,"stairs"); else F.stairsAt=nfdK(bossR.cx+3,bossR.cy);
+  const mid=order.filter(R=>R!==start&&R!==far); for(let i=0;i<2+ri(2);i++) if(mid.length) put(mid[ri(mid.length)],"chest",{r:r()<.15?2:r()<.45?1:0});
+  for(let i=0;i<1+ri(2)+(floor>3?1:0);i++) if(mid.length) put(mid[ri(mid.length)],"event",{e:nfdEventPick(r)});
+  if(floor%3===0||floor===4) if(mid.length) put(mid[ri(mid.length)],"shop");
+  // traps in corridors
+  let traps=0; for(let t=0;t<400&&traps<2+Math.floor(floor/2);t++){ const x=1+ri(NFD_W-2), y=1+ri(NFD_H-2); if(g[y][x]) continue; if(rooms.some(R=>x>=R.x&&x<R.x+R.w&&y>=R.y&&y<R.y+R.h)) continue; const k=nfdK(x,y); if(F.feat[k]) continue; F.feat[k]={k:"trap",hid:1}; traps++; }
+  // foes
+  const B=nfdBiome(floor), lvl=floor; let pack=0;
+  for(const R of rooms){ if(R===start) continue; pack++; if(R.boss){ F.foes.push(nfdMkFoe(floor===10?"tyrant":"warden",R.cx+1,R.cy,lvl,pack)); for(let i=0;i<2;i++) F.foes.push(nfdMkFoe(B.foes[ri(B.foes.length)],R.cx-1-i,R.cy+(i?2:-2),lvl,pack)); continue; }
+    const n=Math.min(4,ri(3)+(floor>2?1:0)+(r()<.3?1:0)); for(let i=0;i<n;i++){ for(let t=0;t<20;t++){ const x=R.x+ri(R.w), y=R.y+ri(R.h); if(F.foes.some(f=>f.x===x&&f.y===y)||F.feat[nfdK(x,y)]) continue; F.foes.push(nfdMkFoe(B.foes[ri(B.foes.length)],x,y,lvl,pack)); break; } } }
+  return F; }
+function nfdBfs(g,sx,sy,block){ const D={}, q=[[sx,sy]]; D[nfdK(sx,sy)]=0; while(q.length){ const [x,y]=q.shift(), d=D[nfdK(x,y)]; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){ const nx=x+dx, ny=y+dy, k=nfdK(nx,ny); if(D[k]!=null||!g[ny]||g[ny][nx]!==0) continue; if(dx&&dy&&(g[y][nx]||g[ny][x])) continue; if(block&&block(nx,ny)) continue; D[k]=d+1; q.push([nx,ny]); } } return D; }
+function nfdMkFoe(k,x,y,lvl,pack){ const D=NFD_FOE[k], sc=1+(lvl-1)*.13; const hp=Math.round(D.hp*sc*(D.boss?1:1)); return {k,x,y,px:x,py:y,hp,max:hp,def:D.def+Math.floor(lvl/3),hit:D.hit+Math.floor(lvl/2),dmg:[D.dmg[0],D.dmg[1],D.dmg[2]+Math.floor(lvl/3)],ap:D.ap,rng:D.rng,pack,awake:0,fx:{},id:Math.random().toString(36).slice(2,8),boss:!!D.boss,face:-1,hitT:-9}; }
+// ---- events with choices and skill checks
+const NFD_EV={
+  courier:{t:"A wounded courier slumps against the wall, clutching a sealed data case.",o:[
+    {l:"Give them a Health Tonic",need:"tonic",go:h=>{ h.cons.tonic--; const g=40+NFD.floor*10; nfdGold(g); return [`The courier presses ${g} gold into your hand. "The Wire Warden isn't what it seems. Hit it before it calls its spiders."`]; }},
+    {l:"Patch them up",chk:["INT",12],ok:h=>{ nfdXp(25); return ["You splice a bandage from cable and cloth. They thank you and slip you a map shard.",nfdReveal(.5)]; },no:h=>["Your patch job doesn't hold. They limp away, disappointed."]},
+    {l:"Take the data case",go:h=>{ nfdLoot(nfdItem(NFD.floor+1,null,1)); h.karma=(h.karma||0)-1; return ["You take the case. Inside: gear. The courier's eyes follow you into the dark."]; }},
+    {l:"Walk away",go:()=>["You leave them to the dark."]}]},
+  shrine:{t:"A glitched shrine flickers between colors. Strange glyphs crawl over its surface.",o:[
+    {l:"Pray",go:h=>{ if(Math.random()<.6){ nfdBless(); return ["Warm light washes over you.",NFD.lastBless]; } nfdHurtHero(nfdRoll(2,6),"the shrine"); return ["The shrine screams static. It burns!"]; }},
+    {l:"Decode the glyphs",chk:["INT",13],ok:h=>{ nfdBless(); nfdBless(); return ["You read the code and choose your blessing carefully.",NFD.lastBless]; },no:h=>{ nfdHurtHero(4,"feedback"); return ["The glyphs bite back with a jolt."]; }},
+    {l:"Smash it for parts",chk:["STR",12],ok:()=>{ const g=30+NFD.floor*12; nfdGold(g); return [`It cracks open: ${g} gold in salvage.`]; },no:()=>{ nfdWake(6); return ["It won't budge, and the noise echoes down the halls…"]; }}]},
+  vault:{t:"A heavy vault door, locked with a neon keypad.",o:[
+    {l:"Pick the lock",chk:["AGI",13],ok:()=>{ nfdLoot(nfdItem(NFD.floor+1,null,2)); return ["Click. Inside rests something special."]; },no:()=>{ nfdHurtHero(nfdRoll(1,8),"a shock trap"); return ["The keypad zaps you."]; }},
+    {l:"Force it open",chk:["STR",14],ok:()=>{ nfdLoot(nfdItem(NFD.floor+1,null,1)); nfdWake(8); return ["The door gives way with a crash. Something heard that."]; },no:()=>{ nfdWake(8); return ["It holds. Your banging carries far."]; }},
+    {l:"Leave it",go:()=>["Some doors are better left closed."]}]},
+  fountain:{t:"A fountain of liquid neon bubbles quietly.",o:[
+    {l:"Drink",go:h=>{ if(Math.random()<.7){ h.hp=nfdMaxHp(h); return ["Pure energy. You're fully healed."]; } h.fx.poison=3; return ["It tastes like battery acid. You're poisoned."]; }},
+    {l:"Test it first",chk:["INT",11],ok:h=>{ h.hp=nfdMaxHp(h); h.cons.tonic=(h.cons.tonic||0)+1; return ["It's clean. You drink deep and bottle some (+1 Health Tonic)."]; },no:()=>["You can't tell. Better not risk it."]},
+    {l:"Leave",go:()=>["You move on."]}]},
+  dice:{t:"A grinning hologram shuffles glowing dice. \"One roll. Beat me and double your bet.\"",o:[
+    {l:"Bet 30 gold",needGold:30,go:h=>{ const a=nfdRoll(1,20)+Math.max(0,nfdMod(nfdStat(h,"AGI"))), b=nfdRoll(1,20); if(a>b){ nfdGold(30); return [`You roll ${a}, it rolls ${b}. You win 30 gold!`]; } nfdGold(-30); return [`You roll ${a}, it rolls ${b}. The house wins.`]; }},
+    {l:"Spot the trick",chk:["INT",14],ok:()=>{ nfdGold(80); return ["The dice are loaded. You call it out and it pays you 80 gold to keep quiet."]; },no:()=>["You can't see how it cheats."]},
+    {l:"Walk away",go:()=>["The hologram shrugs."]}]},
+  bones:{t:"The bones of an old adventurer, still wearing a pack.",o:[
+    {l:"Search the pack",go:h=>{ const g=20+NFD.floor*8; nfdGold(g); if(Math.random()<.5) h.cons.tonic=(h.cons.tonic||0)+1; return [`You find ${g} gold${Math.random()<.5?" and a tonic":""}.`]; }},
+    {l:"Read their journal",chk:["INT",11],ok:()=>{ nfdReveal(1); return ["Their notes map the whole floor. You know the way now."]; },no:()=>["The pages crumble."]},
+    {l:"Give them rest",go:h=>{ nfdXp(20); return ["You lay them flat and say a few words. You feel steadier (+20 XP)."]; }}]},
+  cage:{t:"A spirit of light is trapped in a cage of red wire.",o:[
+    {l:"Tear the wires",chk:["STR",13],ok:h=>{ h.perkTemp=(h.perkTemp||0)+1; nfdBless(); return ["The spirit bursts free and blesses you.",NFD.lastBless]; },no:h=>{ nfdHurtHero(nfdRoll(1,6),"the wires"); return ["The wires cut your hands."]; }},
+    {l:"Slip it through the bars",chk:["AGI",12],ok:h=>{ nfdXp(30); return ["It squeezes free and flies off, leaving a trail of light (+30 XP)."]; },no:()=>["You can't get the angle right."]},
+    {l:"Leave it",go:()=>["Its glow dims behind you."]}]},
+  camp:{t:"An abandoned camp with a still-warm fire.",o:[
+    {l:"Rest a while",go:h=>{ h.hp=Math.min(nfdMaxHp(h),h.hp+Math.round(nfdMaxHp(h)*.5)); if(Math.random()<.3){ nfdAmbush(); return ["You rest… and wake to footsteps. Ambush!"]; } return ["You rest and heal half your health."]; }},
+    {l:"Keep watch and rest",chk:["VIT",12],ok:h=>{ h.hp=nfdMaxHp(h); return ["You stay alert and fully recover."]; },no:h=>{ h.hp=Math.min(nfdMaxHp(h),h.hp+Math.round(nfdMaxHp(h)*.25)); return ["You doze off a little. You recover some health."]; }},
+    {l:"Move on",go:()=>["No time to rest."]}]}};
+function nfdEventPick(r){ const K=Object.keys(NFD_EV); return K[Math.floor(r()*K.length)]; }
+// ---- open / close
+function openNfDepths(){ if($("#gnf")) return; closePanel(); const M=nfdS(); if(M.run&&M.run.v===1){ nfdOpenShell(); nfdResume(M.run); } else { nfdOpenShell(); nfdClassPick(); } }
+function nfdOpenShell(){ const wrap=el("div",{id:"gnf",class:"nfd",role:"dialog","aria-label":"Neon Fantasy: The Depths"});
+  const info=el("span",{class:"g1sub",id:"nfdInfo",text:""});
+  const bar=el("div",{class:"g1bar"},el("strong",{text:"THE DEPTHS"}),info,el("button",{class:"btn",type:"button",text:"🧍 Hero",onclick:()=>nfdSheet()}),el("button",{class:"btn",type:"button",text:"🎒 Bag",onclick:()=>nfdBag()}),el("button",{class:"btn",type:"button",text:"?",onclick:()=>nfdHelp(),"aria-label":"How to play"}),el("button",{class:"btn hot",type:"button",text:"✕ Leave",onclick:()=>nfdAskLeave()}));
+  const box=el("div",{class:"nfdmain"}); const cvb=el("div",{class:"nfdcvb"}); const cv=document.createElement("canvas"); cv.width=1920; cv.height=1080; cv.className="nfdcv"; cvb.append(cv);
+  const log=el("div",{class:"nfdlog",id:"nfdLog","aria-live":"polite"}); const side=el("div",{class:"nfdside"},el("div",{class:"nfdhero",id:"nfdHeroBox"}),el("strong",{text:"Combat log",class:"nfdlh"}),log);
+  box.append(cvb,side); const act=el("div",{class:"nfdbar",id:"nfdBar"}); const modal=el("div",{class:"nfdmodal",hidden:true,id:"nfdModal"});
+  wrap.append(bar,box,act,modal); $("#game").appendChild(wrap); try{ releaseKeys&&releaseKeys(); }catch(e){}
+  NFD={LW:1280,LH:720,open:true,cv,c:cv.getContext("2d"),t:0,last:performance.now(),meta:nfdS(),fx:[],nums:[],shots:[],log:[],cam:{x:0,y:0},hover:null,sel:null,busy:0,queue:[],mode:"pick",shake:0};
+  const fit=()=>{ if(!NFD) return; const r=cvb.getBoundingClientRect(); if(r.width<10||r.height<10) return; const W=r.width-12, H=r.height-12, asp=Math.max(.45,Math.min(2.4,W/H)); const LW=asp>=1?1280:Math.round(Math.max(560,900*asp+200)), LH=Math.round(LW/asp); if(LW!==NFD.LW||LH!==NFD.LH){ NFD.LW=LW; NFD.LH=LH; cv.width=Math.round(LW*1.5); cv.height=Math.round(LH*1.5); } cv.style.width=W+"px"; cv.style.height=(W/asp)+"px"; }; NFD.fit=fit; fit(); addEventListener("resize",fit); setTimeout(fit,50); try{ const ro=new ResizeObserver(()=>fit()); ro.observe(cvb); NFD.ro=ro; }catch(e){}
+  cv.addEventListener("pointermove",e=>{ NFD.hover=nfdPt(e); }); cv.addEventListener("pointerleave",()=>{ NFD.hover=null; });
+  cv.addEventListener("pointerdown",e=>{ e.preventDefault(); const p=nfdPt(e); NFD.hover=p; nfdClick(p); });
+  requestAnimationFrame(nfdFrame); try{ stTrack("act","Play Neon Fantasy: The Depths"); }catch(e){} }
+function nfdPt(e){ const r=NFD.cv.getBoundingClientRect(), sx=(e.clientX-r.left)/r.width*NFD.LW, sy=(e.clientY-r.top)/r.height*NFD.LH; return {x:Math.floor((sx+NFD.cam.x)/NFD_TS),y:Math.floor((sy+NFD.cam.y)/NFD_TS),sx,sy}; }
+function nfdAskLeave(){ if(!NFD) return; if(NFD.mode==="pick"||NFD.mode==="over"){ nfdClose(); return; }
+  nfdModal("Leave the Depths?",[el("p",{text:"Your run is saved at the start of this floor. You can continue it from the Gate later (you'll restart this floor)."})],[["Stay",()=>nfdModalClose()],["Save & leave",()=>{ nfdClose(); },1]]); }
+function nfdClose(){ const w=$("#gnf"); if(w&&w.classList.contains("nfd")) w.remove(); if(NFD){ removeEventListener("resize",NFD.fit); try{ NFD.ro&&NFD.ro.disconnect(); }catch(e){} NFD.open=false; } NFD=null; persist(); try{ hud(); }catch(e){} }
+// ---- modal helper
+function nfdModal(title,body,btns,cls){ const m=$("#nfdModal"); if(!m) return; m.hidden=false; m.className="nfdmodal"+(cls?" "+cls:""); m.replaceChildren(el("div",{class:"nfdmc"},el("h3",{text:title}),...body,el("div",{class:"row nfdmb"},...(btns||[]).map(([t,f,hot])=>el("button",{class:"btn"+(hot?" hot":""),type:"button",text:t,onclick:f}))))); NFD.modal=1; }
+function nfdModalClose(){ const m=$("#nfdModal"); if(m){ m.hidden=true; m.replaceChildren(); } if(NFD) NFD.modal=0; nfdUi(); }
+// ---- class pick (new run)
+function nfdClassPick(){ const M=NFD.meta; NFD.mode="pick"; const cards=el("div",{class:"nfdcls"});
+  for(const [k,C] of Object.entries(NFD_CLS)){ const own=!!M.cls[k]; const pv=document.createElement("canvas"); pv.width=160; pv.height=170; pv.className="nfdpv"; nfdPortrait(pv,k);
+    cards.append(el("div",{class:"nfdcard"+(own?"":" lock"),style:`--cc:${C.col}`},pv,el("strong",{text:`${C.ic} ${C.n}`}),el("p",{text:C.d}),el("div",{class:"sub",text:NFD_STATS.map(s=>`${s} ${C.st[s]}`).join(" · ")+` · ${C.ap} AP`}),
+      el("div",{class:"sub",text:"Abilities: "+C.ab.map(a=>NFD_AB[a].n).join(", ")}),
+      own?el("button",{class:"btn hot",type:"button",text:"Begin run",onclick:()=>nfdNewRun(k)}):el("button",{class:"btn",type:"button",text:`Unlock · ${C.cost} Echoes`,disabled:M.echo<C.cost?"":null,onclick:()=>{ M.echo-=C.cost; M.cls[k]=1; persist(); beep(880,.08); nfdClassPick(); }}))); }
+  nfdModal("Choose your hero",[el("p",{class:"sub",text:`Descend ${NFD_FLOORS} floors of the Aethernet. Turn-based combat, random floors, one life. Echoes kept: ${M.echo} · Best depth: ${M.best}/${NFD_FLOORS} · Wins: ${M.wins}`}),cards,nfdAltarBox()],[["Close",()=>nfdClose()]],"wide"); }
+function nfdAltarBox(){ const M=nfdS(); const box=el("div",{class:"nfdaltar"},el("strong",{text:`✧ Altar of Echoes (${M.echo} Echoes)`}),el("div",{class:"sub",text:"Permanent upgrades for every future run. Earn Echoes by going deeper, slaying foes and beating bosses."}));
+  const l=el("div",{class:"list"}); for(const [k,U] of Object.entries(NFD_UP)){ const lv=M.up[k], max=lv>=U.max, c=U.cost(lv); l.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:`${U.n} ${"●".repeat(lv)}${"○".repeat(U.max-lv)}`}),el("div",{class:"sub",text:U.d})),
+    el("button",{class:"btn",type:"button",text:max?"Max":`${c} Echoes`,disabled:max||M.echo<c?"":null,onclick:()=>{ M.echo-=c; M.up[k]++; persist(); beep(990,.08); if(NFD&&NFD.mode==="pick") nfdClassPick(); }}))); }
+  box.append(l); return box; }
+function nfdPortrait(cv,k){ const c=cv.getContext("2d"); const C=NFD_CLS[k]; const draw=()=>{ if(!cv.isConnected&&cv._s) return; cv._s=1; const t=performance.now()/1000; c.clearRect(0,0,160,170); const g=c.createRadialGradient(80,110,10,80,110,90); g.addColorStop(0,C.col+"55"); g.addColorStop(1,"transparent"); c.fillStyle=g; c.fillRect(0,0,160,170);
+    try{ drawStick(c,80,150,1.9,{look:{...(save.look||DEFAULT_LOOK)},dir:1,phase:0,moving:false},t); }catch(e){} nfdClassGear(c,k,80,150,1.9,1,t); requestAnimationFrame(draw); }; requestAnimationFrame(draw); }
+// a class item drawn on top of the stick figure (sword+shield, daggers, staff, bow)
+function nfdClassGear(c,k,x,y,s,dir,t){ c.save(); c.translate(x,y); c.scale(s*dir,s); const C=NFD_CLS[k]; c.lineCap="round";
+  if(k==="knight"){ c.strokeStyle="#dfe6f5"; c.lineWidth=2.4; c.beginPath(); c.moveTo(12,-34); c.lineTo(22,-58); c.stroke(); c.strokeStyle=C.col; c.lineWidth=2; c.beginPath(); c.moveTo(9,-36); c.lineTo(15,-33); c.stroke(); c.fillStyle="#2a2f48"; c.strokeStyle=C.col; c.lineWidth=1.5; c.beginPath(); c.moveTo(-14,-42); c.lineTo(-4,-42); c.lineTo(-4,-30); c.lineTo(-9,-24); c.lineTo(-14,-30); c.closePath(); c.fill(); c.stroke(); }
+  else if(k==="rogue"){ for(const sx of [10,-8]){ c.strokeStyle="#e9e2ff"; c.lineWidth=1.8; c.beginPath(); c.moveTo(sx,-32); c.lineTo(sx+6,-42); c.stroke(); } c.fillStyle="rgba(40,10,40,.85)"; c.beginPath(); c.arc(0,-56,10,Math.PI,0); c.fill(); }
+  else if(k==="mage"){ c.strokeStyle="#8a6ac0"; c.lineWidth=2; c.beginPath(); c.moveTo(12,-6); c.lineTo(12,-66); c.stroke(); c.fillStyle=C.col; c.shadowColor=C.col; c.shadowBlur=10; c.beginPath(); c.arc(12,-68,3.5+Math.sin(t*4)*.6,0,7); c.fill(); c.shadowBlur=0; c.fillStyle="#3a1a5a"; c.beginPath(); c.moveTo(-10,-60); c.lineTo(0,-80); c.lineTo(10,-60); c.closePath(); c.fill(); }
+  else if(k==="ranger"){ c.strokeStyle=C.col; c.lineWidth=1.8; c.beginPath(); c.arc(10,-38,14,-1.2,1.2); c.stroke(); c.strokeStyle="#e9e2ff"; c.lineWidth=.8; c.beginPath(); c.moveTo(10+Math.cos(-1.2)*14,-38+Math.sin(-1.2)*14); c.lineTo(10+Math.cos(1.2)*14,-38+Math.sin(1.2)*14); c.stroke(); c.fillStyle="#2a4a3a"; c.beginPath(); c.arc(0,-56,10,Math.PI,0); c.fill(); }
+  c.restore(); }
+// ---- runs
+function nfdNewRun(cls){ const M=NFD.meta, C=NFD_CLS[cls]; M.runs++; const h={cls,lv:1,xp:0,st:{...C.st},ab:C.ab.slice(),perk:{},cd:{},fx:{},eq:{w:null,a:null,t:null},bag:[],cons:{tonic:2+M.up.pot,bomb:1,elixir:0,map:0},gold:0,kills:0,karma:0,reroll:M.up.reroll?1:0,pts:0};
+  NFD.hero=h; h.eq.w=nfdItem(1,"w",M.up.start?1:0,cls); h.eq.w.n=(M.up.start?"Heirloom ":"Old ")+NFD_WEAP[h.eq.w.t].n; h.eq.a=nfdItem(1,"a",0,cls); h.eq.a.a=[]; h.eq.a.b=1; h.eq.a.n="Traveler's vest";
+  h.hp=nfdMaxHp(h); NFD.seed=Math.floor(Math.random()*1e9); NFD.floor=1; nfdModalClose(); nfdStartFloor(true); }
+function nfdSnap(){ const h=NFD.hero; return {v:1,seed:NFD.seed,floor:NFD.floor,hero:JSON.parse(JSON.stringify({...h,fx:{},cd:{}})),at:Date.now()}; }
+function nfdResume(r){ NFD.hero=r.hero; NFD.hero.fx={}; NFD.hero.cd={}; NFD.seed=r.seed; NFD.floor=r.floor; NFD.hero.hp=Math.max(1,Math.min(nfdMaxHp(NFD.hero),NFD.hero.hp||1)); nfdStartFloor(false); nfdLog(`Run continued on floor ${NFD.floor}.`,"#9fd8ff"); }
+function nfdStartFloor(intro){ const F=nfdGen(NFD.seed,NFD.floor); NFD.F=F; const h=NFD.hero; h.x=F.start.cx; h.y=F.start.cy; h.px=h.x; h.py=h.y; h.face=1; NFD.mode="explore"; NFD.combat=null; NFD.fx=[]; NFD.nums=[]; NFD.shots=[];
+  NFD.meta.run=nfdSnap(); persist(); nfdFov(); NFD.cam={x:h.x*NFD_TS-(NFD.LW/2),y:h.y*NFD_TS-(NFD.LH/2)};
+  const B=nfdBiome(NFD.floor); NFD.banner={t:0,a:`Floor ${NFD.floor}`,b:B.n+(F.boss?" · Boss floor":"")}; nfdLog(`— Floor ${NFD.floor}: ${B.n} —`,B.pal.ac); if(F.boss) nfdLog("A powerful presence waits at the far end of this floor.","#ff8a8a");
+  try{ beep(330,.2,"triangle",.05); setTimeout(()=>beep(220,.3,"triangle",.05),180); }catch(e){} nfdUi(); }
+// ---- field of view
+function nfdLos(g,x0,y0,x1,y1){ let dx=Math.abs(x1-x0), dy=-Math.abs(y1-y0), sx=x0<x1?1:-1, sy=y0<y1?1:-1, err=dx+dy, x=x0, y=y0; while(!(x===x1&&y===y1)){ const e2=2*err; if(e2>=dy){ err+=dy; x+=sx; } if(e2<=dx){ err+=dx; y+=sy; } if(x===x1&&y===y1) break; if(!g[y]||g[y][x]!==0) return false; } return true; }
+function nfdFov(){ const F=NFD.F, h=NFD.hero, V=new Set(); for(let y=h.y-NFD_VIEW;y<=h.y+NFD_VIEW;y++) for(let x=h.x-NFD_VIEW;x<=h.x+NFD_VIEW;x++){ if(!F.g[y]||F.g[y][x]==null) continue; if((x-h.x)**2+(y-h.y)**2>NFD_VIEW*NFD_VIEW+2) continue; if(nfdLos(F.g,h.x,h.y,x,y)){ V.add(nfdK(x,y)); F.seen.add(nfdK(x,y)); } } NFD.vis=V; }
+const nfdVisible=(x,y)=>NFD.vis&&NFD.vis.has(nfdK(x,y));
+function nfdReveal(frac){ const F=NFD.F; for(let y=0;y<NFD_H;y++) for(let x=0;x<NFD_W;x++) if(Math.random()<frac){ const open=F.g[y][x]===0||[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>F.g[y+b]&&F.g[y+b][x+a]===0); if(open) F.seen.add(nfdK(x,y)); } return frac>=1?"The whole floor is mapped.":"Part of the floor is revealed."; }
+// ---- occupancy + paths
+function nfdFoeAt(x,y){ return NFD.F.foes.find(f=>f.hp>0&&f.x===x&&f.y===y); }
+function nfdFree(x,y,self){ const F=NFD.F; if(!F.g[y]||F.g[y][x]!==0) return false; if(NFD.hero.x===x&&NFD.hero.y===y&&self!==NFD.hero) return false; const f=nfdFoeAt(x,y); return !f||f===self; }
+function nfdPath(sx,sy,tx,ty,self,maxLen){ const F=NFD.F, prev={}, q=[[sx,sy]], seen=new Set([nfdK(sx,sy)]); while(q.length){ const [x,y]=q.shift(); if(x===tx&&y===ty) break;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){ const nx=x+dx, ny=y+dy, k=nfdK(nx,ny); if(seen.has(k)) continue; if(!F.g[ny]||F.g[ny][nx]!==0) continue; if(dx&&dy&&(F.g[y][nx]||F.g[ny][x])) continue; if(!(nx===tx&&ny===ty)&&!nfdFree(nx,ny,self)) continue; seen.add(k); prev[k]=[x,y]; q.push([nx,ny]); } }
+  if(!seen.has(nfdK(tx,ty))) return null; const path=[]; let cur=[tx,ty]; while(!(cur[0]===sx&&cur[1]===sy)){ path.unshift(cur); cur=prev[nfdK(cur[0],cur[1])]; if(!cur) return null; } return maxLen!=null&&path.length>maxLen?path.slice(0,maxLen):path; }
+const nfdDist=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
+// ---- log + floating numbers
+function nfdLog(t,col){ NFD.log.push({t,col:col||"#d9d0f5"}); if(NFD.log.length>60) NFD.log.shift(); const L=$("#nfdLog"); if(L){ L.append(el("div",{style:`color:${col||"#d9d0f5"}`,text:t})); while(L.childNodes.length>60) L.firstChild.remove(); L.scrollTop=L.scrollHeight; } }
+function nfdNum(x,y,txt,col,big){ NFD.nums.push({x:x*NFD_TS+NFD_TS/2+nfdR(10)-5,y:y*NFD_TS,txt:String(txt),col,t:0,big}); }
+// ---- main loop
+function nfdFrame(now){ if(!NFD||!NFD.open) return; const dt=Math.min(.05,(now-NFD.last)/1000); NFD.last=now; NFD.t+=dt; try{ nfdUpdate(dt); nfdDraw(); }catch(e){ console.error(e); } requestAnimationFrame(nfdFrame); }
+function nfdUpdate(dt){ const h=NFD.hero; if(NFD.banner){ NFD.banner.t+=dt; if(NFD.banner.t>2.8) NFD.banner=null; } NFD.shake=Math.max(0,NFD.shake-dt);
+  for(const n of NFD.nums) n.t+=dt; NFD.nums=NFD.nums.filter(n=>n.t<1.1); for(const f of NFD.fx) f.t+=dt; NFD.fx=NFD.fx.filter(f=>f.t<f.life); for(const s of NFD.shots) s.t+=dt; NFD.shots=NFD.shots.filter(s=>s.t<s.life);
+  if(!h||!NFD.F) return; const k=Math.min(1,dt*14); for(const e of [h,...NFD.F.foes]){ e.px+=(e.x-e.px)*k; e.py+=(e.y-e.py)*k; }
+  const tx=h.px*NFD_TS+NFD_TS/2-(NFD.LW/2), ty=h.py*NFD_TS+NFD_TS/2-(NFD.LH/2); NFD.cam.x+=(tx-NFD.cam.x)*Math.min(1,dt*6); NFD.cam.y+=(ty-NFD.cam.y)*Math.min(1,dt*6);
+  // queued steps/actions run one at a time
+  if(NFD.queue.length&&NFD.t>=(NFD.qT||0)){ const a=NFD.queue.shift(); NFD.qT=NFD.t+(a.wait||.11); try{ a.f(); }catch(e){ console.error(e); } if(!NFD.queue.length) nfdUi(); } }
+function nfdQ(f,wait){ NFD.queue.push({f,wait}); }
+const nfdBusy=()=>NFD.queue.length>0||NFD.modal;
+// ---- input
+addEventListener("keydown",e=>{ if(!NFD||!NFD.open) return; const t=e.target; if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return; e.stopImmediatePropagation();
+  const k=e.key; if(k==="Escape"){ e.preventDefault(); if(NFD.modal) nfdModalClose(); else if(NFD.sel){ NFD.sel=null; nfdUi(); } else nfdAskLeave(); return; }
+  if(NFD.modal||NFD.mode==="pick"||NFD.mode==="over") return; e.preventDefault(); if(e.repeat&&!/Arrow|^[wasd]$/i.test(k)) return;
+  const dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]}[k];
+  if(dir){ const h=NFD.hero; nfdClick({x:h.x+dir[0],y:h.y+dir[1]}); return; }
+  if(k===" "||k==="Enter"){ if(NFD.combat&&NFD.combat.turn===NFD.hero) nfdEndTurn(); return; }
+  if(/^[1-9]$/.test(k)){ const L=nfdActList(); const a=L[+k-1]; if(a) a.f(); return; }
+  if(k==="h"||k==="H"){ nfdUseCons("tonic"); return; } if(k==="c"||k==="C"){ nfdSheet(); return; } if(k==="i"||k==="I"){ nfdBag(); return; } },true);
+function nfdClick(p){ if(!NFD||nfdBusy()||!NFD.F||NFD.mode==="pick"||NFD.mode==="over") return; const h=NFD.hero, F=NFD.F, C=NFD.combat;
+  if(C&&C.turn!==h) return; const S=NFD.sel;
+  if(S){ nfdUseSel(p); return; }
+  const foe=nfdFoeAt(p.x,p.y); if(foe&&nfdVisible(p.x,p.y)){ nfdAttackFoe(foe); return; }
+  if(p.x===h.x&&p.y===h.y){ nfdInteract(); return; }
+  if(!F.seen.has(nfdK(p.x,p.y))||F.g[p.y]==null||F.g[p.y][p.x]!==0) return;
+  const path=nfdPath(h.x,h.y,p.x,p.y,h); if(!path||!path.length) return; let steps=path; if(C){ if(h.ap<=0){ nfdLog("No AP left. End your turn (Space).","#ffb84a"); return; } steps=path.slice(0,h.ap); }
+  nfdWalk(steps); }
+function nfdWalk(steps){ const h=NFD.hero; for(const [x,y] of steps){ nfdQ(()=>{ if(NFD.combat&&h.ap<=0) { NFD.queue=NFD.queue.filter(()=>false); return; } if(!nfdFree(x,y,h)){ NFD.queue=[]; return; } if(h.fx.root){ nfdLog("You're rooted and can't move!","#ffb84a"); NFD.queue=[]; return; }
+      h.face=x>h.x?1:x<h.x?-1:h.face; h.x=x; h.y=y; if(NFD.combat) h.ap--; nfdFov(); try{ beep(180+nfdR(30),.02,"square",.02); }catch(e){}
+      if(nfdStepOn(x,y)) { NFD.queue=[]; return; } if(!NFD.combat&&nfdCheckAggro()){ NFD.queue=[]; return; } if(!NFD.combat) nfdWander(); },.1); } }
+// stepping on a feature
+function nfdStepOn(x,y){ const F=NFD.F, k=nfdK(x,y), f=F.feat[k], h=NFD.hero; if(!f) return false;
+  if(f.k==="trap"){ delete f.hid; const chk=nfdCheck("AGI",12+Math.floor(NFD.floor/3)); if(chk.ok){ nfdLog(`Trap! You dodge it (AGI check ${chk.roll}+${chk.mod} vs ${chk.dc}).`,"#9fd8ff"); } else { const d=nfdRoll(2,6)+NFD.floor; nfdHurtHero(d,"a spike trap"); nfdLog(`Trap! ${chk.roll}+${chk.mod} vs ${chk.dc}: you take ${d}.`,"#ff8a8a"); } f.k="trapx"; return false; }
+  if(f.k==="chest"){ delete F.feat[k]; const g=Math.round((8+NFD.floor*6+nfdR(10))*nfdGoldMul()); nfdGold(g); nfdLoot(nfdItem(NFD.floor,null,f.r>=1?Math.max(f.r,Math.random()<.2?f.r+1:f.r):undefined)); if(Math.random()<.4) { h.cons.tonic++; nfdLog("…and a Health Tonic.","#43f0a4"); } nfdFxAt(x,y,"burst","#ffd36a"); beep(1200,.06); return false; }
+  if(f.k==="event"&&!NFD.combat){ nfdEvent(f.e,k); return true; }
+  if(f.k==="shop"&&!NFD.combat){ nfdShop(); return true; }
+  if(f.k==="stairs"&&!NFD.combat){ nfdModal("Descend?",[el("p",{text:`Go down to floor ${NFD.floor+1}? You can't come back up.`})],[["Not yet",()=>nfdModalClose()],["Descend ⬇",()=>{ nfdModalClose(); nfdDescend(); },1]]); return true; }
+  return false; }
+function nfdInteract(){ const h=NFD.hero, f=NFD.F.feat[nfdK(h.x,h.y)]; if(f) nfdStepOn(h.x,h.y); }
+function nfdDescend(){ const M=NFD.meta; NFD.floor++; M.best=Math.max(M.best,NFD.floor-1); if(NFD.floor>NFD_FLOORS){ nfdWin(); return; } nfdXp(10*NFD.floor); nfdStartFloor(true); }
+// asleep foes shuffle a little while you explore
+function nfdWander(){ for(const f of NFD.F.foes){ if(f.hp<=0||f.awake||NFD_FOE[f.k].still||f.boss||Math.random()>.25) continue; const d=pickOf([[1,0],[-1,0],[0,1],[0,-1]]); if(nfdFree(f.x+d[0],f.y+d[1],f)){ f.x+=d[0]; f.y+=d[1]; } } }
+function nfdCheckAggro(){ const h=NFD.hero, F=NFD.F; let woke=[]; for(const f of F.foes){ if(f.hp<=0) continue; const d=nfdDist(f,h); if(d<=(f.boss?9:6)&&nfdVisible(f.x,f.y)&&nfdLos(F.g,f.x,f.y,h.x,h.y)) woke.push(f); }
+  if(!woke.length) return false; const packs=new Set(woke.map(f=>f.pack)); const all=F.foes.filter(f=>f.hp>0&&(packs.has(f.pack)&&nfdDist(f,h)<=12||woke.includes(f))); nfdStartCombat(all); return true; }
+function nfdWhenFree(fn){ const go=()=>{ if(!NFD||NFD.mode==="over") return; if(NFD.modal) return setTimeout(go,300); fn(); }; setTimeout(go,300); }
+function nfdWake(r){ const h=NFD.hero; const all=NFD.F.foes.filter(f=>f.hp>0&&nfdDist(f,h)<=r); for(const f of all){ f.awake=1; } if(all.some(f=>nfdDist(f,h)<=6)) nfdWhenFree(()=>{ if(!NFD.combat) nfdStartCombat(all.filter(f=>f.hp>0&&nfdDist(f,h)<=8)); }); }
+function nfdAmbush(){ const h=NFD.hero, B=nfdBiome(NFD.floor), L=[]; for(const [dx,dy] of [[2,0],[-2,0],[0,2]]){ const x=h.x+dx, y=h.y+dy; if(nfdFree(x,y)){ const f=nfdMkFoe(pickOf(B.foes),x,y,NFD.floor,999); f.awake=1; NFD.F.foes.push(f); L.push(f); } } if(L.length) nfdWhenFree(()=>{ if(!NFD.combat) nfdStartCombat(L); }); }
+// ---- combat
+function nfdStartCombat(foes){ const h=NFD.hero; for(const f of foes) f.awake=1; const order=[{e:h,i:nfdRoll(1,20)+nfdMod(nfdStat(h,"AGI"))+2},...foes.map(f=>({e:f,i:nfdRoll(1,20)+Math.floor((NFD_FOE[f.k].ap-4)*2)}))].sort((a,b)=>b.i-a.i);
+  NFD.combat={order:order.map(o=>o.e),idx:-1,turn:null,round:1}; NFD.mode="combat"; NFD.sel=null; nfdLog(`⚔ Combat! Initiative: ${order.map(o=>(o.e===h?"You":NFD_FOE[o.e.k].n)+" "+o.i).join(", ")}.`,"#ffd36a");
+  NFD.banner={t:.8,a:"COMBAT",b:"Roll for initiative"}; try{ beep(140,.18,"sawtooth",.05); }catch(e){} nfdNextTurn(); }
+function nfdNextTurn(){ const C=NFD.combat; if(!C) return; const h=NFD.hero; C.order=C.order.filter(e=>e===h||e.hp>0); if(nfdCombatOver()) return;
+  C.idx=(C.idx+1)%C.order.length; if(C.idx===0&&C.turn) C.round++; const e=C.order[C.idx]; C.turn=e;
+  // start-of-turn effects
+  const name=e===h?"You":NFD_FOE[e.k].n; if(e.fx.poison>0){ const d=3+Math.floor(NFD.floor/3); e.fx.poison--; if(e===h) nfdHurtHero(d,"poison"); else nfdHurtFoe(e,d,"#b46aff"); nfdLog(`${name} take${e===h?"":"s"} ${d} poison damage.`,"#b46aff"); }
+  if(e.fx.burn>0){ const d=4; e.fx.burn--; if(e===h) nfdHurtHero(d,"burning"); else nfdHurtFoe(e,d,"#ff7a45"); }
+  if(e!==h&&e.hp<=0){ nfdNextTurn(); return; } if(e===h&&NFD.mode==="over") return;
+  for(const k of ["rally","smoke","marked","slow","stun","root"]) if(e.fx[k]&&k!=="stun"&&k!=="root") e.fx[k]--; for(const k of Object.keys(e.fx)) if(e.fx[k]<=0) delete e.fx[k];
+  if(e===h){ for(const k in h.cd) if(h.cd[k]>0) h.cd[k]--; h.ap=nfdApMax(h)-(h.fx.slow?2:0); if(h.fx.stun){ delete h.fx.stun; nfdLog("You're stunned and lose your turn!","#ffb84a"); nfdUi(); setTimeout(()=>nfdNextTurn(),700); return; } NFD.banner={t:1.6,a:"YOUR TURN",b:`${h.ap} AP`}; nfdUi(); return; }
+  nfdUi(); setTimeout(()=>{ if(NFD&&NFD.combat) nfdFoeTurn(e); },350); }
+function nfdEndTurn(){ if(!NFD.combat||NFD.combat.turn!==NFD.hero||nfdBusy()) return; NFD.sel=null; const h=NFD.hero; if(h.fx.root){ h.fx.root--; if(!h.fx.root) delete h.fx.root; } nfdNextTurn(); }
+function nfdCombatOver(){ const C=NFD.combat, h=NFD.hero; if(h.hp<=0){ nfdDie(); return true; } const alive=C.order.filter(e=>e!==h&&e.hp>0);
+  if(!alive.length){ NFD.combat=null; NFD.mode="explore"; NFD.sel=null; for(const k in h.cd) h.cd[k]=0; h.fx={}; nfdLog("Victory. The area is quiet again.","#43f0a4"); NFD.banner={t:1.2,a:"VICTORY",b:""}; try{ [523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.1,"triangle",.05),i*90)); }catch(e){}
+    if(NFD.F.boss&&!NFD.F.foes.some(f=>f.boss&&f.hp>0)&&!NFD.F.feat[NFD.F.stairsAt]){ if(NFD.floor===NFD_FLOORS){ setTimeout(()=>nfdWin(),900); } else { NFD.F.feat[NFD.F.stairsAt]={k:"stairs"}; const [sx,sy]=NFD.F.stairsAt.split(",").map(Number); NFD.F.seen.add(NFD.F.stairsAt); nfdFxAt(sx,sy,"burst","#cf72ff"); nfdLog("A stairway opens where the boss fell.","#cf72ff"); } }
+    nfdFov(); nfdCheckAggro(); nfdUi(); return true; } return false; }
+// ---- the hero acts
+function nfdAttackFoe(foe){ const h=NFD.hero, rng=nfdRange(h), C=NFD.combat; if(!C){ nfdStartCombat(NFD.F.foes.filter(f=>f.hp>0&&(f.pack===foe.pack||nfdDist(f,h)<=6))); if(NFD.combat.turn!==h) return; }
+  const inRange=nfdDist(h,foe)<=rng&&(rng===1||nfdLos(NFD.F.g,h.x,h.y,foe.x,foe.y));
+  if(inRange){ if(h.ap<2){ nfdLog("Attacking takes 2 AP.","#ffb84a"); return; } h.ap-=2; nfdStrike(h,foe,{}); nfdCombatOver(); nfdUi(); return; }
+  if(rng>1){ nfdLog("Out of range or no line of sight.","#ffb84a"); return; }
+  // walk next to it, then swing if AP allows
+  let best=null; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){ const x=foe.x+dx, y=foe.y+dy; if(!nfdFree(x,y,h)) continue; const p=nfdPath(h.x,h.y,x,y,h); if(p&&(!best||p.length<best.length)) best=p; }
+  if(!best){ nfdLog("Can't reach that foe.","#ffb84a"); return; } if(best.length+2>h.ap){ nfdLog(`Need ${best.length+2} AP to reach and attack (you have ${h.ap}).`,"#ffb84a"); nfdWalk(best.slice(0,h.ap)); return; }
+  nfdWalk(best); nfdQ(()=>{ if(nfdDist(h,foe)<=1&&foe.hp>0&&h.ap>=2){ h.ap-=2; nfdStrike(h,foe,{}); nfdCombatOver(); } },.05); }
+// one attack roll: hero -> foe
+function nfdStrike(h,foe,o){ const W=nfdWeap(h); h.face=foe.x>h.x?1:foe.x<h.x?-1:h.face; const hitB=nfdHitB(h)+(o.hit||0), ch=nfdChance(hitB,foe.def), roll=1+nfdR(100);
+  nfdLunge(h,foe,W.r>1?"arrow":null); const nm=NFD_FOE[foe.k].n;
+  if(roll>ch){ nfdNum(foe.x,foe.y,"MISS","#9a8cc0"); nfdLog(`You ${o.verb||"attack"} ${nm}: rolled ${roll} vs ${ch}% → miss.`,"#9a8cc0"); try{ beep(300,.04,"triangle",.03); }catch(e){} return 0; }
+  const crit=1+nfdR(100)<=nfdCrit(h)+(o.crit||0); const dice=W.d; let dmg=nfdRoll(dice[0]*(crit?2:1),dice[1])+nfdDmgB(h)+(o.add||0); dmg=Math.max(1,Math.round(dmg*(o.mul||1)*(foe.fx.marked?1.5:1)));
+  nfdLog(`You ${o.verb||"hit"} ${nm}: ${roll} vs ${ch}% → ${crit?"CRIT! ":""}${dice[0]*(crit?2:1)}d${dice[1]}+${nfdDmgB(h)+(o.add||0)} = ${dmg} damage.`,crit?"#ffd36a":"#e9e2ff");
+  nfdHurtFoe(foe,dmg,crit?"#ffd36a":"#fff",crit); const lee=nfdGear(h,"leech"); if(lee) nfdHealHero(Math.max(1,Math.round(dmg*lee/100)),true);
+  if(h.fx.venom>0&&foe.hp>0){ h.fx.venom--; foe.fx.poison=3; nfdLog(`${nm} is poisoned.`,"#b46aff"); } return dmg; }
+// a spell/ability damage packet (always hits unless the foe dodges with its defense vs your spell power)
+function nfdSpell(foe,dice,mod,col,label,o){ o=o||{}; const h=NFD.hero; const hitB=nfdMod(nfdStat(h,o.stat||"INT"))+Math.floor(h.lv/2)+3+(h.perk.precise||0), ch=Math.min(95,nfdChance(hitB,foe.def)+15), roll=1+nfdR(100), nm=NFD_FOE[foe.k].n;
+  if(roll>ch){ nfdNum(foe.x,foe.y,"RESIST","#9a8cc0"); nfdLog(`${label} → ${nm}: ${roll} vs ${ch}% → resisted.`,"#9a8cc0"); return 0; }
+  let dmg=Math.max(1,Math.round((nfdRoll(dice[0],dice[1])+mod)*(o.mul||1)*(foe.fx.marked?1.5:1))); nfdLog(`${label} → ${nm}: ${dice[0]}d${dice[1]}+${mod} = ${dmg}.`,col); nfdHurtFoe(foe,dmg,col); return dmg; }
+function nfdHurtFoe(f,d,col,big){ f.hp-=d; f.hitT=NFD.t; nfdNum(f.x,f.y,d,col||"#fff",big); NFD.shake=Math.max(NFD.shake,big?.25:.1); try{ beep(d>15?120:180,.06,"square",.04); }catch(e){}
+  if(f.hp<=0){ f.hp=0; const D=NFD_FOE[f.k], h=NFD.hero; h.kills++; nfdFxAt(f.x,f.y,"poof",D.col); nfdLog(`${D.n} is defeated! +${D.xp} XP`,"#43f0a4"); nfdXp(D.xp); const g=Math.round((D.g+nfdR(D.g+1))*nfdGoldMul()); if(g) nfdGold(g,true);
+    if(Math.random()<(f.boss?1:.12)) nfdLoot(nfdItem(NFD.floor+(f.boss?2:0),null,f.boss?2+(Math.random()<.35?1:0):undefined)); if(!f.boss&&Math.random()<.1){ h.cons.tonic++; nfdLog("It dropped a Health Tonic.","#43f0a4"); }
+    if(f.boss){ NFD.shake=.8; nfdLog(`★ ${D.n} has fallen!`,"#ffd36a"); } } }
+function nfdHurtHero(d,src){ const h=NFD.hero; d=Math.max(1,Math.round(d)); h.hp-=d; h.hitT=NFD.t; nfdNum(h.x,h.y,d,"#ff5a5a",d>=10); NFD.shake=Math.max(NFD.shake,.15); try{ beep(90,.08,"sawtooth",.05); }catch(e){} if(h.hp<=0){ h.hp=0; if(NFD.combat) setTimeout(()=>{ if(NFD) nfdCombatOver(); },300); else nfdDie(); } nfdUi(); }
+function nfdHealHero(n,quiet){ const h=NFD.hero, m=nfdMaxHp(h), was=h.hp; h.hp=Math.min(m,h.hp+n); const got=h.hp-was; if(got>0){ nfdNum(h.x,h.y,"+"+got,"#43f0a4"); if(!quiet) nfdLog(`You heal ${got}.`,"#43f0a4"); } nfdUi(); }
+function nfdLunge(a,b,shot){ a.lunge={t0:NFD.t,dx:Math.sign(b.x-a.x),dy:Math.sign(b.y-a.y)}; if(shot) NFD.shots.push({x0:a.x,y0:a.y,x1:b.x,y1:b.y,t:0,life:.25,k:shot,col:"#e9e2ff"}); }
+function nfdFxAt(x,y,k,col){ NFD.fx.push({x,y,k,col,t:0,life:k==="poof"?.6:.7}); }
+// ---- abilities
+function nfdActList(){ const h=NFD.hero; if(!h) return []; const L=[]; const C=NFD.combat, myTurn=!C||C.turn===h;
+  for(const k of h.ab){ const A=NFD_AB[k]; if(A.pas) continue; L.push({k,ic:A.ic,n:A.n,ap:A.ap,cd:h.cd[k]||0,dis:!C||!myTurn||h.ap<A.ap||(h.cd[k]||0)>0,tip:A.d,f:()=>nfdPickAb(k)}); }
+  L.push({k:"tonic",ic:"🧪",n:`Tonic ×${h.cons.tonic}`,ap:C?1:0,dis:!h.cons.tonic||!myTurn||(C&&h.ap<1),tip:NFD_CONS.tonic.d,f:()=>nfdUseCons("tonic")});
+  if(h.cons.bomb) L.push({k:"bomb",ic:"💣",n:`Bomb ×${h.cons.bomb}`,ap:2,dis:!C||!myTurn||h.ap<2,tip:NFD_CONS.bomb.d,f:()=>{ NFD.sel={k:"bomb",tg:"t",rng:5}; nfdUi(); }});
+  return L; }
+function nfdPickAb(k){ const h=NFD.hero, A=NFD_AB[k]; if(!NFD.combat){ nfdLog("Abilities are for combat.","#9a8cc0"); return; } if(h.ap<A.ap||(h.cd[k]||0)>0) return;
+  if(A.tg==="s"){ nfdDoAb(k,null); return; } if(A.tg==="a"){ nfdDoAb(k,null); return; } NFD.sel={k,tg:A.tg,rng:A.rng}; nfdLog(`${A.n}: pick a ${A.tg==="t"?"tile":"target"} (Esc to cancel).`,"#9fd8ff"); nfdUi(); }
+function nfdUseSel(p){ const S=NFD.sel, h=NFD.hero; if(S.k==="bomb"){ if(nfdDist(h,p)>5||!nfdVisible(p.x,p.y)){ nfdLog("Too far or out of sight.","#ffb84a"); return; } NFD.sel=null; h.cons.bomb--; h.ap-=2; NFD.shots.push({x0:h.x,y0:h.y,x1:p.x,y1:p.y,t:0,life:.3,k:"orb",col:"#ffd36a"});
+    setTimeout(()=>{ if(!NFD) return; nfdFxAt(p.x,p.y,"blast","#ffd36a"); for(const f of NFD.F.foes) if(f.hp>0&&Math.abs(f.x-p.x)<=1&&Math.abs(f.y-p.y)<=1){ const d=nfdRoll(2,6)+NFD.floor; nfdLog(`Shock Bomb hits ${NFD_FOE[f.k].n} for ${d}.`,"#ffd36a"); nfdHurtFoe(f,d,"#ffd36a"); } nfdCombatOver(); nfdUi(); },280); nfdUi(); return; }
+  const A=NFD_AB[S.k]; if(A.tg==="e"){ const f=nfdFoeAt(p.x,p.y); if(!f||!nfdVisible(p.x,p.y)){ nfdLog("Pick a foe.","#ffb84a"); return; } if(nfdDist(h,f)>A.rng||(A.rng>1&&!nfdLos(NFD.F.g,h.x,h.y,f.x,f.y))){ nfdLog("Out of range.","#ffb84a"); return; } NFD.sel=null; nfdDoAb(S.k,f); return; }
+  if(A.tg==="t"){ if(nfdDist(h,p)>A.rng||!nfdVisible(p.x,p.y)){ nfdLog("Too far or out of sight.","#ffb84a"); return; } if(S.k!=="fireball"&&!nfdFree(p.x,p.y,h)){ nfdLog("That tile is blocked.","#ffb84a"); return; } NFD.sel=null; nfdDoAb(S.k,p); } }
+function nfdDoAb(k,tg){ const h=NFD.hero, A=NFD_AB[k], INT=nfdMod(nfdStat(h,"INT")), AGI=nfdMod(nfdStat(h,"AGI")), VIT=nfdMod(nfdStat(h,"VIT")); h.ap-=A.ap; h.cd[k]=A.cd; nfdLog(`✦ ${A.n}`,NFD_CLS[h.cls].col); const adj=()=>NFD.F.foes.filter(f=>f.hp>0&&nfdDist(f,h)<=1);
+  switch(k){
+    case "cleave": nfdStrike(h,tg,{verb:"cleave"}); for(const f of adj()) if(f!==tg) nfdStrike(h,f,{verb:"cleave",mul:.8}); nfdFxAt(h.x,h.y,"ring","#ffb84a"); break;
+    case "bash": nfdStrike(h,tg,{verb:"bash",mul:.5}); if(tg.hp>0&&!tg.boss&&Math.random()<.75){ tg.fx.stun=1; nfdLog(`${NFD_FOE[tg.k].n} is stunned!`,"#f5e663"); nfdNum(tg.x,tg.y,"STUN","#f5e663"); } break;
+    case "rally": h.fx.rally=2; nfdHealHero(nfdRoll(1,8)+Math.max(0,VIT)); nfdFxAt(h.x,h.y,"ring","#43f0a4"); break;
+    case "charge": { let best=null; for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){ const x=tg.x+dx,y=tg.y+dy; if(!nfdFree(x,y,h)) continue; const p=nfdPath(h.x,h.y,x,y,h); if(p&&p.length<=5&&(!best||p.length<best.length)) best=p; } if(best&&best.length){ const last=best[best.length-1]; h.x=last[0]; h.y=last[1]; nfdFov(); } if(nfdDist(h,tg)<=1) nfdStrike(h,tg,{verb:"charge into",add:4}); break; }
+    case "backstab": nfdStrike(h,tg,{verb:"backstab",mul:1.6,crit:25}); break;
+    case "poison": h.fx.venom=2; nfdLog("Your blades drip with venom.","#b46aff"); break;
+    case "smoke": h.fx.smoke=1; nfdFxAt(h.x,h.y,"smoke","#c8c0e0"); nfdLog("You vanish into smoke. Foes have −40% to hit you.","#c8c0e0"); break;
+    case "shadowstep": case "blink": nfdFxAt(h.x,h.y,"smoke","#cf72ff"); h.x=tg.x; h.y=tg.y; h.px=h.x; h.py=h.y; nfdFov(); nfdFxAt(h.x,h.y,"ring","#cf72ff"); break;
+    case "fan": nfdFxAt(h.x,h.y,"ring","#ff3fa8"); for(const f of NFD.F.foes) if(f.hp>0&&nfdDist(f,h)<=2) nfdSpell(f,[1,6],Math.max(0,AGI),"#ff3fa8","Fan of Knives",{stat:"AGI"}); break;
+    case "bolt": NFD.shots.push({x0:h.x,y0:h.y,x1:tg.x,y1:tg.y,t:0,life:.22,k:"orb",col:"#cf72ff"}); setTimeout(()=>{ if(!NFD) return; nfdSpell(tg,[2,6],INT,"#cf72ff","Neon Bolt"); nfdCombatOver(); nfdUi(); },200); break;
+    case "frost": nfdFxAt(h.x,h.y,"nova","#7ce7ff"); for(const f of NFD.F.foes) if(f.hp>0&&nfdDist(f,h)<=2){ if(nfdSpell(f,[1,8],INT,"#7ce7ff","Frost Nova")) f.fx.slow=2; } break;
+    case "chain": { const hit=[tg]; let cur=tg; for(let i=0;i<2;i++){ const n=NFD.F.foes.filter(f=>f.hp>0&&!hit.includes(f)&&nfdDist(f,cur)<=3).sort((a,b)=>nfdDist(a,cur)-nfdDist(b,cur))[0]; if(!n) break; hit.push(n); cur=n; }
+      let px=h; hit.forEach((f,i)=>{ NFD.shots.push({x0:px.x,y0:px.y,x1:f.x,y1:f.y,t:-i*.12,life:.3+i*.12,k:"zap",col:"#fff36a"}); px=f; }); setTimeout(()=>{ if(!NFD) return; hit.forEach((f,i)=>nfdSpell(f,[2,8],INT,"#fff36a","Arc Chain",{mul:i?.5:1})); nfdCombatOver(); nfdUi(); },220); break; }
+    case "fireball": NFD.shots.push({x0:h.x,y0:h.y,x1:tg.x,y1:tg.y,t:0,life:.3,k:"orb",col:"#ff7a45"}); setTimeout(()=>{ if(!NFD) return; nfdFxAt(tg.x,tg.y,"blast","#ff7a45"); for(const f of NFD.F.foes) if(f.hp>0&&Math.abs(f.x-tg.x)<=1&&Math.abs(f.y-tg.y)<=1){ if(nfdSpell(f,[3,6],INT,"#ff7a45","Fireball")) f.fx.burn=2; } nfdCombatOver(); nfdUi(); },300); break;
+    case "volley": { const T=NFD.F.foes.filter(f=>f.hp>0&&nfdDist(f,h)<=6&&nfdLos(NFD.F.g,h.x,h.y,f.x,f.y)).sort((a,b)=>nfdDist(a,h)-nfdDist(b,h)).slice(0,3); if(!T.length) nfdLog("No foes in range.","#ffb84a"); T.forEach(f=>nfdStrike(h,f,{verb:"shoot",mul:.75})); break; }
+    case "snare": nfdLunge(h,tg,"arrow"); nfdSpell(tg,[1,6],Math.max(0,AGI),"#43f0a4","Snare Shot",{stat:"AGI"}); if(tg.hp>0){ tg.fx.root=2; nfdNum(tg.x,tg.y,"ROOTED","#43f0a4"); } break;
+    case "mark": tg.fx.marked=2; nfdNum(tg.x,tg.y,"MARKED","#ffd36a"); nfdLog(`${NFD_FOE[tg.k].n} is marked: +50% damage taken.`,"#ffd36a"); break;
+    case "pierce": { const L=NFD.F.foes.filter(f=>{ if(f.hp<=0) return false; if(f===tg) return true; const ax=tg.x-h.x, ay=tg.y-h.y, bx=f.x-h.x, by=f.y-h.y; return Math.abs(ax*by-ay*bx)<=Math.max(Math.abs(ax),Math.abs(ay))*.7&&(ax*bx+ay*by)>0&&nfdDist(f,h)<=7; }); L.forEach(f=>nfdStrike(h,f,{verb:"pierce"})); break; }
+    case "wind": nfdHealHero(Math.round(nfdMaxHp(h)*.35)); nfdFxAt(h.x,h.y,"ring","#43f0a4"); break; }
+  nfdCombatOver(); nfdUi(); }
+function nfdUseCons(k){ const h=NFD.hero, C=NFD.combat; if(!h||!h.cons[k]) return; if(C&&(C.turn!==h||h.ap<1)) return; if(k==="tonic"){ if(h.hp>=nfdMaxHp(h)){ nfdLog("Already at full health.","#9a8cc0"); return; } h.cons.tonic--; if(C) h.ap--; nfdHealHero(nfdRoll(2,8)+4); try{ beep(740,.06,"sine",.05); }catch(e){} }
+  else if(k==="elixir"){ h.cons.elixir--; if(C) h.ap--; h.fx={}; nfdHealHero(nfdMaxHp(h)); } else if(k==="map"){ h.cons.map--; nfdLog(nfdReveal(1),"#9fd8ff"); } nfdUi(); }
+// ---- foe turns (simple tactics: close in, keep range if ranged, healers heal, bosses summon/nova)
+function nfdFoeTurn(f){ if(!NFD||!NFD.combat) return; const h=NFD.hero, D=NFD_FOE[f.k]; let ap=f.ap-(f.fx.slow?2:0); const nm=D.n; const rooted=!!f.fx.root; if(f.fx.root){ f.fx.root--; if(!f.fx.root) delete f.fx.root; }
+  if(f.fx.stun){ delete f.fx.stun; nfdLog(`${nm} is stunned.`,"#f5e663"); return setTimeout(()=>nfdNextTurn(),500); }
+  const acts=[]; const done=()=>{ if(!NFD) return; if(h.hp<=0){ nfdCombatOver(); return; } setTimeout(()=>{ if(NFD&&NFD.combat) nfdNextTurn(); },250); };
+  // boss specials
+  if(f.boss&&Math.random()<.3&&NFD.combat.round>1){ if(D.summon&&NFD.F.foes.filter(x=>x.hp>0&&!x.boss).length<4){ let n=0; for(const [dx,dy] of [[1,1],[-1,1],[1,-1],[-1,-1]]){ if(n>=2) break; const x=f.x+dx, y=f.y+dy; if(nfdFree(x,y)){ const s=nfdMkFoe(D.summon,x,y,NFD.floor,f.pack); s.awake=1; NFD.F.foes.push(s); NFD.combat.order.push(s); nfdFxAt(x,y,"ring",NFD_FOE[D.summon].col); n++; } } nfdLog(`${nm} calls for help!`,"#ff8a8a"); NFD.shake=.3; return setTimeout(done,500); }
+    if(D.nova&&nfdDist(f,h)<=2){ nfdFxAt(f.x,f.y,"nova","#e9e2ff"); const d=nfdRoll(3,6)+NFD.floor; nfdLog(`${nm} unleashes a null nova!`,"#ff8a8a"); nfdHurtHero(d,nm); return setTimeout(done,600); } }
+  if(D.healer&&ap>=2){ const hurt=NFD.F.foes.filter(x=>x.hp>0&&x!==f&&x.hp<x.max*.6&&nfdDist(x,f)<=5)[0]; if(hurt){ const n=nfdRoll(2,6)+NFD.floor; hurt.hp=Math.min(hurt.max,hurt.hp+n); nfdNum(hurt.x,hurt.y,"+"+n,"#43f0a4"); nfdFxAt(hurt.x,hurt.y,"ring","#43f0a4"); nfdLog(`${nm} heals ${NFD_FOE[hurt.k].n} for ${n}.`,"#ff8ad8"); return setTimeout(done,500); } }
+  const canHit=()=>nfdDist(f,h)<=f.rng&&(f.rng===1||nfdLos(NFD.F.g,f.x,f.y,h.x,h.y));
+  // ranged foes back away when you're adjacent
+  if(f.rng>1&&nfdDist(f,h)<=1&&ap>=3&&!rooted){ const opts=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].map(([dx,dy])=>[f.x+dx,f.y+dy]).filter(([x,y])=>nfdFree(x,y,f)&&Math.max(Math.abs(x-h.x),Math.abs(y-h.y))>1); if(opts.length){ const [x,y]=opts[0]; acts.push(()=>{ f.x=x; f.y=y; }); ap--; } }
+  let steps=[]; if(!canHit()&&!D.still&&!rooted){ let best=null; for(let ty=h.y-f.rng;ty<=h.y+f.rng;ty++) for(let tx=h.x-f.rng;tx<=h.x+f.rng;tx++){ if(!nfdFree(tx,ty,f)) continue; if(f.rng>1&&!nfdLos(NFD.F.g,tx,ty,h.x,h.y)) continue; const p=nfdPath(f.x,f.y,tx,ty,f,14); if(p&&(!best||p.length<best.length)) best=p; } if(!best){ const p=nfdPath(f.x,f.y,h.x,h.y,f,14); if(p) best=p.slice(0,-1); } if(best) steps=best.slice(0,Math.max(0,ap-2)); }
+  for(const [x,y] of steps) acts.push(()=>{ if(nfdFree(x,y,f)){ f.face=x>f.x?1:x<f.x?-1:f.face; f.x=x; f.y=y; } });
+  const left=ap-steps.length; let i=0; const run=()=>{ if(!NFD) return; if(i<acts.length){ acts[i++](); return setTimeout(run,110); } if(left>=2&&canHit()) nfdFoeStrike(f); if(left>=4&&canHit()&&D.ap>=5&&h.hp>0) setTimeout(()=>{ if(NFD&&h.hp>0) nfdFoeStrike(f); done(); },380); else setTimeout(done,f.rng>1?380:260); };
+  run(); }
+function nfdFoeStrike(f){ const h=NFD.hero, D=NFD_FOE[f.k]; f.face=h.x>f.x?1:-1; nfdLunge(f,h,f.rng>1?(D.burn?"fire":"orb"):null); const def=nfdDef(h), ch=Math.max(5,nfdChance(f.hit,def)-(h.fx.smoke?40:0)), roll=1+nfdR(100);
+  if(roll>ch){ nfdNum(h.x,h.y,"MISS","#9a8cc0"); nfdLog(`${D.n} attacks: ${roll} vs ${ch}% → miss.`,"#9a8cc0"); return; }
+  const crit=nfdR(100)<5; let d=nfdRoll(f.dmg[0]*(crit?2:1),f.dmg[1])+f.dmg[2]; nfdLog(`${D.n} hits you: ${roll} vs ${ch}% → ${crit?"CRIT! ":""}${d} damage.`,"#ff8a8a"); nfdHurtHero(d,D.n);
+  if(D.web&&Math.random()<.35&&h.hp>0){ h.fx.root=1; nfdLog("Webbed! You can't move next turn.","#38e8ff"); } if(D.burn&&Math.random()<.4) h.fx.burn=2; if(D.drain){ f.hp=Math.min(f.max,f.hp+Math.ceil(d/2)); } }
+// ---- progress
+function nfdXpNeed(lv){ return 20+lv*lv*12; }
+function nfdXp(n){ const h=NFD.hero; h.xp+=n; while(h.xp>=nfdXpNeed(h.lv)){ h.xp-=nfdXpNeed(h.lv); h.lv++; h.pts++; const m=nfdMaxHp(h); h.hp=Math.min(m,h.hp+Math.ceil(m*.3)); nfdLog(`★ Level ${h.lv}! Choose a stat and a new talent.`,"#ffd36a"); NFD.banner={t:0,a:`LEVEL ${h.lv}`,b:"New talent available"}; try{ [659,880,1175].forEach((f,i)=>setTimeout(()=>beep(f,.1,"triangle",.05),i*100)); }catch(e){}
+    if(!NFD.combat) setTimeout(()=>nfdLevelUp(),500); } nfdUi(); }
+function nfdLevelUp(){ const h=NFD.hero; if(!h||h.pts<=0||NFD.modal||NFD.combat) return; const C=NFD_CLS[h.cls];
+  const pool=[...C.learn.filter(a=>!h.ab.includes(a)).map(a=>({ab:a})),...(h.ab.includes("wind")?[]:[{ab:"wind"}]),...Object.keys(NFD_PERK).filter(p=>!(p==="quick"&&h.perk.quick)).map(p=>({perk:p}))];
+  const picks=[]; while(picks.length<3&&pool.length){ const i=nfdR(pool.length); picks.push(pool.splice(i,1)[0]); } let stat=null, pick=null;
+  const sRow=el("div",{class:"row nfdstats"}), pRow=el("div",{class:"nfdpicks"}); const go=el("button",{class:"btn hot",type:"button",text:"Confirm",disabled:"",onclick:()=>{ h.st[stat]++; if(pick.ab) h.ab.push(pick.ab); else h.perk[pick.perk]=(h.perk[pick.perk]||0)+1; h.pts--; h.hp=Math.min(nfdMaxHp(h),h.hp+ (pick.perk==="tough"?14:0)); nfdModalClose(); nfdLog(`Learned ${pick.ab?NFD_AB[pick.ab].n:NFD_PERK[pick.perk].n} · +1 ${stat}.`,"#ffd36a"); if(h.pts>0) setTimeout(nfdLevelUp,200); }});
+  const upd=()=>{ go.disabled=!(stat&&pick); [...sRow.children].forEach(b=>b.classList.toggle("hot",b.dataset.s===stat)); [...pRow.children].forEach((b,i)=>b.classList.toggle("on",picks[i]===pick)); };
+  for(const s of NFD_STATS) sRow.append(el("button",{class:"btn",type:"button","data-s":s,text:`${s} ${h.st[s]} → ${h.st[s]+1}`,onclick:()=>{ stat=s; upd(); }}));
+  for(const p of picks){ const A=p.ab?NFD_AB[p.ab]:null, P=p.perk?NFD_PERK[p.perk]:null; pRow.append(el("button",{type:"button",class:"nfdpick",onclick:()=>{ pick=p; upd(); }},el("b",{text:A?`${A.ic} ${A.n}`:`◆ ${P.n}`}),el("span",{text:A?(A.pas?A.d:`${A.ap} AP · cooldown ${A.cd} · ${A.d}`):P.d}))); }
+  nfdModal(`Level ${h.lv}`,[el("strong",{text:"Raise a stat"}),sRow,el("strong",{text:"Learn a talent"}),pRow],[["Later",()=>nfdModalClose()]]); NFD.modal=1; $("#nfdModal .nfdmb").prepend(go); }
+function nfdGoldMul(){ const h=NFD.hero; return (1+(NFD.meta.up.gold||0)*.15)*(1+(h.perk.scav||0)*.35); }
+function nfdGold(n,quiet){ const h=NFD.hero; h.gold=Math.max(0,h.gold+n); if(!quiet||n) nfdNum(h.x,h.y,(n>0?"+":"")+n+"g","#ffd36a"); if(n>0) nfdLog(`+${n} gold.`,"#ffd36a"); nfdUi(); }
+function nfdLoot(it){ const h=NFD.hero; if(h.bag.length>=12){ nfdLog(`Your bag is full. You leave the ${it.n} behind.`,"#ff8a8a"); return; } h.bag.push(it); nfdLog(`Found: ${it.n} (${NFD_RAR[it.r][0]}).`,NFD_RAR[it.r][1]); nfdNum(h.x,h.y,"LOOT",NFD_RAR[it.r][1]); }
+function nfdBless(){ const h=NFD.hero, B=[["STR","+1 STR"],["AGI","+1 AGI"],["INT","+1 INT"],["VIT","+1 VIT"]]; const b=pickOf(B); h.st[b[0]]++; NFD.lastBless=`Blessing: ${b[1]}.`; nfdLog(NFD.lastBless,"#ffd36a"); }
+// ---- skill checks: d20 + stat modifier vs DC
+function nfdCheck(stat,dc){ const h=NFD.hero, mod=nfdMod(nfdStat(h,stat)); const roll=1+nfdR(20); return {roll,mod,dc,ok:roll===20||(roll!==1&&roll+mod>=dc)}; }
+function nfdCheckPct(stat,dc){ const mod=nfdMod(nfdStat(NFD.hero,stat)); return Math.max(5,Math.min(95,(21-(dc-mod))*5)); }
+function nfdEvent(key,fk){ const E=NFD_EV[key], h=NFD.hero; const opts=E.o.filter(o=>!o.need||h.cons[o.need]>0).filter(o=>!o.needGold||h.gold>=o.needGold);
+  const body=[el("p",{class:"nfdevt",text:E.t})]; const list=el("div",{class:"nfdopts"});
+  const finish=lines=>{ delete NFD.F.feat[fk]; const out=el("div",{class:"nfdres"},...lines.filter(Boolean).map(t=>el("p",{text:t}))); nfdModal("…",[el("p",{class:"nfdevt",text:E.t}),out],[["Continue",()=>{ nfdModalClose(); if(h.pts>0) nfdLevelUp(); },1]]); nfdUi(); };
+  for(const o of opts){ const lab=o.chk?`[${o.chk[0]} ${o.chk[1]}] ${o.l} · ${nfdCheckPct(o.chk[0],o.chk[1])}%`:o.l;
+    list.append(el("button",{class:"btn nfdopt",type:"button",text:lab,onclick:()=>{ if(o.go){ finish(o.go(h)); return; }
+      let r=nfdCheck(o.chk[0],o.chk[1]); let re=""; if(!r.ok&&h.reroll){ h.reroll=0; const r2=nfdCheck(o.chk[0],o.chk[1]); re=` (Second Chance reroll: ${r.roll} → ${r2.roll})`; r=r2; }
+      nfdDiceAnim(r,()=>{ const head=`${o.chk[0]} check: rolled ${r.roll} ${r.mod>=0?"+":"−"} ${Math.abs(r.mod)} = ${r.roll+r.mod} vs DC ${r.dc} → ${r.ok?"SUCCESS":"FAIL"}${r.roll===20?" (natural 20!)":r.roll===1?" (natural 1)":""}${re}`; nfdLog(head,r.ok?"#43f0a4":"#ff8a8a"); finish([head,...(r.ok?o.ok(h):o.no(h))]); }); }})); }
+  nfdModal("Encounter",[...body,list],[["Step away",()=>nfdModalClose()]]); }
+function nfdDiceAnim(r,done){ const d=el("div",{class:"nfddie",text:"?"}); nfdModal("Rolling…",[d],[]); let n=0; const tick=()=>{ if(!NFD) return; n++; d.textContent=String(1+nfdR(20)); try{ beep(600+nfdR(400),.02,"square",.02); }catch(e){} if(n<12) setTimeout(tick,50+n*6); else { d.textContent=String(r.roll); d.classList.add(r.ok?"ok":"no"); setTimeout(done,650); } }; tick(); }
+// ---- merchant
+function nfdShop(){ const h=NFD.hero, f=NFD.floor; if(!NFD.F.stock) NFD.F.stock=[nfdItem(f+1,null,1),nfdItem(f+1,null,Math.random()<.3?2:1),nfdItem(f,null,0)];
+  const price={tonic:30+f*4,bomb:40+f*5,elixir:120+f*10,map:50};
+  const rows=el("div",{class:"list"}); for(const [k,p] of Object.entries(price)) rows.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:`${NFD_CONS[k].ic} ${NFD_CONS[k].n} (you have ${h.cons[k]||0})`}),el("div",{class:"sub",text:NFD_CONS[k].d})),el("button",{class:"btn",type:"button",text:`${p}g`,disabled:h.gold<p?"":null,onclick:()=>{ h.gold-=p; h.cons[k]=(h.cons[k]||0)+1; beep(900,.05); nfdShop(); }})));
+  for(const it of NFD.F.stock){ const p=Math.round(it.v*1.6); rows.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{style:`color:${NFD_RAR[it.r][1]}`,text:it.n}),el("div",{class:"sub",text:nfdItemLines(it).join(" · ")})),el("button",{class:"btn",type:"button",text:`${p}g`,disabled:h.gold<p||h.bag.length>=12?"":null,onclick:()=>{ h.gold-=p; NFD.F.stock=NFD.F.stock.filter(x=>x!==it); h.bag.push(it); beep(900,.05); nfdShop(); }}))); }
+  const sell=el("div",{class:"list"}); for(const it of h.bag) sell.append(el("div",{class:"li"},el("div",{class:"grow",style:`color:${NFD_RAR[it.r][1]}`,text:it.n}),el("button",{class:"btn",type:"button",text:`Sell ${it.v}g`,onclick:()=>{ h.bag=h.bag.filter(x=>x!==it); h.gold+=it.v; nfdShop(); }})));
+  nfdModal(`Wandering Merchant · ${h.gold} gold`,[el("p",{class:"sub",text:"\"Everything has a price down here, friend.\""}),rows,h.bag.length?el("strong",{text:"Sell from your bag"}):"",sell],[["Leave",()=>{ nfdModalClose(); nfdUi(); },1]],"wide"); }
+// ---- hero sheet + bag
+function nfdSheet(){ const h=NFD.hero; if(!h) return; const C=NFD_CLS[h.cls], W=nfdWeap(h);
+  const rows=[["Level",`${h.lv} (${h.xp}/${nfdXpNeed(h.lv)} XP)`],["Health",`${h.hp}/${nfdMaxHp(h)}`],["Action Points",nfdApMax(h)],["Defense",nfdDef(h)],["To hit",`+${nfdHitB(h)}`],["Damage",`${W.d[0]}d${W.d[1]}+${nfdDmgB(h)}`],["Crit chance",nfdCrit(h)+"%"],["Range",W.r],["Gold",h.gold],["Kills",h.kills]];
+  const st=el("div",{class:"nfdgrid"},...NFD_STATS.map(s=>el("div",{class:"nfdst"},el("b",{text:s}),el("span",{text:String(nfdStat(h,s))}),el("i",{text:(nfdMod(nfdStat(h,s))>=0?"+":"")+nfdMod(nfdStat(h,s))}))));
+  const tb=el("div",{class:"list"},...rows.map(([a,b])=>el("div",{class:"li"},el("div",{class:"grow",text:a}),el("strong",{text:String(b)}))));
+  const ab=el("div",{class:"list"},...h.ab.map(k=>el("div",{class:"li"},el("div",{class:"grow"},el("div",{text:`${NFD_AB[k].ic} ${NFD_AB[k].n}`}),el("div",{class:"sub",text:NFD_AB[k].pas?NFD_AB[k].d:`${NFD_AB[k].ap} AP · cooldown ${NFD_AB[k].cd} · ${NFD_AB[k].d}`})))),...Object.entries(h.perk).map(([k,n])=>el("div",{class:"li"},el("div",{class:"grow",text:`◆ ${NFD_PERK[k].n}${n>1?" ×"+n:""}: ${NFD_PERK[k].d}`}))));
+  nfdModal(`${C.ic} ${C.n} · Level ${h.lv}`,[st,tb,el("strong",{text:"Abilities & perks"}),ab,h.pts>0&&!NFD.combat?el("button",{class:"btn hot",type:"button",text:"Level up now",onclick:()=>{ nfdModalClose(); nfdLevelUp(); }}):""],[["Close",()=>nfdModalClose(),1]],"wide"); }
+function nfdBag(){ const h=NFD.hero; if(!h) return; const slot=k=>{ const it=h.eq[k]; return el("div",{class:"li"},el("div",{class:"grow"},el("div",{class:"sub",text:{w:"Weapon",a:"Armor",t:"Trinket"}[k]}),el("div",{style:it?`color:${NFD_RAR[it.r][1]}`:"",text:it?it.n:"Empty"}),it?el("div",{class:"sub",text:nfdItemLines(it).join(" · ")}):""),it&&k!=="w"?el("button",{class:"btn",type:"button",text:"Unequip",disabled:h.bag.length>=12||NFD.combat?"":null,onclick:()=>{ h.bag.push(it); h.eq[k]=null; h.hp=Math.min(h.hp,nfdMaxHp(h)); nfdBag(); }}):""); };
+  const bag=el("div",{class:"list"}); for(const it of h.bag){ const cur=h.eq[it.k], dp=Math.round((nfdPower(it)-nfdPower(cur))*10)/10, can=it.k!=="w"||NFD_CLS[h.cls].wk.includes(it.t);
+    bag.append(el("div",{class:"li"},el("div",{class:"grow"},el("div",{style:`color:${NFD_RAR[it.r][1]}`,text:it.n}),el("div",{class:"sub",text:nfdItemLines(it).join(" · ")}),el("div",{class:"sub",style:`color:${dp>0?"#43f0a4":dp<0?"#ff8a8a":"#9a8cc0"}`,text:can?(dp>0?`▲ better than equipped (+${dp})`:dp<0?`▼ worse than equipped (${dp})`:"about the same"):"Your class can't use this"})),
+      el("button",{class:"btn"+(dp>0&&can?" hot":""),type:"button",text:"Equip",disabled:!can||(NFD.combat&&NFD.combat.turn!==h)?"":null,onclick:()=>{ if(NFD.combat){ if(h.ap<1) return; h.ap--; } h.bag=h.bag.filter(x=>x!==it); if(cur) h.bag.push(cur); h.eq[it.k]=it; h.hp=Math.min(h.hp,nfdMaxHp(h)); beep(660,.05); nfdBag(); nfdUi(); }}),
+      el("button",{class:"btn",type:"button",text:"Drop",onclick:()=>{ h.bag=h.bag.filter(x=>x!==it); nfdBag(); }}))); }
+  if(!h.bag.length) bag.append(el("div",{class:"empty",text:"Nothing in your bag yet. Open chests and defeat foes."}));
+  const cons=el("div",{class:"row",style:"flex-wrap:wrap;gap:6px"},...Object.entries(NFD_CONS).map(([k,I])=>el("button",{class:"btn",type:"button",title:I.d,text:`${I.ic} ${I.n} ×${h.cons[k]||0}`,disabled:!h.cons[k]||k==="bomb"?"":null,onclick:()=>{ nfdUseCons(k); nfdBag(); }})));
+  nfdModal(`Bag · ${h.bag.length}/12 · ${h.gold} gold`,[el("strong",{text:"Equipped"}),el("div",{class:"list"},slot("w"),slot("a"),slot("t")),el("strong",{text:"Consumables"}),cons,el("strong",{text:"Bag"}),bag,NFD.combat?el("p",{class:"sub",text:"Equipping during combat costs 1 AP."}):""],[["Close",()=>nfdModalClose(),1]],"wide"); }
+function nfdHelp(){ nfdModal("How to play",[el("div",{class:"nfdhelp"},...[
+  "Click or tap a tile to walk there. Arrow keys / WASD step one tile.","When foes see you, combat starts. Everyone rolls initiative and takes turns.","On your turn you have Action Points (AP): each tile moved costs 1 AP, attacking costs 2 AP, abilities show their cost.","Click a foe to attack it (melee walks you next to it first). Hover a foe to see your hit chance before you commit.","Number keys 1–9 use the action bar. H drinks a tonic. Space ends your turn. C is your hero sheet, I your bag.","Events and shrines offer choices. Some need a skill check: roll d20 + your stat modifier against the difficulty (shown with your % chance).","Level up to raise a stat and learn a talent. Bosses wait on floors 5 and 10.","If you fall, the run ends. You keep Echoes for permanent upgrades at the Altar."].map(t=>el("p",{text:"• "+t})))],[["Got it",()=>nfdModalClose(),1]]); }
+// ---- end of a run
+function nfdRunEnd(won){ const h=NFD.hero, M=NFD.meta, depth=won?NFD_FLOORS:NFD.floor-1+(won?0:0); const reached=won?NFD_FLOORS:NFD.floor;
+  const echo=reached*8+h.kills+(NFD.F&&NFD.F.boss&&!NFD.F.foes.some(f=>f.boss&&f.hp>0)?20:0)+(reached>5?20:0)+(won?100:0); M.echo+=echo; M.best=Math.max(M.best,won?NFD_FLOORS:reached-1); M.run=null; if(won) M.wins++;
+  M.hist.unshift({cls:h.cls,lv:h.lv,f:reached,won:!!won,k:h.kills,at:Date.now()}); M.hist=M.hist.slice(0,8);
+  // main-game rewards: capped
+  const today=new Date().toISOString().slice(0,10); if(M.day.d!==today) M.day={d:today,n:0}; let cr=0, chips=0; if(M.day.n<3){ M.day.n++; cr+=Math.min(400,reached*40); }
+  if(reached>=5&&!M.firsts.f5){ M.firsts.f5=1; cr+=1500; chips+=20; } if(won&&!M.firsts.win){ M.firsts.win=1; cr+=5000; chips+=60; }
+  if(cr) earn(cr,"Neon Fantasy: The Depths","#cf72ff"); if(chips) save.chips=(+save.chips||0)+chips; try{ addXp(30+reached*15,"The Depths"); }catch(e){} persist();
+  try{ if(won) broadcastSys(`conquered all ${NFD_FLOORS} floors of The Depths as a ${NFD_CLS[h.cls].n}!`); }catch(e){}
+  return {echo,cr,chips,reached}; }
+function nfdDie(){ if(NFD.mode==="over") return; NFD.mode="over"; NFD.combat=null; const R=nfdRunEnd(false), h=NFD.hero; nfdLog("You have fallen.","#ff5a5a"); try{ [330,262,196,131].forEach((f,i)=>setTimeout(()=>beep(f,.25,"triangle",.05),i*200)); }catch(e){}
+  setTimeout(()=>{ if(!NFD) return; nfdModal("You have fallen",[el("p",{text:`${NFD_CLS[h.cls].n}, level ${h.lv}, fell on floor ${R.reached}.`}),el("p",{class:"sub",text:`Foes slain: ${h.kills} · Gold carried: ${h.gold}`}),el("p",{style:"color:#cf72ff",text:`+${R.echo} Echoes (you have ${NFD.meta.echo})`}),R.cr?el("p",{style:"color:#ffd36a",text:`+₵${R.cr}${R.chips?` and +${R.chips} chips`:""} in the city`}):el("p",{class:"sub",text:"City credit rewards are used up for today (3 runs a day)."})],
+    [["Leave",()=>nfdClose()],["New run",()=>{ nfdModalClose(); nfdClassPick(); },1]],"death"); },900); }
+function nfdWin(){ if(NFD.mode==="over") return; NFD.mode="over"; NFD.combat=null; const R=nfdRunEnd(true), h=NFD.hero; try{ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>beep(f,.15,"triangle",.05),i*120)); }catch(e){}
+  nfdModal("The Aethernet is free",[el("p",{text:`The Aether Tyrant falls and the Depths go quiet. ${NFD_CLS[h.cls].n}, level ${h.lv}: you won.`}),el("p",{style:"color:#cf72ff",text:`+${R.echo} Echoes`}),R.cr?el("p",{style:"color:#ffd36a",text:`+₵${R.cr}${R.chips?` and +${R.chips} chips`:""}`}):""],[["Leave",()=>nfdClose()],["New run",()=>{ nfdModalClose(); nfdClassPick(); },1]],"win"); }
+// ---- DOM HUD
+function nfdUi(){ if(!NFD) return; const h=NFD.hero, bar=$("#nfdBar"), hb=$("#nfdHeroBox"), info=$("#nfdInfo"); if(!bar) return;
+  if(!h||NFD.mode==="pick"){ bar.replaceChildren(); if(hb) hb.replaceChildren(); return; } const C=NFD.combat, myTurn=!C||C.turn===h, m=nfdMaxHp(h);
+  if(info) info.textContent=`Floor ${NFD.floor}/${NFD_FLOORS} · ${nfdBiome(NFD.floor).n} · ${C?(myTurn?"Your turn":"Enemy turn"):"Exploring"}`;
+  const apMax=nfdApMax(h), ap=C?h.ap:apMax; const pips=el("div",{class:"nfdap","aria-label":`${ap} of ${apMax} action points`},...Array.from({length:apMax},(_,i)=>el("i",{class:i<ap?"on":""})));
+  const hp=el("div",{class:"nfdhp"},el("i",{style:`width:${Math.round(h.hp/m*100)}%`}),el("span",{text:`${h.hp}/${m}`}));
+  const acts=el("div",{class:"nfdacts"},...nfdActList().map((a,i)=>{ const b=el("button",{type:"button",class:"nfdab"+(NFD.sel&&NFD.sel.k===a.k?" sel":""),title:`${a.n}: ${a.tip}`,disabled:a.dis?"":null,onclick:()=>a.f()},el("b",{text:a.ic}),el("span",{text:a.n}),el("small",{text:a.cd?`⟳${a.cd}`:a.ap?`${a.ap} AP`:""}),el("kbd",{text:String(i+1)})); return b; }));
+  const end=el("button",{class:"btn hot nfdend",type:"button",text:C?(myTurn?"End turn ⏎":"Enemy turn…"):"Exploring",disabled:!C||!myTurn?"":null,onclick:()=>nfdEndTurn()});
+  bar.replaceChildren(el("div",{class:"nfdvit"},hp,pips),acts,end);
+  if(hb){ hb.replaceChildren(el("div",{class:"nfdhn",style:`color:${NFD_CLS[h.cls].col}`,text:`${NFD_CLS[h.cls].ic} ${NFD_CLS[h.cls].n} · Lv ${h.lv}`}),el("div",{class:"sub",text:`XP ${h.xp}/${nfdXpNeed(h.lv)} · ${h.gold} gold · DEF ${nfdDef(h)} · hit +${nfdHitB(h)}`}),
+    el("div",{class:"sub",text:NFD_STATS.map(s=>`${s} ${nfdStat(h,s)}`).join(" · ")}),Object.keys(h.fx).length?el("div",{class:"sub",style:"color:#ffd36a",text:"Effects: "+Object.keys(h.fx).join(", ")}):"",h.pts>0&&!C?el("button",{class:"btn hot",type:"button",text:"★ Level up!",onclick:()=>nfdLevelUp()}):""); } }
+// ---- drawing
+function nfdDraw(){ const c=NFD.c; c.setTransform(1.5,0,0,1.5,0,0); const F=NFD.F, h=NFD.hero, t=NFD.t;
+  const pal=F?nfdBiome(NFD.floor).pal:NFD_BIOME[0].pal; c.fillStyle=pal.bg; c.fillRect(0,0,NFD.LW,NFD.LH); if(!F||!h){ nfdDrawPickBg(c,t); return; }
+  const sh=NFD.shake>0?NFD.shake*14:0; const cx=Math.round(NFD.cam.x+(Math.random()-.5)*sh), cy=Math.round(NFD.cam.y+(Math.random()-.5)*sh); c.save(); c.translate(-cx,-cy);
+  const x0=Math.max(0,Math.floor(cx/NFD_TS)-1), x1=Math.min(NFD_W-1,Math.ceil((cx+NFD.LW)/NFD_TS)+1), y0=Math.max(0,Math.floor(cy/NFD_TS)-1), y1=Math.min(NFD_H-1,Math.ceil((cy+NFD.LH)/NFD_TS)+1), T=NFD_TS;
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){ const k=nfdK(x,y); if(!F.seen.has(k)) continue; const vis=NFD.vis.has(k), px=x*T, py=y*T, v=F.g[y][x];
+    if(v===0){ c.fillStyle=(x+y)%2?pal.fl:pal.fl2; c.fillRect(px,py,T,T); c.strokeStyle="rgba(255,255,255,.035)"; c.strokeRect(px+.5,py+.5,T-1,T-1); const hsh=((x*73856093)^(y*19349663))>>>0;
+      if(hsh%11===0){ c.fillStyle=pal.ac; c.globalAlpha=.12; c.fillRect(px+8+hsh%20,py+10+(hsh>>3)%20,6,2); c.globalAlpha=1; } if(hsh%17===0){ c.strokeStyle="rgba(0,0,0,.35)"; c.beginPath(); c.moveTo(px+6,py+30); c.lineTo(px+20,py+24); c.lineTo(px+30,py+34); c.stroke(); } }
+    else { c.fillStyle=pal.wall; c.fillRect(px,py,T,T); if(F.g[y+1]&&F.g[y+1][x]===0){ c.fillStyle=pal.top; c.fillRect(px,py+T-10,T,10); c.fillStyle=pal.ac; c.globalAlpha=.5; c.fillRect(px,py+T-10,T,2); c.globalAlpha=1; } }
+    if(!vis){ c.fillStyle="rgba(0,0,0,.55)"; c.fillRect(px,py,T,T); } }
+  // features
+  for(const [k,f] of Object.entries(F.feat)){ if(!F.seen.has(k)) continue; const [x,y]=k.split(",").map(Number); if(x<x0||x>x1||y<y0||y>y1) continue; nfdDrawFeat(c,f,x*T+T/2,y*T+T/2,t,NFD.vis.has(k)); }
+  // combat overlays: reachable tiles + path + selection range
+  const C=NFD.combat, myTurn=C&&C.turn===h&&!nfdBusy();
+  if(myTurn&&!NFD.sel&&h.ap>0){ const D=nfdBfs(F.g,h.x,h.y,(x,y)=>!nfdFree(x,y,h)); c.fillStyle="rgba(56,232,255,.10)"; for(const [k,d] of Object.entries(D)){ if(d<1||d>h.ap) continue; const [x,y]=k.split(",").map(Number); c.fillRect(x*T+2,y*T+2,T-4,T-4); } }
+  if(NFD.sel){ const S=NFD.sel; c.fillStyle="rgba(255,211,106,.10)"; for(let y=h.y-S.rng;y<=h.y+S.rng;y++) for(let x=h.x-S.rng;x<=h.x+S.rng;x++) if(NFD.vis.has(nfdK(x,y))&&F.g[y][x]===0) c.fillRect(x*T+2,y*T+2,T-4,T-4); }
+  const H=NFD.hover; if(H&&F.g[H.y]&&F.g[H.y][H.x]===0&&F.seen.has(nfdK(H.x,H.y))&&!nfdBusy()){ const foe=nfdFoeAt(H.x,H.y); c.strokeStyle=foe&&nfdVisible(H.x,H.y)?"#ff5a6a":NFD.sel?"#ffd36a":"#38e8ff"; c.lineWidth=2; c.strokeRect(H.x*T+2,H.y*T+2,T-4,T-4);
+    if((!C||myTurn)&&!foe&&!NFD.sel){ const p=nfdPath(h.x,h.y,H.x,H.y,h); if(p&&p.length){ c.strokeStyle="rgba(56,232,255,.6)"; c.setLineDash([4,4]); c.beginPath(); c.moveTo(h.x*T+T/2,h.y*T+T/2); for(const [x,y] of p) c.lineTo(x*T+T/2,y*T+T/2); c.stroke(); c.setLineDash([]); if(C){ const ok=p.length<=h.ap; c.fillStyle=ok?"#38e8ff":"#ff8a8a"; c.font="bold 13px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillText(`${p.length} AP`,H.x*T+T/2,H.y*T-4); } } }
+    if(NFD.sel&&NFD.sel.k==="fireball"||NFD.sel&&NFD.sel.k==="bomb"){ c.fillStyle="rgba(255,122,69,.18)"; c.fillRect((H.x-1)*T,(H.y-1)*T,T*3,T*3); } }
+  // entities
+  const ents=[...F.foes.filter(f=>f.hp>0&&NFD.vis.has(nfdK(f.x,f.y))),h].sort((a,b)=>a.py-b.py);
+  for(const e of ents){ if(e===h) nfdDrawHeroAt(c,h,t); else nfdDrawFoe(c,e,t,C&&C.turn===e); }
+  // shots + fx + numbers
+  for(const s of NFD.shots){ const u=Math.max(0,Math.min(1,s.t/s.life)); if(s.t<0) continue; const ax=s.x0*T+T/2, ay=s.y0*T+T/2-14, bx=s.x1*T+T/2, by=s.y1*T+T/2-14, x=ax+(bx-ax)*u, y=ay+(by-ay)*u;
+    c.save(); c.globalCompositeOperation="lighter"; if(s.k==="zap"){ c.strokeStyle=s.col; c.lineWidth=3; c.beginPath(); c.moveTo(ax,ay); for(let i=1;i<=6;i++){ const q=i/6; c.lineTo(ax+(bx-ax)*q+(i<6?(Math.random()-.5)*16:0),ay+(by-ay)*q+(i<6?(Math.random()-.5)*16:0)); } c.stroke(); }
+    else if(s.k==="arrow"){ const a=Math.atan2(by-ay,bx-ax); c.strokeStyle="#e9e2ff"; c.lineWidth=2; c.beginPath(); c.moveTo(x-Math.cos(a)*14,y-Math.sin(a)*14); c.lineTo(x,y); c.stroke(); }
+    else { c.fillStyle=s.col; c.shadowColor=s.col; c.shadowBlur=18; c.beginPath(); c.arc(x,y,s.k==="fire"?7:6,0,7); c.fill(); for(let g=1;g<5;g++){ const q=Math.max(0,u-g*.06); c.globalAlpha=.4-g*.08; c.beginPath(); c.arc(ax+(bx-ax)*q,ay+(by-ay)*q,5-g,0,7); c.fill(); } } c.restore(); }
+  for(const f of NFD.fx){ const u=f.t/f.life, px=f.x*T+T/2, py=f.y*T+T/2; c.save(); c.globalAlpha=1-u; c.strokeStyle=f.col; c.fillStyle=f.col; c.globalCompositeOperation="lighter";
+    if(f.k==="ring"){ c.lineWidth=3; c.beginPath(); c.ellipse(px,py+10,10+u*34,4+u*12,0,0,7); c.stroke(); }
+    else if(f.k==="nova"){ c.lineWidth=4; c.beginPath(); c.arc(px,py,u*T*2.5,0,7); c.stroke(); for(let i=0;i<12;i++){ const a=i*.52; c.fillRect(px+Math.cos(a)*u*T*2.4,py+Math.sin(a)*u*T*2.4,4,4); } }
+    else if(f.k==="blast"){ c.beginPath(); c.arc(px,py,T*1.5*Math.min(1,u*2.5),0,7); c.globalAlpha=(1-u)*.5; c.fill(); c.globalAlpha=1-u; for(let i=0;i<16;i++){ const a=i*.39; c.fillRect(px+Math.cos(a)*u*T*1.8,py+Math.sin(a)*u*T*1.8,5,5); } }
+    else if(f.k==="burst"){ for(let i=0;i<14;i++){ const a=i*.45; c.fillRect(px+Math.cos(a)*u*40,py-u*30+Math.sin(a)*u*30,4,4); } }
+    else if(f.k==="smoke"){ c.globalCompositeOperation="source-over"; c.fillStyle="rgba(200,190,230,.5)"; for(let i=0;i<7;i++){ c.beginPath(); c.arc(px+Math.cos(i)*u*20,py-u*20+Math.sin(i*2)*8,10+u*14,0,7); c.fill(); } }
+    else if(f.k==="poof"){ for(let i=0;i<12;i++){ const a=i*.52; c.fillRect(px+Math.cos(a)*u*36,py+Math.sin(a)*u*24-u*14,5*(1-u)+1,5*(1-u)+1); } } c.restore(); }
+  for(const n of NFD.nums){ const u=n.t/1.1; c.globalAlpha=Math.min(1,(1-u)*2.5); c.font=`bold ${n.big?24:17}px 'IBM Plex Mono',monospace`; c.textAlign="center"; c.lineWidth=4; c.strokeStyle="#000"; const y=n.y-u*34-(u<.15?Math.sin(u/.15*Math.PI)*6:0); c.strokeText(n.txt,n.x,y); c.fillStyle=n.col; c.fillText(n.txt,n.x,y); c.globalAlpha=1; }
+  c.restore();
+  // hover tooltip for a foe: name, HP and your hit chance
+  if(H){ const foe=nfdFoeAt(H.x,H.y); if(foe&&nfdVisible(H.x,H.y)){ const D=NFD_FOE[foe.k], rng=nfdRange(h); const can=nfdDist(h,foe)<=rng&&(rng===1||nfdLos(F.g,h.x,h.y,foe.x,foe.y)); const lines=[`${D.n}${foe.boss?" ★":""}`,`HP ${foe.hp}/${foe.max} · DEF ${foe.def}`,`Your hit chance: ${nfdChance(nfdHitB(h),foe.def)}%${can?"":rng>1?" (out of range)":" (walk + attack)"}`,Object.keys(foe.fx).length?Object.keys(foe.fx).join(", "):""].filter(Boolean);
+    const bx=Math.min(NFD.LW-240,H.sx+14), by=Math.max(10,H.sy-14-lines.length*18); c.fillStyle="rgba(10,6,24,.92)"; c.fillRect(bx,by,230,lines.length*18+10); c.strokeStyle=D.col; c.strokeRect(bx+.5,by+.5,229,lines.length*18+9); c.font="13px 'IBM Plex Mono',monospace"; c.textAlign="left"; lines.forEach((l,i)=>{ c.fillStyle=i?"#d9d0f5":D.col; c.fillText(l,bx+8,by+20+i*18); }); } }
+  // turn order strip
+  if(C){ const L=C.order.filter(e=>e===h||e.hp>0); const w=Math.min(56,900/L.length), sx=(NFD.LW/2)-L.length*w/2; L.forEach((e,i)=>{ const x=sx+i*w, on=C.turn===e, col=e===h?NFD_CLS[h.cls].col:NFD_FOE[e.k].col; c.fillStyle=on?"rgba(255,211,106,.25)":"rgba(10,6,24,.8)"; c.fillRect(x+2,8,w-4,40); c.strokeStyle=on?"#ffd36a":col; c.lineWidth=on?2:1; c.strokeRect(x+2.5,8.5,w-5,39);
+      c.save(); c.beginPath(); c.rect(x+2,8,w-4,40); c.clip(); if(e===h){ try{ drawStick(c,x+w/2,44,.42,{look:save.look||DEFAULT_LOOK,dir:1,phase:0},t); }catch(err){} } else nfdFoeSprite(c,e.k,x+w/2,40,.55,t,0,1); c.restore();
+      c.fillStyle="#3a0a14"; c.fillRect(x+4,44,w-8,3); c.fillStyle=e===h?"#43f0a4":"#ff5a5a"; c.fillRect(x+4,44,(w-8)*(e.hp/(e===h?nfdMaxHp(h):e.max)),3); }); c.font="11px 'IBM Plex Mono',monospace"; c.fillStyle="#cfc6ff"; c.textAlign="center"; c.fillText(`Round ${C.round}`,(NFD.LW/2),62); }
+  // minimap
+  { const s=4, mw=NFD_W*s, mh=NFD_H*s, mx=NFD.LW-mw-12, my=NFD.LH-mh-12; c.fillStyle="rgba(5,3,14,.7)"; c.fillRect(mx-3,my-3,mw+6,mh+6); for(const k of F.seen){ const [x,y]=k.split(",").map(Number); if(F.g[y][x]!==0) continue; c.fillStyle=NFD.vis.has(k)?"rgba(160,150,220,.7)":"rgba(110,100,170,.4)"; c.fillRect(mx+x*s,my+y*s,s,s); }
+    for(const [k,f] of Object.entries(F.feat)) if(F.seen.has(k)&&f.k!=="trap"&&f.k!=="trapx"){ const [x,y]=k.split(",").map(Number); c.fillStyle=f.k==="stairs"?"#cf72ff":f.k==="chest"?"#ffd36a":f.k==="shop"?"#43f0a4":"#38e8ff"; c.fillRect(mx+x*s-1,my+y*s-1,s+2,s+2); }
+    for(const f of F.foes) if(f.hp>0&&NFD.vis.has(nfdK(f.x,f.y))){ c.fillStyle="#ff5a5a"; c.fillRect(mx+f.x*s,my+f.y*s,s,s); } c.fillStyle="#fff"; c.fillRect(mx+h.x*s-1,my+h.y*s-1,s+2,s+2); }
+  // banner
+  if(NFD.banner){ const b=NFD.banner, u=b.t; const a=u<.3?u/.3:u>2.3?Math.max(0,(2.8-u)/.5):1; c.globalAlpha=a; c.fillStyle="rgba(5,3,14,.7)"; c.fillRect(0,NFD.LH/2-60,NFD.LW,90); c.textAlign="center"; c.font="bold 40px Silkscreen,'IBM Plex Mono',monospace"; c.fillStyle="#fff"; c.shadowColor=pal.ac; c.shadowBlur=20; c.fillText(b.a,(NFD.LW/2),NFD.LH/2-10); c.shadowBlur=0; c.font="16px 'IBM Plex Mono',monospace"; c.fillStyle=pal.ac; c.fillText(b.b||"",(NFD.LW/2),NFD.LH/2+16); c.globalAlpha=1; }
+  if(NFD.sel){ c.font="14px 'IBM Plex Mono',monospace"; c.textAlign="center"; c.fillStyle="#ffd36a"; c.fillText(`${NFD.sel.k==="bomb"?"Shock Bomb":NFD_AB[NFD.sel.k].n}: pick a ${NFD.sel.tg==="t"?"tile":"target"} · Esc cancels`,(NFD.LW/2),C?84:30); } }
+function nfdDrawPickBg(c,t){ for(let i=0;i<60;i++){ const x=(i*233+t*20*(1+i%3))%NFD.LW, y=(i*97)%NFD.LH; c.fillStyle=["#43f0a4","#cf72ff","#38e8ff"][i%3]; c.globalAlpha=.3+.3*Math.sin(t*2+i); c.fillRect(x,y,2,2); } c.globalAlpha=1; c.textAlign="center"; c.font="bold 54px Silkscreen,monospace"; c.fillStyle="#cf72ff"; c.shadowColor="#cf72ff"; c.shadowBlur=24; c.fillText("THE DEPTHS",(NFD.LW/2),140); c.shadowBlur=0; }
+function nfdDrawFeat(c,f,x,y,t,vis){ c.save(); if(!vis) c.globalAlpha=.5;
+  if(f.k==="stairs"){ for(let i=0;i<3;i++){ c.strokeStyle=["#cf72ff","#38e8ff","#ffd36a"][i]; c.lineWidth=2; c.beginPath(); c.ellipse(x,y+4,18-i*5+Math.sin(t*3+i)*2,8-i*2,0,0,7); c.stroke(); } c.fillStyle="rgba(207,114,255,.3)"; c.beginPath(); c.ellipse(x,y+4,18,8,0,0,7); c.fill(); c.fillStyle="#fff"; c.font="bold 12px monospace"; c.textAlign="center"; c.fillText("⬇",x,y-10); }
+  else if(f.k==="chest"){ c.fillStyle="#5a3a1a"; c.fillRect(x-14,y-8,28,18); c.fillStyle="#7a5228"; c.fillRect(x-14,y-14,28,8); c.fillStyle=NFD_RAR[f.r||0][1]; c.shadowColor=c.fillStyle; c.shadowBlur=10+Math.sin(t*3)*4; c.fillRect(x-3,y-8,6,6); c.shadowBlur=0; c.strokeStyle="#ffd36a"; c.strokeRect(x-14.5,y-14.5,29,25); }
+  else if(f.k==="event"){ c.fillStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=14; c.font="bold 26px Silkscreen,monospace"; c.textAlign="center"; c.fillText("?",x,y+8+Math.sin(t*3)*3); c.shadowBlur=0; c.strokeStyle="rgba(56,232,255,.5)"; c.beginPath(); c.ellipse(x,y+14,14,5,0,0,7); c.stroke(); }
+  else if(f.k==="shop"){ c.fillStyle="#2a1a4a"; c.beginPath(); c.moveTo(x-12,y+16); c.lineTo(x,y-18); c.lineTo(x+12,y+16); c.fill(); c.fillStyle="#e9d8ff"; c.beginPath(); c.arc(x,y-14,6,0,7); c.fill(); c.fillStyle="#ffd36a"; c.shadowColor="#ffd36a"; c.shadowBlur=12; c.beginPath(); c.arc(x+14,y-4+Math.sin(t*2)*2,4,0,7); c.fill(); c.shadowBlur=0; c.font="bold 11px monospace"; c.textAlign="center"; c.fillStyle="#43f0a4"; c.fillText("SHOP",x,y-26); }
+  else if(f.k==="trapx"||(f.k==="trap"&&!f.hid)){ c.fillStyle="#7a1a2a"; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(x-14+i*8,y+10); c.lineTo(x-10+i*8,y-4); c.lineTo(x-6+i*8,y+10); c.fill(); } }
+  c.restore(); }
+function nfdDrawHeroAt(c,h,t){ const T=NFD_TS; let x=h.px*T+T/2, y=h.py*T+T-4; if(h.lunge){ const u=(NFD.t-h.lunge.t0)/.22; if(u<1){ const k=Math.sin(u*Math.PI)*12; x+=h.lunge.dx*k; y+=h.lunge.dy*k; } else h.lunge=null; }
+  const hurt=NFD.t-(h.hitT||-9)<.3; c.save(); c.fillStyle="rgba(0,0,0,.45)"; c.beginPath(); c.ellipse(x,y,14,5,0,0,7); c.fill(); if(NFD.combat&&NFD.combat.turn===h){ c.strokeStyle="#ffd36a"; c.lineWidth=2; c.beginPath(); c.ellipse(x,y,18,7,0,0,7); c.stroke(); }
+  if(h.fx.smoke) c.globalAlpha=.45; if(hurt&&Math.floor(NFD.t*30)%2) c.globalAlpha=.4; const moving=Math.abs(h.px-h.x)+Math.abs(h.py-h.y)>.05;
+  try{ drawStick(c,x,y,.78,{look:save.look||DEFAULT_LOOK,dir:h.face||1,phase:NFD.t*6,moving},t); }catch(e){} nfdClassGear(c,h.cls,x,y,.78,h.face||1,t); c.restore(); }
+function nfdDrawFoe(c,f,t,active){ const T=NFD_TS; let x=f.px*T+T/2, y=f.py*T+T-6; if(f.lunge){ const u=(NFD.t-f.lunge.t0)/.22; if(u<1){ const k=Math.sin(u*Math.PI)*12; x+=f.lunge.dx*k; y+=f.lunge.dy*k; } else f.lunge=null; }
+  const hurt=NFD.t-f.hitT<.25; c.fillStyle="rgba(0,0,0,.45)"; c.beginPath(); c.ellipse(x,y,f.boss?26:13,f.boss?8:5,0,0,7); c.fill(); if(active){ c.strokeStyle="#ff5a5a"; c.lineWidth=2; c.beginPath(); c.ellipse(x,y,f.boss?30:17,f.boss?10:7,0,0,7); c.stroke(); }
+  c.save(); if(hurt) c.filter="brightness(2.2)"; nfdFoeSprite(c,f.k,x,y,f.boss?1.9:1.25,t+f.x,f.face<0?-1:1); c.restore();
+  if(!f.awake){ c.fillStyle="#cfc6ff"; c.font="bold 12px monospace"; c.textAlign="center"; c.fillText("z",x+12,y-34-Math.sin(t*2)*3); }
+  const w=f.boss?70:36, by=y-(f.boss?100:54); c.fillStyle="#2a0a14"; c.fillRect(x-w/2,by,w,4); c.fillStyle=f.boss?"#ffd36a":"#ff5a5a"; c.fillRect(x-w/2,by,w*(f.hp/f.max),4);
+  const fxs=Object.keys(f.fx); if(fxs.length){ c.font="11px monospace"; c.textAlign="center"; c.fillStyle="#ffd36a"; c.fillText(fxs.map(k=>({poison:"☠",stun:"✶",root:"⊗",slow:"❄",marked:"◎",burn:"🔥"}[k]||"")).join(""),x,by-4); } }
+// original pixel-ish sprites per foe shape
+function nfdFoeSprite(c,k,x,y,s,t,dir,mini){ const D=NFD_FOE[k], col=D.col; c.save(); c.translate(x,y); c.scale(s*(dir||1),s); const b=Math.sin(t*3)*2; c.lineWidth=2; c.strokeStyle=col; c.fillStyle=col;
+  const eye=(ex,ey,cc)=>{ c.fillStyle=cc||"#fff"; c.fillRect(ex-1.5,ey-1.5,3,3); };
+  switch(D.sh){
+    case "blob": c.globalAlpha=.85; c.beginPath(); c.ellipse(0,-10-b/2,15+b/2,12-b/2,0,0,7); c.fill(); c.globalAlpha=1; eye(-5,-13); eye(5,-13); break;
+    case "rat": c.beginPath(); c.ellipse(0,-8,12,7,0,0,7); c.fill(); c.beginPath(); c.arc(10,-12,6,0,7); c.fill(); c.beginPath(); c.moveTo(-12,-8); c.quadraticCurveTo(-24,-14+b,-26,-4); c.stroke(); eye(12,-13,"#000"); break;
+    case "sprout": c.fillStyle="#2a5a2a"; c.fillRect(-3,-22,6,22); c.fillStyle=col; for(const a of [-1,1]){ c.beginPath(); c.ellipse(a*9,-22+b,9,4,a*.5,0,7); c.fill(); } c.beginPath(); c.arc(0,-28,6,0,7); c.fill(); eye(0,-28,"#2a0a14"); break;
+    case "skull": c.fillStyle="#e9e2ff"; c.beginPath(); c.arc(0,-34,9,0,7); c.fill(); c.fillRect(-2,-26,4,16); for(let i=0;i<3;i++) c.fillRect(-8,-24+i*5,16,2); c.strokeStyle="#e9e2ff"; c.beginPath(); c.moveTo(-2,-10); c.lineTo(-7,0); c.moveTo(2,-10); c.lineTo(7,0); c.moveTo(0,-22); c.lineTo(12,-28+b); c.stroke(); eye(-3,-35,"#38e8ff"); eye(3,-35,"#38e8ff"); break;
+    case "spider": c.beginPath(); c.ellipse(0,-12,10,8,0,0,7); c.fill(); for(const a of [-1,1]) for(let i=0;i<3;i++){ c.beginPath(); c.moveTo(a*6,-12); c.lineTo(a*(14+i*3),-18+i*6+b*(i%2?1:-1)); c.lineTo(a*(18+i*3),-2); c.stroke(); } eye(-3,-14,"#ff3fa8"); eye(3,-14,"#ff3fa8"); break;
+    case "robe": c.beginPath(); c.moveTo(-12,0); c.lineTo(-7,-30); c.lineTo(7,-30); c.lineTo(12,0); c.closePath(); c.fill(); c.fillStyle="#1a0a2a"; c.beginPath(); c.arc(0,-33,8,0,7); c.fill(); eye(-3,-33,col); eye(3,-33,col); c.strokeStyle="#8a6ac0"; c.beginPath(); c.moveTo(12,-2); c.lineTo(12,-40); c.stroke(); c.fillStyle=col; c.shadowColor=col; c.shadowBlur=10; c.beginPath(); c.arc(12,-42,3+b*.3,0,7); c.fill(); c.shadowBlur=0; break;
+    case "ghost": c.globalAlpha=.75; c.beginPath(); c.moveTo(-12,-4+b); c.lineTo(-12,-26); c.arc(0,-26,12,Math.PI,0); c.lineTo(12,-4+b); for(let i=0;i<4;i++) c.lineTo(9-i*7,-8+b+(i%2?4:0)); c.closePath(); c.fill(); c.globalAlpha=1; eye(-4,-26,"#0a0a1a"); eye(4,-26,"#0a0a1a"); break;
+    case "knight": c.fillStyle="#5a4a3a"; c.fillRect(-10,-30,20,22); c.fillStyle=col; c.fillRect(-10,-30,20,4); c.fillRect(-9,-42,18,12); c.fillStyle="#1a1a1a"; c.fillRect(-6,-38,12,2); c.fillStyle="#5a4a3a"; c.fillRect(-8,-8,6,8); c.fillRect(2,-8,6,8); c.strokeStyle="#c9d3e0"; c.lineWidth=3; c.beginPath(); c.moveTo(12,-18); c.lineTo(18,-46+b); c.stroke(); break;
+    case "imp": c.beginPath(); c.arc(0,-18,10,0,7); c.fill(); c.beginPath(); c.moveTo(-8,-26); c.lineTo(-12,-36); c.lineTo(-4,-27); c.moveTo(8,-26); c.lineTo(12,-36); c.lineTo(4,-27); c.fill(); eye(-3,-19,"#ffd36a"); eye(3,-19,"#ffd36a"); c.globalAlpha=.6; c.fillStyle="#ffd36a"; c.beginPath(); c.arc(14,-22+b,4,0,7); c.fill(); c.globalAlpha=1; break;
+    case "golem": c.fillStyle="#6a7488"; c.fillRect(-14,-36,28,30); c.fillRect(-20,-32,7,20); c.fillRect(13,-32,7,20); c.fillRect(-11,-6,8,6); c.fillRect(3,-6,8,6); c.fillStyle=col; c.fillRect(-8,-44,16,10); c.fillStyle="#38e8ff"; c.shadowColor="#38e8ff"; c.shadowBlur=8; c.fillRect(-4,-40,8,3); c.fillRect(-3,-26,6,6); c.shadowBlur=0; break;
+    case "boss1": c.fillStyle="#0a1a2a"; c.beginPath(); c.ellipse(0,-22,22,18,0,0,7); c.fill(); c.strokeStyle=col; c.lineWidth=2; for(let i=0;i<8;i++){ const a=i/8*Math.PI*2+t*.4; c.beginPath(); c.moveTo(Math.cos(a)*16,-22+Math.sin(a)*12); c.quadraticCurveTo(Math.cos(a)*30,-22+Math.sin(a)*24+b,Math.cos(a)*38,-4); c.stroke(); } c.fillStyle=col; c.shadowColor=col; c.shadowBlur=14; c.beginPath(); c.arc(0,-24,7,0,7); c.fill(); c.shadowBlur=0; eye(-8,-28,"#ff3fa8"); eye(8,-28,"#ff3fa8"); break;
+    case "boss2": c.fillStyle="#141420"; c.beginPath(); c.moveTo(-18,0); c.lineTo(-14,-40); c.lineTo(14,-40); c.lineTo(18,0); c.closePath(); c.fill(); c.strokeStyle=col; c.stroke(); c.fillStyle="#141420"; c.beginPath(); c.arc(0,-46,10,0,7); c.fill(); c.fillStyle="#ffd36a"; for(let i=0;i<5;i++){ c.beginPath(); c.moveTo(-10+i*5,-54); c.lineTo(-8+i*5,-64-(i%2?0:4)); c.lineTo(-6+i*5,-54); c.fill(); } eye(-4,-46,col); eye(4,-46,col); c.globalCompositeOperation="lighter"; c.strokeStyle="rgba(233,226,255,.35)"; c.beginPath(); c.arc(0,-30,26+Math.sin(t*2)*3,0,7); c.stroke(); break; }
+  c.restore(); }
+
 // One-time: Car Display plots are gone, so plot owners get their 500 chips back.
 function nfMigrateCars(){ if(save&&save.cdPlot&&Number.isInteger(save.cdPlot.plot)){ save.chips=(+save.chips||0)+500; save.cdPlot=null; save.cdGone=1; persist(); toast("The Car Display closed. Your 500 plot chips were refunded. Your cars are at Neon Motors in Harvest Homes.","#ffd36a");
     let n=0; const iv=setInterval(()=>{ if(++n>30) clearInterval(iv); if(DB&&myId){ clearInterval(iv); DB.doc("carplots/"+myId).delete().catch(()=>{}); } },2000); } }
