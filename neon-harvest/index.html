@@ -347,6 +347,14 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 .wxlist,.wxpick{display:flex;flex-wrap:wrap;gap:5px}
 .wxchip{background:#120c22;border:1px solid var(--line);color:#e9e2ff;font:12px var(--f-ui);padding:6px 9px;min-height:34px;cursor:pointer;border-radius:4px}
 .wxchip.on{border-color:#38e8ff;color:#bff7ff;background:rgba(56,232,255,.1)}
+#prompt.multi{display:flex;flex-direction:column;align-items:center;gap:5px;white-space:normal;max-width:min(560px,calc(100vw - 24px))}
+#prompt .hprow{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center;pointer-events:auto}
+#prompt .hpchip{pointer-events:auto;background:#120c22;border:1px solid rgba(56,232,255,.45);color:#bfefff;font:11px var(--f-ui);padding:5px 8px;min-height:32px;cursor:pointer;border-radius:3px}
+#prompt .hpchip.on{border-color:#38e8ff;background:rgba(56,232,255,.18);color:#fff;box-shadow:0 0 8px rgba(56,232,255,.4)}
+#prompt .hpchip:hover{border-color:#ff4fd8}
+#prompt .hphint{font-size:10px;color:#7fa9b8;margin-right:2px}
+#game.mobile #prompt.multi{flex-direction:column;align-items:stretch}
+#game.mobile #prompt .hpchip{min-height:38px;font-size:12px}
 .icard{background:var(--panel);border:1px solid var(--mag);box-shadow:0 0 18px rgba(255,63,168,.25);padding:10px;display:flex;flex-direction:column;gap:8px;font-size:12px}
 .ttt{display:grid;grid-template-columns:repeat(3,minmax(0,84px));gap:6px;justify-content:center}
 .ttt .cell{aspect-ratio:1;max-width:100%;background:#0d0818;border:1px solid var(--line);color:var(--text);font-family:var(--f-display);font-size:34px;cursor:pointer}
@@ -4556,10 +4564,11 @@ function drawHome(t){
 }
 
 /* ============================================================ LOOP */
-const keys={}; let dt=0, last=performance.now(), T=0, target=null, nearHot=null;
+const keys={}; let dt=0, last=performance.now(), T=0, target=null, nearHot=null, hotList=[], hotSelKey="", hotUiKey="";
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySelector(".txc")){ document.querySelector(".txc").remove(); e.preventDefault(); e.stopImmediatePropagation(); return; } if(!$("#title").hidden){ if(e.key==="Enter"&&e.target.tagName!=="BUTTON"){ const b=$("#title .btn.hot"); if(b){ e.preventDefault(); b.click(); } } return; } if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"){ if(e.key==="Escape"&&!$("#overlay").hidden&&e.target.closest&&e.target.closest("#overlay")) closePanel(); return; } if(!$("#overlay").hidden){ if(e.key==="Escape") closePanel(); return; } if(APPUI_ON) return;
   keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();
   if(me.scene==="void"){ const kk=e.key.toLowerCase(); if(kk==="f"){ voidAttack(); e.preventDefault(); } if(kk==="g") setBlock(true); }
+  if(e.key==="Tab"&&hotList.length>1&&$("#overlay").hidden){ e.preventDefault(); hotCycle(e.shiftKey?-1:1); return; }
   if(e.key==="e"||e.key==="E"||e.key===" ") useHot(); if(e.key==="i"||e.key==="I") openStash(); if(e.key==="h"||e.key==="H") openGuide(); if(e.key==="t"||e.key==="T") openFastTravel(); if(e.key==="p"||e.key==="P") openCompanion(); if(e.key==="q"||e.key==="Q") openQuestLog(); if(e.key==="r"||e.key==="R"){ try{ roleKey(e); }catch(err){} } if(e.key==="m"||e.key==="M") openMessages(); if(e.key==="c"||e.key==="C"){ tryOn=null; openWardrobe("name"); } if(e.key==="Enter"){ $("#chatin").focus(); e.preventDefault(); } });
 addEventListener("keyup",e=>{ keys[e.key.toLowerCase()]=false; if(e.key.toLowerCase()==="g") setBlock(false); });
 const releaseKeys=()=>{ for(const k in keys) keys[k]=false; };
@@ -4575,9 +4584,34 @@ cv.addEventListener("pointerdown",e=>{ const r=cv.getBoundingClientRect(); const
   for(const n of cityGen(me.scene)){ if(n.k==="civ"&&Math.abs(n.x-wx)<16&&wy>n.y-90&&wy<n.y+6){ target={x:clamp(n.x-(me.x<n.x?30:-30),30,SCENES[me.scene].w-30),y:clamp(n.y,LANE.top,LANE.bot),use:{act:()=>openCitizen(n)}}; return; } }
   for(const n of (npcs[me.scene]||[])){ if(n.name&&Math.abs(n.x-wx)<16&&wy>n.y-90&&wy<n.y+6){ target={x:clamp(n.x-(me.x<n.x?30:-30),30,SCENES[me.scene].w-30),y:clamp(n.y,LANE.top,LANE.bot),use:{act:()=>openNpc(n)}}; return; } }
   // tap a hotspot (walk then use)
-  const h=hotspots(me.scene).find(h=>Math.abs(h.x-wx)<h.hw&&wy<262); if(h){ target={x:clamp(h.x,30,SCENES[me.scene].w-30),y:clamp(me.y,LANE.top,LANE.bot),use:h}; return; }
+  const h=hotPickAt(wx,wy); if(h){ hotSelKey=hotKey(h); target={x:clamp(h.x,30,SCENES[me.scene].w-30),y:clamp(me.y,LANE.top,LANE.bot),use:h}; return; }
   const sw=SCENES[me.scene].w; target={x:clamp(wx,30,sw-30),y:clamp(wy,LANE.top,LANE.bot)}; });
 
+// ---- choosing what to interact with when several things overlap
+const hotKey=h=>h?(h.label+"@"+Math.round(h.x)):"";
+// how "inside" a spot you are: 0 = dead centre, 1 = edge. Small things (ground items, notes) win when you stand on them.
+const hotFit=(h,x)=>Math.abs(h.x-x)/Math.max(8,h.hw);
+function hotNearby(){ let L=[]; try{ L=hotspots(me.scene)||[]; }catch(e){} const seen=new Set(), out=[];
+  for(const h of L){ if(!h||Math.abs(h.x-me.x)>=h.hw) continue; const k=hotKey(h); if(seen.has(k)) continue; seen.add(k); out.push(h); }
+  return out.sort((a,b)=>hotFit(a,me.x)-hotFit(b,me.x)); }
+function hotPickAt(wx,wy){ let L=[]; try{ L=hotspots(me.scene)||[]; }catch(e){} const ground=wy>=262;
+  const C=L.filter(h=>h&&Math.abs(h.x-wx)<(ground?Math.min(h.hw,h.hw<=45?40:24):h.hw)); if(!C.length) return null;
+  return C.sort((a,b)=>hotFit(a,wx)-hotFit(b,wx))[0]; }
+function hotCycle(d){ if(hotList.length<2) return; const i=Math.max(0,hotList.indexOf(nearHot)); const h=hotList[(i+(d||1)+hotList.length)%hotList.length]; hotSelKey=hotKey(h); nearHot=h; hotUiKey=""; hotPrompt(); beep(660,.03); }
+function hotPrompt(){ const pr=$("#prompt"); if(!(nearHot&&$("#overlay").hidden)){ if(!pr.hidden) pr.hidden=true; hotUiKey=""; return; }
+  const key=hotList.map(hotKey).join("|")+"#"+hotKey(nearHot)+MOBILE; if(key!==hotUiKey){ hotUiKey=key; pr.replaceChildren();
+    pr.append(el("span",{class:"hpmain",text:(MOBILE?"▶ Tap: ":"[E] ")+nearHot.label}));
+    if(hotList.length>1){ pr.classList.add("multi"); const row=el("span",{class:"hprow"}); if(!MOBILE) row.append(el("span",{class:"hphint",text:"Tab ⇄"}));
+      hotList.slice(0,5).forEach((h,i)=>row.append(el("button",{type:"button",class:"hpchip"+(h===nearHot?" on":""),title:h.label,text:`${i+1}. ${h.label.length>26?h.label.slice(0,25)+"…":h.label}`,
+        onpointerdown:e=>{ e.stopPropagation(); e.preventDefault(); hotSelKey=hotKey(h); nearHot=h; hotUiKey=""; if($("#overlay").hidden){ beep(880,.05); safeAct(h); } },onclick:e=>e.stopPropagation()})));
+      pr.append(row); } else pr.classList.remove("multi"); }
+  if(pr.hidden) pr.hidden=false; }
+// markers over every nearby spot; the chosen one bright, with its number
+function hotMarkers(){ const many=hotList.length>1; hotList.slice(0,5).forEach((h,i)=>{ const on=h===nearHot; ctx.save(); ctx.fillStyle=on?"#38e8ff":"rgba(56,232,255,.45)"; ctx.globalAlpha=on?.6+.4*Math.sin(T*6):.7;
+    const s=on?7:4, y=on?248:252; ctx.beginPath(); ctx.moveTo(h.x-s,y); ctx.lineTo(h.x+s,y); ctx.lineTo(h.x,y+s*1.2); ctx.fill();
+    if(many){ ctx.globalAlpha=1; ctx.font="bold 9px 'IBM Plex Mono',monospace"; ctx.textAlign="center"; ctx.fillStyle=on?"#fff":"rgba(200,240,255,.7)"; ctx.fillText(String(i+1),h.x,y-3); }
+    if(on&&many){ ctx.globalAlpha=.35+.2*Math.sin(T*6); ctx.strokeStyle="#38e8ff"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(h.x,LANE.bot+14,Math.min(46,h.hw*.6),6,0,0,7); ctx.stroke(); }
+    ctx.restore(); }); }
 function useHot(){ if(!$("#overlay").hidden) return; if(nearHot){ beep(880,.05); safeAct(nearHot); } }
 function safeAct(h){ try{ stTrack("act",h.label); }catch(e){} try{ h.act(); }catch(e){ console.error(e); toast("That didn't work. Try again."); } }
 function ride(scene,x){ const ov=document.createElement("div"); ov.style.cssText="position:absolute;inset:0;background:#0b0716;opacity:0;transition:opacity .35s;pointer-events:none;display:grid;place-items:center;font-family:var(--f-display);color:var(--cyan);letter-spacing:.1em";
@@ -4613,8 +4647,8 @@ function stepInner(now){
   // hotspot proximity
   // Speed: rebuilding every interaction spot is costly, so it runs about 8 times a second instead of every frame.
   if(T-(window._hotT||-9)>.12||window._hotS!==me.scene){ window._hotT=T; window._hotS=me.scene;
-  nearHot=me.scene==="home"?(hotspots("home").filter(h=>Math.abs(h.x-me.x)<h.hw).sort((a,b)=>Math.abs(a.x-me.x)-Math.abs(b.x-me.x))[0]||null):hotspots(me.scene).find(h=>Math.abs(h.x-me.x)<h.hw)||null; }
-  const pr=$("#prompt"); if(nearHot&&$("#overlay").hidden){ const txt=(MOBILE?"▶ Tap: ":"[E] ")+nearHot.label; if(pr.textContent!==txt) pr.textContent=txt; if(pr.hidden) pr.hidden=false; } else if(!pr.hidden) pr.hidden=true;
+  hotList=hotNearby(); const sel=hotSelKey&&hotList.find(h=>hotKey(h)===hotSelKey); if(!sel) hotSelKey=""; nearHot=sel||hotList[0]||null; }
+  hotPrompt();
   // peers smoothing
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
   // npcs
@@ -4631,7 +4665,7 @@ function render(){
   try{ const _st=dzOn(); if(_st&&_st.k==="kaiju"&&WX_OUT.includes(me.scene)) drawKaijuBack(_st,T,ctx,camX); }catch(e){}
   drawBytesTerminals(T);
   // hotspot marker
-  if(nearHot){ ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.6+.4*Math.sin(T*6); ctx.beginPath(); ctx.moveTo(nearHot.x-6,250); ctx.lineTo(nearHot.x+6,250); ctx.lineTo(nearHot.x,258); ctx.fill(); ctx.globalAlpha=1; }
+  if(nearHot) hotMarkers();
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
   // entities sorted by depth
   const ents=[];
