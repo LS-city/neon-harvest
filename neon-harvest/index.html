@@ -374,6 +374,17 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #gnf.anon .anbt{font:400 9px 'Press Start 2P','Silkscreen',monospace;box-shadow:inset -2px -2px 0 rgba(0,0,0,.5)}
 #gnf.anon .anmc{border-width:3px;box-shadow:6px 6px 0 rgba(0,0,0,.6)}#gnf.anon .anmc h3{font-family:'Press Start 2P','Silkscreen',monospace;font-size:14px;line-height:1.5}
 #gnf.anon .anhp{border-radius:0;box-shadow:0 0 0 2px #08050f}#gnf.anon .anhp i{background:repeating-linear-gradient(90deg,#43f0a4 0 8px,#2ac08a 8px 10px)}
+#gnf.osk .owmm{position:absolute;right:8px;bottom:8px;width:156px;height:120px;border:2px solid #3c3a7a;background:#000;image-rendering:pixelated;cursor:pointer;touch-action:none;box-shadow:4px 4px 0 rgba(0,0,0,.5)}
+#gnf.osk .owact{position:absolute;left:8px;bottom:8px;display:flex;gap:8px;align-items:flex-end}#gnf.osk .owgo{min-height:52px;padding:0 16px;background:#ffd36a;color:#120a04;border-color:#ffd36a;font-size:10px}#gnf.osk .owgo[disabled]{background:#3a3050;color:#9a8cc0;border-color:#3a3050}#gnf.osk .owsprint{min-height:44px}#gnf.osk .owsprint[disabled]{opacity:.5}
+#gnf.osk .owzoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}#gnf.osk .owzoom .anbt{min-width:40px;min-height:40px;font-size:14px}
+#gnf.osk .owdrawer{flex:none;max-height:46%;overflow:auto;background:#0b0820;border-top:2px solid #2a2f58;padding:8px max(10px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px}#gnf.osk .owdrawer[hidden]{display:none}
+#gnf.osk .owtabs{display:flex;gap:6px;flex-wrap:wrap}#gnf.osk .owtabs .btn{border-radius:0;font:400 9px 'Press Start 2P','Silkscreen',monospace;min-height:34px}
+#gnf.osk .owitems{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:4px}#gnf.osk .owitems .ancmd{min-height:72px}#gnf.osk .owitems .anpx{height:30px}
+#gnf.osk .owopts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#gnf.osk .owcols,#gnf.anon .owcols{display:flex;gap:5px;flex-wrap:wrap}.owsw{width:30px;height:30px;border:2px solid #0b0820;box-shadow:0 0 0 1px #3c3a7a;cursor:pointer;padding:0}.owsw.on{box-shadow:0 0 0 3px #fff}
+#gnf.osk .owpics{display:flex;gap:6px;flex-wrap:wrap;align-items:center}#gnf.osk .owpic{width:52px;height:52px;padding:0;border:2px solid #3c3a7a;background:#000;cursor:pointer}#gnf.osk .owpic.on{border-color:#ffd36a}#gnf.osk .owpic img{width:100%;height:100%;object-fit:cover;display:block}
+#gnf.osk .owhelp{color:#cfc6ff}
+#gnf.osk.building .owmm,#gnf.osk.building .owact,#gnf.osk.building .owzoom{display:none}
+@media (max-width:760px){ #gnf.osk .owmm{width:104px;height:80px} #gnf.osk .owitems{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))} #gnf.osk .owitems .ancmd{min-height:64px} #gnf.osk .owdrawer{max-height:50%} }
 @media (max-width:760px){ #gnf.anon .anpanel{height:auto;flex-wrap:wrap;gap:6px} #gnf.anon .anmm{width:120px;height:90px} #gnf.anon .aninfo{min-width:0;max-height:90px} #gnf.anon .ancmds{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));grid-auto-rows:54px;flex:1 1 100%;max-height:112px} #gnf.anon .g1bar .btn{min-height:36px;padding:0 10px} #gnf.anon .anres{gap:5px;font-size:11px} #gnf.anon .anr{padding:2px 5px} #gnf.anon .g1bar strong{display:none} }
 @media (max-height:460px){ #gnf.anon .anpanel{height:112px;flex-wrap:nowrap} #gnf.anon .anmm{width:120px;height:90px} #gnf.anon .ancmds{grid-template-columns:repeat(auto-fill,58px);grid-auto-rows:50px;flex:1;max-height:100px} #gnf.anon .aninfo{max-width:180px} }
 .icard{background:var(--panel);border:1px solid var(--mag);box-shadow:0 0 18px rgba(255,63,168,.25);padding:10px;display:flex;flex-direction:column;gap:8px;font-size:12px}
@@ -4199,6 +4210,8 @@ const SCENES={
   streamdome:{w:2400, spawn:200},
   racers:{w:7000, spawn:200},
   anon:{w:2600, spawn:200},
+  outskirts:{w:2400, spawn:200},
+  wilds:{w:800, spawn:400},
   simcity:{w:5200, spawn:240},
   zerocool:{w:2600, spawn:220},
 };
@@ -4310,6 +4323,8 @@ function hotspotsBase(sc){
   if(sc==="datasim") return dsimHot();
   if(sc==="hhomes") return hhHot();
   if(sc==="anon") return anonHot();
+  if(sc==="outskirts") return owGateHot();
+  if(sc==="wilds") return [];
   if(sc==="hhfloor") return hhFloorHot();
   if(sc==="dexhub") return dexHot();
   if(sc==="story") return [
@@ -4681,7 +4696,7 @@ function stepInner(now){
 }
 function render(){
   let _dzs=[0,0]; try{ _dzs=dzShake(); }catch(e){} ctx.setTransform(scale,0,0,scale,-camX*scale+_dzs[0]*scale,_dzs[1]*scale);
-  if(me.scene==="street"){ drawStreet(T); drawSimEntrance(T); } else if(me.scene==="simcity") drawSim(T); else if(me.scene==="zerocool") drawZeroCool(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="anon") drawAnonHub(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street"){ drawStreet(T); drawSimEntrance(T); } else if(me.scene==="simcity") drawSim(T); else if(me.scene==="zerocool") drawZeroCool(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="story") drawStory(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="anon") drawAnonHub(T); else if(me.scene==="outskirts") drawOwGate(T); else if(me.scene==="wilds") drawOwWildsBg(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   try{ const _st=dzOn(); if(_st&&_st.k==="kaiju"&&WX_OUT.includes(me.scene)) drawKaijuBack(_st,T,ctx,camX); }catch(e){}
   drawBytesTerminals(T);
@@ -5187,6 +5202,7 @@ const HELP=[
   {id:"prison",icon:"⛓",n:"Rust Gate Prison",sub:"Where arrested runners do their time",where:"You're sent here when arrested; anyone can visit",secs:[
     ["Shorten your sentence",["Press license plates, work the laundry, shoot hoops, read in the library or sit in the chapel.","Pay bail at the pay phone, or risk digging the tunnel (if a guard doesn't catch you)."]],
     ["Also inside",["Lift weights for a Void buff, grab a canteen tray to heal, and buy snacks and phone cards at the commissary.","Visitors can see who's locked up and use the hoops, library, chapel and commissary too."]]],rel:["crime"]},
+  {id:"outskirts",icon:"⛺",n:"The Outskirts",sub:"Open-world wasteland: salvage and build a hideout",where:"Metro → The Outskirts → walk through the Gate",steps:["Walk anywhere: WASD/arrows on PC, or tap where you want to go. Tap things to use them. M opens the map.","Salvage heaps, car wrecks, crates and server racks for scrap and parts. Spots refill after 8 to 16 minutes. The far side has the best loot.","What you find goes in your pack. Stash it at the gate or at a Stash crate in your hideout. Halvorsen drones patrol the far side: if one zaps you, you drop half your pack. Sprint (Shift) to escape.","Claim a free plot for ₵500 and press 🔨 Build. Place floors, walls, doors, furniture, neon, signs, graffiti and posters with your own pictures, in any color.","Tech costs parts: Generators power Mining Rigs (chips), Server Racks grow your pack, Turrets fight raiders, the Antenna shows patrols. Raiders come for hideouts with tech while you're home: tap them to zap them."]},
   {id:"anon",icon:"◆",n:"Project ANON",sub:"Real-time strategy vs Halvorsen Corp",where:"Metro → Project ANON → War Room",steps:["Walk into the War Room and pick an Operation or a Skirmish (Easy, Normal or Hard).","Drones mine glowing data crystals and bring the data to your Core. Data pays for everything. Power (from Cores and Power Relays) is your unit cap.","Select a drone to build: Node Forge (Runners, Glitchers, Hackers), Code Lab (upgrades), Mech Bay (Mechs), Firewall Turrets and more Relays.","PC: left-click or drag to select, right-click to move, attack, mine or set a rally point. A = attack-move. Phones: tap to select, tap the ground to move, use ▭ Box and ⚔ Army.","Destroy every Halvorsen building to win. Operations pay a one-time bonus. Skirmish wins pay credits (first 3 a day)."]},
   {id:"cardisplay",icon:"🚗",n:"Cars & trucks",sub:"Buy and customize rides",where:"Metro → Harvest Homes → Neon Motors (far end)",steps:["Buy any of 15 hover cars and trucks at Neon Motors with credits.","Customize them in the resident garage next door: paint, decals, underglow, spoilers, light trails and a plate.","The old Car Display closed. If you owned a plot, your 500 chips were refunded."],secs:[
     ["Good to know",["Everyone walking by sees your rides. Release a plot to get half your chips back."]]]}]},
@@ -6716,7 +6732,7 @@ function curHomeKey(){ return me.scene==="rowin"?"row:"+(rowInSlot||""):me.scene
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {simcity:"Sim City (underground)",zerocool:"Zero Cool (Sim City)",rowin:(rowStores[rowInSlot]&&rowStores[rowInSlot].name)||"a Neon Row store",dexhub:"MyDex Hub",datasim:"Data Sim HQ",hhomes:"Harvest Homes",hhfloor:"a Harvest Homes hallway",racers:"the Car Display",anon:"Project ANON",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Ramblings of a Mad Man)",line:"The Line (12/11)"}[s]||"somewhere"; }
+function sceneName(s){ return {simcity:"Sim City (underground)",zerocool:"Zero Cool (Sim City)",rowin:(rowStores[rowInSlot]&&rowStores[rowInSlot].name)||"a Neon Row store",dexhub:"MyDex Hub",datasim:"Data Sim HQ",hhomes:"Harvest Homes",hhfloor:"a Harvest Homes hallway",racers:"the Car Display",anon:"Project ANON",outskirts:"The Outskirts",wilds:"out in the Outskirts",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",story:"Story Mode (Ramblings of a Mad Man)",line:"The Line (12/11)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -6728,7 +6744,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},hhomes:{n:"Harvest Homes",x:140,d:"High-tech apartment towers: your apartment, your neighbors, elevators to every floor"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},den:{n:"Gamers Den",x:140,d:"Gamer & anime bar: themed booths, Den menu, jukebox, event boards and THE VOID arcade cabinet"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"Ramblings of a Mad Man by Edwin C. Reyes: a 2D pixel-art story game in 34 chapters. ₵40 + 2 chips per chapter, ₵500 + 50 chips for the whole book"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},anon:{n:"Project ANON",x:140,d:"Real-time strategy war vs Halvorsen Corp: the War Room and the Ops Board"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},hhomes:{n:"Harvest Homes",x:140,d:"High-tech apartment towers: your apartment, your neighbors, elevators to every floor"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},den:{n:"Gamers Den",x:140,d:"Gamer & anime bar: themed booths, Den menu, jukebox, event boards and THE VOID arcade cabinet"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},story:{n:"Story Mode",x:140,d:"Ramblings of a Mad Man by Edwin C. Reyes: a 2D pixel-art story game in 34 chapters. ₵40 + 2 chips per chapter, ₵500 + 50 chips for the whole book"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},anon:{n:"Project ANON",x:140,d:"Real-time strategy war vs Halvorsen Corp: the War Room and the Ops Board"},outskirts:{n:"The Outskirts",x:140,d:"Open-world wasteland past the city wall: salvage, build your own hideout"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -6750,6 +6766,7 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"Sim City entrance (underground)",d:"Stairs down at the far east end of Sector 9, past The Third Eye. Black markets below.",s:"street",x:4300},
   {g:"Hot spots",n:"Gemix (Mech Gems)",d:"Color, upgrade and form gems for your mech (Byte Market)",s:"byte",x:4600},
   {g:"Hot spots",n:"Car Display",d:"Dealership, garage and player car plots",s:"racers",x:()=>CD_DEAL[0]},
+  {g:"Hot spots",n:"The Outskirts Gate",d:"Open world: salvage parts and build your hideout",s:"outskirts",x:()=>OWG.gate},
   {g:"Hot spots",n:"Project ANON War Room",d:"Real-time strategy: build a base and crush Halvorsen Corp",s:"anon",x:()=>ANH.war},
   {g:"Hot spots",n:"Neon Motors (Harvest Homes)",d:"Buy and customize your cars and trucks",s:"hhomes",x:()=>HH_GAR.deal},
   {g:"Hot spots",n:"MyDex Hub",d:"Open MyDex and forge items into badges",s:"dexhub",x:()=>DEX_X.term},
@@ -8377,6 +8394,487 @@ function drawAnonHub(t){ const W=SCENES.anon.w, X0=camX, X1=camX+VW, P=3, fr=Mat
   // ground: pixel tiles with a neon seam
   for(let x=Math.floor(X0/48)*48;x<X1;x+=48){ ctx.fillStyle=(x/48)%2?"#121528":"#101324"; ctx.fillRect(x,262,48,80); ctx.fillStyle="#1d2440"; ctx.fillRect(x,262,48,P); ctx.fillStyle="#0b0e1c"; ctx.fillRect(x,262,P,80); if((x/48)%3===0){ ctx.fillStyle=Math.floor(t*2+x)%2?"#17607e":"#38e8ff"; ctx.fillRect(x+21,268,P*2,P); } }
   if(X0<260) anHubDraw("metro",fr,140,262); }
+
+// ================================================================ THE OUTSKIRTS: a shared open-world wasteland outside the city.
+// Top-down pixel art (same pipeline as Project ANON). Walk anywhere, salvage scrap and parts, dodge Halvorsen patrols,
+// claim a plot and build a hideout you can fully customize (walls, furniture, neon, signs, graffiti, your own posters).
+// Hideouts are saved in each player's homes/<uid> doc (field "ho"), so everyone sees everyone's hideout.
+const OW_T=32, OW_W=104, OW_H=80, OW_SEED=40217, OW_PS=8, OW_SPD=150;
+const OW_COLS=["#38e8ff","#ff3fa8","#43f0a4","#ffd36a","#ff9a3c","#b06bff","#f2efe6","#ff5a5a"], OW_COLN=["Cyan","Pink","Green","Gold","Orange","Violet","White","Red"];
+const OW_BLOCK=new Set([3,4,7]);
+const OW_PLOT_COST=500, OW_MAX_ITEMS=140, OW_MAX_IMG=4;
+// hideout pieces. cost: s = scrap, p = parts by type. L 0 = floor layer, 1 = object layer
+const OW_IT={
+  floor:{n:"Metal floor",cat:"build",L:0,s:1,d:"Riveted steel plates."},
+  deck:{n:"Wood deck",cat:"build",L:0,s:1,d:"Salvaged planks."},
+  grid:{n:"Neon grid floor",cat:"build",L:0,s:2,col:1,d:"Glowing floor grid in any color."},
+  rug:{n:"Rug",cat:"build",L:0,s:3,col:1,d:"A soft rug in any color."},
+  wall:{n:"Wall",cat:"build",L:1,s:2,blk:1,col:1,d:"Scrap-metal wall with a colored trim."},
+  window:{n:"Window wall",cat:"build",L:1,s:3,blk:1,col:1,d:"A wall with a lit window."},
+  door:{n:"Door",cat:"build",L:1,s:4,col:1,d:"Anyone can walk through a door."},
+  fence:{n:"Fence",cat:"build",L:1,s:1,blk:1,d:"Chain-link fence."},
+  couch:{n:"Couch",cat:"furn",L:1,s:6,col:1,blk:1,d:"For hanging out."},
+  chair:{n:"Chair",cat:"furn",L:1,s:3,col:1,d:"Have a seat."},
+  table:{n:"Table",cat:"furn",L:1,s:4,blk:1,d:"Cable-spool table."},
+  bed:{n:"Bed",cat:"furn",L:1,s:8,col:1,blk:1,d:"A real mattress out here is a luxury."},
+  plant:{n:"Plant",cat:"furn",L:1,s:3,d:"Somehow still alive."},
+  lamp:{n:"Neon lamp",cat:"furn",L:1,s:4,col:1,light:1,d:"Lights up the night in any color."},
+  tube:{n:"Neon tube",cat:"furn",L:1,s:3,col:1,light:1,d:"A glowing tube light."},
+  barrel:{n:"Fire barrel",cat:"furn",L:1,s:4,blk:1,light:2,d:"Warm light and crackling fire."},
+  crate:{n:"Stash crate",cat:"tech",L:1,s:8,blk:1,d:"Stash your pack here: scrap and parts go safely into your storage."},
+  bench:{n:"Workbench",cat:"tech",L:1,s:10,p:{fan:1},blk:1,d:"+25% scrap from every salvage."},
+  gen:{n:"Generator",cat:"tech",L:1,s:12,p:{psu:1},blk:1,d:"Powers up to 2 mining rigs."},
+  rig:{n:"Mining rig",cat:"tech",L:1,s:10,p:{gpu:1},blk:1,d:"Mines 3 chips an hour while powered (holds up to 24h). Tap to collect."},
+  rack:{n:"Server rack",cat:"tech",L:1,s:10,p:{ssd:1},blk:1,d:"+4 pack space each (max 2 racks)."},
+  turret:{n:"Turret",cat:"tech",L:1,s:14,p:{chip:1},blk:1,col:1,d:"Shoots raiders that come for your hideout."},
+  antenna:{n:"Antenna",cat:"tech",L:1,s:6,p:{batt:1},d:"Shows Halvorsen patrols on your map and warns you before raids."},
+  arcade:{n:"Arcade cabinet",cat:"tech",L:1,s:12,p:{screen:1},blk:1,col:1,light:1,d:"Blinking attract mode. Pure style."},
+  flag:{n:"Flag",cat:"decor",L:1,s:3,col:1,d:"Fly your colors."},
+  sign:{n:"Sign",cat:"decor",L:1,s:4,col:1,txt:1,d:"A sign with your own words."},
+  neon:{n:"Neon sign",cat:"decor",L:1,s:6,col:1,txt:1,light:1,d:"Glowing words in any color."},
+  graffiti:{n:"Graffiti",cat:"decor",L:0,s:2,col:1,txt:1,d:"Spray your tag on the ground."},
+  poster:{n:"Poster",cat:"decor",L:1,s:3,img:1,d:"Put up your own picture. Tap it to see it big."},
+  board:{n:"Billboard",cat:"decor",L:1,s:10,img:1,w:2,blk:1,d:"A big screen showing your own picture."},
+};
+const OW_CATS=[["build","Build"],["furn","Furniture"],["tech","Tech"],["decor","Decor & posters"]];
+let OWM=null, OW=null, owHidden={}, owHiddenOn=false;
+const OW_OK=new WeakSet();
+function owS(){ if(save.osk&&OW_OK.has(save.osk)) return save.osk; const d={scrap:0,pack:{s:0,p:[]},cd:{},p:-1,at:0,n:"",c:0,it:[],im:[],pos:null,raid:{n:0,w:0},rig:{},bag:null}; let s=save.osk&&typeof save.osk==="object"?save.osk:{}; s={...d,...s};
+  s.scrap=Math.max(0,Math.floor(+s.scrap||0)); s.pack={s:Math.max(0,Math.floor(+(s.pack&&s.pack.s)||0)),p:(Array.isArray(s.pack&&s.pack.p)?s.pack.p:[]).filter(id=>BY[id]).slice(0,20)};
+  if(!s.cd||typeof s.cd!=="object") s.cd={}; s.p=Number.isInteger(s.p)&&s.p>=0&&s.p<200?s.p:-1; s.c=clamp(Math.floor(+s.c||0),0,7); s.n=String(s.n||"").replace(/[\u0000-\u001f]/g,"").slice(0,24);
+  s.im=(Array.isArray(s.im)?s.im:[]).map(u=>typeof u==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(u)&&u.length<40000?u:"").slice(0,OW_MAX_IMG); s.it=owCleanItems(s.it,s.im.length); if(!s.rig||typeof s.rig!=="object") s.rig={}; if(!s.raid||typeof s.raid!=="object") s.raid={n:0,w:0}; save.osk=s; OW_OK.add(s); return s; }
+function owCleanItems(a,nim){ return (Array.isArray(a)?a:[]).filter(o=>o&&OW_IT[o.k]&&Number.isInteger(o.x)&&Number.isInteger(o.y)&&o.x>=0&&o.y>=0&&o.x<OW_PS&&o.y<OW_PS).slice(0,OW_MAX_ITEMS).map(o=>{ const D=OW_IT[o.k], r={k:o.k,x:o.x,y:o.y,c:clamp(Math.floor(+o.c||0),0,7)};
+  if(D.txt) r.t=String(o.t||"").replace(/[\u0000-\u001f​-‏‪-‮]/g,"").slice(0,24); if(D.img) r.i=Number.isInteger(o.i)&&o.i>=0&&o.i<Math.max(nim,0)?o.i:-1; if(o.br) r.br=1; return r; }); }
+// what other players see (stored in homes/<uid>.ho)
+function owPub(){ const s=save&&save.osk; if(!s||!(s.p>=0)) return null; return {p:s.p,at:+s.at||0,n:s.n||"",c:s.c||0,it:(s.it||[]).map(o=>[o.k,o.x,o.y,o.c||0,OW_IT[o.k]&&OW_IT[o.k].txt?(o.t||""):OW_IT[o.k]&&OW_IT[o.k].img?(o.i==null?-1:o.i):0,o.br?1:0]),im:(s.im||[]).slice(0,OW_MAX_IMG)}; }
+function owCleanPub(h){ if(!h||typeof h!=="object"||!Number.isInteger(h.p)||h.p<0||h.p>=200) return null; const im=(Array.isArray(h.im)?h.im:[]).map(u=>typeof u==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(u)&&u.length<40000?u:"").slice(0,OW_MAX_IMG);
+  const it=owCleanItems((Array.isArray(h.it)?h.it:[]).map(a=>Array.isArray(a)?{k:a[0],x:a[1],y:a[2],c:a[3],t:typeof a[4]==="string"?a[4]:"",i:Number.isInteger(a[4])?a[4]:-1,br:a[5]===1}:null),im.length);
+  return {p:h.p,at:+h.at||0,n:String(h.n||"").replace(/[\u0000-\u001f]/g,"").slice(0,24),c:clamp(Math.floor(+h.c||0),0,7),it,im}; }
+// ---------------------------------------------------------------- the shared map (same seed for everyone)
+function owGen(){ if(OWM) return OWM; const W=OW_W, H=OW_H, g=new Uint8Array(W*H), r=seeded(OW_SEED), at=(x,y)=>y*W+x, inb=(x,y)=>x>=0&&y>=0&&x<W&&y<H;
+  const N=[]; for(let i=0;i<(Math.ceil(W/8)+2)*(Math.ceil(H/8)+2);i++) N.push(r()); const nz=(x,y)=>{ const gx=x/8, gy=y/8, x0=Math.floor(gx), y0=Math.floor(gy), fx=gx-x0, fy=gy-y0, cw=Math.ceil(W/8)+2, v=(a,b)=>N[b*cw+a]; const s=t=>t*t*(3-2*t); return (v(x0,y0)*(1-s(fx))+v(x0+1,y0)*s(fx))*(1-s(fy))+(v(x0,y0+1)*(1-s(fx))+v(x0+1,y0+1)*s(fx))*s(fy); };
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const n=nz(x,y); g[at(x,y)]=n>.62?1:n<.22?8:0; }
+  const set=(x,y,v)=>{ if(inb(x,y)) g[at(x,y)]=v; }; const rect=(x0,y0,w,h,v)=>{ for(let y=y0;y<y0+h;y++) for(let x=x0;x<x0+w;x++) set(x,y,v); };
+  // the dead river
+  const RX=y=>Math.round(62+Math.sin(y*.11)*5+Math.sin(y*.047+1)*4); for(let y=0;y<H;y++){ const c=RX(y); for(let x=c-1;x<=c+2;x++) set(x,y,3); }
+  // roads (bridges where they cross the river)
+  const road=(x0,y0,x1,y1)=>{ if(y0===y1) for(let x=Math.min(x0,x1);x<=Math.max(x0,x1);x++){ for(const yy of [y0,y0+1]) set(x,yy,g[at(x,yy)]===3?9:2); } else for(let y=Math.min(y0,y1);y<=Math.max(y0,y1);y++){ for(const xx of [x0,x0+1]) set(xx,y,g[at(xx,y)]===3?9:2); } };
+  road(0,H-9,W-1,H-9); road(16,4,16,H-9); road(16,22,W-6,22); road(44,22,44,H-9); road(86,22,86,H-9); road(44,48,86,48);
+  // landmarks
+  const LM=[]; const lm=(n,x,y,w,h,tier)=>{ LM.push({n,x,y,w,h,tier}); };
+  const ruinBox=(x0,y0,w,h,gaps)=>{ for(let x=x0;x<x0+w;x++){ set(x,y0,4); set(x,y0+h-1,4); } for(let y=y0;y<y0+h;y++){ set(x0,y,4); set(x0+w-1,y,4); } for(const [gx,gy] of gaps) set(gx,gy,5); };
+  // Junkyard (fenced, near the gate)
+  { const x0=22,y0=56,w=16,h=12; for(let x=x0;x<x0+w;x++){ set(x,y0,7); set(x,y0+h-1,7); } for(let y=y0;y<y0+h;y++){ set(x0,y,7); set(x0+w-1,y,7); } set(x0+7,y0+h-1,0); set(x0+8,y0+h-1,0); set(x0,y0+5,0); set(x0+w-1,y0+4,0); lm("The Junkyard",x0,y0,w,h,1); }
+  // Old Mall ruins
+  { const x0=22,y0=6,w=18,h=12; ruinBox(x0,y0,w,h,[[x0+8,y0+h-1],[x0+9,y0+h-1],[x0,y0+6],[x0+w-1,y0+5]]); for(let x=x0+6;x<x0+w-1;x+=6) for(let y=y0+1;y<y0+5;y++) set(x,y,4); lm("Old Mall",x0,y0,w,h,2); }
+  // Server Farm ruins (across the river)
+  { const x0=72,y0=4,w=22,h=14; ruinBox(x0,y0,w,h,[[x0+10,y0+h-1],[x0+11,y0+h-1],[x0,y0+7]]); for(let x=x0+3;x<x0+w-2;x+=4) for(let y=y0+3;y<y0+h-3;y++) if((y-y0)%5) set(x,y,4); lm("Server Farm",x0,y0,w,h,3); }
+  // Crash Site crater
+  { const cx=72,cy=62,R=7; for(let y=-R;y<=R;y++) for(let x=-R;x<=R;x++){ const d=x*x+y*y; if(d<=R*R&&inb(cx+x,cy+y)&&g[at(cx+x,cy+y)]!==3&&g[at(cx+x,cy+y)]!==2&&g[at(cx+x,cy+y)]!==9) set(cx+x,cy+y,d<4?4:8); } set(cx+2,cy,4); set(cx-2,cy+1,4); lm("Crash Site",cx-R,cy-R,R*2,R*2,3); }
+  // Halvorsen outpost
+  { const x0=90,y0=30,w=12,h=12; for(let x=x0;x<x0+w;x++){ set(x,y0,7); set(x,y0+h-1,7); } for(let y=y0;y<y0+h;y++){ set(x0,y,7); set(x0+w-1,y,7); } set(x0,y0+5,9); set(x0,y0+6,9); rect(x0+4,y0+3,4,3,4); lm("Halvorsen Outpost",x0,y0,w,h,3); }
+  // scattered rubble + small ruins
+  for(let i=0;i<70;i++){ const x=Math.floor(r()*W), y=Math.floor(r()*H); if(g[at(x,y)]===0||g[at(x,y)]===1||g[at(x,y)]===8){ if(r()<.35&&x>8){ set(x,y,4); if(r()<.5) set(x+1,y,4); } else set(x,y,5); } }
+  // hideout plots: 8x8 pads along the roads, away from landmarks and water
+  const plots=[]; const freeRect=(x0,y0,w,h)=>{ for(let y=y0;y<y0+h;y++) for(let x=x0;x<x0+w;x++){ if(!inb(x,y)) return false; const v=g[at(x,y)]; if(v===3||v===9||v===2||v===7) return false; } for(const L of LM) if(x0<L.x+L.w+1&&x0+w>L.x-1&&y0<L.y+L.h+1&&y0+h>L.y-1) return false; return true; };
+  for(let y=2;y<H-OW_PS-2;y+=9) for(let x=3;x<W-OW_PS-2;x+=9){ if(plots.length>=30) break; const px=x+Math.floor(r()*2), py=y+Math.floor(r()*2); if(px<10&&py>H-22) continue; if(!freeRect(px-1,py-1,OW_PS+2,OW_PS+2)) continue; rect(px,py,OW_PS,OW_PS,6); plots.push({x:px,y:py}); }
+  // the gate zone (west end of the main road)
+  const gate={x:2,y:H-9}; rect(0,H-14,6,12,0); for(let y=H-15;y<=H-2;y++) if(y<H-11||y>H-6) set(6,y,4); rect(0,H-14,6,1,4); rect(0,H-3,6,1,4); road(0,H-9,8,H-9);
+  // salvage spots
+  const spots=[]; const tierAt=(x,y)=>{ for(const L of LM) if(x>=L.x&&y>=L.y&&x<L.x+L.w&&y<L.y+L.h) return L.tier; const d=Math.hypot(x-gate.x,y-gate.y); return d<40?1:d<75?2:3; };
+  const okSpot=(x,y)=>inb(x,y)&&[0,1,5,8].includes(g[at(x,y)])&&!plots.some(p=>x>=p.x-1&&y>=p.y-1&&x<p.x+OW_PS+1&&y<p.y+OW_PS+1)&&!spots.some(s=>Math.abs(s.x-x)+Math.abs(s.y-y)<3)&&Math.hypot(x-gate.x,y-gate.y)>6;
+  for(const L of LM){ let n=0, tries=0; while(n<(L.tier===1?9:7)&&tries++<400){ const x=L.x+1+Math.floor(r()*(L.w-2)), y=L.y+1+Math.floor(r()*(L.h-2)); if(!okSpot(x,y)) continue; spots.push({x,y,tier:L.tier,k:L.n==="Server Farm"?"rack":L.n==="Crash Site"?"wreck":L.n==="Halvorsen Outpost"?"crate":L.n==="Old Mall"?(r()<.5?"crate":"heap"):"heap"}); n++; } }
+  { let n=0, tries=0; while(n<34&&tries++<3000){ const x=2+Math.floor(r()*(W-4)), y=2+Math.floor(r()*(H-4)); if(!okSpot(x,y)) continue; const t=tierAt(x,y); spots.push({x,y,tier:t,k:r()<.3?"car":r()<.5?"crate":"heap"}); n++; } }
+  // connectivity: carve a walkable path from the gate to every plot and spot
+  const walk=v=>!OW_BLOCK.has(v); const reach=()=>{ const seen=new Uint8Array(W*H), q=[at(gate.x,gate.y)]; seen[q[0]]=1; while(q.length){ const i=q.pop(), x=i%W, y=(i/W)|0; for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){ const X=x+a, Y=y+b; if(!inb(X,Y)) continue; const j=at(X,Y); if(seen[j]||!walk(g[j])) continue; seen[j]=1; q.push(j); } } return seen; };
+  let seen=reach(); for(const t of [...plots.map(p=>({x:p.x+3,y:p.y+OW_PS})),...spots]){ if(seen[at(t.x,t.y)]) continue; let x=t.x, y=t.y; while(!seen[at(x,y)]&&(x!==gate.x||y!==gate.y)){ if(Math.abs(x-gate.x)>Math.abs(y-gate.y)) x+=x>gate.x?-1:1; else y+=y>gate.y?-1:1; const v=g[at(x,y)]; if(!walk(v)) set(x,y,v===3?9:5); } seen=reach(); }
+  // patrol routes
+  const pat=[]; const hps=[[96,36],[83,10],[72,62],[30,12],[96,58],[60,34],[80,40]]; for(const [hx,hy] of hps){ const wp=[]; let t=0; while(wp.length<4&&t++<200){ const x=hx+Math.floor((r()-.5)*16), y=hy+Math.floor((r()-.5)*14); if(inb(x,y)&&walk(g[at(x,y)])&&g[at(x,y)]!==6) wp.push([x,y]); } if(wp.length) pat.push({hx,hy,wp}); }
+  OWM={W,H,g,plots,spots,gate,LM,pat,RX}; return OWM; }
+function owTile(x,y){ const M=owGen(); return x<0||y<0||x>=M.W||y>=M.H?4:M.g[y*M.W+x]; }
+// ---------------------------------------------------------------- hideouts (mine + everyone else's)
+let owHoCache={sig:"",list:[]};
+function owHideouts(){ const sig=Object.entries(homes||{}).map(([u,h])=>u+":"+(h&&h.ho?h.ho.at+"/"+(h.ho.it||[]).length+"/"+(h.ho.im||[]).length:"")).join("|")+"#"+(save.osk?JSON.stringify([save.osk.p,save.osk.at,(save.osk.it||[]).length,save.osk.c,save.osk.n]):"")+"#"+(OW&&OW.ver||0);
+  if(sig===owHoCache.sig) return owHoCache.list; const byPlot={}; const add=(uid,ho)=>{ if(!ho) return; const cur=byPlot[ho.p]; if(!cur||ho.at<cur.ho.at||(ho.at===cur.ho.at&&uid<cur.uid)) byPlot[ho.p]={uid,ho}; };
+  for(const [uid,h] of Object.entries(homes||{})){ if(uid===myId) continue; try{ add(uid,owCleanPub(h&&h.ho)); }catch(e){} } const S=owS(); if(S.p>=0) add(myId||"me",{p:S.p,at:S.at,n:S.n,c:S.c,it:S.it,im:S.im,mine:1});
+  owHoCache={sig,list:Object.values(byPlot)}; owRebuildBlocks(); return owHoCache.list; }
+function owPlotOwner(p){ return owHideouts().find(h=>h.ho.p===p)||null; }
+function owRebuildBlocks(){ const M=owGen(); if(!OW) return; OW.blk=new Uint8Array(M.W*M.H); for(const h of owHoCache.list){ const P=M.plots[h.ho.p]; if(!P) continue; for(const o of h.ho.it){ const D=OW_IT[o.k]; if(!D||!D.blk||D.L!==1) continue; for(let i=0;i<(D.w||1);i++){ const x=P.x+o.x+i, y=P.y+o.y; if(x<M.W) OW.blk[y*M.W+x]=1; } } } OW.flow=null; }
+function owBlocked(tx,ty){ const M=owGen(); if(tx<0||ty<0||tx>=M.W||ty>=M.H) return true; if(OW_BLOCK.has(M.g[ty*M.W+tx])) return true; return !!(OW&&OW.blk&&OW.blk[ty*M.W+tx]); }
+function owMyPlot(){ const S=owS(); if(S.p<0) return null; const o=owPlotOwner(S.p); return o&&(o.ho.mine)?owGen().plots[S.p]:null; }
+function owNearPlot(x,y,P){ return P&&x>=(P.x-1)*OW_T&&y>=(P.y-1)*OW_T&&x<(P.x+OW_PS+1)*OW_T&&y<(P.y+OW_PS+1)*OW_T; }
+function owInPlot(x,y,P){ return P&&x>=P.x*OW_T&&y>=P.y*OW_T&&x<(P.x+OW_PS)*OW_T&&y<(P.y+OW_PS)*OW_T; }
+function owHas(k,working){ return owS().it.filter(o=>o.k===k&&(!working||!o.br)).length; }
+function owPackCap(){ return 8+4*Math.min(2,owHas("rack",1)); }
+function owPackN(){ const p=owS().pack; return p.p.length; }
+// parts as building costs: use the cheapest matching part from storage
+function owPartsOf(t){ return Object.entries(save.inv||{}).filter(([id,n])=>n>0&&BY[id]&&BY[id].t===t&&!BY[id].bound).sort((a,b)=>BY[a[0]].v-BY[b[0]].v); }
+function owCanPay(k){ const D=OW_IT[k], S=owS(); if(S.scrap<D.s) return false; for(const [t,n] of Object.entries(D.p||{})){ if(owPartsOf(t).reduce((a,[,c])=>a+c,0)<n) return false; } return true; }
+function owPay(k){ const D=OW_IT[k], S=owS(); S.scrap-=D.s; for(const [t,n] of Object.entries(D.p||{})){ let need=n; for(const [id,c] of owPartsOf(t)){ const u=Math.min(c,need); addItem(id,-u); need-=u; if(!need) break; } } }
+function owRefund(k){ const D=OW_IT[k], S=owS(); S.scrap+=Math.ceil(D.s/2); }
+function owCostTxt(k){ const D=OW_IT[k]; return `🔩${D.s}`+Object.entries(D.p||{}).map(([t,n])=>` + ${n} ${TYPE_N[t]||t}`).join(""); }
+// ---------------------------------------------------------------- pixel sprites for the Outskirts
+function owPal(L){ L=fullLook(L||DEFAULT_LOOK); let sk="#e0b090"; try{ const v=WARD.skin.opts[L.skin][2]; sk=v==="holo"?"#b8f0ff":v; }catch(e){} return {sk,j:COLORS[L.jacket]||"#38e8ff",p:COLORS[L.pants]||"#2a2440",h:COLORS[L.hairCol]==="#2a2440"?"#3a3258":(COLORS[L.hairCol]||"#3a3258"),a:COLORS[L.accent]||"#38e8ff",v:COLORS[L.visor%COLORS.length]||"#38e8ff",hat:L.hat,hair:L.hair}; }
+function owSprPlayer(L,dir,f){ const P=owPal(L); const key=`ow|pl|${P.sk}|${P.j}|${P.p}|${P.h}|${P.a}|${P.hat}|${P.hair}|${dir}|${f}`;
+  return anSprite(key,14,22,6,21,g=>{ const walk=f>0, lf=walk?[0,-1,0,1][f]:0; const side=dir>=2;
+    // legs
+    if(side){ pR(g,5+lf,15,2,5,P.p); pR(g,7-lf,15,2,5,P.p); pR(g,4+lf,20,3,1,"#15121f"); pR(g,7-lf,20,3,1,"#15121f"); }
+    else { pR(g,4,15,2,5+(lf>0?0:0),P.p); pR(g,8,15,2,5,P.p); pR(g,4,20-(lf<0?1:0),2,1,"#15121f"); pR(g,8,20-(lf>0?1:0),2,1,"#15121f"); if(lf<0) pR(g,4,19,2,1,P.p); if(lf>0) pR(g,8,19,2,1,P.p); }
+    // body
+    pR(g,3,8,8,7,P.j); pR(g,3,14,8,1,"#15121f"); pR(g,3,8,8,1,"rgba(255,255,255,.25)"); if(dir===0){ pR(g,6,9,2,5,P.a); } if(dir===1){ pR(g,4,10,6,3,"rgba(0,0,0,.25)"); }
+    // arms
+    const sw=walk?[0,1,0,-1][f]:0; if(side){ pR(g,6-sw,9,2,5,P.j); pR(g,6-sw,14,2,1,P.sk); } else { pR(g,1,9+sw,2,5,P.j); pR(g,11,9-sw,2,5,P.j); pR(g,1,14+sw,2,1,P.sk); pR(g,11,14-sw,2,1,P.sk); }
+    // head
+    pR(g,3,1,8,7,P.sk); if(dir===1){ pR(g,3,1,8,6,P.h); } else { pR(g,3,1,8,2,P.h); if(P.hair) pR(g,side?3:2,2,side?2:1,4,P.h); if(dir===0){ pR(g,4,4,6,2,"#0a0612"); pR(g,5,4,4,1,P.v); } else { pR(g,8,4,3,2,"#0a0612"); pR(g,9,4,2,1,P.v); } }
+    if(P.hat){ pR(g,2,0,10,2,P.a); if(side) pR(g,11,1,2,1,P.a); } },dir===3); }
+function owSprDrone(f,alert){ return anSprite(`ow|dr|${f}|${alert?1:0}`,18,12,9,11,g=>{ pR(g,3,4,12,5,"#3a1e0a"); pR(g,3,4,12,1,"#ff9a3c"); pR(g,5,9,8,1,"#2a160a"); pR(g,7,5,4,3,"#120806"); pR(g,8,6,2,1,alert?"#ff2a2a":"#ff9a3c"); pR(g,0,3,4,1,"#5a6078"); pR(g,14,3,4,1,"#5a6078"); if(f%2){ pR(g,0,2,5,1,"#cfd6e8"); pR(g,13,2,5,1,"#cfd6e8"); } else { pR(g,1,1,1,2,"#cfd6e8"); pR(g,16,1,1,2,"#cfd6e8"); } }); }
+function owSprBot(f){ return anSprite(`ow|bot|${f}`,14,12,7,11,g=>{ const l=f%2; pR(g,2,4,10,5,"#4a4f68"); pR(g,2,4,10,1,"#7a8098"); pR(g,4,5,2,1,"#ff3a3a"); pR(g,8,5,2,1,"#ff3a3a"); pR(g,1,9+l,2,2,"#2a2f48"); pR(g,5,9+(1-l),2,2,"#2a2f48"); pR(g,9,9+l,2,2,"#2a2f48"); pR(g,11,9+(1-l),2,2,"#2a2f48"); pR(g,6,1,2,3,"#7a8098"); pR(g,6,0,2,1,"#ff3a3a"); }); }
+function owSprSpot(k,ready,f){ return anSprite(`ow|sp|${k}|${ready?1:0}|${f}`,28,22,14,20,g=>{ const dim=!ready;
+  if(k==="heap"){ const c=dim?["#2a2436","#231e2e","#1c1826"]:["#5a5070","#4a4060","#3a3250"]; for(let y=0;y<10;y++){ const w=Math.round(20*Math.sin((y+1)/11*Math.PI/2)); pR(g,14-Math.floor(w/2),10+y,w,1,c[y%3]); } if(!dim){ pR(g,9,13,3,2,"#7a8098"); pR(g,15,12,2,3,"#ff9a3c"); pR(g,12,16,4,1,"#43f0a4"); pR(g,18,15,2,2,"#38e8ff"); pR(g,7,17,2,1,"#c9d3e0"); } }
+  else if(k==="car"){ const b=dim?"#2a2232":"#6a3040"; pR(g,2,10,24,8,b); pR(g,6,6,14,5,dim?"#231c2c":"#4a2232"); pR(g,8,7,10,3,"#0a0612"); pR(g,3,17,5,3,"#15121f"); pR(g,19,17,5,3,"#15121f"); pR(g,2,10,24,1,dim?"#3a3046":"#a05060"); if(!dim){ pR(g,24,12,2,2,"#ffd36a"); pR(g,10,12,3,2,"#7a8098"); } }
+  else if(k==="crate"){ pR(g,7,8,14,12,dim?"#2a2232":"#5a4a30"); pR(g,7,8,14,2,dim?"#342a3e":"#7a6440"); pR(g,13,8,2,12,dim?"#231c2c":"#3a2e1e"); pR(g,7,13,14,1,dim?"#231c2c":"#3a2e1e"); if(!dim){ pR(g,9,15,3,2,"#ff9a3c"); } }
+  else if(k==="rack"){ pR(g,8,2,12,18,dim?"#1d1a2a":"#141026"); pR(g,8,2,12,1,"#2a2548"); for(let i=0;i<5;i++){ pR(g,10,4+i*3,8,2,"#1d1a33"); if(!dim) pR(g,11,4+i*3,1,1,(i+f)%3===0?"#43f0a4":(i+f)%3===1?"#38e8ff":"#20304a"); } }
+  else if(k==="wreck"){ pR(g,1,8,26,10,dim?"#231e2e":"#3a3f58"); pR(g,4,4,18,5,dim?"#1c1826":"#4a5070"); pR(g,1,8,26,1,"#7a8098"); pR(g,20,11,6,5,"#0a0612"); if(!dim){ pR(g,21,12,4,1,"#38e8ff"); pR(g,8,12,6,2,"#ff3fa8"); } }
+  if(ready&&f%4===0) pR(g,[10,18,14,22][f>>2&3]||12,[8,12,6,10][f>>2&3]||8,1,1,"#ffffff"); }); }
+// hideout piece sprites (16 px per tile; objects can be taller than one tile)
+function owSprItem(k,c,f,t){ const col=OW_COLS[c||0]; const D=OW_IT[k], W=16*(D.w||1); const H={wall:26,window:26,door:26,fence:20,couch:16,chair:14,table:14,bed:16,plant:22,lamp:26,tube:24,barrel:18,crate:16,bench:18,gen:20,rig:22,rack:28,turret:22,antenna:30,arcade:28,flag:30,sign:22,neon:24,poster:24,board:30}[k]||16;
+  return anSprite(`ow|it|${k}|${c}|${f}`,W,H,0,H-1,g=>{ const b=H-1; const M1="#3a3f58", M2="#5a6078", M3="#252a40", DK="#0a0612";
+    if(k==="wall"||k==="window"){ pR(g,0,b-25,16,26,M3); pR(g,0,b-25,16,3,M2); pR(g,0,b-22,16,1,col); for(let x=2;x<16;x+=5) pR(g,x,b-18,1,16,"#1d2236"); pR(g,0,b-3,16,4,"#15182a"); if(k==="window"){ pR(g,3,b-18,10,8,DK); pR(g,4,b-17,8,6,f%4===3?"#ffe9a8":"#ffd36a"); pR(g,7,b-17,1,6,DK); pR(g,4,b-14,8,1,DK); } }
+    else if(k==="door"){ pR(g,0,b-25,16,3,M2); pR(g,0,b-22,2,22,M3); pR(g,14,b-22,2,22,M3); pR(g,2,b-22,12,22,"#1a1428"); pR(g,2,b-22,12,1,col); pR(g,11,b-12,2,2,col); }
+    else if(k==="fence"){ pR(g,0,b-19,1,20,M2); pR(g,15,b-19,1,20,M2); for(let y=b-18;y<b;y+=2) for(let x=(y&2)?1:2;x<15;x+=2) pR(g,x,y,1,1,"#4a4f68"); pR(g,0,b-19,16,1,M2); }
+    else if(k==="couch"){ pR(g,0,b-15,16,7,col); pR(g,0,b-15,16,1,"rgba(255,255,255,.35)"); pR(g,0,b-8,16,6,M3); pR(g,1,b-9,14,3,col); pR(g,0,b-12,2,9,col); pR(g,14,b-12,2,9,col); pR(g,1,b-2,2,2,DK); pR(g,13,b-2,2,2,DK); }
+    else if(k==="chair"){ pR(g,4,b-13,8,6,col); pR(g,4,b-7,8,3,M3); pR(g,4,b-4,1,4,M2); pR(g,11,b-4,1,4,M2); }
+    else if(k==="table"){ pDisc(g,8,b-8,6,"#6a4a30"); pDisc(g,8,b-8,4,"#7a5a3a"); pR(g,6,b-3,4,3,"#3a2a1e"); pR(g,5,b-10,3,2,"#38e8ff"); }
+    else if(k==="bed"){ pR(g,0,b-15,16,15,"#2a2440"); pR(g,1,b-14,14,12,"#e9e2ff"); pR(g,1,b-9,14,7,col); pR(g,1,b-9,14,1,"rgba(255,255,255,.35)"); pR(g,3,b-13,10,3,"#ffffff"); }
+    else if(k==="plant"){ pR(g,5,b-6,6,6,"#6a3a2a"); pR(g,5,b-6,6,1,"#8a5a3a"); for(const [x,y,h] of [[7,4,12],[4,7,8],[10,6,10],[6,9,6],[11,10,5]]) pR(g,x,b-6-h,2,h,"#2f8f62"); pR(g,3,b-14,3,3,"#43f0a4"); pR(g,10,b-17,3,3,"#43f0a4"); }
+    else if(k==="lamp"){ pR(g,7,b-18,2,18,M2); pR(g,5,b-2,6,2,M3); pR(g,4,b-25,8,8,col); pR(g,5,b-24,6,2,"#ffffff"); pR(g,4,b-17,8,1,M3); }
+    else if(k==="tube"){ pR(g,2,b-23,2,23,M3); pR(g,12,b-23,2,23,M3); pR(g,4,b-20,8,3,col); pR(g,4,b-19,8,1,"#ffffff"); }
+    else if(k==="barrel"){ pR(g,3,b-12,10,12,"#5a3a2a"); pR(g,3,b-9,10,1,"#3a2a1e"); pR(g,3,b-4,10,1,"#3a2a1e"); const fl=["#ff7a2a","#ffb84a","#ff5a1a","#ffd36a"]; for(let i=0;i<5;i++) pR(g,4+i*2,b-14-((i+f)%3)*2,2,3+((i+f)%3)*2,fl[(i+f)%4]); }
+    else if(k==="crate"){ pR(g,1,b-14,14,14,"#5a4a30"); pR(g,1,b-14,14,2,"#7a6440"); pR(g,7,b-14,2,14,"#3a2e1e"); pR(g,1,b-7,14,1,"#3a2e1e"); pR(g,3,b-11,3,2,"#43f0a4"); }
+    else if(k==="bench"){ pR(g,0,b-12,16,4,"#7a5a3a"); pR(g,0,b-12,16,1,"#9a7a5a"); pR(g,1,b-8,2,8,M3); pR(g,13,b-8,2,8,M3); pR(g,3,b-16,4,4,M2); pR(g,9,b-15,5,3,"#38e8ff"); pR(g,10,b-14,3,1,"#c8fbff"); }
+    else if(k==="gen"){ pR(g,1,b-16,14,16,"#3a3a20"); pR(g,1,b-16,14,2,"#ffd36a"); for(let i=0;i<5;i++) pR(g,2+i*3,b-12,2,8,"#252514"); pR(g,11,b-19,3,3,M2); pR(g,3,b-3,3,2,f%2?"#43f0a4":"#1a3a2a"); }
+    else if(k==="rig"){ pR(g,1,b-20,14,20,"#141026"); pR(g,1,b-20,14,1,"#2a2548"); for(let i=0;i<4;i++){ pR(g,3,b-18+i*4,10,3,"#2a2f48"); pR(g,4+((i+f)%4)*2,b-17+i*4,2,1,"#43f0a4"); } }
+    else if(k==="rack"){ pR(g,2,b-27,12,27,"#141026"); pR(g,2,b-27,12,1,"#2a2548"); for(let i=0;i<7;i++){ pR(g,4,b-25+i*3,8,2,"#1d1a33"); pR(g,5,b-25+i*3,1,1,(i+f)%3===0?"#43f0a4":(i+f)%3===1?"#38e8ff":"#20304a"); } }
+    else if(k==="turret"){ for(let i=0;i<8;i++) pR(g,2+Math.floor(i/3),b-i,12-Math.floor(i/3)*2,1,"#2a3354"); pDisc(g,8,b-13,5,M3); pRing(g,8,b-13,5,5,col); pR(g,6,b-15,4,2,"#c8fbff"); }
+    else if(k==="antenna"){ pR(g,7,b-28,2,28,M2); for(let i=0;i<4;i++) pR(g,4+i,b-24+i*6,8-i*2,1,M2); pR(g,7,b-29,2,2,f%2?"#ff3a3a":"#5a1a1a"); pR(g,4,b-2,8,2,M3); }
+    else if(k==="arcade"){ pR(g,2,b-27,12,27,"#1a1230"); pR(g,2,b-27,12,4,col); pR(g,3,b-22,10,8,DK); for(let i=0;i<3;i++) pR(g,4+((i*3+f)%8),b-21+i*2,2,2,i===1?col:"#ffffff"); pR(g,3,b-12,10,3,"#2a2440"); pR(g,5,b-11,2,1,"#ff3a3a"); pR(g,9,b-11,1,1,"#38e8ff"); }
+    else if(k==="flag"){ pR(g,2,b-29,2,29,M2); const w=[0,1,0,-1][f]; for(let y=0;y<9;y++) pR(g,4,b-28+y,10+((y+f)%3===0?w:0),1,col); pR(g,6,b-25,5,3,"rgba(0,0,0,.3)"); }
+    else if(k==="sign"){ pR(g,7,b-8,2,8,"#5a4a30"); pR(g,0,b-21,16,13,"#2a2440"); pR(g,0,b-21,16,1,col); pR(g,0,b-9,16,1,col); pR(g,2,b-17,12,1,"rgba(255,255,255,.35)"); pR(g,2,b-14,9,1,"rgba(255,255,255,.35)"); }
+    else if(k==="neon"){ pR(g,1,b-23,14,12,DK); pR(g,1,b-23,14,1,M2); for(let i=0;i<5;i++) pR(g,3+i*2,b-20+(i%2)*2,1,4,f%4===3&&i===2?M3:col); pR(g,7,b-11,2,11,M3); }
+    else if(k==="graffiti"){ /* drawn as text on the ground */ pR(g,2,b-4,12,2,col); }
+    else if(k==="poster"){ pR(g,7,b-6,2,6,"#5a4a30"); pR(g,1,b-23,14,18,"#e9e2ff"); pR(g,2,b-22,12,16,"#1a1428"); }
+    else if(k==="board"){ pR(g,6,b-10,3,10,M2); pR(g,23,b-10,3,10,M2); pR(g,0,b-29,32,20,M3); pR(g,0,b-29,32,1,M2); pR(g,1,b-28,30,18,"#1a1428"); }
+    else if(k==="floor"){ pR(g,0,b-15,16,16,"#3a3f58"); pR(g,0,b-15,16,1,"#4a5070"); pR(g,0,b-15,1,16,"#4a5070"); pR(g,2,b-13,1,1,"#7a8098"); pR(g,13,b-13,1,1,"#7a8098"); pR(g,2,b-2,1,1,"#7a8098"); pR(g,13,b-2,1,1,"#7a8098"); }
+    else if(k==="deck"){ for(let i=0;i<4;i++){ pR(g,0,b-15+i*4,16,4,i%2?"#6a4a30":"#7a5a3a"); pR(g,0,b-15+i*4,16,1,"#4a3220"); } }
+    else if(k==="grid"){ pR(g,0,b-15,16,16,"#0d0a1c"); pR(g,0,b-15,16,1,col); pR(g,0,b-15,1,16,col); pR(g,8,b-15,1,16,"rgba(255,255,255,.06)"); pR(g,0,b-7,16,1,"rgba(255,255,255,.06)"); }
+    else if(k==="rug"){ pR(g,1,b-14,14,14,col); pR(g,2,b-13,12,12,"rgba(0,0,0,.25)"); pR(g,3,b-12,10,10,col); pR(g,1,b-14,14,1,"rgba(255,255,255,.3)"); } }); }
+function owSprGate(f){ return anSprite(`ow|gate|${f}`,26,104,4,103,g=>{ const b=103; pR(g,0,b-103,16,24,"#3a3460"); pR(g,0,b-103,16,3,"#5a5280"); pR(g,0,b-27,16,28,"#3a3460"); pR(g,0,b-27,16,3,"#5a5280"); pR(g,2,b-79,12,52,"#120a14");
+    for(let i=0;i<9;i++) pR(g,0,b-79+i*6,3,3,i%2?"#ffd36a":"#15121f"); for(let i=0;i<9;i++) pR(g,13,b-79+i*6,3,3,i%2?"#15121f":"#ffd36a"); pR(g,16,b-96,10,26,"#0a0718"); pR(g,16,b-96,10,1,"#ff9a3c"); pR(g,16,b-71,10,1,"#ff9a3c");
+    const L="CITY"; for(let i=0;i<4;i++) pText(g,L[i],19,b-94+i*6,f===3&&i===2?"#6a3a1a":"#ff9a3c",1); pR(g,5,b-23,6,3,f%2?"#43f0a4":"#1a3a2a"); pR(g,5,b-99,6,2,f%2?"#ff3a3a":"#5a1a1a"); }); }
+function owIcon(k,c){ const key="owi"+k+(c||0); if(AN_ICON.has(key)) return AN_ICON.get(key); const s=owSprItem(k,c||0,0); const [cv,g]=pxCv(s.W*2,s.H*2); g.imageSmoothingEnabled=false; g.drawImage(s.c,0,0,s.W*2,s.H*2); const u=cv.toDataURL(); AN_ICON.set(key,u); return u; }
+// uploaded pictures shown as pixel art in the world (tap a poster to see the real picture)
+const OW_IMG={}; function owImgPx(src,w,h){ if(!src) return null; const key=src.length+"|"+src.slice(-40)+"|"+w+"x"+h; let e=OW_IMG[key]; if(e) return e.ok?e.c:null; e=OW_IMG[key]={ok:0}; const im=new Image(); im.onload=()=>{ const [c,g]=pxCv(w,h); g.imageSmoothingEnabled=true; g.imageSmoothingQuality="high"; const k=Math.max(w/im.width,h/im.height), iw=im.width*k, ih=im.height*k; g.drawImage(im,(w-iw)/2,(h-ih)/2,iw,ih); e.c=c; e.ok=1; }; im.src=src; const ks=Object.keys(OW_IMG); if(ks.length>80) delete OW_IMG[ks[0]]; return null; }
+// ---------------------------------------------------------------- terrain (art resolution: 16 px per tile)
+function owBake(){ const M=owGen(), T=16; const [cv,c]=pxCv(M.W*T,M.H*T); const r=seeded(OW_SEED+3);
+  const COL={0:["#221a2a","#261d2e","#1f1826","#241c2c"],1:["#25291f","#283022","#22261c","#2a2e22"],8:["#3a2e24","#3e3226","#36291f","#3a2c22"],5:["#2a2230","#2c2434"],6:["#2c2c3c","#30303e"],2:["#17151f","#1a1822"],9:["#4a3220","#523822"],3:["#0c2a34","#0e2e3a"],4:["#3a3550"],7:["#221a2a"]};
+  for(let y=0;y<M.H;y++) for(let x=0;x<M.W;x++){ const v=M.g[y*M.W+x], px=x*T, py=y*T, L=COL[v]||COL[0]; pR(c,px,py,T,T,L[Math.floor(r()*L.length)]);
+    if(v===0||v===1||v===8){ for(let i=0;i<5;i++) pR(c,px+Math.floor(r()*T),py+Math.floor(r()*T),1,1,v===1?(r()<.5?"#3a4a2a":"#1a1e14"):v===8?(r()<.5?"#4a3a2c":"#2c2218"):(r()<.5?"#2e2438":"#18121e")); if(v===1&&r()<.4){ const gx=px+2+Math.floor(r()*12), gy=py+4+Math.floor(r()*10); pR(c,gx,gy-2,1,3,"#4a5a32"); pR(c,gx+2,gy-1,1,2,"#3e4c2a"); } }
+    else if(v===2){ pR(c,px,py,T,1,"#121018"); if(y%2===0&&M.g[(y+1)*M.W+x]===2&&(x%4<2)) pR(c,px+3,py+15,10,2,"#7a6a2a"); if(r()<.1) pR(c,px+Math.floor(r()*12),py+Math.floor(r()*12),3,2,"#100e16"); }
+    else if(v===9){ for(let i=0;i<4;i++) pR(c,px,py+i*4,T,1,"#2a1a10"); pR(c,px,py,1,T,"#2a1a10"); }
+    else if(v===3){ if(r()<.4) pR(c,px+Math.floor(r()*12),py+Math.floor(r()*14),4,1,"#14404e"); }
+    else if(v===5){ for(let i=0;i<4;i++) pR(c,px+2+Math.floor(r()*11),py+2+Math.floor(r()*11),2+Math.floor(r()*2),2,r()<.5?"#3a3550":"#4a4466"); }
+    else if(v===6){ pR(c,px,py,T,1,"#24243a"); pR(c,px,py,1,T,"#24243a"); if(r()<.2) pR(c,px+5,py+6,4,1,"#26263a"); } }
+  // tall things drawn with a lit top and a dark front
+  for(let y=0;y<M.H;y++) for(let x=0;x<M.W;x++){ const v=M.g[y*M.W+x]; const px=x*T, py=y*T, up=y>0&&M.g[(y-1)*M.W+x]===v, dn=y<M.H-1&&M.g[(y+1)*M.W+x]===v;
+    if(v===4){ pR(c,px,py,T,T,"#3a3550"); for(let i=0;i<4;i++) pR(c,px+Math.floor(r()*13),py+Math.floor(r()*10),3,1,"#463f62"); if(!up){ pR(c,px,py,T,3,"#5a5280"); } if(!dn){ pR(c,px,py+T-5,T,5,"#221e34"); pR(c,px,py+T-5,T,1,"#15122a"); if(r()<.3) pR(c,px+4+Math.floor(r()*8),py+T-4,1,3,"#7a4a2a"); } if(r()<.12) pR(c,px+5,py+6,1,1,r()<.5?"#38e8ff":"#ff3fa8"); }
+    else if(v===7){ pR(c,px,py,T,T,(x+y)%2?"#221a2a":"#241c2c"); for(let i=0;i<T;i+=2) for(let j=(i&2)?0:1;j<T;j+=2) pR(c,px+j,py+i,1,1,"#4a4f68"); pR(c,px,py,T,1,"#5a6078"); if(x%3===0) pR(c,px,py,2,T,"#5a6078"); }
+    else if(v===3){ const L=x>0&&M.g[y*M.W+x-1]!==3&&M.g[y*M.W+x-1]!==9, R=x<M.W-1&&M.g[y*M.W+x+1]!==3&&M.g[y*M.W+x+1]!==9; if(L) pR(c,px,py,2,T,"#1a3a40"); if(R) pR(c,px+T-2,py,2,T,"#0a1a20"); } }
+  // the gate pad
+  pR(c,0,(M.H-12)*T,5*T,8*T,"#1a1a2a"); for(let i=0;i<5*T;i+=8) pR(c,i,(M.H-12)*T,4,2,"#ffd36a");
+  OW.terrain=cv; }
+// ---------------------------------------------------------------- open / close
+function owEnter(){ if($("#gnf")) return; closePanel(); const M=owGen(), S=owS(); go("wilds"); me.x=400;
+  const st=S.pos&&Number.isFinite(S.pos.x)&&!owBlocked(Math.floor(S.pos.x/OW_T),Math.floor(S.pos.y/OW_T))?S.pos:{x:(M.gate.x+7)*OW_T,y:(M.gate.y+1)*OW_T};
+  OW={x:st.x,y:st.y,dir:0,mv:0,walk:0,path:null,act:null,t:0,last:performance.now(),cam:{x:0,y:0,z:1.5},drones:[],bots:[],fx:[],keys:{},stun:0,sprint:0,sprintCd:0,raidT:200+Math.random()*120,raid:null,msg:[],ver:0,build:null,sel:null,ptr:new Map(),open:true,saveT:0,warnT:0};
+  for(const P of M.pat){ const w=P.wp[0]; OW.drones.push({x:(w[0]+.5)*OW_T,y:(w[1]+.5)*OW_T,wi:0,P,st:"patrol",t:0,sx:0,sy:0,id:OW.drones.length}); }
+  owShell(); owBake(); owHideouts(); owRebuildBlocks(); owCenter(); requestAnimationFrame(owFrame); owMsg(S.p<0?"Welcome to the Outskirts. Salvage scrap, dodge patrols, and claim a plot for your hideout.":"Back in the Outskirts. "+(S.n||"Your hideout")+" is waiting.","#ffd36a");
+  try{ stTrack("act","The Outskirts"); }catch(e){} try{ pushPresence(true); }catch(e){} }
+function owLeave(){ const S=owS(); if(OW){ S.pos={x:Math.round(OW.x),y:Math.round(OW.y)}; OW.open=false; try{ OW.ro&&OW.ro.disconnect(); }catch(e){} try{ removeEventListener("keydown",OW.kd,true); removeEventListener("keyup",OW.ku,true); }catch(e){} } const w=$("#gnf"); if(w&&w.classList.contains("osk")) w.remove(); OW=null; persist(); go("outskirts",OWG.gate); try{ hud(); }catch(e){} }
+function owMsg(txt,col){ if(!OW) return; OW.msg.push({txt,col:col||"#e9e2ff",t:0}); if(OW.msg.length>3) OW.msg.shift(); }
+function owShell(){ const wrap=el("div",{id:"gnf",class:"osk anon",role:"dialog","aria-label":"The Outskirts"});
+  const res=el("div",{class:"anres",id:"owRes"});
+  const bar=el("div",{class:"g1bar"},el("strong",{text:"THE OUTSKIRTS"}),res,el("button",{class:"btn",type:"button",text:"🗺 Map",title:"Map (M)",onclick:()=>owMapToggle()}),el("button",{class:"btn",type:"button",text:"⌂ Hideout",title:"Your hideout (H)",onclick:()=>owHideoutMenu()}),el("button",{class:"btn hot",type:"button",text:"✕",title:"Leave (you keep your pack)","aria-label":"Leave",onclick:()=>owLeave()}));
+  const box=el("div",{class:"anbox"}); const cv=document.createElement("canvas"); cv.className="ancv"; box.append(cv);
+  const mm=document.createElement("canvas"); mm.className="owmm"; box.append(mm);
+  const act=el("div",{class:"owact"},el("button",{type:"button",class:"anbt owsprint",id:"owSprint",text:"⚡ Sprint",onclick:()=>owSprint()}),el("button",{type:"button",class:"anbt owgo",id:"owAct",hidden:true,onclick:()=>owDoAct()}));
+  box.append(act); const zoom=el("div",{class:"owzoom"},el("button",{type:"button",class:"anbt",text:"+",title:"Zoom in","aria-label":"Zoom in",onclick:()=>owZoom(1)}),el("button",{type:"button",class:"anbt",text:"−",title:"Zoom out","aria-label":"Zoom out",onclick:()=>owZoom(-1)})); box.append(zoom);
+  const drawer=el("div",{class:"owdrawer",id:"owDrawer",hidden:true}); const modal=el("div",{class:"anmodal",id:"anModal",hidden:true}); wrap.append(bar,box,drawer,modal); $("#game").appendChild(wrap); try{ releaseKeys&&releaseKeys(); }catch(e){}
+  OW.cv=cv; OW.c=cv.getContext("2d"); OW.mm=mm; OW.mmc=mm.getContext("2d"); OW.box=box;
+  const fit=()=>{ const r=box.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1); if(r.width<10) return; OW.cvW=r.width; OW.cvH=r.height; OW.dpr=dpr; cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); cv.style.width=r.width+"px"; cv.style.height=r.height+"px"; };
+  fit(); try{ OW.ro=new ResizeObserver(fit); OW.ro.observe(box); }catch(e){ addEventListener("resize",fit); } if(OW.cvW<600) OW.cam.z=1.5; owBindInput(cv,mm); owUi(); }
+function owModal(title,body,btns,cls){ const m=$("#anModal"); if(!m) return; m.hidden=false; m.className="anmodal"+(cls?" "+cls:""); m.replaceChildren(el("div",{class:"anmc"},el("h3",{text:title}),...body,el("div",{class:"row anmb"},...(btns||[]).map(([t,f,hot])=>el("button",{class:"btn"+(hot?" hot":""),type:"button",text:t,onclick:f}))))); if(OW) OW.modal=1; }
+function owModalClose(){ const m=$("#anModal"); if(m){ m.hidden=true; m.replaceChildren(); } if(OW) OW.modal=0; }
+const owVW=()=>OW.cvW/OW.cam.z, owVH=()=>OW.cvH/OW.cam.z;
+function owCenter(){ const M=owGen(); OW.cam.x=OW.x-owVW()/2; OW.cam.y=OW.y-owVH()/2; OW.cam.x=Math.max(-60,Math.min(M.W*OW_T-owVW()+60,OW.cam.x)); OW.cam.y=Math.max(-60,Math.min(M.H*OW_T-owVH()+60,OW.cam.y)); }
+function owZoom(d){ const Z=[1,1.5,2], i=Z.indexOf(OW.cam.z); OW.cam.z=Z[Math.max(0,Math.min(2,(i<0?1:i)+d))]; owCenter(); }
+// ---------------------------------------------------------------- input
+function owW(cx,cy){ const r=OW.cv.getBoundingClientRect(); return {x:OW.cam.x+(cx-r.left)/OW.cam.z,y:OW.cam.y+(cy-r.top)/OW.cam.z}; }
+function owBindInput(cv,mm){ cv.addEventListener("contextmenu",e=>e.preventDefault());
+  cv.addEventListener("pointerdown",e=>{ if(OW.modal) return; cv.setPointerCapture&&cv.setPointerCapture(e.pointerId); OW.ptr.set(e.pointerId,{x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:performance.now()}); });
+  cv.addEventListener("pointermove",e=>{ const P=OW.ptr.get(e.pointerId); const w=owW(e.clientX,e.clientY); OW.hover=w; if(!P) return; P.x=e.clientX; P.y=e.clientY; if(OW.build&&Math.hypot(P.x-P.x0,P.y-P.y0)>6&&OW.build.drag!==false){ OW.build.paint=1; owBuildTap(w,true); } });
+  const up=e=>{ const P=OW.ptr.get(e.pointerId); OW.ptr.delete(e.pointerId); if(!P||OW.modal) return; if(OW.bigmap){ OW.bigmap=false; return; } const w=owW(e.clientX,e.clientY); if(OW.build){ if(!OW.build.paint) owBuildTap(w); OW.build.paint=0; OW.build.last=null; return; } if(Math.hypot(P.x-P.x0,P.y-P.y0)>12) return; owTap(w); };
+  cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",e=>OW.ptr.delete(e.pointerId)); cv.addEventListener("pointerleave",()=>{ OW.hover=null; });
+  cv.addEventListener("wheel",e=>{ e.preventDefault(); owZoom(e.deltaY>0?-1:1); },{passive:false});
+  mm.addEventListener("pointerdown",e=>{ e.stopPropagation(); owMapToggle(); });
+  OW.kd=e=>{ if(!OW||!$("#gnf.osk")) return; const tg=e.target&&e.target.tagName; if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT") return; const k=e.key;
+    if(k==="Escape"){ e.preventDefault(); e.stopPropagation(); if(OW.modal) owModalClose(); else if(OW.build) owBuildEnd(); else if(OW.bigmap) owMapToggle(); else owLeave(); return; }
+    if(OW.modal) return; const m={ArrowUp:"u",w:"u",W:"u",ArrowDown:"d",s:"d",S:"d",ArrowLeft:"l",a:"l",A:"l",ArrowRight:"r",d:"r",D:"r"}[k]; if(m){ OW.keys[m]=1; OW.path=null; OW.act=null; e.preventDefault(); e.stopPropagation(); return; }
+    if(k==="e"||k==="E"||k===" "){ e.preventDefault(); e.stopPropagation(); owDoAct(); return; } if(k==="Shift"){ owSprint(); return; } if(k==="m"||k==="M"){ owMapToggle(); return; } if(k==="h"||k==="H"){ owHideoutMenu(); return; } if(k==="b"||k==="B"){ owBuildStart(); return; } if(k==="+"||k==="="){ owZoom(1); return; } if(k==="-"){ owZoom(-1); return; } };
+  OW.ku=e=>{ if(!OW) return; const m={ArrowUp:"u",w:"u",W:"u",ArrowDown:"d",s:"d",S:"d",ArrowLeft:"l",a:"l",A:"l",ArrowRight:"r",d:"r",D:"r"}[e.key]; if(m) OW.keys[m]=0; };
+  addEventListener("keydown",OW.kd,true); addEventListener("keyup",OW.ku,true); }
+// tap: talk to what's under your finger, or walk there
+function owPick(w){ const M=owGen(); const near=(x,y,r)=>Math.hypot(w.x-x,w.y-y)<r;
+  for(const b of OW.bots) if(b.hp>0&&near(b.x,b.y-8,22)) return {t:"bot",b};
+  for(const [i,s] of M.spots.entries()) if(near((s.x+.5)*OW_T,(s.y+.5)*OW_T,24)) return {t:"spot",i};
+  if(owS().bag&&near(owS().bag.x,owS().bag.y,24)) return {t:"bag"};
+  const tx=Math.floor(w.x/OW_T), ty=Math.floor(w.y/OW_T);
+  for(const h of owHideouts()){ const P=M.plots[h.ho.p]; if(!P) continue; for(const o of h.ho.it){ const D=OW_IT[o.k]; if(D.L!==1) continue; const ox=P.x+o.x, oy=P.y+o.y; if(tx>=ox&&tx<ox+(D.w||1)&&(ty===oy||ty===oy-1)) return {t:"item",h,o,P}; } }
+  const pi=M.plots.findIndex(P=>tx>=P.x&&ty>=P.y&&tx<P.x+OW_PS&&ty<P.y+OW_PS); if(pi>=0) return {t:"plot",i:pi};
+  if(Math.hypot(w.x-(M.gate.x+1)*OW_T,w.y-(M.gate.y+1)*OW_T)<70) return {t:"gate"};
+  return null; }
+function owTap(w){ if(OW.stun>0) return; const p=owPick(w); if(p&&p.t==="bot"){ owZap(p.b); return; } if(p&&p.t==="item"&&(p.o.k==="poster"||p.o.k==="board")&&Math.hypot(w.x-OW.x,w.y-OW.y)<OW_T*6){ owViewPoster(p); return; }
+  if(p){ const tgt=owActPos(p); OW.act=p; owPathTo(tgt.x,tgt.y); return; } OW.act=null; owPathTo(w.x,w.y); try{ beep(700,.02,"sine",.02); }catch(e){} OW.ping={x:w.x,y:w.y,t:0}; }
+function owActPos(p){ const M=owGen(); if(p.t==="spot"){ const s=M.spots[p.i]; return {x:(s.x+.5)*OW_T,y:(s.y+1.3)*OW_T}; } if(p.t==="bag") return {x:owS().bag.x,y:owS().bag.y+10}; if(p.t==="item") return {x:(p.P.x+p.o.x+.5)*OW_T,y:(p.P.y+p.o.y+1.4)*OW_T}; if(p.t==="plot"){ const P=M.plots[p.i]; return {x:(P.x+OW_PS/2)*OW_T,y:(P.y+OW_PS+.5)*OW_T}; } if(p.t==="gate") return {x:(M.gate.x+2)*OW_T,y:(M.gate.y+1)*OW_T}; return {x:OW.x,y:OW.y}; }
+// BFS path over tiles (8 directions, no corner cutting)
+function owPathTo(x,y){ const M=owGen(); let gx=Math.floor(x/OW_T), gy=Math.floor(y/OW_T); const sx=Math.floor(OW.x/OW_T), sy=Math.floor(OW.y/OW_T); if(owBlocked(gx,gy)){ let best=null; for(let r=1;r<4&&!best;r++) for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){ if(!owBlocked(gx+dx,gy+dy)&&(!best||Math.hypot(dx,dy)<best.d)) best={x:gx+dx,y:gy+dy,d:Math.hypot(dx,dy)}; } if(!best){ OW.path=null; return; } gx=best.x; gy=best.y; x=(gx+.5)*OW_T; y=(gy+.5)*OW_T; }
+  const W=M.W, prev=new Int32Array(W*M.H).fill(-1), st=sy*W+sx, goal=gy*W+gx; prev[st]=st; const q=[st]; let h=0, found=st===goal; const D=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  while(h<q.length&&!found&&q.length<9000){ const i=q[h++], cx=i%W, cy=(i/W)|0; for(const [a,b] of D){ const X=cx+a, Y=cy+b; if(owBlocked(X,Y)) continue; if(a&&b&&(owBlocked(cx+a,cy)||owBlocked(cx,cy+b))) continue; const j=Y*W+X; if(prev[j]>=0) continue; prev[j]=i; if(j===goal){ found=true; break; } q.push(j); } }
+  if(!found){ OW.path=null; return; } const pts=[{x,y}]; let i=goal; while(i!==st){ i=prev[i]; if(i===st) break; pts.push({x:(i%W+.5)*OW_T,y:(((i/W)|0)+.5)*OW_T}); } pts.reverse(); OW.path=pts; }
+function owSprint(){ if(!OW||OW.sprintCd>0) return; OW.sprint=2.2; OW.sprintCd=9; try{ beep(880,.05,"square",.03); }catch(e){} }
+// ---------------------------------------------------------------- the frame
+function owFrame(now){ if(!OW||!OW.open) return; const dt=Math.min(.05,(now-OW.last)/1000); OW.last=now; try{ if(!OW.modal) owTick(dt); owDraw(dt); }catch(e){ console.error(e); } requestAnimationFrame(owFrame); }
+function owTick(dt){ const M=owGen(), S=owS(); OW.t+=dt; OW.sprint=Math.max(0,OW.sprint-dt); OW.sprintCd=Math.max(0,OW.sprintCd-dt); OW.stun=Math.max(0,OW.stun-dt);
+  // move
+  let vx=0, vy=0; const K=OW.keys; if(!OW.build&&OW.stun<=0){ vx=(K.r?1:0)-(K.l?1:0); vy=(K.d?1:0)-(K.u?1:0);
+    if(!vx&&!vy&&OW.path&&OW.path.length){ const p=OW.path[0], dx=p.x-OW.x, dy=p.y-OW.y, d=Math.hypot(dx,dy); if(d<6){ OW.path.shift(); if(!OW.path.length){ OW.path=null; if(OW.act){ const a=OW.act; OW.act=null; owAutoAct(a); } } } else { vx=dx/d; vy=dy/d; } } }
+  const sp=OW_SPD*(OW.sprint>0?1.75:1); OW.mv=0; if(vx||vy){ const l=Math.hypot(vx,vy); vx/=l; vy/=l; const nx=OW.x+vx*sp*dt, ny=OW.y+vy*sp*dt; const ok=(x,y)=>{ for(const [a,b] of [[-7,-4],[7,-4],[-7,4],[7,4]]) if(owBlocked(Math.floor((x+a)/OW_T),Math.floor((y+b)/OW_T))) return false; return true; };
+    if(ok(nx,OW.y)) OW.x=nx; if(ok(OW.x,ny)) OW.y=ny; OW.mv=1; OW.walk+=dt*sp/22; OW.dir=Math.abs(vx)>Math.abs(vy)?(vx>0?2:3):(vy>0?0:1); }
+  // camera follows
+  { const M2=owGen(); const BP=OW.build&&owMyPlot(); const tx=BP?(BP.x+OW_PS/2)*OW_T-owVW()/2:OW.x-owVW()/2, ty=BP?(BP.y+OW_PS/2)*OW_T-owVH()/2:OW.y-owVH()/2; OW.cam.x+=(tx-OW.cam.x)*Math.min(1,dt*6); OW.cam.y+=(ty-OW.cam.y)*Math.min(1,dt*6); OW.cam.x=Math.max(-60,Math.min(M2.W*OW_T-owVW()+60,OW.cam.x)); OW.cam.y=Math.max(-60,Math.min(M2.H*OW_T-owVH()+60,OW.cam.y)); }
+  // patrol drones
+  const myP=owMyPlot(), safe=Math.hypot(OW.x-(M.gate.x+2)*OW_T,OW.y-(M.gate.y+1)*OW_T)<140||owInPlot(OW.x,OW.y,myP)||!!(()=>{ for(const P of M.plots) if(owInPlot(OW.x,OW.y,P)) return 1; return 0; })();
+  for(const d of OW.drones){ d.t+=dt; const hx=(d.P.hx+.5)*OW_T, hy=(d.P.hy+.5)*OW_T; const dist=Math.hypot(OW.x-d.x,OW.y-d.y);
+    if(d.st==="patrol"){ const w=d.P.wp[d.wi], tx=(w[0]+.5)*OW_T, ty=(w[1]+.5)*OW_T, dd=Math.hypot(tx-d.x,ty-d.y); if(dd<8) d.wi=(d.wi+1)%d.P.wp.length; else { d.x+=(tx-d.x)/dd*55*dt; d.y+=(ty-d.y)/dd*55*dt; } if(dist<150&&!safe&&OW.stun<=0){ d.st="chase"; d.t=0; owMsg("⚠ A Halvorsen drone spotted you! Run or sprint!","#ff5a5a"); try{ beep(220,.25,"sawtooth",.05); }catch(e){} } }
+    else if(d.st==="chase"){ if(safe||d.t>7||Math.hypot(d.x-hx,d.y-hy)>520){ d.st="home"; } else { const a=Math.atan2(OW.y-d.y,OW.x-d.x); d.x+=Math.cos(a)*142*dt; d.y+=Math.sin(a)*142*dt; if(dist<20) owCaught(d); } }
+    else { const dd=Math.hypot(hx-d.x,hy-d.y); if(dd<10){ d.st="patrol"; } else { d.x+=(hx-d.x)/dd*80*dt; d.y+=(hy-d.y)/dd*80*dt; } } }
+  // raids on your hideout (only while you're home and have tech)
+  if(myP&&owInPlot(OW.x,OW.y,myP)&&S.it.some(o=>OW_IT[o.k].cat==="tech")&&!OW.build){ OW.raidT-=dt; if(OW.raidT<10&&OW.raidT+dt>=10&&owHas("antenna",1)) owMsg("📡 Antenna: raiders incoming in 10 seconds!","#ffd36a"); if(OW.raidT<=0&&!OW.raid) owRaidStart(); }
+  if(OW.raid) owRaidTick(dt,myP);
+  // effects
+  for(const f of OW.fx){ f.t+=dt; if(f.vx!=null){ f.x+=f.vx*dt; f.y+=f.vy*dt; f.vy+=(f.g||0)*dt; } } OW.fx=OW.fx.filter(f=>f.t<f.life); for(const m of OW.msg) m.t+=dt; OW.msg=OW.msg.filter(m=>m.t<5); if(OW.ping){ OW.ping.t+=dt; if(OW.ping.t>.6) OW.ping=null; }
+  if(S.bag&&Date.now()>S.bag.t){ S.bag=null; owMsg("Your dropped bag was picked clean by scavengers.","#9a8cc0"); }
+  OW.saveT+=dt; if(OW.saveT>5){ OW.saveT=0; S.pos={x:Math.round(OW.x),y:Math.round(OW.y)}; } owNearAct(); OW.uiT=(OW.uiT||0)+dt; if(OW.uiT>.3){ OW.uiT=0; owUi(); } try{ pushPresence(); }catch(e){} }
+function owCaught(d){ const S=owS(); d.st="home"; OW.stun=1.3; OW.path=null; OW.act=null; OW.fx.push({k:"zap",x:OW.x,y:OW.y-10,t:0,life:.5}); try{ beep(160,.3,"sawtooth",.06); }catch(e){}
+  const n=Math.ceil(S.pack.p.length/2), sc=Math.ceil(S.pack.s/2); if(!n&&!sc){ owMsg("Zapped by a drone! Your pack was empty, so you lost nothing.","#ff9a3c"); return; }
+  const drop=S.pack.p.splice(0,n); S.pack.s-=sc; S.bag={x:Math.round(OW.x),y:Math.round(OW.y),s:sc+(S.bag?S.bag.s:0),p:[...drop,...(S.bag?S.bag.p:[])].slice(0,20),t:Date.now()+3*6e4}; persist(); owMsg(`Zapped! You dropped half your pack (🔩${sc}${n?` + ${n} part${n>1?"s":""}`:""}). Grab the bag within 3 minutes.`,"#ff5a5a"); }
+// ---------------------------------------------------------------- what you can do where you stand
+function owNearAct(){ const M=owGen(), S=owS(); let a=null; const near=(x,y,r)=>Math.hypot(OW.x-x,OW.y-y)<r;
+  if(S.bag&&near(S.bag.x,S.bag.y,40)) a={t:"bag",txt:"🎒 Grab your bag"};
+  if(!a) for(const [i,s] of M.spots.entries()) if(near((s.x+.5)*OW_T,(s.y+.8)*OW_T,46)){ const left=owSpotLeft(i); a={t:"spot",i,txt:left>0?`⏳ Picked clean (${Math.ceil(left/60)}m)`:"🔩 Salvage",dis:left>0}; break; }
+  if(!a&&near((M.gate.x+2)*OW_T,(M.gate.y+1)*OW_T,110)&&(S.pack.s||S.pack.p.length)) a={t:"gate",txt:"⇩ Stash pack (gate)"};
+  if(!a){ const tx=Math.floor(OW.x/OW_T), ty=Math.floor(OW.y/OW_T); for(const h of owHideouts()){ const P=M.plots[h.ho.p]; if(!P||!owNearPlot(OW.x,OW.y,P)) continue; if(!h.ho.mine) break; for(const o of S.it){ if(Math.abs(P.x+o.x-tx)>1||Math.abs(P.y+o.y-ty)>1) continue; if(o.br){ a={t:"repair",o,txt:`🔧 Repair ${OW_IT[o.k].n} (🔩3)`}; break; } if(o.k==="crate"&&(S.pack.s||S.pack.p.length)){ a={t:"crate",txt:"⇩ Stash pack"}; break; } if(o.k==="rig"){ const ch=owRigChips(o); if(ch>=1){ a={t:"rig",o,txt:`💎 Collect ${ch} chips`}; break; } } } if(a) break; } }
+  if(!a){ const pi=M.plots.findIndex(P=>owNearPlot(OW.x,OW.y,P)); if(pi>=0){ const o=owPlotOwner(pi); if(!o&&S.p<0) a={t:"claim",i:pi,txt:`🚩 Claim plot (₵${OW_PLOT_COST})`}; else if(o&&o.ho.mine) a={t:"build",txt:"🔨 Build"}; } }
+  OW.near=a; const B=$("#owAct"); if(B){ if(!a||OW.build){ B.hidden=true; } else { B.hidden=false; if(B.textContent!==a.txt) B.textContent=a.txt; B.disabled=!!a.dis; } } }
+function owAutoAct(p){ if(p.t==="spot"||p.t==="bag"||p.t==="gate"){ owNearAct(); if(OW.near&&OW.near.t===p.t&&!OW.near.dis) owDoAct(); } else if(p.t==="item"){ if(p.o.k==="poster"||p.o.k==="board") owViewPoster(p); else if(p.h.ho.mine){ owNearAct(); if(OW.near&&["repair","rig","crate"].includes(OW.near.t)) owDoAct(); else owMsg(p.o.t?`"${p.o.t}"`:`${OW_IT[p.o.k].n}: ${OW_IT[p.o.k].d}`,"#cfc6ff"); } else owMsg(p.o.t?`"${p.o.t}" · ${p.h.ho.n||"a hideout"}`:`${OW_IT[p.o.k].n} in ${p.h.ho.n||nameOf(p.h.uid)+"'s hideout"}.`,"#cfc6ff"); } else if(p.t==="plot"){ const o=owPlotOwner(p.i); if(o) owMsg(o.ho.mine?"Your hideout. Press Build to customize it.":`${o.ho.n||"A hideout"} · owned by ${nameOf(o.uid)}`,"#cfc6ff"); else { owNearAct(); if(OW.near&&OW.near.t==="claim") owDoAct(); else owMsg("Free plot. You already have a hideout.","#9a8cc0"); } } }
+function owDoAct(){ const a=OW&&OW.near; if(!a||a.dis||OW.stun>0) return; const S=owS(), M=owGen();
+  if(a.t==="spot") owSalvage(a.i);
+  else if(a.t==="bag"){ const b=S.bag, cap=owPackCap(); const room=cap-S.pack.p.length; const take=b.p.splice(0,room); S.pack.p.push(...take); S.pack.s+=b.s; S.bag=b.p.length?{...b,s:0}:null; persist(); owMsg(`Recovered your bag: 🔩${b.s}${take.length?` + ${take.length} part${take.length>1?"s":""}`:""}.`,"#43f0a4"); try{ beep(900,.06); }catch(e){} }
+  else if(a.t==="gate"||a.t==="crate") owBank(a.t==="gate"?"the gate":"your stash crate");
+  else if(a.t==="claim") owClaim(a.i);
+  else if(a.t==="build") owBuildStart();
+  else if(a.t==="repair"){ if(S.scrap<3){ owMsg("You need 🔩3 in storage to repair.","#ff9a3c"); return; } S.scrap-=3; delete a.o.br; OW.ver++; persist(); owMsg(`${OW_IT[a.o.k].n} repaired.`,"#43f0a4"); try{ beep(1100,.06); }catch(e){} }
+  else if(a.t==="rig"){ const ch=owRigChips(a.o); if(ch<1) return; S.rig[a.o.x+","+a.o.y]=Date.now(); save.chips+=ch; persist(); owMsg(`+${ch} chips from your mining rig.`,"#38e8ff"); try{ beep(1300,.06); }catch(e){} } }
+function owSpotCD(i){ const t=owGen().spots[i].tier; return (t===1?8:t===2?12:16)*6e4; }
+function owSpotLeft(i){ const at=owS().cd[i]||0; return Math.max(0,(at+owSpotCD(i)-Date.now())/1000); }
+function owSalvage(i){ const S=owS(), M=owGen(), s=M.spots[i]; if(owSpotLeft(i)>0) return; if(OW.busy) return; OW.busy={i,t:0,dur:1.1}; OW.path=null; try{ beep(400,.05,"square",.03); }catch(e){}
+  const done=()=>{ OW.busy=null; S.cd[i]=Date.now(); let sc=(2+Math.floor(Math.random()*4))*s.tier; if(owHas("bench",1)) sc=Math.ceil(sc*1.25); S.pack.s=Math.min(999,S.pack.s+sc); const got=[]; const chance=s.tier===1?.35:s.tier===2?.55:.8; const cap=owPackCap();
+    if(Math.random()<chance){ if(S.pack.p.length<cap){ const id=rollItem(s.tier===3?.45:s.tier===2?.25:.08); S.pack.p.push(id); got.push(id); } else owMsg("Your pack is full. Stash it at your crate or the gate.","#ff9a3c"); }
+    if(s.tier>=2&&Math.random()<.2&&S.pack.p.length<cap){ const id=rollItem(.3); S.pack.p.push(id); got.push(id); }
+    persist(); questEvent&&questEvent("dig"); for(let k=0;k<8;k++) OW.fx.push({k:"spark",x:(s.x+.5)*OW_T,y:(s.y+.5)*OW_T,vx:(Math.random()-.5)*90,vy:-60-Math.random()*60,g:220,t:0,life:.6,col:["#ffd36a","#c9d3e0","#43f0a4"][k%3]});
+    OW.fx.push({k:"text",x:(s.x+.5)*OW_T,y:(s.y)*OW_T,txt:"+"+sc,col:"#ffd36a",t:0,life:1.2}); owMsg(`Salvaged 🔩${sc}${got.length?" + "+got.map(id=>BY[id].n).join(", "):""}`,got.length?RAR[BY[got[0]].r].c:"#ffd36a"); try{ beep(600,.06,"triangle"); setTimeout(()=>beep(1000,.06,"triangle"),80); }catch(e){}
+    if(got.some(id=>BY[id].r==="epic")) try{ broadcastSys(`found an EPIC ${BY[got.find(id=>BY[id].r==="epic")].n} in the Outskirts`); }catch(e){} };
+  OW.busyDone=done; }
+function owBank(where){ const S=owS(); const n=S.pack.p.length, sc=S.pack.s; for(const id of S.pack.p) addItem(id); S.scrap+=sc; S.pack={s:0,p:[]}; persist(); owMsg(`Stashed at ${where}: 🔩${sc}${n?` + ${n} part${n>1?"s":""} (now in your stash)`:""}.`,"#43f0a4"); try{ beep(700,.06); setTimeout(()=>beep(1050,.08),90); }catch(e){} OW.ver++; }
+function owRigChips(o){ const S=owS(); if(o.br) return 0; const gens=owHas("gen",1), rigs=S.it.filter(x=>x.k==="rig"&&!x.br); const idx=rigs.indexOf(o); if(idx<0||idx>=gens*2) return 0; const k=o.x+","+o.y; if(!S.rig[k]){ S.rig[k]=Date.now(); return 0; } return Math.floor(Math.min(24,(Date.now()-S.rig[k])/36e5)*3); }
+function owClaim(i){ const S=owS(); if(S.p>=0){ owMsg("You already have a hideout. Release it first from ⌂ Hideout.","#ff9a3c"); return; } if(owPlotOwner(i)){ owMsg("Someone already owns this plot.","#ff9a3c"); return; }
+  owModal("Claim this plot?",[el("p",{text:`Plot #${i+1} becomes your hideout for ₵${OW_PLOT_COST}. Build walls, furniture and tech, put up your own posters, and defend it from raiders.`})],[["Not now",()=>owModalClose()],[`Claim for ₵${OW_PLOT_COST}`,()=>{ owModalClose(); if(save.credits<OW_PLOT_COST){ owMsg(`You need ₵${OW_PLOT_COST-Math.floor(save.credits)} more.`,"#ff9a3c"); return; } save.credits-=OW_PLOT_COST; S.p=i; S.at=Date.now(); S.it=[]; S.n=(myName||"Runner")+"'s Hideout"; persist(); OW.ver++; owHideouts(); owMsg("Plot claimed! Press 🔨 Build to start your hideout.","#43f0a4"); try{ beep(1200,.1); broadcastSys&&broadcastSys("claimed a hideout plot in the Outskirts"); }catch(e){} owCheckClaim(); },1]]); }
+// if two players claimed the same plot at once, the earlier claim keeps it
+function owCheckClaim(){ const S=owS(); if(S.p<0) return; for(const [uid,h] of Object.entries(homes||{})){ if(uid===myId) continue; const o=owCleanPub(h&&h.ho); if(o&&o.p===S.p&&(o.at<S.at||(o.at===S.at&&uid<(myId||"")))){ S.p=-1; save.credits+=OW_PLOT_COST; persist(); toast("Someone claimed that plot a moment before you. Your credits were refunded.","#ff9a3c"); return; } } }
+// ---------------------------------------------------------------- raids
+function owRaidStart(){ const P=owMyPlot(); if(!P) return; const S=owS(); S.raid.n++; const n=3+Math.min(5,Math.floor(S.raid.w/2)); OW.raid={left:n,killed:0,broke:0,t:0}; OW.bots=[];
+  for(let i=0;i<n;i++){ const side=i%4, along=Math.random()*OW_PS; const x=(P.x+(side===0?-2:side===1?OW_PS+2:along))*OW_T, y=(P.y+(side===2?-2:side===3?OW_PS+2:along))*OW_T; OW.bots.push({x,y,hp:3,id:i,tgt:null,eat:0,f:0,delay:i*.8}); }
+  owMsg("🚨 RAID! Scavenger bots are coming for your hideout. Tap them to zap!","#ff5a5a"); try{ beep(300,.2,"square",.05); setTimeout(()=>beep(300,.2,"square",.05),300); }catch(e){} }
+function owRaidTick(dt,P){ const R=OW.raid, S=owS(); R.t+=dt; if(!P){ OW.raid=null; OW.bots=[]; return; }
+  const tech=S.it.filter(o=>OW_IT[o.k].cat==="tech"&&!o.br);
+  for(const b of OW.bots){ if(b.hp<=0) continue; if(b.delay>0){ b.delay-=dt; continue; } b.f+=dt*8; if(!b.tgt||b.tgt.br||!S.it.includes(b.tgt)) b.tgt=tech.sort((a,c)=>Math.hypot((P.x+a.x)*OW_T-b.x,(P.y+a.y)*OW_T-b.y)-Math.hypot((P.x+c.x)*OW_T-b.x,(P.y+c.y)*OW_T-b.y))[0]||null;
+    if(!b.tgt){ b.hp=0; R.left--; continue; } const tx=(P.x+b.tgt.x+.5)*OW_T, ty=(P.y+b.tgt.y+1.1)*OW_T, d=Math.hypot(tx-b.x,ty-b.y); if(d>12){ b.x+=(tx-b.x)/d*48*dt; b.y+=(ty-b.y)/d*48*dt; b.eat=0; } else { b.eat+=dt; if(Math.random()<.2) OW.fx.push({k:"spark",x:tx,y:ty-12,vx:(Math.random()-.5)*60,vy:-50,g:200,t:0,life:.4,col:"#ffd36a"}); if(b.eat>2.5){ b.tgt.br=1; R.broke++; b.hp=0; R.left--; OW.ver++; owMsg(`A raider wrecked your ${OW_IT[b.tgt.k].n}! Walk up to it to repair.`,"#ff5a5a"); OW.fx.push({k:"boom",x:tx,y:ty-8,r:22,t:0,life:.5}); try{ beep(140,.25,"sawtooth",.05); }catch(e){} } } }
+  // turrets
+  for(const o of S.it){ if(o.k!=="turret"||o.br) continue; o.cd=(o.cd||0)-dt; if(o.cd>0) continue; const tx=(P.x+o.x+.5)*OW_T, ty=(P.y+o.y+.3)*OW_T; const T=OW.bots.filter(b=>b.hp>0&&b.delay<=0&&Math.hypot(b.x-tx,b.y-ty)<OW_T*4.5).sort((a,c)=>Math.hypot(a.x-tx,a.y-ty)-Math.hypot(c.x-tx,c.y-ty))[0]; if(!T) continue; o.cd=.8; o.ang=Math.atan2(T.y-ty,T.x-tx); OW.fx.push({k:"bolt",x0:tx,y0:ty-6,x1:T.x,y1:T.y-6,t:0,life:.12,col:OW_COLS[o.c||0]}); owHurtBot(T,1); }
+  if(R.left<=0||OW.bots.every(b=>b.hp<=0)){ const win=R.broke===0; const sc=R.killed*5; S.scrap+=sc; let part=null; if(win&&R.killed>=3){ part=rollItem(.25); addItem(part); } if(win) S.raid.w++; persist(); OW.raid=null; OW.bots=[]; OW.raidT=180+Math.random()*180;
+    owModal(win?"Raid repelled!":"Raid over",[el("p",{text:win?`Your hideout held. You scrapped ${R.killed} raider${R.killed===1?"":"s"} for 🔩${sc}${part?` and found a ${BY[part].n}`:""}.`:`${R.broke} piece${R.broke===1?"":"s"} of tech got wrecked. Repair them with scrap. You still scrapped ${R.killed} raider${R.killed===1?"":"s"} for 🔩${sc}. Turrets help a lot.`})],[["OK",()=>owModalClose(),1]],win?"win":"lose"); } }
+function owHurtBot(b,n){ if(b.hp<=0) return; b.hp-=n; OW.fx.push({k:"hit",x:b.x,y:b.y-6,t:0,life:.25}); if(b.hp<=0){ OW.raid.killed++; OW.raid.left--; OW.fx.push({k:"boom",x:b.x,y:b.y-6,r:16,t:0,life:.45}); for(let k=0;k<6;k++) OW.fx.push({k:"spark",x:b.x,y:b.y-6,vx:(Math.random()-.5)*120,vy:-80-Math.random()*60,g:260,t:0,life:.6,col:k%2?"#7a8098":"#ff3a3a"}); try{ beep(500,.08,"square",.04); }catch(e){} } }
+function owZap(b){ if(!OW.raid) return; if(Math.hypot(b.x-OW.x,b.y-OW.y)>OW_T*6){ owMsg("Get closer to zap it.","#9a8cc0"); return; } if((OW.zapCd||0)>OW.t) return; OW.zapCd=OW.t+.3; OW.fx.push({k:"zapline",x0:OW.x,y0:OW.y-14,x1:b.x,y1:b.y-6,t:0,life:.15}); owHurtBot(b,1); try{ beep(1500,.04,"square",.03); }catch(e){} }
+// ---------------------------------------------------------------- drawing
+function owDraw(dt){ const M=owGen(), z=OW.cam.z, dpr=OW.dpr, rt=performance.now()/1000, sc=2*z, S=owS();
+  const bw=Math.ceil(OW.cvW/sc)+2, bh=Math.ceil(OW.cvH/sc)+2; if(!OW.buf||OW.buf.width!==bw||OW.buf.height!==bh){ [OW.buf,OW.bc]=pxCv(bw,bh); } const b=OW.bc; b.imageSmoothingEnabled=false;
+  const ox=Math.floor(OW.cam.x/2), oy=Math.floor(OW.cam.y/2); const A=(x,y)=>[Math.round(x/2)-ox,Math.round(y/2)-oy]; const vis=(x,y,m)=>x>-(m||40)&&x<bw+(m||40)&&y>-(m||40)&&y<bh+(m||60);
+  b.fillStyle="#07050c"; b.fillRect(0,0,bw,bh); b.drawImage(OW.terrain,-ox,-oy);
+  // water shimmer
+  for(let y=Math.max(0,Math.floor(oy/16));y<Math.min(M.H,Math.ceil((oy+bh)/16));y++){ const c=M.RX(y); for(let x=c-1;x<=c+2;x++) if(M.g[y*M.W+x]===3&&((x*7+y*3+Math.floor(rt*2))%5===0)) pR(b,x*16-ox+((y*5+Math.floor(rt*3))%12),y*16-oy+((x*3)%14),3,1,"#2a7a8a"); }
+  // plot outlines + floor layer
+  const hos=owHideouts(), byPlot={}; for(const h of hos) byPlot[h.ho.p]=h;
+  for(const [i,P] of M.plots.entries()){ const x0=P.x*16-ox, y0=P.y*16-oy; if(!vis(x0,y0,140)) continue; const h=byPlot[i]; const col=h?OW_COLS[h.ho.c||0]:"#4a4a66";
+    for(let k=0;k<OW_PS*16;k+=4){ if((k/4+Math.floor(rt*4))%2&&!h) continue; pR(b,x0+k,y0,2,1,col); pR(b,x0+k,y0+OW_PS*16-1,2,1,col); pR(b,x0,y0+k,1,2,col); pR(b,x0+OW_PS*16-1,y0+k,1,2,col); }
+    if(h) for(const o of h.ho.it){ const D=OW_IT[o.k]; if(D.L!==0) continue; const s=owSprItem(o.k,o.c,0); b.drawImage(s.c,x0+o.x*16-1,y0+o.y*16+16-s.H+1); if(o.k==="graffiti"&&o.t){ pText(b,o.t.slice(0,12),x0+o.x*16+8,y0+o.y*16+6,OW_COLS[o.c||0],1,true); } }
+    if(!h){ pText(b,"FREE PLOT",x0+OW_PS*8,y0+OW_PS*8-3,"#5a5a7a",1,true); } }
+  // depth-sorted objects
+  const L=[]; const push=(y,f)=>L.push([y,f]);
+  for(const [i,s] of M.spots.entries()){ const [x,y]=A((s.x+.5)*OW_T,(s.y+1)*OW_T); if(!vis(x,y)) continue; const ready=owSpotLeft(i)<=0; push((s.y+1)*OW_T,()=>{ const sp=owSprSpot(s.k,ready,Math.floor(rt*6+i)%16); b.drawImage(sp.c,x-sp.ax,y-sp.ay); if(ready&&s.tier>1) for(let t=0;t<s.tier;t++) pR(b,x-4+t*4,y-24,2,2,s.tier===3?"#ff3fa8":"#ffd36a"); }); }
+  for(const h of hos){ const P=M.plots[h.ho.p]; if(!P) continue; const hidden=owHidden[h.uid]; for(const o of h.ho.it){ const D=OW_IT[o.k]; if(D.L!==1) continue; const wx=(P.x+o.x)*OW_T, wy=(P.y+o.y+1)*OW_T; const [x,y]=A(wx,wy); if(!vis(x,y,60)) continue;
+      push(wy-1,()=>{ const fr=Math.floor(rt*4+o.x+o.y)%4, s=owSprItem(o.k,o.c,D.light||["rig","rack","gen","arcade","antenna","flag","barrel","window","neon"].includes(o.k)?fr:0); b.drawImage(s.c,x-1,y-s.H+1);
+        if(o.k==="poster"||o.k==="board"){ const pw=o.k==="board"?30:12, ph=o.k==="board"?18:16, px=x+(o.k==="board"?1:2), py=y-(o.k==="board"?28:22); const src=hidden?null:h.ho.im[o.i]; const im=owImgPx(src,pw,ph); if(im) b.drawImage(im,px,py); else { pR(b,px,py,pw,ph,"#1a1428"); pText(b,hidden?"X":"?",px+pw/2,py+ph/2-2,"#5a5a7a",1,true); } }
+        if((o.k==="sign"||o.k==="neon")&&o.t){ const t=o.t.slice(0,4); pText(b,t,x+8,y-(o.k==="neon"?21:18),o.k==="neon"?(fr===3&&o.k==="neon"?"#5a5a7a":OW_COLS[o.c||0]):"#e9e2ff",1,true); }
+        if(o.k==="turret"){ const a=o.ang!=null?o.ang:-Math.PI/2+Math.sin(rt+o.x)*.6; pLine(b,x+8+Math.cos(a)*2,y-13+Math.sin(a)*2,x+8+Math.cos(a)*8,y-13+Math.sin(a)*8,"#9aa4b8",2); }
+        if(o.br){ if(Math.floor(rt*8+o.x)%2) pR(b,x+3+Math.floor(Math.random()*10),y-6-Math.floor(Math.random()*12),1,1,"#ff7a2a"); pR(b,x+2,y-3,12,1,"#ff3a3a"); } }); }
+    // the hideout name banner
+    const [nx,ny]=A((P.x+OW_PS/2)*OW_T,P.y*OW_T); if(vis(nx,ny,100)) push(P.y*OW_T-2,()=>{ const nm=(h.ho.n||"HIDEOUT").toUpperCase().slice(0,18); const w=nm.length*4+5; pR(b,nx-Math.floor(w/2),ny-9,w,8,"#0a0718"); pR(b,nx-Math.floor(w/2),ny-9,w,1,OW_COLS[h.ho.c||0]); pText(b,nm,nx,ny-7,OW_COLS[h.ho.c||0],1,true); }); }
+  { const gx=6*16-ox, gy=(M.gate.y-2)*16-oy; if(vis(gx,gy,120)) push((M.gate.y+3)*OW_T,()=>{ const s=owSprGate(Math.floor(rt*4)%4); b.drawImage(s.c,gx-s.ax,gy+16*6-s.ay); }); }
+  if(S.bag){ const [x,y]=A(S.bag.x,S.bag.y); push(S.bag.y,()=>{ pR(b,x-4,y-7,8,7,"#7a5a3a"); pR(b,x-3,y-8,6,2,"#9a7a5a"); pR(b,x-1,y-5,2,2,"#ffd36a"); if(Math.floor(rt*3)%2) pR(b,x,y-12,1,3,"#ffd36a"); }); }
+  // other players
+  for(const p of peers.values()){ if(p.s!=="wilds"||!(p.ox>0)||isBlocked&&isBlocked(p.by)) continue; p.odx=p.odx==null?p.ox:p.odx+(p.ox-p.odx)*Math.min(1,dt*8); p.ody=p.ody==null?p.oy:p.ody+(p.oy-p.ody)*Math.min(1,dt*8); const mvg=Math.hypot(p.ox-p.odx,p.oy-p.ody)>1; p.ow=(p.ow||0)+(mvg?dt*7:0);
+    const [x,y]=A(p.odx,p.ody); if(!vis(x,y)) continue; push(p.ody,()=>{ owShadow(b,x,y,5); const s=owSprPlayer(p.look,p.od||0,mvg?Math.floor(p.ow)%4:0); b.drawImage(s.c,x-s.ax,y-s.ay); const nm=String(nameOf(p.by)||"RUNNER").toUpperCase().slice(0,12); pText(b,nm,x,y-30,"#cfc6ff",1,true); }); }
+  // me
+  { const [x,y]=A(OW.x,OW.y); push(OW.y,()=>{ owShadow(b,x,y,5); const s=owSprPlayer(save.look,OW.dir,OW.mv?Math.floor(OW.walk)%4:0); b.drawImage(OW.stun>0&&Math.floor(rt*20)%2?s.fl:s.c,x-s.ax+(OW.stun>0?(Math.floor(rt*30)%2?1:-1):0),y-s.ay); if(OW.sprint>0) for(let i=0;i<3;i++) pR(b,x-8-i*3+(OW.dir===3?16+i*6:0),y-6-i*4,2,1,"#38e8ff"); }); }
+  // drones and raiders
+  for(const d of OW.drones){ const [x,y]=A(d.x,d.y); if(!vis(x,y)) continue; push(d.y+20,()=>{ owShadow(b,x,y+6,4); const s=owSprDrone(Math.floor(rt*14+d.id)%2,d.st==="chase"); b.drawImage(s.c,x-s.ax,y-s.ay-8+Math.round(Math.sin(rt*4+d.id))); if(d.st==="chase"&&Math.floor(rt*6)%2){ pR(b,x-1,y-26,2,4,"#ff3a3a"); pR(b,x-1,y-21,2,1,"#ff3a3a"); } else if(d.st==="patrol"){ const a=rt*1.5+d.id; for(let i=0;i<10;i++){ const r=4+i*3; pR(b,Math.round(x+Math.cos(a)*r),Math.round(y+4+Math.sin(a)*r*.5),1,1,"rgba(255,154,60,.35)"); } } }); }
+  for(const bt of OW.bots){ if(bt.hp<=0||bt.delay>0) continue; const [x,y]=A(bt.x,bt.y); push(bt.y,()=>{ owShadow(b,x,y,4); const s=owSprBot(Math.floor(bt.f)%2); b.drawImage(s.c,x-s.ax,y-s.ay); for(let i=0;i<3;i++) pR(b,x-5+i*4,y-15,3,1,i<bt.hp?"#ff5a5a":"#3a1a1a"); }); }
+  L.sort((a,c)=>a[0]-c[0]); for(const [,f] of L) f();
+  // effects
+  const boom=["#ffffff","#fff1a8","#ffd36a","#ff9a3c","#ff5a2a","#a8321a","#3a2a3a"];
+  for(const f of OW.fx){ const u=f.t/f.life;
+    if(f.k==="spark"){ const [x,y]=A(f.x,f.y); pR(b,x,y,1,1,f.col); }
+    else if(f.k==="text"){ const [x,y]=A(f.x,f.y); pText(b,f.txt,x,y-Math.round(u*10),f.col,1,true); }
+    else if(f.k==="boom"){ const [x,y]=A(f.x,f.y); const R=Math.max(2,Math.round(f.r/2*(.35+u*.8))), ci=Math.min(6,Math.floor(u*7)); pDisc(b,x,y,R,boom[Math.min(6,ci+2)]); pDisc(b,x,y,Math.max(1,Math.round(R*.6)),boom[Math.min(6,ci+1)]); }
+    else if(f.k==="hit"){ const [x,y]=A(f.x,f.y); const r=1+Math.round(u*4); for(let i=0;i<6;i++){ const a=i*1.05; pR(b,Math.round(x+Math.cos(a)*r),Math.round(y+Math.sin(a)*r),1,1,i%2?"#38e8ff":"#ffffff"); } }
+    else if(f.k==="bolt"){ const [x0,y0]=A(f.x0,f.y0), [x1,y1]=A(f.x1,f.y1); pLine(b,x0+(x1-x0)*u,y0+(y1-y0)*u,x0+(x1-x0)*Math.min(1,u+.3),y0+(y1-y0)*Math.min(1,u+.3),f.col); }
+    else if(f.k==="zapline"){ const [x0,y0]=A(f.x0,f.y0), [x1,y1]=A(f.x1,f.y1); let px=x0, py=y0; for(let i=1;i<=4;i++){ const q=i/4, nx=x0+(x1-x0)*q+(i<4?Math.round((Math.random()-.5)*5):0), ny=y0+(y1-y0)*q+(i<4?Math.round((Math.random()-.5)*5):0); pLine(b,px,py,nx,ny,i%2?"#38e8ff":"#ffffff"); px=nx; py=ny; } }
+    else if(f.k==="zap"){ const [x,y]=A(f.x,f.y); for(let i=0;i<8;i++){ const a=i*.785+u*6; pR(b,Math.round(x+Math.cos(a)*(4+u*8)),Math.round(y+Math.sin(a)*(4+u*8)),1,1,i%2?"#ff3a3a":"#ffd36a"); } } }
+  if(OW.ping){ const [x,y]=A(OW.ping.x,OW.ping.y), r=2+Math.round(OW.ping.t*12); pRing(b,x,y,r,Math.max(1,Math.round(r*.5)),"#38e8ff",OW.ping.t>.3?2:0); }
+  if(OW.path&&OW.path.length){ const last=OW.path[OW.path.length-1]; const [x,y]=A(last.x,last.y); pR(b,x-1,y,3,1,"#38e8ff"); pR(b,x,y-1,1,3,"#38e8ff"); }
+  if(OW.busy){ OW.busy.t+=dt; const [x,y]=A(OW.x,OW.y); pR(b,x-9,y-30,18,3,PX_OUT); pR(b,x-8,y-29,Math.round(16*Math.min(1,OW.busy.t/OW.busy.dur)),1,"#ffd36a"); if(OW.busy.t>=OW.busy.dur&&OW.busyDone){ const f=OW.busyDone; OW.busyDone=null; f(); } }
+  if(OW.build) owDrawBuildGrid(b,ox,oy,rt);
+  // night: darken the edges, then blit
+  const c=OW.c; c.setTransform(1,0,0,1,0,0); c.imageSmoothingEnabled=false; c.fillStyle="#07050c"; c.fillRect(0,0,OW.cv.width,OW.cv.height); const fx=(OW.cam.x/2-ox)*sc*dpr, fy=(OW.cam.y/2-oy)*sc*dpr; c.drawImage(OW.buf,0,0,bw,bh,-Math.round(fx),-Math.round(fy),Math.round(bw*sc*dpr),Math.round(bh*sc*dpr));
+  c.setTransform(dpr,0,0,dpr,0,0);
+  // light from lamps, neon and fire (additive glow)
+  c.save(); c.globalCompositeOperation="lighter"; for(const h of hos){ const P=M.plots[h.ho.p]; if(!P) continue; for(const o of h.ho.it){ const D=OW_IT[o.k]; if(!D.light) continue; const sx=((P.x+o.x+.5)*OW_T-OW.cam.x)*z, sy=((P.y+o.y+.2)*OW_T-OW.cam.y)*z; if(sx<-120||sy<-120||sx>OW.cvW+120||sy>OW.cvH+120) continue; const col=D.light===2?"#ff9a3c":OW_COLS[o.c||0], R=(D.light===2?70:60)*z*(0.92+0.08*Math.sin(rt*(D.light===2?9:2)+o.x)); const g=c.createRadialGradient(sx,sy,0,sx,sy,R); g.addColorStop(0,col+"55"); g.addColorStop(1,col+"00"); c.fillStyle=g; c.fillRect(sx-R,sy-R,R*2,R*2); } } c.restore();
+  const vg=c.createRadialGradient(OW.cvW/2,OW.cvH/2,Math.min(OW.cvW,OW.cvH)*.35,OW.cvW/2,OW.cvH/2,Math.max(OW.cvW,OW.cvH)*.75); vg.addColorStop(0,"rgba(7,5,12,0)"); vg.addColorStop(1,"rgba(7,5,12,.6)"); c.fillStyle=vg; c.fillRect(0,0,OW.cvW,OW.cvH);
+  if(OW.raid&&Math.floor(rt*4)%2){ c.fillStyle="rgba(255,60,60,.4)"; c.fillRect(0,0,OW.cvW,4); c.fillRect(0,OW.cvH-4,OW.cvW,4); c.fillRect(0,0,4,OW.cvH); c.fillRect(OW.cvW-4,0,4,OW.cvH); }
+  if(OW.drones.some(d=>d.st==="chase")&&Math.floor(rt*6)%2){ c.fillStyle="rgba(255,90,40,.35)"; c.fillRect(0,0,OW.cvW,3); c.fillRect(0,OW.cvH-3,OW.cvW,3); }
+  // messages
+  let my=10; c.textAlign="left"; c.font="10px 'Press Start 2P','Silkscreen',monospace"; for(const m of OW.msg){ const a=Math.min(1,(5-m.t)*1.5); c.globalAlpha=a; const t=m.txt.length>58&&OW.cvW<600?m.txt.slice(0,56)+"…":m.txt; const w=Math.min(OW.cvW-24,c.measureText(t).width); c.fillStyle="#0a0718"; c.fillRect(8,my,w+18,22); c.fillStyle=m.col; c.fillRect(8,my,3,22); c.fillText(t,17,my+15,OW.cvW-40); my+=26; c.globalAlpha=1; }
+  owDrawMinimap(); if(OW.bigmap) owDrawBigMap(c); }
+function owShadow(b,x,y,w){ b.fillStyle="rgba(0,0,0,.45)"; for(let i=-w;i<=w;i++) b.fillRect(x+i,y-1,1,Math.abs(i)>w-2?1:2); }
+function owDrawMinimap(){ const M=owGen(), c=OW.mmc, k=2; if(OW.mm.width!==M.W*k){ OW.mm.width=M.W*k; OW.mm.height=M.H*k; OW.mmBase=null; } c.imageSmoothingEnabled=false;
+  if(!OW.mmBase){ const [bc,g]=pxCv(M.W*k,M.H*k); const C={0:"#1e1826",1:"#22281c",2:"#3a3848",3:"#0e3a48",4:"#4a4466",5:"#2a2232",6:"#2e2e40",7:"#5a6078",8:"#3a2e24",9:"#5a3a22"}; for(let y=0;y<M.H;y++) for(let x=0;x<M.W;x++) pR(g,x*k,y*k,k,k,C[M.g[y*M.W+x]]||"#1e1826"); OW.mmBase=bc; }
+  c.drawImage(OW.mmBase,0,0); for(const h of owHideouts()){ const P=M.plots[h.ho.p]; if(P) pR(c,P.x*k,P.y*k,OW_PS*k,OW_PS*k,h.ho.mine?"#43f0a4":OW_COLS[h.ho.c||0]+"99"); }
+  for(const [i,s] of M.spots.entries()) if(owSpotLeft(i)<=0) pR(c,s.x*k,s.y*k,2,2,"#ffd36a"); if(owHas("antenna",1)) for(const d of OW.drones) pR(c,Math.floor(d.x/OW_T)*k-1,Math.floor(d.y/OW_T)*k-1,3,3,"#ff5a5a");
+  for(const p of peers.values()) if(p.s==="wilds"&&p.ox>0) pR(c,Math.floor(p.ox/OW_T)*k-1,Math.floor(p.oy/OW_T)*k-1,3,3,"#cfc6ff"); const S=owS(); if(S.bag) pR(c,Math.floor(S.bag.x/OW_T)*k-1,Math.floor(S.bag.y/OW_T)*k-1,3,3,"#ffffff");
+  pR(c,Math.floor(OW.x/OW_T)*k-2,Math.floor(OW.y/OW_T)*k-2,5,5,Math.floor(performance.now()/250)%2?"#38e8ff":"#ffffff"); pR(c,M.gate.x*k,(M.gate.y-2)*k,6,6,"#ffd36a"); }
+function owMapToggle(){ if(!OW) return; OW.bigmap=!OW.bigmap; }
+function owDrawBigMap(c){ const M=owGen(); const pad=16, W=OW.cvW-pad*2, H=OW.cvH-pad*2, k=Math.min(W/M.W,H/M.H), x0=Math.round((OW.cvW-M.W*k)/2), y0=Math.round((OW.cvH-M.H*k)/2);
+  c.fillStyle="rgba(5,3,12,.85)"; c.fillRect(0,0,OW.cvW,OW.cvH); c.imageSmoothingEnabled=false; c.drawImage(OW.mm,x0,y0,M.W*k,M.H*k); c.strokeStyle="#38e8ff"; c.lineWidth=2; c.strokeRect(x0-1,y0-1,M.W*k+2,M.H*k+2);
+  c.font="9px 'Press Start 2P','Silkscreen',monospace"; c.textAlign="center"; for(const L of M.LM){ c.fillStyle=L.tier===3?"#ff3fa8":L.tier===2?"#ffd36a":"#43f0a4"; c.fillText(L.n.toUpperCase(),x0+(L.x+L.w/2)*k,y0+(L.y-1)*k); }
+  c.fillStyle="#ffd36a"; c.fillText("GATE",x0+(M.gate.x+3)*k,y0+(M.gate.y-3)*k); c.fillStyle="#9a8cc0"; c.fillText("TAP TO CLOSE · DOTS: GOLD = SALVAGE · GREEN = YOUR HIDEOUT",OW.cvW/2,OW.cvH-8); }
+// ---------------------------------------------------------------- hideout menu + build mode
+function owHideoutMenu(){ const S=owS(), M=owGen(); if(S.p<0){ owModal("Your hideout",[el("p",{text:"You don't have a hideout yet. Find a FREE PLOT (dashed outline) and claim it for ₵"+OW_PLOT_COST+". Plots closer to the gate are safer from patrols."}),el("p",{class:"sub",text:`Storage: 🔩${S.scrap} scrap · Pack: 🔩${S.pack.s} + ${S.pack.p.length}/${owPackCap()} parts`})],[["Close",()=>owModalClose(),1]]); return; }
+  const P=M.plots[S.p]; const name=el("input",{type:"text",maxlength:"24",value:S.n,placeholder:"Hideout name",style:"width:100%;box-sizing:border-box;padding:8px;background:#0d0818;color:#e9e2ff;border:1px solid #3c3a7a;font:inherit"});
+  const cols=el("div",{class:"owcols"},...OW_COLS.map((cl,i)=>el("button",{type:"button",class:"owsw"+(i===S.c?" on":""),style:`background:${cl}`,title:OW_COLN[i],"aria-label":OW_COLN[i],onclick:e=>{ S.c=i; [...cols.children].forEach((b2,j)=>b2.classList.toggle("on",j===i)); }})));
+  const tech=S.it.filter(o=>OW_IT[o.k].cat==="tech"); const rigs=S.it.filter(o=>o.k==="rig"&&!o.br).length, gens=owHas("gen",1);
+  owModal(S.n||"Your hideout",[el("label",{class:"fld"},"Name",name),el("div",{class:"fld"},"Banner color",cols),
+    el("div",{class:"anstats"},el("div",{},el("b",{text:String(S.it.length)}),el("span",{text:"pieces"})),el("div",{},el("b",{text:"🔩"+S.scrap}),el("span",{text:"scrap"})),el("div",{},el("b",{text:`${Math.min(rigs,gens*2)}/${rigs}`}),el("span",{text:"rigs powered"})),el("div",{},el("b",{text:`${S.raid.w}`}),el("span",{text:"raids repelled"}))),
+    el("p",{class:"sub",text:`Pack: 🔩${S.pack.s} + ${S.pack.p.length}/${owPackCap()} parts. Stash it at a crate in your hideout or at the gate.`})],
+    [["Release plot",()=>{ owModal("Release your hideout?",[el("p",{text:"Everything you built is removed and you get half the scrap back. You won't get the ₵"+OW_PLOT_COST+" back."})],[["Keep it",()=>owHideoutMenu()],["Release",()=>{ for(const o of S.it) owRefund(o.k); S.p=-1; S.it=[]; S.im=[]; S.rig={}; persist(); OW.ver++; owModalClose(); owMsg("Plot released.","#9a8cc0"); },1]]); }],["Walk there",()=>{ owModalClose(); OW.act=null; owPathTo((P.x+OW_PS/2)*OW_T,(P.y+OW_PS+.5)*OW_T); }],["Save",()=>{ S.n=name.value.replace(/[\u0000-\u001f]/g,"").trim().slice(0,24); persist(); OW.ver++; owModalClose(); owMsg("Hideout saved.","#43f0a4"); },1]]); }
+function owBuildStart(){ const P=owMyPlot(); if(!P){ owMsg(owS().p<0?"Claim a plot first.":"Your plot is loading. Try again in a second.","#ff9a3c"); return; } if(!(OW.x>=(P.x-2)*OW_T&&OW.y>=(P.y-2)*OW_T&&OW.x<(P.x+OW_PS+2)*OW_T&&OW.y<(P.y+OW_PS+2)*OW_T)){ owMsg("Walk to your hideout to build.","#ff9a3c"); return; } if(OW.raid){ owMsg("Not during a raid!","#ff5a5a"); return; }
+  OW.build={k:"wall",c:owS().c,cat:"build",tool:"place",txt:"",img:-1}; OW.path=null; OW.keys={}; OW.zPrev=OW.cam.z; if(OW.cvW<700) OW.cam.z=1; else if(OW.cam.z<1.5) OW.cam.z=1.5; const gw=$("#gnf.osk"); if(gw) gw.classList.add("building"); OW.cam.x=(P.x+OW_PS/2)*OW_T-owVW()/2; OW.cam.y=(P.y+OW_PS/2)*OW_T-owVH()/2+(OW.cvW<700?40:0); owDrawer(); }
+function owBuildEnd(){ OW.build=null; if(OW.zPrev) OW.cam.z=OW.zPrev; const gw=$("#gnf.osk"); if(gw) gw.classList.remove("building"); const d=$("#owDrawer"); if(d){ d.hidden=true; d.replaceChildren(); } persist(); OW.ver++; owHideouts(); }
+function owDrawer(){ const d=$("#owDrawer"); if(!d||!OW.build) return; const B=OW.build, S=owS(); d.hidden=false;
+  const tabs=el("div",{class:"owtabs"},...OW_CATS.map(([k,n])=>el("button",{type:"button",class:"btn"+(B.cat===k?" hot":""),text:n,onclick:()=>{ B.cat=k; B.k=Object.keys(OW_IT).find(x=>OW_IT[x].cat===k); B.tool="place"; owDrawer(); }})),el("button",{type:"button",class:"btn"+(B.tool==="erase"?" hot":""),text:"🧹 Remove",title:"Tap pieces to remove them (half the scrap back)",onclick:()=>{ B.tool=B.tool==="erase"?"place":"erase"; owDrawer(); }}),el("button",{type:"button",class:"btn hot",text:"✓ Done",onclick:()=>owBuildEnd()}));
+  const items=el("div",{class:"owitems"},...Object.entries(OW_IT).filter(([,D])=>D.cat===B.cat).map(([k,D])=>{ const can=owCanPay(k); return el("button",{type:"button",class:"ancmd"+(B.k===k&&B.tool==="place"?" on":""),disabled:can?null:"",title:`${D.n}: ${D.d} Cost ${owCostTxt(k)}`,onclick:()=>{ B.k=k; B.tool="place"; owDrawer(); }},el("img",{class:"anpx",src:owIcon(k,D.col?B.c:0),alt:""}),el("span",{text:D.n}),el("small",{text:owCostTxt(k)})); }));
+  const D=OW_IT[B.k]; const opts=el("div",{class:"owopts"});
+  if(B.tool==="place"&&D.col) opts.append(el("div",{class:"owcols"},...OW_COLS.map((cl,i)=>el("button",{type:"button",class:"owsw"+(i===B.c?" on":""),style:`background:${cl}`,title:OW_COLN[i],"aria-label":OW_COLN[i],onclick:()=>{ B.c=i; owDrawer(); }}))));
+  if(B.tool==="place"&&D.txt){ const ti=el("input",{type:"text",maxlength:"24",value:B.txt,placeholder:D.k==="graffiti"?"Your tag":"Your words",style:"flex:1;min-width:120px;padding:7px;background:#0d0818;color:#e9e2ff;border:1px solid #3c3a7a;font:inherit"}); ti.oninput=()=>{ B.txt=ti.value; }; opts.append(ti); }
+  if(B.tool==="place"&&D.img){ const pics=el("div",{class:"owpics"}); S.im.forEach((src,i)=>{ if(!src) return; pics.append(el("button",{type:"button",class:"owpic"+(B.img===i?" on":""),title:"Use this picture",onclick:()=>{ B.img=i; owDrawer(); }},el("img",{src,alt:"Your picture "+(i+1)}))); });
+    const fi=el("input",{type:"file",accept:"image/png,image/jpeg,image/webp,image/gif",style:"display:none"}); const msg=el("span",{class:"sub"});
+    fi.onchange=async()=>{ msg.textContent="Shrinking…"; try{ const u=await owShrink(fi.files[0]); let slot=S.im.findIndex((x,i)=>!x||!S.it.some(o=>OW_IT[o.k].img&&o.i===i)); if(slot<0&&S.im.length<OW_MAX_IMG) slot=S.im.length; if(slot<0){ msg.textContent=`You can use ${OW_MAX_IMG} pictures. Remove a poster to free one.`; return; } S.im[slot]=u; B.img=slot; persist(); owDrawer(); owMsg("Picture ready. Tap a spot to put up the poster.","#43f0a4"); }catch(e){ msg.textContent="That picture didn't work. Try a JPG or PNG."; } };
+    pics.append(el("button",{type:"button",class:"btn",text:"📷 Upload picture",onclick:()=>fi.click()}),fi,msg); opts.append(pics); opts.append(el("p",{class:"sub",style:"margin:0;flex-basis:100%",text:"Pictures are public to everyone in the Outskirts. Follow the house rules: no nudity, hate, or stuff you don't have the rights to."})); }
+  const help=el("div",{class:"sub owhelp",text:B.tool==="erase"?"Tap a piece to remove it.":`${D.n}: ${D.d}${D.L===0?" Floors go under everything.":""} Drag to paint.`});
+  d.replaceChildren(tabs,items,opts,help,el("div",{class:"sub",text:`Storage: 🔩${S.scrap} · ${S.it.length}/${OW_MAX_ITEMS} pieces`})); }
+function owShrink(file){ return new Promise((ok,no)=>{ if(!file||!/^image\//.test(file.type)||file.size>15e6) return no(0); const u=URL.createObjectURL(file), im=new Image(); im.onerror=()=>{ URL.revokeObjectURL(u); no(0); };
+  im.onload=()=>{ URL.revokeObjectURL(u); let max=240, q=.8, d=""; for(let i=0;i<6;i++){ const k=Math.min(1,max/Math.max(im.width,im.height)), cv=document.createElement("canvas"); cv.width=Math.max(1,Math.round(im.width*k)); cv.height=Math.max(1,Math.round(im.height*k)); const c=cv.getContext("2d"); c.fillStyle="#000"; c.fillRect(0,0,cv.width,cv.height); c.drawImage(im,0,0,cv.width,cv.height); d=cv.toDataURL("image/jpeg",q); if(d.length<=30000) break; max=Math.round(max*.82); q=Math.max(.5,q-.08); } d.length<=30000?ok(d):no(0); }; im.src=u; }); }
+function owBuildTap(w,drag){ const B=OW.build, P=owMyPlot(), S=owS(); if(!B||!P) return; const cx=Math.floor(w.x/OW_T)-P.x, cy=Math.floor(w.y/OW_T)-P.y; if(cx<0||cy<0||cx>=OW_PS||cy>=OW_PS) return; const key=cx+","+cy; if(drag&&B.last===key) return; B.last=key; const D=OW_IT[B.k];
+  if(B.tool==="erase"){ const L1=S.it.filter(o=>OW_IT[o.k].L===1&&cy===o.y&&cx>=o.x&&cx<o.x+(OW_IT[o.k].w||1)); const tgt=L1[0]||S.it.find(o=>OW_IT[o.k].L===0&&o.x===cx&&o.y===cy); if(!tgt) return; S.it.splice(S.it.indexOf(tgt),1); owRefund(tgt.k); if(tgt.k==="rig") delete S.rig[tgt.x+","+tgt.y]; try{ beep(300,.04); }catch(e){} OW.ver++; owRebuildBlocks(); owDrawer(); return; }
+  const w2=D.w||1; if(cx+w2>OW_PS) return; if(D.L===1){ for(let i=0;i<w2;i++){ if(S.it.some(o=>OW_IT[o.k].L===1&&o.y===cy&&cx+i>=o.x&&cx+i<o.x+(OW_IT[o.k].w||1))) return; } } else { const old=S.it.find(o=>OW_IT[o.k].L===0&&o.x===cx&&o.y===cy); if(old){ if(old.k===B.k&&old.c===(D.col?B.c:0)&&!D.txt) return; S.it.splice(S.it.indexOf(old),1); owRefund(old.k); } }
+  if(D.blk){ const px=(P.x+cx)*OW_T, py=(P.y+cy)*OW_T; if(Math.abs(OW.x-(px+16*w2))<16*w2+6&&Math.abs(OW.y-(py+16))<20){ owMsg("You're standing there.","#9a8cc0"); return; } }
+  if(S.it.length>=OW_MAX_ITEMS){ owMsg(`Your hideout is full (${OW_MAX_ITEMS} pieces).`,"#ff9a3c"); return; } if(B.k==="rack"&&owHas("rack")>=2){ owMsg("2 server racks max.","#ff9a3c"); return; }
+  if(D.img&&(B.img<0||!S.im[B.img])){ owMsg("Upload a picture first (📷 below).","#ff9a3c"); return; } if(D.txt&&!B.txt.trim()){ owMsg("Type the words for it first.","#ff9a3c"); return; }
+  if(!owCanPay(B.k)){ owMsg(`Not enough: ${owCostTxt(B.k)}. Salvage more scrap and stash it.`,"#ff9a3c"); return; }
+  owPay(B.k); const o={k:B.k,x:cx,y:cy,c:D.col?B.c:0}; if(D.txt) o.t=B.txt.replace(/[\u0000-\u001f​-‏‪-‮]/g,"").trim().slice(0,24); if(D.img) o.i=B.img; S.it.push(o); if(B.k==="rig") S.rig[cx+","+cy]=Date.now();
+  OW.ver++; owRebuildBlocks(); try{ beep(D.L?820:620,.03,"triangle",.03); }catch(e){} OW.fx.push({k:"hit",x:(P.x+cx+.5)*OW_T,y:(P.y+cy+.5)*OW_T,t:0,life:.25}); owDrawer(); }
+function owDrawBuildGrid(b,ox,oy,rt){ const P=owMyPlot(); if(!P) return; const x0=P.x*16-ox, y0=P.y*16-oy; for(let i=0;i<=OW_PS;i++){ for(let k=0;k<OW_PS*16;k+=2){ pR(b,x0+i*16,y0+k,1,1,"rgba(56,232,255,.35)"); pR(b,x0+k,y0+i*16,1,1,"rgba(56,232,255,.35)"); } }
+  const h=OW.hover; if(!h) return; const cx=Math.floor(h.x/OW_T)-P.x, cy=Math.floor(h.y/OW_T)-P.y; if(cx<0||cy<0||cx>=OW_PS||cy>=OW_PS) return; const B=OW.build;
+  if(B.tool==="erase"){ for(let k=0;k<16;k++){ pR(b,x0+cx*16+k,y0+cy*16+k,1,1,"#ff5a5a"); pR(b,x0+cx*16+15-k,y0+cy*16+k,1,1,"#ff5a5a"); } return; }
+  const D=OW_IT[B.k], s=owSprItem(B.k,D.col?B.c:0,0); b.globalAlpha=.65; b.drawImage(s.c,x0+cx*16-1,y0+(cy+1)*16-s.H+1); b.globalAlpha=1; for(let k=0;k<16*(D.w||1);k+=2){ pR(b,x0+cx*16+k,y0+cy*16,1,1,"#43f0a4"); pR(b,x0+cx*16+k,y0+cy*16+15,1,1,"#43f0a4"); } }
+// poster viewer (the real picture), with report + admin hide
+function owViewPoster(p){ const src=p.h.ho.im[p.o.i]; const hidden=owHidden[p.h.uid]; const who=p.h.ho.mine?"You":nameOf(p.h.uid);
+  owModal(p.o.k==="board"?"Billboard":"Poster",[hidden?el("p",{class:"sub",text:"This picture was removed by a moderator."}):src?el("img",{src,alt:"Poster by "+who,style:"display:block;max-width:100%;max-height:55vh;margin:0 auto;image-rendering:auto;border:3px solid #e9e2ff"}):el("p",{class:"sub",text:"No picture yet."}),el("p",{class:"sub",text:`In ${p.h.ho.n||"a hideout"} · put up by ${who}`})],
+    [...(!p.h.ho.mine&&src?[["🚩 Report",()=>{ owModalClose(); openReport("player",p.h.uid,nameOf(p.h.uid),{why:"Outskirts poster"}); }]]:[]),...(IS_ADMIN&&!p.h.ho.mine?[[hidden?"Unhide (admin)":"Hide pictures (admin)",()=>owAdminHide(p.h.uid,!hidden)]]:[]),["Close",()=>owModalClose(),1]]); }
+async function owAdminHide(uid,on){ if(!IS_ADMIN||!DB) return; const next={...owHidden}; if(on) next[uid]=1; else delete next[uid]; try{ await DB.doc("shopinfo/oskHidden").set({u:next,at:Date.now()}); owHidden=next; owModalClose(); toast(on?"Their Outskirts pictures are hidden for everyone.":"Pictures restored.","#43f0a4"); }catch(e){ toast("Couldn't save that."); } }
+function owWatchHidden(){ if(owHiddenOn||!DB) return; owHiddenOn=true; try{ DB.doc("shopinfo/oskHidden").onSnapshot(s=>{ const d=s&&s.exists?s.data():null; owHidden=d&&d.u&&typeof d.u==="object"?d.u:{}; }); }catch(e){} }
+function owUi(){ const R=$("#owRes"); if(!R||!OW) return; const S=owS(); const M=owGen(); const zone=M.LM.find(L=>OW.x>=L.x*OW_T&&OW.y>=L.y*OW_T&&OW.x<(L.x+L.w)*OW_T&&OW.y<(L.y+L.h)*OW_T); const key=[S.scrap,S.pack.s,S.pack.p.length,owPackCap(),zone&&zone.n,Math.ceil(OW.sprintCd)].join("|"); if(key===OW.uiKey) return; OW.uiKey=key;
+  R.replaceChildren(el("span",{class:"anr d",title:"Scrap in storage (for building)",text:`🔩 ${S.scrap}`}),el("span",{class:"anr p"+(S.pack.p.length>=owPackCap()?" full":""),title:"Your pack (stash it at the gate or a crate)",text:`🎒 🔩${S.pack.s} · ${S.pack.p.length}/${owPackCap()}`}),el("span",{class:"anr t",text:zone?zone.n.toUpperCase():"WASTELAND"}));
+  const sb=$("#owSprint"); if(sb){ sb.disabled=OW.sprintCd>0; sb.textContent=OW.sprintCd>0?`⚡ ${Math.ceil(OW.sprintCd)}s`:"⚡ Sprint"; } }
+// multiplayer: share where I am out here
+function owPres(){ return me.scene==="wilds"&&OW?{ox:Math.round(OW.x),oy:Math.round(OW.y),od:OW.dir}:{}; }
+function owPeer(q,pr){ if(pr.s==="wilds"&&Number.isFinite(+pr.ox)){ q.ox=clamp(+pr.ox,1,OW_W*OW_T); q.oy=clamp(+pr.oy||0,1,OW_H*OW_T); q.od=[0,1,2,3].includes(pr.od)?pr.od:0; } else { q.ox=0; q.oy=0; q.odx=null; q.ody=null; } }
+// ---------------------------------------------------------------- the city side: the Outskirts Gate (side view, pixel art)
+const OWG={board:700,gate:1350,scrap:1950};
+function owGateHot(){ return [{x:140,hw:60,label:"Take the metro",act:()=>openMetro()},{x:OWG.board,hw:90,label:"Outskirts board: how it works",act:()=>owBoard()},{x:OWG.gate,hw:160,label:"Enter the Outskirts (open world)",act:()=>owEnter()},{x:OWG.scrap,hw:90,label:"Scrap heap: city side",act:()=>toast("Picked clean. The good stuff is out past the gate.","#9a8cc0")}]; }
+function owBoard(){ const S=owS(); const n=owHideouts().length; const body=panel("The Outskirts","An open wasteland outside the city. Everyone shares the same map."); currentView="owboard";
+  body.append(el("div",{class:"anhow"},...["🔩 Salvage heaps, wrecks, crates and server racks for scrap and parts. They refill after a few minutes.","🎒 What you find goes in your pack. Stash it at the gate or a crate in your hideout to keep it safe.","🛸 Halvorsen drones patrol the far side. If one zaps you, you drop half your pack. Sprint to get away; plots and the gate are safe.","🚩 Claim a plot for ₵"+OW_PLOT_COST+" and build your hideout: walls, floors, furniture, neon, signs, graffiti and your own posters.","⚙ Tech pieces cost parts: generators and mining rigs make chips, racks grow your pack, turrets fight raiders.","🚨 Raiders hit hideouts that have tech while you're home. Tap them to zap them."].map(t=>el("p",{text:t}))),
+    el("div",{class:"anstats"},el("div",{},el("b",{text:String(n)}),el("span",{text:"hideouts"})),el("div",{},el("b",{text:String(owGen().plots.length-n)}),el("span",{text:"free plots"})),el("div",{},el("b",{text:"🔩"+S.scrap}),el("span",{text:"your scrap"})),el("div",{},el("b",{text:S.p>=0?"#"+(S.p+1):"none"}),el("span",{text:"your plot"}))),
+    el("div",{class:"row"},el("button",{class:"btn hot",type:"button",text:"Enter the Outskirts",onclick:()=>owEnter()}))); }
+function drawOwGate(t){ const W=SCENES.outskirts.w, X0=camX, X1=camX+VW, P=3;
+  const sky=["#1a0a14","#24101a","#2e1620","#381c22","#3a2024"]; for(let i=0;i<5;i++){ ctx.fillStyle=sky[i]; ctx.fillRect(camX,i*54,VW,54); }
+  // a big dusty moon + far wasteland hills
+  { const mx=OWG.gate+460; if(X0<mx+60&&X1>mx-60){ ctx.fillStyle="#e8a070"; for(let y=-27;y<=27;y+=P){ const w=Math.floor(Math.sqrt(729-y*y)/P)*P; ctx.fillRect(mx-w,60+y,w*2,P); } ctx.fillStyle="#d08060"; ctx.fillRect(mx-12,50,12,6); ctx.fillRect(mx+9,66,9,6); } }
+  for(let x=Math.floor(X0/P)*P;x<X1;x+=P){ const h=Math.floor((40+Math.sin(x*.004)*22+Math.sin(x*.013)*10)/P)*P; ctx.fillStyle="#1e1218"; ctx.fillRect(x,200-h,P,h+62); }
+  // city wall with the gate
+  for(let x=Math.floor(X0/48)*48;x<X1;x+=48){ if(x>OWG.gate-180&&x<OWG.gate+150) continue; ctx.fillStyle="#2a2440"; ctx.fillRect(x,150,48,112); ctx.fillStyle="#3a3460"; ctx.fillRect(x,150,48,P*2); ctx.fillStyle="#1d1a33"; ctx.fillRect(x,150,P,112); ctx.fillStyle=(x/48)%3===0?"#ff3fa8":"#1d1a33"; ctx.fillRect(x+18,190,P*2,P); }
+  { const g=OWG.gate; ctx.fillStyle="#3a3460"; ctx.fillRect(g-180,110,48,152); ctx.fillRect(g+132,110,48,152); ctx.fillStyle="#4a4280"; ctx.fillRect(g-180,110,48,P*2); ctx.fillRect(g+132,110,48,P*2); ctx.fillStyle="#2a2440"; ctx.fillRect(g-132,110,264,30);
+    for(let i=0;i<22;i++){ ctx.fillStyle=i%2?"#ffd36a":"#15121f"; ctx.fillRect(g-132+i*12,140,12,P*2); }
+    // the open gate: you can see the wasteland through it
+    ctx.fillStyle="#2a1a22"; ctx.fillRect(g-132,146,264,116); for(let i=0;i<10;i++){ ctx.fillStyle=i%2?"#3a2a2a":"#33222a"; ctx.fillRect(g-132,180+i*8,264,8); } ctx.fillStyle="#4a3a2a"; ctx.fillRect(g-40,232,24,12); ctx.fillStyle="#5a5070"; ctx.fillRect(g+30,226,30,18); ctx.fillStyle="#ff9a3c"; ctx.fillRect(g+60+Math.round(Math.sin(t*1.2)*40),170+Math.round(Math.sin(t*3)*3),6,P);
+    for(let i=0;i<7;i++){ ctx.fillStyle="#5a6078"; ctx.fillRect(g-132+i*44,146,P,40-((i*13+Math.floor(t*2))%3)*3); }
+    pText(ctx,"THE OUTSKIRTS",g,117,Math.sin(t*3)>-.9?"#ff9a3c":"#6a3a1a",P,true); pText(ctx,"NO CITY PATROLS PAST THIS POINT",g,96,"#ffd36a",2,true); }
+  // board
+  if(X0<OWG.board+120&&X1>OWG.board-120){ const x=OWG.board; ctx.fillStyle="#3a405a"; ctx.fillRect(x-60,210,6,52); ctx.fillRect(x+54,210,6,52); ctx.fillStyle="#ff9a3c"; ctx.fillRect(x-80,150,160,66); ctx.fillStyle="#1a1020"; ctx.fillRect(x-77,153,154,60); pText(ctx,"OUTSKIRTS",x,160,"#ff9a3c",2,true); pText(ctx,"SALVAGE",x-66,180,"#cfc6ff",2); pText(ctx,"BUILD",x-66,196,"#43f0a4",2); const n=owHideouts().length; pText(ctx,String(n)+" HIDEOUTS",x+70,188,"#ffd36a",1,false); }
+  // scrap pile
+  if(X0<OWG.scrap+120&&X1>OWG.scrap-120){ const x=OWG.scrap; const cl=["#3a3250","#4a4060","#2e2840"]; for(let y=0;y<14;y++){ const w=Math.floor((30+y*7)/P)*P; ctx.fillStyle=cl[y%3]; ctx.fillRect(x-w/2,220+y*3,w,P); } ctx.fillStyle="#ff9a3c"; ctx.fillRect(x-6,226,6,P); ctx.fillStyle="#7a8098"; ctx.fillRect(x+10,232,9,P); }
+  // ground
+  for(let x=Math.floor(X0/48)*48;x<X1;x+=48){ ctx.fillStyle=(x/48)%2?"#221a22":"#1e161e"; ctx.fillRect(x,262,48,80); ctx.fillStyle="#2e2230"; ctx.fillRect(x,262,48,P); }
+  if(X0<260) anHubDraw("metro",Math.floor(t*4)%4,140,262); }
+function drawOwWildsBg(t){ ctx.fillStyle="#07050c"; ctx.fillRect(camX,0,VW,400); pText(ctx,"OUT IN THE OUTSKIRTS",camX+VW/2,180,"#ff9a3c",3,true); }
 
 // Cars moved to the Harvest Homes parking garage
 const HH_GAR={deal:4720,gar:4980};
@@ -13796,7 +14294,7 @@ async function flush(){
   try{ localStorage.setItem("nh_save",JSON.stringify(data)); localStorage.setItem("nh_save_uid",myId||""); if(DB&&myId) localStorage.setItem("nh_save_dirty","1"); }catch(e){}
   // nh_save_dirty stays set until the cloud confirms this save, so an unfinished save can be recovered on the next visit.
   if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); try{ if(JSON.parse(localStorage.getItem("nh_save")||"{}").savedAt===data.savedAt) localStorage.removeItem("nh_save_dirty"); }catch(e){} }catch(e){}
-    const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{},(save.t1211&&save.t1211.beat||[]).length,save.hh||null,null]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},t1211:(save.t1211&&save.t1211.beat||[]).length,hh:cleanHH(save.hh),nf:null,at:Date.now()}); }catch(e){} } }
+    const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{},(save.t1211&&save.t1211.beat||[]).length,save.hh||null,null,owPub()]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},t1211:(save.t1211&&save.t1211.beat||[]).length,hh:cleanHH(save.hh),nf:null,ho:owPub(),at:Date.now()}); }catch(e){} } }
 }
 function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0; o.rp=Math.max(0,+o.rp||0); if(!o.rpDay||typeof o.rpDay!=="object") o.rpDay={d:"",n:0}; o.rpLog=(Array.isArray(s.rpLog)?s.rpLog:[]).filter(e=>e&&isFinite(+e.t)&&isFinite(+e.n)&&+e.n>0).slice(0,40).map(e=>({t:+e.t,n:Math.floor(+e.n),s:String(e.s||"Work").slice(0,40)}));
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
@@ -14107,7 +14605,7 @@ const WX_SEASONS=[
 const WX={clear:{n:"Clear night",ic:"🌙"},rain:{n:"Rain",ic:"🌧"},storm:{n:"Thunderstorm",ic:"⛈"},fog:{n:"Fog",ic:"🌫"},snow:{n:"Snow",ic:"🌨"},blizzard:{n:"Blizzard",ic:"❄"},
   leaves:{n:"Falling leaves",ic:"🍂"},blossom:{n:"Cherry blossoms",ic:"🌸"},heat:{n:"Heat wave",ic:"🔥"},acid:{n:"Acid rain",ic:"☣"},aurora:{n:"Aurora",ic:"🌌"}};
 const WX_SEASON_MS=7*864e5, WX_SLOT_MS=20*6e4, WX_EPOCH=Date.UTC(2026,0,5,5);
-const WX_OUT=["street","byte","grid","neonrow","civic","prison","hhomes","racers","linx","clash","story","anon","line","smacked"];
+const WX_OUT=["street","byte","grid","neonrow","civic","prison","hhomes","racers","linx","clash","story","anon","outskirts","line","smacked"];
 let wxLock=null, wxLast="", wxFlash=0, wxBolt=null, wxNextBolt=0;
 // owner-set cycle: mode season|random|list, how often it changes, how long a season lasts
 let wxCfg={mode:"season",slotMin:20,list:[],seasonH:168};
@@ -15271,7 +15769,7 @@ function drawLvBadge(c,x,y,name,lv){ if(!(lv>0)) return; const nw=c.measureText(
 { const b=$("#lvpill"); if(b) b.addEventListener("click",()=>{ beep(900,.04); openLevel(); }); }
 setTimeout(lvHud,1500);
 
-function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,lv:lvNow(),zb:zbMe()?1:0,zbid:(zbOn()||{}).id||"",zbit:[...zbMine].slice(0,30),...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres()};
+function pushPresence(force,extra){ if(!ROOM) return; const now=performance.now(); const pos={s:me.scene,h:curHomeKey(),fx:myFx(),dk:myDk(),hp:me.scene==="void"?Math.round(myHP):null,blk:me.blocking?1:0,dead:me.dead?1:0,seat:me.scene==="club"&&me.seat!=null?me.seat:null,hs:(me.scene==="home"||me.scene==="vip"||me.scene==="ascend")&&me.homeSit?1:0,x:Math.round(me.x),y:Math.round(me.y),d:me.dir,lk:save.look,lv:lvNow(),zb:zbMe()?1:0,zbid:(zbOn()||{}).id||"",zbit:[...zbMine].slice(0,30),...(me.scene==="ascend"&&SI?{sv:SI.side,sp:SI.dust,sc:SI.charge,rx:SI.rx}:{}),st:(mySlot>=0||cbSlot>=0||clubSlot>=0||bbSlot>=0||asmSlot>=0)?1:0,...rolePres(),...owPres()};
   const sig=JSON.stringify(pos); if(!force&&(sig===lastSig||now-lastPush<120)) return; lastSig=sig; lastPush=now; ROOM.presence({...pos,...(extra||{})}).catch(()=>{}); }
 setInterval(()=>{ if(ROOM) pushPresence(true,{hb:Date.now()}); },20000);
 function validLook(l){ return fullLook(l&&typeof l==="object"?l:DEFAULT_LOOK); }
@@ -15284,7 +15782,7 @@ function applyPeer(p){ if(isSelf(p)) return false; if(p.kind!=="viewer") return 
   if(q&&q.pid!==p.peer&&(q.updatedAt||0)>(p.updatedAt||0)) return false; // an older tab of the same player: ignore it
   const fresh=!q; if(!q){ q={by:p.by,dx:x,dy:y,phase:0}; peers.set(key,q); if(p.by) resolveNames([p.by]); }
   else if(q.pid&&q.pid!==p.peer){ q.dx=x; q.dy=y; } // same player came back in a new tab: move the one figure, don't add another
-  q.pid=p.peer; try{ rolePeer(q,p.presence||{}); }catch(e){}
+  q.pid=p.peer; try{ rolePeer(q,p.presence||{}); }catch(e){} try{ owPeer(q,pr); }catch(e){}
   q.sv=pr.sv===1||pr.sv===2?pr.sv:0; q.sp=clamp(Math.floor(+pr.sp||0),0,999); q.sc=clamp(Math.floor(+pr.sc||0),0,5000); q.rx=pr.rx&&SHOW_RX.some(r=>r[0]===pr.rx.k)&&Number.isFinite(+pr.rx.at)?{k:pr.rx.k,at:Math.min(Date.now(),+pr.rx.at)}:null;
   Object.assign(q,{by:p.by,guest:!!p.guest,updatedAt:p.updatedAt||Date.now(),s:pr.s,home:typeof pr.h==="string"?pr.h:null,x,y,dir:pr.d===-1?-1:1,look:validLook(pr.lk),lv:Math.max(0,Math.min(1000,Math.floor(+pr.lv||0))),zb:pr.zb===1,zbid:typeof pr.zbid==="string"?pr.zbid.slice(0,48):"",zbit:Array.isArray(pr.zbit)?pr.zbit.filter(i=>Number.isInteger(i)&&i>=0&&i<64).slice(0,30):[],staff:pr.st===1,hp:Number.isFinite(+pr.hp)&&pr.hp!==null?clamp(Math.round(+pr.hp),0,100):100,blk:pr.blk===1,dead:pr.dead===1,fx:FX_KEYS.includes(pr.fx)?pr.fx:null,dk:typeof pr.dk==="string"&&DRINK_FX[pr.dk]?pr.dk:null,seat:Number.isInteger(pr.seat)&&pr.seat>=0&&pr.seat<SEATS.length?pr.seat:null,hs:pr.hs===1});
   if(pr.say&&typeof pr.say.text==="string") q.say={text:pr.say.text.slice(0,80),at:Math.min(Date.now(),+pr.say.at||0)};
@@ -15306,7 +15804,7 @@ setInterval(hud,1000);
   ACCESS.mode=!db?"signedout":!myId?"limited":!canWrite?"readonly":room?"full":"full";
   if(db) try{ streamWatch(db); }catch(e){} try{ wxWatch(db); }catch(e){}
   if(db) try{ wxWatch(db); }catch(e){}
-  if(db&&myId&&canWrite){ DB=db;
+  if(db&&myId&&canWrite){ DB=db; setTimeout(()=>{ try{ owWatchHidden(); }catch(e){} },0);
     try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ const cloud=snap.data(); let use=cloud;
         // If this device's last save never reached the cloud (the app was closed mid-save), keep the newer copy from this device.
         try{ const ls=JSON.parse(localStorage.getItem("nh_save")||"null"); if(localStorage.getItem("nh_save_dirty")==="1"&&localStorage.getItem("nh_save_uid")===myId&&ls&&(+ls.savedAt||0)>(+cloud.savedAt||0)) use=ls; }catch(e){}
