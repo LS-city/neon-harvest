@@ -2197,6 +2197,8 @@ function drawStick(c,x,y,s,o,t){ if(offWorld(c,x,y,140*(s||1))) return;
   else if(em==="atk"){ const wk=held&&WSTATS[held]?WSTATS[held].kind:"melee", u=Math.min(1,(t-o.emote.t)/.3), ext=Math.sin(u*Math.PI); c.moveTo(0,sh+2); c.lineTo(dir*(9+6*ext),sh); c.lineTo(dir*(16+8*ext),sh-2); c.moveTo(0,sh+2); c.lineTo(-dir*6,hip+2); hx=dir*(16+8*ext); hy=sh-2; ha=wk==="ranged"?0:(-1.3+2.1*u); }
   else if(em==="use"){ c.moveTo(0,sh+2); c.lineTo(dir*8,sh+4); c.lineTo(dir*6,head+5); c.moveTo(0,sh+2); c.lineTo(o.sit?dir*5:-sw*.8,o.sit?hip+1:hip+4); }
   else if(em==="wave"){ const w=Math.sin(t*14)*5; c.moveTo(0,sh+2); c.lineTo(dir*10,sh-8); c.lineTo(dir*12+w,sh-20); c.moveTo(0,sh+2); c.lineTo(-dir*6,hip+2); hx=dir*12+w; hy=sh-20; ha=-1.35; }
+  else if(em==="panic"){ const a=Math.sin(t*23)*6, b=Math.cos(t*19)*6; c.moveTo(0,sh+2); c.lineTo(-8,sh-8+a*.4); c.lineTo(-11+a,sh-21); c.moveTo(0,sh+2); c.lineTo(8,sh-8+b*.4); c.lineTo(11+b,sh-21); hx=dir*(11+b); hy=sh-21; ha=-1.4; }
+  else if(em==="cower"){ const q=Math.sin(t*40)*1.2; c.moveTo(0,sh+2); c.lineTo(-8,sh-4+q); c.lineTo(5,head-7+q); c.moveTo(0,sh+2); c.lineTo(8,sh-4-q); c.lineTo(-5,head-7-q); hx=dir*5; hy=head-7; ha=-2.2; }
   else if(em==="cheer"){ c.moveTo(0,sh+2); c.lineTo(-9,sh-10); c.lineTo(-11,sh-22); c.moveTo(0,sh+2); c.lineTo(9,sh-10); c.lineTo(11,sh-22); hx=dir*11; hy=sh-22; ha=-1.45; }
   else if(em==="dance"){ const a=Math.sin(t*10)*10; c.moveTo(0,sh+2); c.lineTo(-12,sh-4+a); c.moveTo(0,sh+2); c.lineTo(12,sh-4-a); hx=dir*12; hy=sh-4-dir*a; ha=-.4; }
   else if(em==="pose"){ c.moveTo(0,sh+2); c.lineTo(dir*9,sh-4); c.lineTo(dir*15,sh-14); c.moveTo(0,sh+2); c.lineTo(-dir*6,hip-3); c.lineTo(-dir*2,hip+1); hx=dir*15; hy=sh-14; ha=-1.0; }
@@ -2471,6 +2473,7 @@ function tickCity(dt){ const now=Date.now();
   const L=cityGen(me.scene); const stars=heatStars();
   for(const n of L){ if(n.say&&T-n.say.t>4) n.say=null;
     if(n.k==="bot"&&n.out){ if(now>n.out){ n.out=0; n.x=n.min+Math.random()*(n.max-n.min); } else continue; }
+    if(!n.life&&(n.k==="civ"||n.k==="cop")){ if(dzPanicking()){ n.state="patrol"; dzPanicMove(n,dt); continue; } else if((n.pn||n.pnHome)&&dzCalm(n,dt)) continue; }
     if(n.k==="cop"){ const chaseAt=policy("crackdown")?1:2; const d=Math.hypot(me.x-n.x,(me.y-n.y)*1.5);
       if(n.state!=="chase"&&stars>=chaseAt&&!jailed()&&!(IS_ADMIN&&save.admImm)&&d<300&&$("#overlay").hidden){ n.state="chase"; npcSay(n,"STOP! Police!"); beep(1200,.08,"square"); setTimeout(()=>beep(900,.08,"square"),120); }
       if(n.state==="chase"){ if(stars<chaseAt||jailed()||d>460){ n.state="patrol"; n.vx=24*(n.vx<0?-1:1); npcSay(n,stars?"Lost 'em.":"Carry on."); continue; }
@@ -2500,7 +2503,7 @@ function drawGangBot(c,x,y,s,t,n){ c.save(); c.translate(x,y); c.scale(s,s); con
   if(n.say&&T-n.say.t<4) drawBubble(c,x,y-96*s,n.say.text,"#ff5a4a","#ffd8d0"); }
 function cityEnts(ents){ const L=cityGen(me.scene), wet=wxWet();
   for(const n of L){ if(n.k==="bot"){ if(n.out) continue; ents.push({x:n.x,y:n.y,draw:(c,x,y,s,t)=>drawGangBot(c,x,y,s,t,n)}); continue; }
-    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.life?!!(n.walking||n.vx):!!n.vx&&!(n.pause>0),look:n.look,zombie:zbIsR(n),name:(zbIsR(n)?"🧟 ":"")+lifeName(n)+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null,sit:!!n.sit,emote:(n.danceUntil>T||(n.life&&n.act&&n.act.mode==="dance"&&!n.goal&&!n.leaving))?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)},umb:wet&&!n.sit?UMB_COLS[hashNum((n.name||"c")+n.k)%UMB_COLS.length]:null}); }
+    ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.pn?n.pn.mode==="run":n.life?!!(n.walking||n.vx):!!n.vx&&!(n.pause>0),look:n.look,zombie:zbIsR(n),name:(zbIsR(n)?"🧟 ":"")+lifeName(n)+(n.k==="civ"&&n.hurt?" 🩹":n.k==="civ"&&n.buyer&&roleIs("dealer")?" 💊":""),say:n.say,rk:n.k==="cop"?"police":null,sit:!!n.sit||!!(n.pn&&n.pn.mode==="cower"),emote:n.pn?dzPanicEmote(n):(n.danceUntil>T||(n.life&&n.act&&n.act.mode==="dance"&&!n.goal&&!n.leaving))?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)},umb:wet&&!n.sit?UMB_COLS[hashNum((n.name||"c")+n.k)%UMB_COLS.length]:null}); }
   // acolytes behind cult leaders (me and peers)
   const acoLook=i=>({jacket:0,pants:0,skin:(i*3)%5,style:1,visor:0,hat:0});
   if(roleIs("cult")&&save.acolytes&&me.scene!=="void"){ const tr=roleTick.acoTrail||[]; for(let i=0;i<save.acolytes;i++){ const p=tr[Math.min(tr.length-1,14+i*12)]||me; ents.push({x:p.x-(me.dir||1)*(22+i*16),y:clamp(p.y+(i%2?8:-6),LANE.top,LANE.bot),o:{dir:me.dir,phase:me.phase+i,moving:me.moving,look:acoLook(i),name:"",rk:"cult",cu:save.myCult?{by:myId,...save.myCult}:null,aco:1}}); } }
@@ -2881,8 +2884,10 @@ function lifePlace(R,a,now){ R.akey=a.key; R.sit=false; R.walking=false; R.leavi
   if(now-a.start<40e3&&a.a!=="sleep"){ R.x=lifeEntryX(a.sc); R.y=clamp(R.spot.y,LANE.top,LANE.bot); R.goal={x:R.spot.x,y:R.spot.y}; } else { R.x=R.spot.x; R.y=R.spot.y; R.goal=null; lifeArrive(R); } R.chatT=T+4+Math.random()*12; }
 function lifeArrive(R){ const a=R.act; if(!a) return; if(R.leaving){ R.leftKey=a.key; R.here=false; return; } if(a.mode==="seat") R.sit=true; if(a.mode==="walk") R.pause=2+Math.random()*5; }
 function lifeTick(dt){ const now=Date.now(); if(DB&&!elWatched) try{ elWatch(); }catch(e){}
+  const _dzp=dzPanicking();
   for(const R of lifeHere(me.scene)){ const a=R.act;
     if(R.ix===ZK_KILLER&&zkMove(R,dt)) continue;
+    if(_dzp&&dzCanPanic(R)){ dzPanicMove(R,dt); continue; } else if(R.pn) dzCalm(R,dt);
     if(R.vx){ R.vxT=R.vxT||now; if(now-R.vxT>2500){ R.vx=0; R.vxT=0; } else continue; }
     if(!R.leaving&&a.end-now<20e3&&a.a!=="vote"||(!R.leaving&&a.a==="vote"&&a.end-now<15e3)){ R.leaving=true; R.sit=false; R.goal={x:lifeEntryX(a.sc),y:R.y}; }
     if((R.fleeUntil||0)>T){ R.sit=false; R.walking=true; const sp=95*dt; R.x=clamp(R.x+R.fleeDir*sp,R.min,R.max); R.dir=R.fleeDir; R.phase+=dt*10; continue; }
@@ -2925,7 +2930,7 @@ function moodOf(n){ const now=Date.now(); if(n.moodT>now-1000&&n.mood) return n.
   if(f>.55) k="scared"; else if(k==="party"||k==="grateful"){} else if(k==="angry"&&v<0){} else if(v<-.35&&(n.ev||[]).some(x=>x.k==="angry"&&x.until>now)) k="angry"; else if(v<-.25) k="sad"; else if(e<.3) k="tired";
   else if(k==="focused"&&v>-.1&&v<.55){} else if(act==="work"&&v<.05) k="stressed"; else if(v>.55&&e>.6) k="excited"; else if(v>.3) k="happy"; else if(v>.05) k="content"; else k="bored";
   n.mood={k,why:why[0]||"Just living their life"}; n.moodT=now; return n.mood; }
-function moodEmoji(n){ return (MOODS[moodOf(n).k]||MOODS.content)[0]; }
+function moodEmoji(n){ if(n&&n.pn) return "😱"; return (MOODS[moodOf(n).k]||MOODS.content)[0]; }
 function lifeName(n){ return (n.name?n.name+" ":"")+moodEmoji(n); }
 
 /* ---- awareness ---- */
@@ -3227,7 +3232,7 @@ function zkDraw(t){ const now=Date.now(); for(const p of zkScenes(now)){ if(p.sc
 // --- stop-and-chat card
 let npcCard=null, npcCardEl=null;
 function npcSnoozed(){ return (+save.npcSnooze||0)>Date.now(); }
-function npcCanStop(){ return !!save&&$("#overlay").hidden&&!npcCard&&!($("#title")&&!$("#title").hidden)&&!$("#gccj")&&!$("#gnf")&&!$("#gbook")&&!$("#g1211")&&!$("#gdsim")&&!$("#gmydex")&&!(typeof IDLE!=="undefined"&&IDLE)&&!me.dead&&!(typeof jailed==="function"&&jailed())&&!heatStars()&&me.scene!=="void"&&me.scene!=="ascend"&&document.visibilityState==="visible"; }
+function npcCanStop(){ return !dzPanicking()&&!!save&&$("#overlay").hidden&&!npcCard&&!($("#title")&&!$("#title").hidden)&&!$("#gccj")&&!$("#gnf")&&!$("#gbook")&&!$("#g1211")&&!$("#gdsim")&&!$("#gmydex")&&!(typeof IDLE!=="undefined"&&IDLE)&&!me.dead&&!(typeof jailed==="function"&&jailed())&&!heatStars()&&me.scene!=="void"&&me.scene!=="ascend"&&document.visibilityState==="visible"; }
 function npcStartChat(n,mode){ if(npcCard) npcCloseCard(); const M=npcMem(); let Q=null;
   if(mode!=="ask"){ const unasked=NPC_Q.filter(q=>M[q.id]==null), pool=unasked.length?unasked:NPC_Q; const want=Math.random()<.5?"deep":Math.random()<.6?"outside":"fun"; const P=pool.filter(q=>q.k===want); Q=(P.length?P:pool)[(Math.random()*(P.length||pool.length))|0]; }
   npcCard={n,Q,mode:mode||"q",step:0,line:"",x0:me.x,sc:me.scene}; n.talkUntil=T+60; n.dir=me.x>=n.x?1:-1; me.dir=n.x>=me.x?1:-1;
@@ -3260,11 +3265,11 @@ function npcMindTick(dt){ if(!save) return; const now=Date.now();
         n.sit=false; n.goal={x:me.x+(n.x>me.x?55:-55),y:clamp(me.y,LANE.top,LANE.bot)}; n.vx=0; n.talkUntil=0; npcSay(n,["Hey! Wait up!",`${myName||"Hey"}! Hold on!`,"Psst! Over here!"][(Math.random()*3)|0]);
         let tries=0; const go=()=>{ if(!n.here||tries++>30) return; if(!npcCanStop()){ setTimeout(go,500); return; } if(Math.abs(n.x-me.x)<90||!n.goal) npcStartChat(n,"q"); else if(Math.abs(n.x-me.x)<600){ n.goal={x:me.x+(n.x>me.x?55:-55),y:clamp(me.y,LANE.top,LANE.bot)}; setTimeout(go,400); } }; setTimeout(go,600); } } }
   // two residents talk to each other
-  if(!npcConvoBusy&&T>npcConvoT){ npcConvoT=T+14+Math.random()*16; const res=cityGen(me.scene).filter(n=>n.life&&n.here&&!n.goal&&!((n.talkUntil||0)>T)&&!(npcCard&&npcCard.n===n)&&moodOf(n).k!=="asleep"&&moodOf(n).k!=="scared");
+  if(!npcConvoBusy&&T>npcConvoT&&!dzPanicking()){ npcConvoT=T+14+Math.random()*16; const res=cityGen(me.scene).filter(n=>n.life&&n.here&&!n.goal&&!((n.talkUntil||0)>T)&&!(npcCard&&npcCard.n===n)&&moodOf(n).k!=="asleep"&&moodOf(n).k!=="scared");
     const pairs=[]; for(let i=0;i<res.length;i++) for(let j=i+1;j<res.length;j++){ const a=res[i], b=res[j]; if(Math.abs(a.x-b.x)<240&&Math.abs(a.x-me.x)<VW*.9) pairs.push([a,b]); }
     if(pairs.length){ const [a,b]=pairs[(Math.random()*pairs.length)|0]; npcConverse(a,b); } }
   // close friends find each other and hang out
-  if(T>npcHangT){ npcHangT=T+20; const res=cityGen(me.scene).filter(n=>n.life&&n.here&&!n.goal&&!n.sit&&n.act&&n.act.mode!=="seat"&&n.act.a!=="work"&&!((n.talkUntil||0)>T)&&moodOf(n).k!=="asleep");
+  if(T>npcHangT&&!dzPanicking()){ npcHangT=T+20; const res=cityGen(me.scene).filter(n=>n.life&&n.here&&!n.goal&&!n.sit&&n.act&&n.act.mode!=="seat"&&n.act.a!=="work"&&!((n.talkUntil||0)>T)&&moodOf(n).k!=="asleep");
     for(const a of res){ const f=res.find(b=>b!==a&&npcBondLv(npcBond(a,b))>=2&&Math.abs(a.x-b.x)>120&&Math.abs(a.x-b.x)<900); if(f&&Math.random()<.5){ a.goal={x:f.x+(a.x<f.x?-46:46),y:clamp(f.y+(Math.random()*16-8),LANE.top,LANE.bot)}; npcSay(a,`${f.name.split(" ")[0]}! Wait for me!`); break; } } } }
 function npcConverse(a,b){ npcConvoBusy=true; const A=a.name.split(" ")[0], B=b.name.split(" ")[0], lv=npcBondLv(npcBond(a,b)), nm=myName||"that runner"; const rA=relOf(npcKey(a)); const pick=x=>x[(Math.random()*x.length)|0];
   const others=LIFE_R.filter(x=>x!==a&&x!==b); const C=pick(others), Cn=C.name.split(" ")[0]; const s=thLive(); const sharedLike=(a.likes||[]).find(x=>(b.likes||[]).includes(x)); const actL=sharedLike&&LIFE_ACT[sharedLike]?LIFE_ACT[sharedLike].l:"grabbing noodles";
@@ -4689,7 +4694,7 @@ function stepInner(now){
   // peers smoothing
   for(const p of peers.values()){ const k=Math.min(1,dt*8); const ox=p.dx; p.dx+=(p.x-p.dx)*k; p.dy+=(p.y-p.dy)*k; p.moving=Math.abs(p.dx-ox)>.3; if(p.moving) p.phase+=dt*7; }
   // npcs
-  for(const n of (npcs[me.scene]||[])){ n.stop=!!(n.name&&Math.abs(me.x-n.x)<70&&Math.abs(me.y-n.y)<60); if(n.stop){ n.dir=me.x>=n.x?1:-1; continue; } if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; } }
+  for(const n of (npcs[me.scene]||[])){ if(dzPanicking()){ dzPanicMove(n,dt); continue; } else if((n.pn||n.pnHome)&&dzCalm(n,dt)) continue; n.stop=!!(n.name&&Math.abs(me.x-n.x)<70&&Math.abs(me.y-n.y)<60); if(n.stop){ n.dir=me.x>=n.x?1:-1; continue; } if(n.vx){ n.x+=n.vx*dt; if(n.x>n.max||n.x<n.min){ n.vx*=-1; } n.dir=n.vx>0?1:-1; n.phase=(n.phase||0)+dt*6; } }
   tickCustomers(); tickJobs(); tickCb(); tickBb(); tickDen(); tickClub(); tickVoid(); try{ tickRowIn(dt); }catch(e){}
   pushPresence(false);
   if(cv.height>4){ render(); screenFx(); }
@@ -4706,7 +4711,7 @@ function render(){
   if(target){ ctx.strokeStyle="rgba(56,232,255,.5)"; ctx.beginPath(); ctx.ellipse(target.x,target.y,10,3,0,0,7); ctx.stroke(); }
   // entities sorted by depth
   const ents=[];
-  for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:!!n.vx&&!n.stop,look:n.look,name:lifeName(n),say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit,emote:n.dance||n.danceUntil>T?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}});
+  for(const n of (npcs[me.scene]||[])) ents.push({x:n.x,y:n.y,o:{dir:n.dir,phase:n.phase||0,moving:n.pn?n.pn.mode==="run":!!n.vx&&!n.stop,look:n.look,name:lifeName(n),say:n.say&&T-n.say.t<4?{text:n.say.text,t:n.say.t}:null,fx:n.fx||null,dk:n.dk||null,sit:!!n.sit||!!(n.pn&&n.pn.mode==="cower"),emote:n.pn?dzPanicEmote(n):n.dance||n.danceUntil>T?{e:"dance",t:T}:(n.emote&&T-n.emote.t<3?n.emote:null)}});
   for(const p of peers.values()) if(p.s===me.scene&&(p.home||null)===curHomeKey()) ents.push({x:p.dx,y:p.dy,o:{dir:p.dir,phase:p.phase,moving:p.moving,look:p.look,role:roleO(p),dcc:dccSym(p.by),name:(zbPeer(p)?"🧟 ":"")+(p.staff?"★ ":"")+nameOf(p.by),lv:p.lv,zombie:zbPeer(p),say:p.say&&!isBlocked(p.by)?{text:p.say.text,t:T-(Date.now()-p.say.at)/1000}:null,emote:p.emote?{e:p.emote.e,it:p.emote.it,t:T-(Date.now()-p.emote.at)/1000}:null,fx:p.fx,dk:p.dk,sit:(p.s==="club"&&p.seat!=null)||((p.s==="home"||p.s==="vip"||p.s==="ascend")&&p.hs),hp:p.s==="void"?p.hp:null,block:p.blk,dead:p.dead,hurt:p.hurtT}});
   if(me.scene==="club") for(const c of patrons) ents.push({x:c.x,y:c.y,cust:c,o:{dir:c.dir,phase:c.phase,moving:c.moving,look:c.look,sit:c.sat,name:c.arrived&&!c.leaving?`Seat ${c.seat+1}`:"",say:c.arrived&&!c.leaving&&!c.served?{text:`${BY[c.want].n}, please`,t:T}:null,emote:c.useT&&T-c.useT<3?{e:"use",t:c.useT,it:c.want}:null,fx:(c.fxUntil||0)>Date.now()?TRIPS[c.want].fx:null}});
   if(me.scene==="den") denEnts(ents); if(me.scene==="rowin") rowInEnts(ents);
@@ -14892,7 +14897,22 @@ function dzAlert(st){ let a=$("#dzAlert"); if(a) a.remove(); const D=DZ[st.k];
   document.body.append(a); }
 function dzCheck(){ const st=dzOn(); if(st&&dzSeen!==st.id){ dzSeen=st.id; dzCraters=[]; dzAlert(st); chatLine(null,`${DZ[st.k].ic} NATURAL DISASTER: ${DZ[st.k].n}! ${DZ[st.k].d}`,"sys"); dzPanic(); try{ beep(70,1.2,"sawtooth",.05); }catch(e){} }
   if(!st){ const a=$("#dzAlert"); if(a) a.remove(); } }
-function dzPanic(){ const st=dzOn(); if(!st) return; try{ for(const R of lifeHere(me.scene)){ if(Math.random()<.7){ R.fleeUntil=T+4+Math.random()*4; R.fleeDir=Math.random()<.5?-1:1; } } const L=lifeHere(me.scene); const n=L[(Math.random()*L.length)|0]; if(n) npcSay(n,pickOf(DZ_SCARED[st.k])); }catch(e){} }
+// EVERY resident panics in terror while a disaster is on: sprinting and zig-zagging, flailing, cowering and shaking, screaming.
+// (Zombified residents and Silas, who stays eerily calm, are the exceptions.)
+const DZ_SCREAMS=["AAAAAAH!","We're all gonna die!","HELP! Somebody help!","Run! RUN!","Not today, not today!","I don't wanna die!","Where do we go?!","Mom?! MOM?!","Get out of the way!","This is the end!","Somebody DO something!","My apartment!!","Everybody run!","Oh no oh no oh no","I'm too young for this!","Hide! HIDE!"];
+function dzPanicking(){ try{ return !!dzOn(); }catch(e){ return false; } }
+function dzCanPanic(n){ if(!n||n.k==="bot") return false; try{ if(n.life&&n.ix===ZK_KILLER) return false; if(zbIsR(n)) return false; }catch(e){} return true; }
+function dzLine(){ const st=dzOn(); const own=st&&DZ_SCARED[st.k]; return own&&Math.random()<.45?pickOf(own):pickOf(DZ_SCREAMS); }
+function dzPanicMove(n,dt){ const W=(SCENES[me.scene]||{w:2000}).w; if(n.pnHome==null) n.pnHome={x:n.x,y:n.y}; const lo=n.life?(n.min||60):n.min!=null?Math.max(40,n.min-200):Math.max(40,n.pnHome.x-260), hi=n.life?(n.max||W-60):n.max!=null?Math.min(W-40,n.max+200):Math.min(W-40,n.pnHome.x+260);
+  let P=n.pn; if(!P||T>P.until){ const cower=P&&P.mode==="run"&&Math.random()<.35; P=n.pn={mode:cower?"cower":"run",until:T+(cower?1.4+Math.random()*1.8:1.6+Math.random()*2.6),dir:Math.random()<.5?-1:1,sp:115+Math.random()*55,vy:(Math.random()-.5)*40,bx:n.x}; }
+  n.sit=false; n.goal=null; n.pause=0; n.stop=false;
+  if(P.mode==="run"){ if(Math.random()<dt*.9) P.dir*=-1; let x=n.x+P.dir*P.sp*dt; if(x<lo||x>hi){ P.dir*=-1; x=clamp(x,lo,hi); } n.x=x; n.y=clamp(n.y+P.vy*dt,LANE.top,LANE.bot); if(n.y<=LANE.top||n.y>=LANE.bot) P.vy*=-1; n.dir=P.dir; n.phase=(n.phase||0)+dt*13; n.walking=true; P.bx=n.x; }
+  else { n.x=P.bx+(Math.random()-.5)*3; n.walking=false; n.dir=Math.random()<.02?-n.dir:n.dir; }
+  if(T>(n.pnSay||0)){ n.pnSay=T+4+Math.random()*7; if(Math.random()<.55) npcSay(n,dzLine()); } }
+// after the disaster: everyone settles down and heads back where they belong
+function dzCalm(n,dt){ if(!n.pn&&n.pnHome==null) return false; n.pn=null; if(n.life){ n.pnHome=null; if(n.spot&&!n.leaving) n.goal={x:n.spot.x,y:n.spot.y}; return false; } const h=n.pnHome; if(!h){ return false; } const dx=h.x-n.x; if(Math.abs(dx)<3||n.vx){ if(!n.vx){ n.x=h.x; n.y=h.y; } n.pnHome=null; return false; } n.x+=Math.sign(dx)*Math.min(Math.abs(dx),55*dt); n.dir=dx>0?1:-1; n.phase=(n.phase||0)+dt*6; return true; }
+function dzPanicEmote(n){ return n&&n.pn?{e:n.pn.mode==="cower"?"cower":"panic",t:T}:null; }
+function dzPanic(){ const st=dzOn(); if(!st) return; try{ const L=cityGen(me.scene).concat(npcs[me.scene]||[]).filter(dzCanPanic); L.sort(()=>Math.random()-.5).slice(0,3).forEach((n,i)=>setTimeout(()=>{ if(dzOn()) npcSay(n,dzLine()); },i*500)); }catch(e){} }
 setInterval(()=>{ try{ dzCheck(); if(dzOn()&&Math.random()<.35) dzPanic(); }catch(e){} },6000);
 setInterval(()=>{ try{ if(dzState&&Date.now()>=dzState.until&&Date.now()<dzState.until+2000) chatLine(null,`${DZ[dzState.k].ic} The ${DZ[dzState.k].n.toLowerCase()} is over. Search the rubble outside for anything valuable.`,"sys"); }catch(e){} },1000);
 function dzSpeed(){ const st=dzOn(); if(st&&st.k==="zombie") return zbMe()?.8:1; if(!st||!WX_OUT.includes(me.scene)) return 1; return {flood:.6,freeze:.7,toxic:.85,tsunami:.8}[st.k]||1; }
