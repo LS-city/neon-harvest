@@ -58,6 +58,8 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
 .key b{font-family:Orbitron,sans-serif;font-size:15px}
 .key small{font-size:10px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .key.hit{background:var(--c);color:#0b0221;box-shadow:0 0 20px var(--c)}
+.key.armed{outline:2px solid var(--c);outline-offset:2px}
+#beatDots{display:inline-flex;gap:4px;align-items:center}#beatDots i{width:9px;height:9px;background:#2a2140;display:block}#beatDots i.on{background:var(--acc,#ff2e88);box-shadow:0 0 8px var(--acc,#ff2e88)}#beatDots i.one.on{background:#fff}
 .legend{display:flex;gap:14px;justify-content:center;margin-top:8px;flex-wrap:wrap}
 .legend span{font-size:12px;display:flex;align-items:center;gap:6px}
 .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -146,6 +148,9 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
         <select id="bars"><option value="1">1 bar</option><option value="2" selected>2 bars</option><option value="4">4 bars</option></select>
         <button id="quant" class="on" title="Snaps your loop hits to the beat">SNAP</button>
         <button id="metro" class="on">CLICK</button>
+        <button id="syncBtn" class="on" title="Every key waits for the next beat slot, so everything you play locks together">SYNC</button>
+        <button id="flowBtn" class="on" title="What you play echoes back in time for the next few bars, softer each time, so the beat builds as you go">FLOW</button>
+        <span class="t" id="beatDots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       </div>
       <div class="row">
         <span class="t">Video</span>
@@ -164,7 +169,7 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
       <span><i style="background:#00f0ff"></i>Q–P Chords</span>
       <span><i style="background:#ff2e88"></i>A–L Drums</span>
       <span><i style="background:#ff8a3d"></i>Z–M Bass</span>
-      <span class="small">Space = loop play/stop · Enter = loop rec · Backspace = undo layer</span>
+      <span class="small">Space = loop play/stop · Enter = loop rec · Backspace = undo layer · SYNC locks every key to the beat · FLOW echoes what you play so the beat builds</span>
     </div>
   </div>
 </div>
@@ -259,7 +264,8 @@ function osc(type,f,t,dur){const o=ctx.createOscillator();o.type=type;o.frequenc
 function filt(type,f,q=1){const b=ctx.createBiquadFilter();b.type=type;b.frequency.value=f;b.Q.value=q;return b;}
 const curves={};function dist(k){if(!curves[k]){const n=2048,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i*2/n-1;c[i]=(1+k)*x/(1+k*Math.abs(x));}curves[k]=c;}const w=ctx.createWaveShaper();w.curve=curves[k];w.oversample='2x';return w;}
 const mtof=m=>440*Math.pow(2,(m-69)/12);
-function out(node,{dly=0,verb=0}={}){node.connect(master);if(dly){const s=G();s.gain.value=dly;node.connect(s);s.connect(delaySend);}if(verb){const s=G();s.gain.value=verb;node.connect(s);s.connect(verbSend);}}
+let bus=null,busV=1;
+function out(node,{dly=0,verb=0}={}){node.connect(bus||master);if(dly){const s=G();s.gain.value=dly*busV;node.connect(s);s.connect(delaySend);}if(verb){const s=G();s.gain.value=verb*busV;node.connect(s);s.connect(verbSend);}}
 
 const DRUM_P={
   synthwave:{kick:[160,42,.5,0],snare:[1200,200,.22,.25],hat:[7500,.05],tom:1,verb:.25},
@@ -307,31 +313,42 @@ function playLead(m,t){
     const o=osc('sawtooth',mtof(m),t,1);vg.connect(o.detune);o.connect(d);d.connect(f);f.connect(gn);out(gn,{verb:.3,dly:.15});}
   else{const o=osc('triangle',mtof(m),t,1),o2=osc('sine',mtof(m)*2,t,1),gn=G(),g2=G();g2.gain.value=.2;env(gn,t,.3,.9,.03);const v=osc('sine',5,t,1),vg=G();vg.gain.value=5;v.connect(vg);vg.connect(o.detune);o.connect(gn);o2.connect(g2);g2.connect(gn);out(gn,{verb:.5,dly:.2});}
 }
-function sound(k,t){const m=KEYMAP[k],g=GENRES[genre];
+function sound(k,t,vel=1){const m=KEYMAP[k],g=GENRES[genre];
+  if(vel<.999){bus=G();bus.gain.value=vel;bus.connect(master);busV=vel;}
+  try{
   if(m.type==='drum')playDrum(DRUMS[m.i],t);
   else if(m.type==='bass')playBass(g.root-24+semi(m.i),t);
   else if(m.type==='chord')playChord(chordNotes(m.i),t);
   else playLead(g.root+12+semi(m.i),t);
-  vq.push({t,k});}
+  }finally{bus=null;busV=1;}
+  vq.push({t,k,vel});}
 function click(t,accent){const o=osc('square',accent?1800:1200,t,.03),gn=G();env(gn,t,.12,.03);o.connect(gn);gn.connect(ctx.destination);}
 
 /* ================= LOOPER ================= */
 let bpm=100,loop=[],layer=0,loopOn=false,loopRec=false,t0=0,schedTo=0,timer=null,quant=true,metro=true;
+let clockOn=false,sync=true,flow=true,flowHits=[];
+// how finely each kind of key snaps: drums + lead to 16ths, bass + chords to 8ths
+const SNAP_DIV={drum:4,lead:4,bass:2,chord:2};
+function clockStart(){initAudio();if(clockOn)return;clockOn=true;t0=ctx.currentTime+0.05;schedTo=t0;timer=setInterval(tick,25);}
+// the next grid slot for a key; a press up to 45 ms late still counts as on time and plays right away
+function slotFor(k,now){const div=SNAP_DIV[KEYMAP[k].type]||4,step=spb()/div,n=Math.ceil((now-t0-0.045)/step);return Math.max(now,t0+n*step);}
 const spb=()=>60/bpm,loopBeats=()=>+document.getElementById('bars').value*4,loopLen=()=>loopBeats()*spb();
-function setBpm(v){const now=ctx?ctx.currentTime:0;if(loopOn){const cur=(now-t0)/spb();bpm=+v;t0=now-cur*spb();}else bpm=+v;
+function setBpm(v){const now=ctx?ctx.currentTime:0;if(clockOn){const cur=(now-t0)/spb();bpm=+v;t0=now-cur*spb();}else bpm=+v;
   document.getElementById('bpm').value=bpm;document.getElementById('bpmv').textContent=bpm;setDelay();}
 function tick(){
   const a=schedTo,b=ctx.currentTime+0.12,L=loopLen(),sp=spb();
   if(b<=a)return;
   const k0=Math.floor((a-t0)/L),k1=Math.floor((b-t0)/L);
   for(let k=k0;k<=k1;k++){const base=t0+k*L;
-    loop.forEach(e=>{if(e.skip===k)return;const at=base+e.beat*sp;if(at>=a&&at<b)sound(e.k,at);});
-    if(metro&&(loopRec||loop.length===0))for(let i=0;i<loopBeats();i++){const at=base+i*sp;if(at>=a&&at<b)click(at,i%4===0);}
+    if(loopOn)loop.forEach(e=>{if(e.skip===k)return;const at=base+e.beat*sp;if(at>=a&&at<b)sound(e.k,at);});
+    if(flow)flowHits.forEach(e=>{if(k<=e.cyc||e.left<=0)return;const at=base+e.beat*sp;if(at>=a&&at<b&&e.last!==k){e.last=k;e.left--;sound(e.k,at,e.vel*Math.pow(.62,e.n-e.left));}});
+    if(loopOn&&metro&&(loopRec||loop.length===0))for(let i=0;i<loopBeats();i++){const at=base+i*sp;if(at>=a&&at<b)click(at,i%4===0);}
   }
+  flowHits=flowHits.filter(e=>e.left>0);
   schedTo=b;
 }
-function loopStart(){initAudio();if(loopOn)return;loopOn=true;t0=ctx.currentTime+0.05;schedTo=t0;timer=setInterval(tick,25);tick();updLoopUI();}
-function loopStop(){loopOn=false;loopRec=false;clearInterval(timer);updLoopUI();}
+function loopStart(){initAudio();if(loopOn)return;clockStart();loopOn=true;tick();updLoopUI();}
+function loopStop(){loopOn=false;loopRec=false;updLoopUI();}
 function toggleLoopRec(){initAudio();if(!loopRec){layer++;loopRec=true;if(!loopOn)loopStart();}else loopRec=false;updLoopUI();}
 function updLoopUI(){document.getElementById('loopRec').classList.toggle('recon',loopRec);
   const pb=document.getElementById('loopPlay');pb.textContent=loopOn?'■ STOP':'▶ PLAY';pb.classList.toggle('on',loopOn);
@@ -344,11 +361,15 @@ document.getElementById('loopClear').onclick=()=>{loop=[];updLoopUI();};
 document.getElementById('bars').onchange=()=>{if(loopOn){loopStop();loopStart();}};
 document.getElementById('quant').onclick=e=>{quant=!quant;e.currentTarget.classList.toggle('on',quant);};
 document.getElementById('metro').onclick=e=>{metro=!metro;e.currentTarget.classList.toggle('on',metro);};
+document.getElementById('syncBtn').onclick=e=>{sync=!sync;e.currentTarget.classList.toggle('on',sync);};
+document.getElementById('flowBtn').onclick=e=>{flow=!flow;if(!flow)flowHits=[];e.currentTarget.classList.toggle('on',flow);};
 
 /* ================= PRESS ================= */
 function press(k){
-  initAudio();const t=ctx.currentTime;sound(k,t);
-  const m=KEYMAP[k];m.el.classList.add('hit');setTimeout(()=>m.el.classList.remove('hit'),110);
+  initAudio();if(sync||flow)clockStart();const now=ctx.currentTime,t=sync?slotFor(k,now):now;sound(k,t);
+  const m=KEYMAP[k];m.el.classList.add('armed');setTimeout(()=>m.el.classList.remove('armed'),Math.max(60,(t-now)*1000+40));
+  if(flow&&!loopRec){const L=loopLen(),rel=t-t0,cyc=Math.floor(rel/L);let beat=Math.round(((rel-cyc*L)/spb())*4)/4;let c=cyc;if(beat>=loopBeats()){beat-=loopBeats();c++;}
+    flowHits=flowHits.filter(e=>!(e.k===k&&Math.abs(e.beat-beat)<.01));flowHits.push({k,beat,cyc:c,left:3,n:3,vel:1});if(flowHits.length>64)flowHits.shift();}
   if(loopRec&&loopOn){const L=loopLen(),rel=t-t0,cyc=Math.floor(rel/L);let beat=(rel-cyc*L)/spb();
     if(quant){beat=Math.round(beat*4)/4;}let skip=cyc;if(beat>=loopBeats()){beat-=loopBeats();skip=cyc+1;}
     loop.push({k,beat,layer,skip});updLoopUI();}
@@ -473,8 +494,8 @@ const LVL=[['HIGH',1],['MED',.6],['LOW',.3]];let lvl=0;
 const cap=(a,n)=>{if(a.length>n)a.splice(0,a.length-n);};
 const rnd=(a,b)=>a+Math.random()*(b-a);
 function bolt(x){const pts=[[x,0]];let y=0,xx=x;while(y<hz){y+=rnd(25,60);xx+=rnd(-45,45);pts.push([xx,Math.min(y,hz)]);}return pts;}
-const vq=[];
-function trigger(k){const m=KEYMAP[k];const P=GENRES[genre].pal;dancerHit(m);
+const vq=[];let lastBeatDot=-1;
+function trigger(k){const m=KEYMAP[k];const P=GENRES[genre].pal;dancerHit(m);m.el.classList.add('hit');clearTimeout(m.hitT);m.hitT=setTimeout(()=>m.el.classList.remove('hit'),110);
   hype=Math.min(1,hype+.045);
   if(m.type==='drum'){const d=DRUMS[m.i];
     if(d==='kick'){fx.shake=Math.max(fx.shake,1);}
@@ -505,6 +526,7 @@ function draw(now){
   const dt=Math.min((now-last)/1000,.05);last=now;const P=GENRES[genre].pal;
   vq.sort((a,b)=>a.t-b.t);
   if(ctx)while(vq.length&&vq[0].t<=ctx.currentTime)trigger(vq.shift().k);
+  if(ctx&&clockOn){const bi=((Math.floor((ctx.currentTime-t0)/spb())%4)+4)%4;if(bi!==lastBeatDot){lastBeatDot=bi;document.querySelectorAll('#beatDots i').forEach((d,i)=>{d.classList.toggle('on',i===bi);d.classList.toggle('one',i===0);});}}
   if(vq.length>400)vq.length=0;
   scroll=(scroll+dt*(bpm/60)*.5*(1+hype*1.5))%1;
   const full=view==='visuals';
