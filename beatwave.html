@@ -59,6 +59,7 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
 .key small{font-size:10px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .key.hit{background:var(--c);color:#0b0221;box-shadow:0 0 20px var(--c)}
 .key.armed{outline:2px solid var(--c);outline-offset:2px}
+#progChip{font-size:11px;letter-spacing:.06em;color:#9a8cc0}#progChip b{color:var(--acc,#ff2e88);text-shadow:0 0 8px var(--acc,#ff2e88)}
 #beatDots{display:inline-flex;gap:4px;align-items:center}#beatDots i{width:9px;height:9px;background:#2a2140;display:block}#beatDots i.on{background:var(--acc,#ff2e88);box-shadow:0 0 8px var(--acc,#ff2e88)}#beatDots i.one.on{background:#fff}
 .legend{display:flex;gap:14px;justify-content:center;margin-top:8px;flex-wrap:wrap}
 .legend span{font-size:12px;display:flex;align-items:center;gap:6px}
@@ -148,9 +149,10 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
         <select id="bars"><option value="1">1 bar</option><option value="2" selected>2 bars</option><option value="4">4 bars</option></select>
         <button id="quant" class="on" title="Snaps your loop hits to the beat">SNAP</button>
         <button id="metro" class="on">CLICK</button>
+        <button id="magicBtn" class="on" title="Everything you type fits the music: notes follow the chords and a soft groove plays under you">✨ MAGIC</button>
         <button id="syncBtn" class="on" title="Every key waits for the next beat slot, so everything you play locks together">SYNC</button>
         <button id="flowBtn" class="on" title="What you play echoes back in time for the next few bars, softer each time, so the beat builds as you go">FLOW</button>
-        <span class="t" id="beatDots" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="t" id="beatDots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="t" id="progChip"></span>
       </div>
       <div class="row">
         <span class="t">Video</span>
@@ -169,7 +171,7 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
       <span><i style="background:#00f0ff"></i>Q–P Chords</span>
       <span><i style="background:#ff2e88"></i>A–L Drums</span>
       <span><i style="background:#ff8a3d"></i>Z–M Bass</span>
-      <span class="small">Space = loop play/stop · Enter = loop rec · Backspace = undo layer · SYNC locks every key to the beat · FLOW echoes what you play so the beat builds</span>
+      <span class="small">Space = loop play/stop · Enter = loop rec · Backspace = undo layer · ✨ MAGIC makes everything you type fit the music · SYNC locks keys to the beat · FLOW echoes what you play</span>
     </div>
   </div>
 </div>
@@ -218,7 +220,7 @@ function chordNotes(d){const g=GENRES[genre];const r=g.root+semi(d);
 function chordName(d){const g=GENRES[genre];const r=g.root+semi(d);const nm=NOTE[r%12];if(genre==='rock')return nm+'5';
   const t3=semi(d+2)-semi(d),t5=semi(d+4)-semi(d),t7=semi(d+6)-semi(d);
   let q=t5===6?'dim':(t3===3?'m':'');if(genre==='rnb'){q=t5===6?'m7b5':(t3===3?'m7':(t7===11?'maj7':'7'));}return nm+q;}
-function label(m){if(m.type==='drum'){const d=DRUMS[m.i];return d==='perc'?PERC_NAME[genre]:DRUM_LABEL[d];}
+function label(m){if(magic&&m.type!=='drum')return m.type==='lead'?'MELODY '+(m.i+1):m.type==='chord'?'CHORD ✨':'BASS ✨';if(m.type==='drum'){const d=DRUMS[m.i];return d==='perc'?PERC_NAME[genre]:DRUM_LABEL[d];}
   if(m.type==='chord')return chordName(m.i);
   if(m.type==='lead'){const n=GENRES[genre].root+12+semi(m.i);return 'LEAD '+NOTE[n%12];}
   const n=GENRES[genre].root-24+semi(m.i);return 'BASS '+NOTE[n%12];}
@@ -316,7 +318,11 @@ function playLead(m,t){
 function sound(k,t,vel=1){const m=KEYMAP[k],g=GENRES[genre];
   if(vel<.999){bus=G();bus.gain.value=vel;bus.connect(master);busV=vel;}
   try{
-  if(m.type==='drum')playDrum(DRUMS[m.i],t);
+  if(magicOn()&&m.type!=='drum'){const d=degAt(t);
+    if(m.type==='bass')playBass(g.root-24+semi(d+BASS_OFF[m.i%BASS_OFF.length]),t);
+    else if(m.type==='chord'){let n=chordNotes(d);const inv=m.i%3;for(let j=0;j<inv;j++)n=n.slice(1).concat(n[0]+12);if(m.i>=6)n=n.map(x=>x+12);playChord(n,t);}
+    else playLead(g.root+12+semi(d+LEAD_OFF[m.i%LEAD_OFF.length]),t);}
+  else if(m.type==='drum')playDrum(DRUMS[m.i],t);
   else if(m.type==='bass')playBass(g.root-24+semi(m.i),t);
   else if(m.type==='chord')playChord(chordNotes(m.i),t);
   else playLead(g.root+12+semi(m.i),t);
@@ -329,6 +335,19 @@ let bpm=100,loop=[],layer=0,loopOn=false,loopRec=false,t0=0,schedTo=0,timer=null
 let clockOn=false,sync=true,flow=true,flowHits=[];
 // how finely each kind of key snaps: drums + lead to 16ths, bass + chords to 8ths
 const SNAP_DIV={drum:4,lead:4,bass:2,chord:2};
+/* ================= MAGIC: whatever you type fits =================
+   The music walks through a chord progression for the genre (one chord per bar). Every key is mapped to notes
+   of the chord playing at that moment: lead keys play chord tones rising across the keyboard, chord keys play
+   that chord in different voicings, bass keys play its root/fifth/octave. A soft groove plays under you while you type. */
+let magic=true,lastPressT=-99,slotUse={};
+const PROG={synthwave:[0,5,2,6],techno:[0,0,5,6],rock:[0,6,5,6],rnb:[1,4,0,5]};
+const LEAD_OFF=[0,2,4,7,9,11,14,16,18,21], BASS_OFF=[0,4,7,0,4,2,7];
+const GROOVE={synthwave:{kick:[0,8],snare:[4,12],hat:[2,6,10,14]},techno:{kick:[0,4,8,12],clap:[4,12],hat:[2,6,10,14]},rock:{kick:[0,7,8],snare:[4,12],hat:[0,2,4,6,8,10,12,14]},rnb:{kick:[0,10],snare:[4,12],hat:[0,2,4,6,8,10,12,14]}};
+function degAt(t){const p=PROG[genre]||PROG.synthwave;const bar=Math.floor((t-t0+1e-4)/(spb()*4));return p[((bar%p.length)+p.length)%p.length];}
+function magicOn(){return magic&&clockOn;}
+// how loud the backing groove is right now (fades out after you stop typing)
+function grooveVel(t){const idle=t-lastPressT;return idle<8?1:idle<12?1-(idle-8)/4:0;}
+function chordNameAt(d){return chordName(d);}
 function clockStart(){initAudio();if(clockOn)return;clockOn=true;t0=ctx.currentTime+0.05;schedTo=t0;timer=setInterval(tick,25);}
 // the next grid slot for a key; a press up to 45 ms late still counts as on time and plays right away
 function slotFor(k,now){const div=SNAP_DIV[KEYMAP[k].type]||4,step=spb()/div,n=Math.ceil((now-t0-0.045)/step);return Math.max(now,t0+n*step);}
@@ -345,6 +364,13 @@ function tick(){
     if(loopOn&&metro&&(loopRec||loop.length===0))for(let i=0;i<loopBeats();i++){const at=base+i*sp;if(at>=a&&at<b)click(at,i%4===0);}
   }
   flowHits=flowHits.filter(e=>e.left>0);
+  if(magic&&clockOn){const st=sp/4,G0=GROOVE[genre]||GROOVE.synthwave,g=GENRES[genre];let n=Math.ceil((a-t0)/st);
+    for(let at=t0+n*st;at<b;at=t0+(++n)*st){const v=grooveVel(at);if(v<=0)continue;const i=((n%16)+16)%16,d=degAt(at);
+      bus=G();bus.gain.value=v;bus.connect(master);busV=v;
+      try{for(const dr in G0)if(G0[dr].includes(i)){const vv={kick:.55,snare:.4,clap:.4,hat:.22}[dr]||.4;const bb=G();bb.gain.value=vv;bb.connect(bus);const keep=bus;bus=bb;busV=v*vv;playDrum(dr,at);bus=keep;busV=v;}
+        if(i%2===0&&genre!=='rnb'||genre==='rnb'&&(i===0||i===6||i===8)){const bb=G();bb.gain.value=.28;bb.connect(bus);const keep=bus;bus=bb;busV=v*.28;playBass(g.root-24+semi(d+(i===8&&genre!=='techno'?4:0)),at);bus=keep;busV=v;}
+        if(i===0){const bb=G();bb.gain.value=.3;bb.connect(bus);const keep=bus;bus=bb;busV=v*.3;playChord(chordNotes(d),at);bus=keep;busV=v;}
+      }finally{bus=null;busV=1;}}}
   schedTo=b;
 }
 function loopStart(){initAudio();if(loopOn)return;clockStart();loopOn=true;tick();updLoopUI();}
@@ -361,12 +387,15 @@ document.getElementById('loopClear').onclick=()=>{loop=[];updLoopUI();};
 document.getElementById('bars').onchange=()=>{if(loopOn){loopStop();loopStart();}};
 document.getElementById('quant').onclick=e=>{quant=!quant;e.currentTarget.classList.toggle('on',quant);};
 document.getElementById('metro').onclick=e=>{metro=!metro;e.currentTarget.classList.toggle('on',metro);};
+document.getElementById('magicBtn').onclick=e=>{magic=!magic;e.currentTarget.classList.toggle('on',magic);relabel();};
 document.getElementById('syncBtn').onclick=e=>{sync=!sync;e.currentTarget.classList.toggle('on',sync);};
 document.getElementById('flowBtn').onclick=e=>{flow=!flow;if(!flow)flowHits=[];e.currentTarget.classList.toggle('on',flow);};
 
 /* ================= PRESS ================= */
 function press(k){
-  initAudio();if(sync||flow)clockStart();const now=ctx.currentTime,t=sync?slotFor(k,now):now;sound(k,t);
+  initAudio();if(sync||flow||magic)clockStart();const now=ctx.currentTime;let t=sync?slotFor(k,now):now;lastPressT=now;
+  if(sync&&KEYMAP[k].type!=='drum'){const div=SNAP_DIV[KEYMAP[k].type]||4,step=spb()/div;let n=0;while(n<4&&(slotUse[t.toFixed(3)]||0)>=(KEYMAP[k].type==='lead'?1:2)){t+=step;n++;}const key=t.toFixed(3);slotUse[key]=(slotUse[key]||0)+1;if(Object.keys(slotUse).length>200)slotUse={};}
+  sound(k,t);
   const m=KEYMAP[k];m.el.classList.add('armed');setTimeout(()=>m.el.classList.remove('armed'),Math.max(60,(t-now)*1000+40));
   if(flow&&!loopRec){const L=loopLen(),rel=t-t0,cyc=Math.floor(rel/L);let beat=Math.round(((rel-cyc*L)/spb())*4)/4;let c=cyc;if(beat>=loopBeats()){beat-=loopBeats();c++;}
     flowHits=flowHits.filter(e=>!(e.k===k&&Math.abs(e.beat-beat)<.01));flowHits.push({k,beat,cyc:c,left:3,n:3,vel:1});if(flowHits.length>64)flowHits.shift();}
@@ -526,7 +555,7 @@ function draw(now){
   const dt=Math.min((now-last)/1000,.05);last=now;const P=GENRES[genre].pal;
   vq.sort((a,b)=>a.t-b.t);
   if(ctx)while(vq.length&&vq[0].t<=ctx.currentTime)trigger(vq.shift().k);
-  if(ctx&&clockOn){const bi=((Math.floor((ctx.currentTime-t0)/spb())%4)+4)%4;if(bi!==lastBeatDot){lastBeatDot=bi;document.querySelectorAll('#beatDots i').forEach((d,i)=>{d.classList.toggle('on',i===bi);d.classList.toggle('one',i===0);});}}
+  if(ctx&&clockOn){const bi=((Math.floor((ctx.currentTime-t0)/spb())%4)+4)%4;if(bi!==lastBeatDot){lastBeatDot=bi;document.querySelectorAll('#beatDots i').forEach((d,i)=>{d.classList.toggle('on',i===bi);d.classList.toggle('one',i===0);});if(magic){const p=PROG[genre]||PROG.synthwave,cur=degAt(ctx.currentTime);document.getElementById('progChip').innerHTML=p.map(x=>x===cur?'<b>'+chordName(x)+'</b>':chordName(x)).join(' → ');}else document.getElementById('progChip').textContent='';}}
   if(vq.length>400)vq.length=0;
   scroll=(scroll+dt*(bpm/60)*.5*(1+hype*1.5))%1;
   const full=view==='visuals';
