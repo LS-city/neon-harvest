@@ -109,16 +109,20 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
 
   <div class="panel">
     <div class="row">
-      <input type="text" id="link" placeholder="Paste your NEON HARVEST link (GitHub repo or GitHub Pages)" value="">
-      <button id="loadLink">SHOW ON SCREEN</button>
-      <button id="fxOver" class="on" title="Show the beat effects on top of the game">FX OVER GAME</button>
       <button id="fxLvl" title="How wild the effects get">FX: HIGH</button>
       <button id="viewToggle">VIEW: VISUALS</button>
-      <button id="dancerBtn">🕺 DANCER</button>
-      <button id="modeBtn" title="Where your keys go while you're playing the game">KEYS: GAME + BEATS</button>
+      <button id="dancerBtn" title="Change how your person looks">🕺 PERSON LOOK</button>
+      <span class="t" style="margin-left:6px">Grid</span><span class="row" id="gridBtns"></span>
+      <button id="gridAuto" class="on" title="The grid changes shape by itself every 8 bars and when you hit CRASH">AUTO</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="t">Car</span><select id="carStyle"><option value="coupe">80s Coupe</option><option value="super">Supercar</option><option value="muscle">Muscle car</option><option value="hover">Hover car</option><option value="none">No car</option></select>
+      <label class="t">Paint <input type="color" id="carCol" value="#ff2e88"></label>
+      <label class="t">Glow <input type="color" id="carGlow" value="#00f0ff"></label>
+      <span class="t" style="margin-left:6px">Person</span><select id="personPos"><option value="roof">Riding on the roof</option><option value="road">Dancing beside the car</option><option value="none">Hidden</option></select>
     </div>
     <div class="err" id="linkErr"></div>
-    <div class="small" id="gameHelp" style="display:none;margin-top:6px">Game screen blank? <a id="gameTab" href="#" target="_blank" rel="noopener" style="color:var(--cyan)">Open the game in its own tab ↗</a>. If it doesn't load there either, turn on GitHub Pages for the repo (Settings → Pages → Deploy from branch: main).</div>
+    <div style="display:none"><input type="text" id="link"><button id="loadLink"></button><button id="fxOver" class="on"></button><button id="modeBtn"></button><div id="gameHelp"><a id="gameTab" href="#"></a></div></div>
   </div>
 
   <div class="panel" id="dancerPanel" style="display:none">
@@ -146,7 +150,7 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
     <iframe id="game" title="Your game" allow="autoplay; fullscreen; gamepad" style="display:none"></iframe>
     <canvas id="viz" width="1280" height="720"></canvas>
     <div id="fsHud"><div class="fsg" id="fsGenre"></div><div class="fsc" id="fsChords"></div><div class="fsi"><b id="fsBar"></b></div><div class="fsh">TYPE ANYTHING · SPACE = SWELL · ← → GENRE · ESC = EXIT</div><button id="fsExit" type="button">✕ EXIT FLOW STATE</button></div>
-    <div class="focusbar" id="focusbar">THE GAME HAS YOUR KEYBOARD · CLICK HERE TO MAKE BEATS</div>
+    <div class="focusbar" id="focusbar" style="display:none"></div>
     <div class="status"><span class="chip hype" id="hypeChip">HYPE <i><b id="hypeBar"></b></i></span><span class="chip" id="modeChip" style="display:none"></span><span class="chip" id="loopChip">LOOP: EMPTY</span><span class="chip rec" id="recChip" style="display:none">● REC 0:00</span></div>
   </div>
 
@@ -169,10 +173,8 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
       <div class="row">
         <span class="t">Video</span>
         <select id="recMode">
-          <option value="game">Game only (no effects)</option>
-          <option value="screen">Game + effects</option>
           <option value="dancer">Dancer only</option>
-          <option value="visuals">Synthwave visuals only</option>
+          <option value="visuals" selected>Visuals (car, person, grid)</option>
         </select>
         <button id="recBtn">● RECORD VIDEO</button>
       </div>
@@ -574,9 +576,9 @@ frame.addEventListener('load',()=>{
   catch(_){sameSite=false;}
   updMode();});
 function setView(v){view=v;frame.style.visibility=v==='game'?'visible':'hidden';document.getElementById('viewToggle').textContent='VIEW: '+({game:'GAME',visuals:'VISUALS',dancer:'DANCER'})[v];
-  const dp=document.getElementById('dancerPanel');if(dp)dp.style.display=v==='dancer'?'block':'none';const db=document.getElementById('dancerBtn');if(db)db.classList.toggle('on',v==='dancer');}
-document.getElementById('viewToggle').onclick=()=>{const order=['visuals','dancer','game'];let i=order.indexOf(view);do{i=(i+1)%3;}while(order[i]==='game'&&!frame.src);setView(order[i]);};
-document.getElementById('dancerBtn').onclick=()=>setView(view==='dancer'?(frame.src?'game':'visuals'):'dancer');
+  }
+document.getElementById('viewToggle').onclick=()=>setView(view==='visuals'?'dancer':'visuals');
+document.getElementById('dancerBtn').onclick=()=>{const dp=document.getElementById('dancerPanel');dp.style.display=dp.style.display==='none'?'block':'none';document.getElementById('dancerBtn').classList.toggle('on',dp.style.display!=='none');};
 document.getElementById('fxOver').onclick=e=>{fxOver=!fxOver;e.currentTarget.classList.toggle('on',fxOver);};
 window.addEventListener('blur',()=>{setTimeout(()=>{if(!sameSite&&document.activeElement===frame)focusbar.style.display='block';},0);});
 focusbar.onclick=()=>{frame.blur();window.focus();focusbar.style.display='none';};
@@ -590,6 +592,7 @@ recBtn.onclick=async()=>{
   if(recorder){recorder.stop();return;}
   initAudio();if(!window.MediaRecorder){alertBox('Your browser can\'t record video. Try Chrome or Edge.');return;}
   const mode=document.getElementById('recMode').value;let stream;
+  if(mode!=='dancer')mode='visuals';
   if(mode==='visuals'||mode==='dancer'){setView(mode);S=1.5;cv.width=1920;cv.height=1080;stream=new MediaStream([...cv.captureStream(60).getVideoTracks(),...recDest.stream.getAudioTracks()]);}
   else{
     if(!frame.src){alertBox('Load your game first (SHOW ON SCREEN), then record.');return;}
@@ -671,9 +674,86 @@ function trigger(k){const m=KEYMAP[k];const P=GENRES[genre].pal;dancerHit(m);m.e
   else if(m.type==='bass')fx.bass=1;
   else if(m.type==='chord'){fx.hue=(fx.hue+35)%360;const n=12;for(let i=0;i<n;i++)lasers.push({a:Math.PI*(1.04+i/(n-1)*.92),life:1,c:m.i});}
   else comets.push({x:-40,y:hz*(.85-m.i*.075),life:1,c:m.i});
+  try{rideHit(m);}catch(_){}
 }
 let last=performance.now(),scroll=0;const wave=new Float32Array(2048);
 function hexA(h,a){const n=parseInt(h.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';}
+/* ================= THE RIDE: your car, your person, and a grid that transforms as you play ================= */
+const GRID_MODES=[['flat','FLAT'],['waves','WAVES'],['hills','HILLS'],['tunnel','TUNNEL'],['vortex','VORTEX'],['eq','EQUALIZER']];
+let ride={grid:'waves',auto:true,car:'coupe',col:'#ff2e88',glow:'#00f0ff',person:'roof'};
+try{Object.assign(ride,JSON.parse(localStorage.getItem('bw_ride')||'{}'));}catch(_){}
+const gW={flat:0,waves:0,hills:0,tunnel:0,vortex:0,eq:0};gW[ride.grid]=1;
+let gRip=[],steer=0,steerT=0,brake=0,flame=0,gBar=-1,gT=0,lastAuto=0;
+function saveRide(){try{localStorage.setItem('bw_ride',JSON.stringify(ride));}catch(_){}}
+function setGrid(m){ride.grid=m;saveRide();document.querySelectorAll('#gridBtns button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));}
+function nextGrid(){const ids=GRID_MODES.map(x=>x[0]);let i=ids.indexOf(ride.grid);setGrid(ids[(i+1+Math.floor(Math.random()*(ids.length-2)))%ids.length]);pops.push({t:GRID_MODES.find(x=>x[0]===ride.grid)[1]+'!',life:.9,y:H*.3});}
+{const gb=document.getElementById('gridBtns');GRID_MODES.forEach(([id,n])=>{const b=document.createElement('button');b.textContent=n;b.dataset.m=id;b.onclick=()=>{ride.auto=false;document.getElementById('gridAuto').classList.remove('on');setGrid(id);saveRide();};gb.appendChild(b);});setGrid(ride.grid);
+  const ga=document.getElementById('gridAuto');ga.classList.toggle('on',ride.auto);ga.onclick=()=>{ride.auto=!ride.auto;ga.classList.toggle('on',ride.auto);saveRide();};
+  const cs=document.getElementById('carStyle'),cc=document.getElementById('carCol'),cg=document.getElementById('carGlow'),pp=document.getElementById('personPos');cs.value=ride.car;cc.value=ride.col;cg.value=ride.glow;pp.value=ride.person;
+  cs.onchange=()=>{ride.car=cs.value;saveRide();};cc.oninput=()=>{ride.col=cc.value;saveRide();};cg.oninput=()=>{ride.glow=cg.value;saveRide();};pp.onchange=()=>{ride.person=pp.value;saveRide();};}
+// how each key moves the ride
+function rideHit(m){if(m.type==='lead'){steerT=(m.i/9)*2-1;gRip.push({i:steerT*4,p:.86,t:0,a:.8});}
+  else if(m.type==='chord'){gRip.push({i:0,p:.25,t:0,a:1.2});}
+  else if(m.type==='bass'){flame=1;}
+  else if(m.type==='drum'){const d=DRUMS[m.i];if(d==='snare'||d==='clap')brake=1;if(d==='tomlo'||d==='tomhi')gRip.push({i:d==='tomlo'?-8:8,p:.6,t:0,a:1});
+    if(d==='crash'){gRip.push({i:0,p:.9,t:0,a:2});if(ride.auto)nextGrid();}}
+  if(gRip.length>12)gRip.shift();}
+let specS=new Float32Array(48);
+// a point of the 3D floor grid: column i (-16..16), depth p (0 horizon .. 1 bottom), bent by every grid mode that's mixed in
+function gpt(i,p,T){const f=p*p;let x=cx+i*W*(.011+.139*f),y=hz+(H-hz)*f,dx=0,dy=0;
+  if(gW.waves>.002)dy-=gW.waves*Math.sin(i*.55+p*10-T*4)*(26+fx.bass*40+hype*24)*f*2;
+  if(gW.hills>.002){const hh=(Math.sin(i*.33+(p*7-T*1.3))*.6+Math.sin(i*.17-1.3+(p*3.1-T*.6))*.8+1.2);dy-=gW.hills*hh*125*f*(1.25-p*.5);}
+  if(gW.tunnel>.002){const a=Math.abs(i)/9;dy-=gW.tunnel*Math.min(3,a*a)*H*.34*f;dx-=gW.tunnel*Math.sign(i)*Math.min(1,a)*W*.02*f;}
+  if(gW.vortex>.002){dx+=gW.vortex*Math.sin(p*6-T*2.4+i*.05)*W*.17*f;dy-=gW.vortex*(Math.cos(p*6-T*2.4)*55+Math.sin(i*.4+T*2)*25)*f;}
+  if(gW.eq>.002){const b=specS[Math.max(0,Math.min(47,Math.round((i+16)/32*47)))];dy-=gW.eq*(Math.sqrt(b)*H*.55+fx.kick*30)*f*(1.15-p*.6);}
+  for(const r of gRip){const d=Math.hypot((i-r.i)*.5,(p-r.p)*14);const w=d-r.t*14;if(w>-3&&w<1)dy-=Math.sin((w+3)/4*Math.PI)*r.a*26*f*(1-r.t/1.6);}
+  dy-=fx.kick*12*f;return[x+dx,y+dy];}
+function drawGrid3D(now,dt,P){const T=now/1000;gT=T;
+  for(const k in gW)gW[k]+=((k===ride.grid?1:0)-gW[k])*Math.min(1,dt*2.2);
+  gRip=gRip.filter(r=>(r.t+=dt)<1.6);
+  if(analyser&&window._fd){const fd=window._fd;for(let i=0;i<48;i++){const v=fd[Math.floor(Math.pow(i/48,1.6)*300)+2]/255;specS[i]+=(v-specS[i])*Math.min(1,dt*12);}}
+  if(ride.auto&&ctx&&clockOn){const bar=Math.floor((ctx.currentTime-t0)/(spb()*4));if(bar!==gBar){if(gBar>=0&&bar%8===0&&bar>0&&performance.now()-lastAuto>4000){lastAuto=performance.now();nextGrid();}gBar=bar;}}
+  const rows=[0.001];for(let k=0;k<15;k++){const p=(k+scroll)/15;if(p>.004)rows.push(p);}rows.push(1.06);
+  const cols=[];for(let i=-16;i<=16;i+=.5)cols.push(i);
+  const pts=rows.map(p=>cols.map(i=>gpt(i,p,T)));
+  g.save();g.lineJoin='round';const lineCol=hexA(P.grid,.5+fx.kick*.5);
+  for(let k=1;k<rows.length;k++){const A=pts[k-1],B=pts[k];
+    g.fillStyle=P.floor;g.beginPath();B.forEach((q,j)=>j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));for(let j=A.length-1;j>=0;j--)g.lineTo(A[j][0],A[j][1]);g.closePath();g.fill();
+    g.strokeStyle=lineCol;g.lineWidth=(1+fx.kick*1.5)*(.6+rows[k]*.9);g.shadowColor=P.grid;g.shadowBlur=GL*(5+fx.kick*14);g.globalAlpha=Math.min(1,rows[k]*2.4);
+    g.beginPath();B.forEach((q,j)=>j?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));for(let j=0;j<cols.length;j+=2){g.moveTo(A[j][0],A[j][1]);g.lineTo(B[j][0],B[j][1]);}g.stroke();}
+  g.restore();g.globalAlpha=1;g.shadowBlur=0;}
+function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+// rear view of your car, Outrun style
+function drawCar(x,y,s,P,now){const st=ride.car;if(st==='none')return null;const c=ride.col,gl=ride.glow,T=now/1000,wide=st==='super'?1.12:st==='muscle'?1.06:1,low=st==='super'?.86:1;
+  g.save();g.translate(x,y);g.rotate(-steer*.05);g.scale(s*wide,s);
+  const ug=g.createRadialGradient(0,4,8,0,4,200);ug.addColorStop(0,hexA(gl,.55+fx.kick*.35));ug.addColorStop(1,hexA(gl,0));g.fillStyle=ug;g.save();g.scale(1,.22);g.beginPath();g.arc(0,20,200,0,Math.PI*2);g.fill();g.restore();
+  if(st==='hover'){for(const sx of [-110,110]){const hg=g.createLinearGradient(0,-14,0,30);hg.addColorStop(0,hexA(gl,.9));hg.addColorStop(1,hexA(gl,0));g.fillStyle=hg;g.fillRect(sx-30,-12,60,34+fx.bass*16);}g.translate(0,-18-Math.sin(T*3)*4);}
+  else{g.fillStyle='#07060d';rr(-152,-40,46,42,6);g.fill();rr(106,-40,46,42,6);g.fill();g.fillStyle='#24203a';for(let k=0;k<4;k++){const yy=-36+((T*90+k*10)%40);g.fillRect(-148,yy,38,2);g.fillRect(110,yy,38,2);}}
+  const bg=g.createLinearGradient(0,-80*low,0,-12);bg.addColorStop(0,shade(c,.25));bg.addColorStop(.5,c);bg.addColorStop(1,shade(c,-.55));
+  g.fillStyle=bg;g.beginPath();g.moveTo(-162,-14);g.lineTo(162,-14);g.lineTo(158,-58*low);g.lineTo(140,-78*low);g.lineTo(-140,-78*low);g.lineTo(-158,-58*low);g.closePath();g.fill();
+  g.fillStyle=shade(c,-.7);g.fillRect(-150,-24,300,10);
+  const cab=st==='super'?.82:1;g.fillStyle=shade(c,-.25);g.beginPath();g.moveTo(-108*cab,-78*low);g.lineTo(108*cab,-78*low);g.lineTo(80*cab,(-128+(st==='muscle'?6:0))*low);g.lineTo(-80*cab,(-128+(st==='muscle'?6:0))*low);g.closePath();g.fill();
+  const wy0=(-122+(st==='muscle'?6:0))*low,wy1=-82*low;const wg=g.createLinearGradient(0,wy0,0,wy1);wg.addColorStop(0,'#1a1430');wg.addColorStop(1,'#05030c');g.fillStyle=wg;g.beginPath();g.moveTo(-96*cab,wy1);g.lineTo(96*cab,wy1);g.lineTo(74*cab,wy0);g.lineTo(-74*cab,wy0);g.closePath();g.fill();
+  g.fillStyle='rgba(255,255,255,.08)';g.beginPath();g.moveTo(-60*cab,wy0);g.lineTo(-30*cab,wy0);g.lineTo(-62*cab,wy1);g.lineTo(-90*cab,wy1);g.closePath();g.fill();
+  // the driver: a glowing silhouette with your person's glow color
+  g.fillStyle='#000';g.beginPath();g.arc(0,wy1-22*low,13,0,Math.PI*2);g.fill();g.fillRect(-20,wy1-10*low,40,10*low);g.fillStyle=look.glow||gl;g.fillRect(-10,wy1-26*low,20,3);
+  const tl=.65+brake*.35+fx.kick*.2;g.shadowColor='#ff2a4a';g.shadowBlur=GL*(14+brake*22);g.fillStyle='rgba(255,'+Math.round(42+brake*60)+',74,'+tl+')';
+  if(st==='muscle'){for(const sx of [-1,1]){g.beginPath();g.arc(sx*118,-50*low,13,0,Math.PI*2);g.fill();g.beginPath();g.arc(sx*86,-50*low,13,0,Math.PI*2);g.fill();}}else{g.fillRect(-150,-60*low,300,9);g.fillStyle='rgba(255,220,230,'+tl*.6+')';g.fillRect(-146,-58*low,60,3);g.fillRect(86,-58*low,60,3);}
+  g.shadowBlur=0;g.fillStyle=gl;g.shadowColor=gl;g.shadowBlur=GL*12;g.fillRect(-120,-70*low,240,2);g.shadowBlur=0;
+  g.fillStyle='#e9e6f2';rr(-38,-44*low,76,20,3);g.fill();g.fillStyle='#120a20';g.font='700 13px Orbitron,sans-serif';g.textAlign='center';g.fillText((look.name||'BEATWAVE').slice(0,8),0,-29*low);g.textAlign='left';
+  if(st==='super'||st==='muscle'){g.fillStyle=shade(c,-.4);g.fillRect(-150,(-98)*low,300,8);g.fillRect(-130,-92*low,8,16);g.fillRect(122,-92*low,8,16);}
+  if(st!=='hover'){for(const sx of [-70,70]){g.fillStyle='#3a3550';g.beginPath();g.arc(sx,-16,8,0,Math.PI*2);g.fill();if(flame>.05){const fl=flame*(28+Math.random()*16);const fg=g.createLinearGradient(0,-16,0,-16+fl);fg.addColorStop(0,'rgba(255,255,255,'+flame+')');fg.addColorStop(.3,hexA(gl,flame));fg.addColorStop(1,'rgba(255,90,40,0)');g.fillStyle=fg;g.beginPath();g.moveTo(sx-7,-14);g.lineTo(sx+7,-14);g.lineTo(sx+Math.random()*4-2,-14+fl);g.closePath();g.fill();}}}
+  g.restore();return -128*low*s;}
+function drawRide(now,dt,P){steer+=(steerT-steer)*Math.min(1,dt*3);steerT*=Math.pow(.6,dt);brake=Math.max(0,brake-dt*3);flame=Math.max(0,flame-dt*3.5);
+  const iC=steer*4.5;const[gx,gy]=gpt(iC,.9,gT);const s=.82;const bob=fx.kick*7+Math.sin(now/180)*1.2;
+  if(hype>.35){g.strokeStyle=hexA(ride.glow,(hype-.35)*.9);g.lineWidth=2;for(let k=0;k<6;k++){const yy=H*.7+((now/3+k*90)%(H*.3));g.beginPath();g.moveTo(k%2?W*.08:W*.92,yy);g.lineTo(k%2?W*.02:W*.98,yy+40);g.stroke();}}
+  let roofY=null;if(ride.person==='road'){const q=gpt(steer*4.5-2.6,.86,gT);drawPerson(now,dt,q[0],q[1],2.6);}
+  const ry=drawCar(gx,gy-bob,s,P,now);if(ry!=null)roofY=gy-bob+ry;
+  if(ride.person==='roof'){if(roofY!=null)drawPerson(now,dt,gx,roofY+6,2.2);else drawPerson(now,dt,gx,gy,2.6);}}
+// your person (the same pixel dancer you customize), dancing in the world
+function drawPerson(now,dt,x,y,Z){const act=loopOn||clockOn||(performance.now()-lastHit<2500);const ph=(clockOn&&ctx)?(ctx.currentTime-t0)/spb():now/1000*bpm/60;
+  if(view!=='dancer')updPose(dt,ph,act);const foot=drawFigure();const air=Math.max(0,pose.air.cur);
+  g.save();g.imageSmoothingEnabled=false;g.shadowColor=look.glow;g.shadowBlur=GL*(8+fx.kick*12);g.translate(x,0);g.scale(Math.abs(sxv)<.15?.15*Math.sign(sxv||1):sxv,1);g.drawImage(spr,-40*Z,y-(foot+air)*Z,80*Z,80*Z);g.restore();g.imageSmoothingEnabled=true;g.shadowBlur=0;}
 function draw(now){
   const dt=Math.min((now-last)/1000,.05);last=now;const P=GENRES[genre].pal;
   vq.sort((a,b)=>a.t-b.t);
@@ -704,15 +784,13 @@ function draw(now){
     beams=beams.filter(b=>(b.life-=dt*2)>0);beams.forEach(b=>{const bg=g.createLinearGradient(0,0,0,hz);bg.addColorStop(0,hexA(P.acc,0));bg.addColorStop(1,hexA(P.acc,b.life*.7));g.fillStyle=bg;g.fillRect(b.x-8*b.life-2,0,16*b.life+4,hz);});
     lasers=lasers.filter(l=>(l.life-=dt*1.3)>0);lasers.forEach(l=>{g.strokeStyle='hsla('+((190+fx.hue+l.c*12)%360)+',100%,62%,'+l.life*.85+')';g.lineWidth=2.5;g.shadowColor=g.strokeStyle;g.shadowBlur=GL*(14);g.beginPath();g.moveTo(cx,hz);const len=W*(1.25-l.life*.55);g.lineTo(cx+Math.cos(l.a)*len,hz+Math.sin(l.a)*len);g.stroke();});g.shadowBlur=GL*(0);
   }
-  if(full){g.fillStyle=P.floor;g.fillRect(0,hz,W,H-hz);g.save();g.strokeStyle=hexA(P.grid,.45+fx.kick*.55);g.lineWidth=1+fx.kick*1.5;g.shadowColor=P.grid;g.shadowBlur=GL*(6+fx.kick*16);
-    for(let i=-16;i<=16;i++){g.beginPath();g.moveTo(cx+i*W*.011,hz);g.lineTo(cx+i*W*.15,H);g.stroke();}
-    const n=14;for(let k=0;k<n;k++){const p=(k+scroll)/n,y=hz+(H-hz)*p*p;g.globalAlpha=Math.min(1,p*2.2);g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}g.restore();g.globalAlpha=1;
-    g.fillStyle=hexA(P.grid,.3+fx.kick*.45);g.fillRect(0,hz-1,W,2);}
+  if(full){g.fillStyle=P.floor;g.fillRect(0,hz,W,H-hz);g.fillStyle=hexA(P.grid,.3+fx.kick*.45);g.fillRect(0,hz-1,W,2);drawGrid3D(now,dt,P);}
   if(full||fxOver){
     if(analyser)analyser.getFloatTimeDomainData(wave);else wave.fill(0);
     const amp=H*.17*(.6+fx.bass*.9),base=full?hz-H*.06:H*.86;
     g.strokeStyle=P.wave;g.lineWidth=3;g.shadowColor=P.wave;g.shadowBlur=GL*(16+fx.bass*22);g.beginPath();for(let i=0;i<640;i++){const x=i/639*W,y=base-wave[i*3]*amp;i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();
     if(full){g.strokeStyle=hexA(P.wave,.3);g.lineWidth=2;g.shadowBlur=GL*(4);g.beginPath();for(let i=0;i<640;i++){const x=i/639*W,y=hz+H*.1+wave[i*3]*amp*.5;i?g.lineTo(x,y):g.moveTo(x,y);}g.stroke();}g.shadowBlur=GL*(0);
+    if(full)drawRide(now,dt,P);
     comets=comets.filter(c=>(c.life-=dt*.9)>0);comets.forEach(c=>{c.x+=dt*W*1.1;const col='hsla('+((110+c.c*25)%360)+',100%,65%,';const tg=g.createLinearGradient(c.x-180,0,c.x,0);tg.addColorStop(0,col+'0)');tg.addColorStop(1,col+c.life+')');
       g.strokeStyle=tg;g.lineWidth=4;g.shadowColor=col+'1)';g.shadowBlur=GL*(18);g.beginPath();g.moveTo(c.x-180,c.y+10);g.lineTo(c.x,c.y);g.stroke();g.fillStyle=col+c.life+')';g.beginPath();g.arc(c.x,c.y,5,0,Math.PI*2);g.fill();});g.shadowBlur=GL*(0);
     sweeps=sweeps.filter(s=>(s.life-=dt*1.8)>0);sweeps.forEach(s=>{s.y-=dt*H*1.4;g.strokeStyle=hexA(P.acc,s.life);g.lineWidth=3;g.shadowColor=P.acc;g.shadowBlur=GL*(18);g.beginPath();g.moveTo(0,s.y);g.lineTo(W,s.y);g.stroke();});g.shadowBlur=GL*(0);
@@ -955,7 +1033,7 @@ document.getElementById('modeBtn').onclick=cycleMode;
 const stageEl=document.getElementById('stage'),hypeBar=document.getElementById('hypeBar'),hypeChip=document.getElementById('hypeChip');
 document.getElementById('fxLvl').onclick=e=>{lvl=(lvl+1)%3;fxMul=LVL[lvl][1];e.currentTarget.textContent='FX: '+LVL[lvl][0];};
 setGenre('synthwave');setView('visuals');updMode();
-if(onSite)document.getElementById('loadLink').click();updLoopUI();requestAnimationFrame(draw);
+updLoopUI();requestAnimationFrame(draw);
 </script>
 </body>
 </html>
