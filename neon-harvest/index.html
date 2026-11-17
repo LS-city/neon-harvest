@@ -5194,7 +5194,7 @@ const HELP=[
     ["Also inside",["Lift weights for a Void buff, grab a canteen tray to heal, and buy snacks and phone cards at the commissary.","Visitors can see who's locked up and use the hoops, library, chapel and commissary too."]]],rel:["crime"]},
   {id:"outskirts",icon:"⛺",n:"The Outskirts",sub:"Open-world wasteland: salvage and build a hideout",where:"Metro → The Outskirts → walk through the Gate",steps:["Walk anywhere: WASD/arrows on PC, or tap where you want to go. Tap things to use them. M opens the map.","Salvage heaps, car wrecks, crates and server racks for scrap and parts. Spots refill after 8 to 16 minutes. The far side has the best loot.","What you find goes in your pack. Stash it at the gate or at a Stash crate in your hideout. Halvorsen drones patrol the far side: if one zaps you, you drop half your pack. Sprint (Shift) to escape.","Claim a free plot for ₵500 and press 🔨 Build. Place floors, walls, doors, furniture, neon, signs, graffiti and posters with your own pictures, in any color.","Tech costs parts: Generators power Mining Rigs (chips), Server Racks grow your pack, Turrets fight raiders, the Antenna shows patrols. Raiders come for hideouts with tech while you're home: tap them to zap them."]},
   {id:"anon",icon:"◆",n:"Project ANON",sub:"Real-time strategy vs Halvorsen Corp",where:"Metro → Project ANON → War Room",steps:["Walk into the War Room and pick an Operation or a Skirmish (Easy, Normal or Hard).","Drones mine glowing data crystals and bring the data to your Core. Data pays for everything. Power (from Cores and Power Relays) is your unit cap.","Select a drone to build: Node Forge (Runners, Glitchers, Hackers), Code Lab (upgrades), Mech Bay (Mechs), Firewall Turrets and more Relays.","PC: left-click or drag to select, right-click to move, attack, mine or set a rally point. A = attack-move. Phones: tap to select, tap the ground to move, use ▭ Box and ⚔ Army.","Destroy every Halvorsen building to win. Operations pay a one-time bonus. Skirmish wins pay credits (first 3 a day)."]},
-  {id:"arena",icon:"🏟",n:"Neon Arena",sub:"Robot fights: robots, cards and ranks",where:"Metro → Neon Arena",steps:["Robot Shop: claim a free Rookie Frame, then buy Humanoids (tough), Aliens (strongest cards) or Cyber Beasts (fastest attacks). Humanoid beats Beast, Beast beats Alien, Alien beats Humanoid.","Card Forge: melt items you own into cards. PC parts and weapons make Power cards, food, drinks, club items and hacks make Effect cards, decor and accessories make Passive cards. The item's rarity sets the tier (I to IV). Fuse 3 of the same card into the next tier.","Robot Bay: slot cards into your robot, repair damage after fights, tune it up to Lv 10 with credits and a PC part, paint and rename it.","Fights: your robot attacks on its own. Tap a card (or press 1 to 5) when it lights up. 🤖 Auto plays cards for you. 75 seconds, most HP left wins.","Ranked fights cost a small fee and pay credits, chips, rank points and sometimes a rare part. Ranks: Bronze, Silver, Gold, Platinum, Diamond, Neon. The weekly tournament is 3 fights in a row for a trophy and a big prize. A new season starts every month."]},
+  {id:"arena",icon:"🏟",n:"Neon Arena",sub:"TIX fights: TIX, cards and ranks",where:"Metro → Neon Arena",steps:["TIX Shop: claim a free Scrapling, then buy kaiju TIX: Humanoids (Gorrak, Ironhorn, Colossus Prime: tough), Aliens (Jellyfang, Voltmoth, Kraxis: strongest cards) or Cyber Beasts (Scrapjaw, Lycan-X the cyber werewolf, Hydraxis the three-headed dragon: fastest attacks). Humanoid beats Beast, Beast beats Alien, Alien beats Humanoid.","Card Forge: melt items you own into cards. PC parts and weapons make Power cards, food, drinks, club items and hacks make Effect cards, decor and accessories make Passive cards. The item's rarity sets the tier (I to IV). Fuse 3 of the same card into the next tier.","TIX Bay: slot cards into your TIX, repair damage after fights, tune it up to Lv 10 with credits and a PC part, paint and rename it.","Fights: your TIX attacks on its own. Tap a card (or press 1 to 5) when it lights up. 🤖 Auto plays cards for you. 75 seconds, most HP left wins.","Ranked fights cost a small fee and pay credits, chips, rank points and sometimes a rare part. Ranks: Bronze, Silver, Gold, Platinum, Diamond, Neon. The weekly tournament is 3 fights in a row for a trophy and a big prize. A new season starts every month."]},
   {id:"cardisplay",icon:"🚗",n:"Cars & trucks",sub:"Buy and customize rides",where:"Metro → Harvest Homes → Neon Motors (far end)",steps:["Buy any of 15 hover cars and trucks at Neon Motors with credits.","Customize them in the resident garage next door: paint, decals, underglow, spoilers, light trails and a plate.","The old Car Display closed. If you owned a plot, your 500 chips were refunded."],secs:[
     ["Good to know",["Everyone walking by sees your rides. Release a plot to get half your chips back."]]]}]},
 
@@ -6735,7 +6735,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},hhomes:{n:"Harvest Homes",x:140,d:"High-tech apartment towers: your apartment, your neighbors, elevators to every floor"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},den:{n:"Gamers Den",x:140,d:"Gamer & anime bar: themed booths, Den menu, jukebox, event boards and THE VOID arcade cabinet"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},anon:{n:"Project ANON",x:140,d:"Real-time strategy war vs Halvorsen Corp: the War Room and the Ops Board"},arena:{n:"Neon Arena",x:220,d:"Robot fights: the Robot Shop, the Card Forge, the Robot Bay and ranked fights"},outskirts:{n:"The Outskirts",x:140,d:"Open-world wasteland past the city wall: salvage, build your own hideout"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},hhomes:{n:"Harvest Homes",x:140,d:"High-tech apartment towers: your apartment, your neighbors, elevators to every floor"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},den:{n:"Gamers Den",x:140,d:"Gamer & anime bar: themed booths, Den menu, jukebox, event boards and THE VOID arcade cabinet"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},anon:{n:"Project ANON",x:140,d:"Real-time strategy war vs Halvorsen Corp: the War Room and the Ops Board"},arena:{n:"Neon Arena",x:220,d:"TIX fights: the TIX Shop, the Card Forge, the TIX Bay and ranked fights"},outskirts:{n:"The Outskirts",x:140,d:"Open-world wasteland past the city wall: salvage, build your own hideout"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -6758,7 +6758,7 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"Car Display",d:"Dealership, garage and player car plots",s:"racers",x:()=>CD_DEAL[0]},
   {g:"Hot spots",n:"The Outskirts Gate",d:"Open world: salvage parts and build your hideout",s:"outskirts",x:()=>OWG.gate},
   {g:"Hot spots",n:"Project ANON War Room",d:"Real-time strategy: build a base and crush Halvorsen Corp",s:"anon",x:()=>ANH.war},
-  {g:"Hot spots",n:"Neon Arena",d:"Robot fights: buy a robot, forge cards, climb the ranks",s:"arena",x:()=>ARX.gate},
+  {g:"Hot spots",n:"Neon Arena",d:"TIX fights: buy a TIX, forge cards, climb the ranks",s:"arena",x:()=>ARX.gate},
   {g:"Hot spots",n:"Neon Arena · Card Forge",d:"Turn your items into fighting cards",s:"arena",x:()=>ARX.forge},
   {g:"Hot spots",n:"Neon Motors (Harvest Homes)",d:"Buy and customize your cars and trucks",s:"hhomes",x:()=>HH_GAR.deal},
   {g:"Hot spots",n:"MyDex Hub",d:"Open MyDex and forge items into badges",s:"dexhub",x:()=>DEX_X.term},
@@ -8181,24 +8181,24 @@ function drawAnonHub(t){ const W=SCENES.anon.w, X0=camX, X1=camX+VW, P=3, fr=Mat
   for(let x=Math.floor(X0/48)*48;x<X1;x+=48){ ctx.fillStyle=(x/48)%2?"#121528":"#101324"; ctx.fillRect(x,262,48,80); ctx.fillStyle="#1d2440"; ctx.fillRect(x,262,48,P); ctx.fillStyle="#0b0e1c"; ctx.fillRect(x,262,P,80); if((x/48)%3===0){ ctx.fillStyle=Math.floor(t*2+x)%2?"#17607e":"#38e8ff"; ctx.fillRect(x+21,268,P*2,P); } }
   if(X0<260) anHubDraw("metro",fr,140,262); }
 
-// ================================================================ NEON ARENA: robot fights.
-// Buy a fighting robot (Humanoid, Alien or Cyber Beast), forge your items into cards at the Card Forge,
-// slot the cards into your robot and fight in the arena. Ranked fights are against other players' saved
+// ================================================================ NEON ARENA: TIX fights.
+// Buy a fighting TIX (Humanoid, Alien or Cyber Beast), forge your items into cards at the Card Forge,
+// slot the cards into your TIX and fight in the arena. Ranked fights are against other players' saved
 // builds (homes/<uid>.ar) or arena rivals. Everything lives in save.arena.
 const ARX={metro:140,shop:700,forge:1300,bay:1880,gate:2450,board:3000};
 const AR_TY={h:{n:"Humanoid",ic:"🤖",d:"Takes 15% less damage."},a:{n:"Alien",ic:"👽",d:"Cards hit 25% harder and recharge 12% faster."},b:{n:"Cyber Beast",ic:"🐺",d:"The fastest attacks in the arena."}};
 const AR_BEATS={h:"b",b:"a",a:"h"};
 const AR_BOTS={
-  rookie:{n:"Rookie Frame",ty:"h",tier:0,hp:100,atk:8,aps:1,slots:2,price:0,ch:0,d:"A free starter frame from the arena. Basic, but it fights."},
-  patrol:{n:"Patrol Frame",ty:"h",tier:1,hp:125,atk:10,aps:1,slots:3,price:900,ch:0,d:"A sturdy security frame. Good all-rounder."},
-  vanguard:{n:"Vanguard Mk II",ty:"h",tier:2,hp:165,atk:13,aps:1,slots:4,price:3200,ch:25,d:"Military plating with shoulder cannons."},
-  paladin:{n:"Titan Paladin",ty:"h",tier:3,hp:215,atk:16,aps:.95,slots:5,price:9000,ch:90,d:"A walking fortress with a glowing core."},
-  glimmer:{n:"Glimmer Wisp",ty:"a",tier:1,hp:95,atk:9,aps:1.05,slots:3,price:950,ch:0,d:"A floating light-being. Fragile, but its cards sting."},
-  seer:{n:"Void Seer",ty:"a",tier:2,hp:125,atk:11,aps:1.05,slots:4,price:3400,ch:25,d:"Sees a second ahead. Wears a halo of static."},
-  leviathan:{n:"Star Leviathan",ty:"a",tier:3,hp:165,atk:14,aps:1.05,slots:5,price:9500,ch:90,d:"Something old from between the stars."},
-  hound:{n:"Scrap Hound",ty:"b",tier:1,hp:110,atk:8,aps:1.35,slots:3,price:900,ch:0,d:"A junkyard dog with a jaw like a vice."},
-  panther:{n:"Neon Panther",ty:"b",tier:2,hp:140,atk:10,aps:1.45,slots:4,price:3300,ch:25,d:"Sleek, silent and very fast."},
-  rex:{n:"Chrome Rex",ty:"b",tier:3,hp:190,atk:13,aps:1.4,slots:5,price:9300,ch:90,d:"A chrome tyrant lizard. Back spikes included."}};
+  rookie:{n:"Scrapling",ty:"h",tier:0,hp:100,atk:8,aps:1,slots:2,price:0,ch:0,h:56,d:"A runt kaiju hatched in the arena's scrap pits. Small horn, big attitude. Free for every new fighter."},
+  patrol:{n:"Gorrak",ty:"h",tier:1,hp:125,atk:10,aps:1,slots:3,price:900,ch:0,h:66,d:"A hunched ape-titan that knuckle-walks on armored fists. Its chest vent glows when it's angry."},
+  vanguard:{n:"Ironhorn",ty:"h",tier:2,hp:165,atk:13,aps:1,slots:4,price:3200,ch:25,h:88,d:"A rhino-horned war titan with twin shoulder cannons and a spiked tail."},
+  paladin:{n:"Colossus Prime",ty:"h",tier:3,hp:215,atk:16,aps:.95,slots:5,price:9000,ch:90,h:106,d:"A towering king-kaiju. Glowing dorsal plates, a reactor heart and blades on both arms."},
+  glimmer:{n:"Jellyfang",ty:"a",tier:1,hp:95,atk:9,aps:1.05,slots:3,price:950,ch:0,h:80,d:"A floating jellyfish horror. Its tentacles end in fangs."},
+  seer:{n:"Voltmoth",ty:"a",tier:2,hp:125,atk:11,aps:1.05,slots:4,price:3400,ch:25,h:88,d:"A giant storm moth. Lightning crawls across its eye-marked wings."},
+  leviathan:{n:"Kraxis",ty:"a",tier:3,hp:165,atk:14,aps:1.05,slots:5,price:9500,ch:90,h:104,d:"A cosmic squid from between the stars. Many eyes, more tentacles."},
+  hound:{n:"Scrapjaw",ty:"b",tier:1,hp:110,atk:8,aps:1.35,slots:3,price:900,ch:0,h:52,d:"A junkyard hyena-kaiju with a jaw like a hydraulic press."},
+  panther:{n:"Lycan-X",ty:"b",tier:2,hp:140,atk:10,aps:1.45,slots:4,price:3300,ch:25,h:90,d:"A cyber werewolf. Chrome fangs, a spiked steel mane and claws that hum."},
+  rex:{n:"Hydraxis",ty:"b",tier:3,hp:190,atk:13,aps:1.4,slots:5,price:9300,ch:90,h:104,d:"A three-headed chrome dragon. Each head breathes its own fire."}};
 const AR_FAM={
   laser:{n:"Laser Lance",k:"p",ic:"🔆",cd:6,dmg:30,fx:"beam",d:"A focused beam. One big hit.",from:["gpu"]},
   over:{n:"Overclock Strike",k:"p",ic:"⚡",cd:4,dmg:20,haste:3,fx:"slash",d:"A fast hit, then attacks speed up for 3s.",from:["cpu","core"]},
@@ -8210,7 +8210,7 @@ const AR_FAM={
   shock:{n:"Shock Punch",k:"p",ic:"👊",cd:4,dmg:19,fx:"bolt",d:"A heavy jolt.",from:["kbd","mouse","screen","cam","phone","console"]},
   crash:{n:"System Crash",k:"e",ic:"⛔",cd:11,stun:1.6,fx:"stun",d:"Freezes the enemy.",from:["hack","enc"]},
   drain:{n:"Power Drain",k:"e",ic:"🧲",cd:8,dmg:14,heal:14,fx:"drain",d:"Steals HP from the enemy.",from:["gadget"]},
-  nanite:{n:"Repair Nanites",k:"e",ic:"🩹",cd:9,heal:24,fx:"heal",d:"Heals your robot.",from:["food"]},
+  nanite:{n:"Repair Nanites",k:"e",ic:"🩹",cd:9,heal:24,fx:"heal",d:"Heals your TIX.",from:["food"]},
   shield:{n:"Ion Shield",k:"e",ic:"🛡",cd:9,shield:28,dur:5,fx:"shield",d:"Absorbs damage for 5s.",from:["drink"]},
   haze:{n:"Haze Cloud",k:"e",ic:"🌫",cd:10,haze:4,fx:"haze",d:"The enemy misses 45% of attacks for 4s.",from:["trip"]},
   plate:{n:"Armor Plating",k:"x",ic:"🧱",hp:.08,d:"+8% max HP, always on.",from:["build","decor"]},
@@ -8224,13 +8224,14 @@ const AR_RIVALS=["Rust Bucket","Unit KX-9","Bolt Baron","Gear Ghoul","Sparkjaw",
 const AR_PAINTS=["#38e8ff","#ff3fa8","#43f0a4","#ffd36a","#ff9a3c","#b06bff","#f2efe6","#ff5a5a"], AR_PAINTN=["Cyan","Pink","Green","Gold","Orange","Violet","White","Red"];
 const AR_PCPART=new Set(["chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hdd","screen","cam","batt","cable","kbd","mouse","phone","console"]);
 const AR_MAXBOTS=6;
+const AR_OLDN={"Rookie Frame":1,"Patrol Frame":1,"Vanguard Mk II":1,"Titan Paladin":1,"Glimmer Wisp":1,"Void Seer":1,"Star Leviathan":1,"Scrap Hound":1,"Neon Panther":1,"Chrome Rex":1};
 function arSeason(){ const d=new Date(); return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0"); }
 function arWeek(){ return String(Math.floor((Date.now()/864e5+3)/7)); }
 function arDef(){ return {bots:[],act:0,cards:{},pts:0,w:0,l:0,best:0,season:arSeason(),tourW:"",tourWins:0,trophies:0,seasonBest:0,starter:0}; }
 // never throws: a broken arena save just resets the arena, never the player
 function arClean(a){ try{ const d=arDef(); if(!a||typeof a!=="object") return d; const ck=k=>{ const [f,t]=String(k).split(":"); return AR_FAM[f]&&/^[0-3]$/.test(t); };
     d.bots=(Array.isArray(a.bots)?a.bots:[]).filter(b=>b&&AR_BOTS[b.m]).slice(0,AR_MAXBOTS).map((b,i)=>{ const M=AR_BOTS[b.m]; const sl=(Array.isArray(b.slots)?b.slots:[]).slice(0,M.slots).map(k=>k&&ck(k)?String(k):null); while(sl.length<M.slots) sl.push(null);
-      return {id:typeof b.id==="string"?b.id.slice(0,16):"b"+i+Date.now().toString(36),m:b.m,nm:String(b.nm||M.n).replace(/[<>]/g,"").slice(0,18),p:clamp(Math.floor(+b.p)||0,0,AR_PAINTS.length-1),lv:clamp(Math.floor(+b.lv)||1,1,10),cond:clamp(Math.round(+b.cond),0,100)||(b.cond===0?0:100),slots:sl}; });
+      return {id:typeof b.id==="string"?b.id.slice(0,16):"b"+i+Date.now().toString(36),m:b.m,nm:String((AR_OLDN[b.nm]?M.n:b.nm)||M.n).replace(/[<>]/g,"").slice(0,18),p:clamp(Math.floor(+b.p)||0,0,AR_PAINTS.length-1),lv:clamp(Math.floor(+b.lv)||1,1,10),cond:clamp(Math.round(+b.cond),0,100)||(b.cond===0?0:100),slots:sl}; });
     d.act=clamp(Math.floor(+a.act)||0,0,Math.max(0,d.bots.length-1));
     if(a.cards&&typeof a.cards==="object") for(const [k,n] of Object.entries(a.cards)) if(ck(k)&&+n>0) d.cards[k]=Math.min(999,Math.floor(+n));
     for(const k of ["pts","w","l","best","tourWins","trophies","seasonBest","starter"]) d[k]=Math.max(0,Math.floor(+a[k])||0);
@@ -8260,43 +8261,88 @@ function arRepairCost(b){ const M=AR_BOTS[b.m]; return Math.ceil((100-b.cond)*Ma
 // what other players see in homes/<uid>.ar
 function arPub(){ try{ const A=save&&save.arena; if(!A||!A.bots||!A.bots.length) return null; const b=A.bots[A.act]||A.bots[0]; return {pts:A.pts,w:A.w,l:A.l,tr:A.trophies||0,bot:{m:b.m,nm:b.nm,p:b.p,lv:b.lv},cards:b.slots.filter(Boolean).slice(0,5)}; }catch(e){ return null; } }
 function arCleanPub(o){ if(!o||typeof o!=="object"||!o.bot||!AR_BOTS[o.bot.m]) return null; const M=AR_BOTS[o.bot.m];
-  return {pts:Math.max(0,Math.floor(+o.pts)||0),w:Math.max(0,Math.floor(+o.w)||0),l:Math.max(0,Math.floor(+o.l)||0),tr:Math.max(0,Math.floor(+o.tr)||0),bot:{m:o.bot.m,nm:String(o.bot.nm||M.n).replace(/[<>]/g,"").slice(0,18),p:clamp(Math.floor(+o.bot.p)||0,0,7),lv:clamp(Math.floor(+o.bot.lv)||1,1,10)},cards:(Array.isArray(o.cards)?o.cards:[]).filter(k=>arCard(k)).slice(0,M.slots)}; }
+  return {pts:Math.max(0,Math.floor(+o.pts)||0),w:Math.max(0,Math.floor(+o.w)||0),l:Math.max(0,Math.floor(+o.l)||0),tr:Math.max(0,Math.floor(+o.tr)||0),bot:{m:o.bot.m,nm:String((AR_OLDN[o.bot.nm]?M.n:o.bot.nm)||M.n).replace(/[<>]/g,"").slice(0,18),p:clamp(Math.floor(+o.bot.p)||0,0,7),lv:clamp(Math.floor(+o.bot.lv)||1,1,10)},cards:(Array.isArray(o.cards)?o.cards:[]).filter(k=>arCard(k)).slice(0,M.slots)}; }
 
-// ---------------------------------------------------------------- robot art (pixel blocks, feet at x,y, facing right)
-function arDrawBot(g,m,paint,x,y,sc,dir,t,st){ const M=AR_BOTS[m]; if(!M) return; st=st||{}; const P=Math.max(1,Math.round(2*sc)), tier=M.tier;
-  const metal=["#6f7480","#8c95a8","#b4bccc","#dde2ee"][tier], dark=["#2a2e38","#262b38","#2c3242","#303648"][tier], pc=AR_PAINTS[paint]||AR_PAINTS[0], glow=Math.sin(t*4)>-.6?pc:"#ffffff";
-  g.save(); g.translate(Math.round(x),Math.round(y)); if(dir<0) g.scale(-1,1); if(st.ko){ g.rotate(dir<0?-1.2:1.2); g.translate(0,-4*sc); }
-  const lunge=(st.atk||0)*14*sc; g.translate(lunge,0); const R=(a,b,w,h,c)=>{ g.fillStyle=c; g.fillRect(Math.round(a*sc),Math.round(b*sc),Math.max(P,Math.round(w*sc)),Math.max(P,Math.round(h*sc))); };
-  const flash=st.hit>0&&Math.floor(t*30)%2===0; const C=c=>flash?"#ffffff":c;
-  if(M.ty==="h"){ const bob=Math.round(Math.sin(t*3)*1); const step=Math.sin(t*6)*(st.walk?3:0);
-    R(-11,-22+0,8,22,C(dark)); R(3,-22,8,22,C(dark)); R(-12,-4,10,4,C(metal)); R(2,-4,10,4,C(metal));
-    R(-15,-47+bob,30,26,C(metal)); R(-13,-45+bob,26,4,C(dark)); R(-5,-38+bob,10,8,C(tier?pc:"#9aa3b5"));
-    R(-21,-45+bob,7,20,C(dark)); R(14,-45+bob+Math.round(step),7,20,C(dark)); R(-22,-27+bob,9,6,C(metal)); R(13,-27+bob,9,6,C(metal));
-    R(-8,-61+bob,16,14,C(metal)); R(-6,-57+bob,12,4,C(glow));
-    if(tier>=2){ R(-25,-50+bob,12,7,C(pc)); R(13,-50+bob,12,7,C(pc)); }
-    if(tier>=3){ R(-2,-70+bob,4,9,C(pc)); R(-3,-36+bob,6,6,C(glow)); R(-15,-22,30,3,C(pc)); }
-    if(tier===0){ R(-1,-66+bob,2,5,C("#9aa3b5")); R(-2,-68+bob,4,2,C("#ff5a5a")); } }
-  else if(M.ty==="a"){ const fl=Math.sin(t*2.2)*4, cy=-42+fl;
-    for(let k=0;k<3+tier;k++){ const ox=-12+k*(24/(2+tier)); for(let j=0;j<5;j++){ const wv=Math.sin(t*4+k+j*.8)*3; R(ox+wv,cy+12+j*5,4,5,C(j%2?dark:metal)); } }
-    R(-18,cy-12,36,24,C(metal)); R(-14,cy-16,28,4,C(metal)); R(-14,cy+12,28,4,C(metal)); R(-20,cy-6,4,12,C(metal)); R(16,cy-6,4,12,C(metal));
-    R(-8,cy-6,16,12,C(dark)); R(-5,cy-3,10,6,C(glow)); R(-2,cy-2,4,4,C("#ffffff"));
-    if(tier>=2){ R(-22,cy-24,44,2,C(pc)); R(-24,cy-22,4,2,C(pc)); R(20,cy-22,4,2,C(pc)); }
-    if(tier>=3){ R(-14,cy-30,4,12,C(pc)); R(10,cy-30,4,12,C(pc)); R(-26,cy,6,3,C(pc)); R(20,cy,6,3,C(pc)); R(-12,cy-10,5,4,C(glow)); R(7,cy-10,5,4,C(glow)); } }
-  else { const run=st.walk?Math.sin(t*12)*3:Math.sin(t*3)*.6, big=tier>=3?1.15:1;
-    R(-22,-14,5,14+run,C(dark)); R(-12,-14,5,14-run,C(dark)); R(8,-14,5,14-run,C(dark)); R(17,-14,5,14+run,C(dark));
-    R(-26,-31*big,46,17*big,C(metal)); R(-24,-17,42,3,C(dark)); R(-36,-31*big+2,12,4,C(metal)); R(-40,-31*big,6,3,C(pc));
-    R(16,-40*big,20*big,15*big,C(metal)); R(30*big,-33*big,8,6,C(metal)); R(32*big,-29*big,8,3,C(dark)); R(26*big,-36*big,5,4,C(glow));
-    if(tier===2){ R(18,-46,4,6,C(metal)); R(25,-46,4,6,C(metal)); R(-22,-30,36,2,C(pc)); }
-    if(tier>=3){ for(let k=0;k<5;k++) R(-20+k*8,-40*big,4,8,C(pc)); R(34*big,-28*big,10,3,C("#ffffff")); }
-    if(tier<=1){ R(-18,-28,20,3,C(pc)); } }
-  if(st.stun>0){ for(let k=0;k<3;k++){ const a=t*5+k*2.1; R(Math.cos(a)*14-2,-78+Math.sin(a)*4,4,4,"#ffd36a"); } }
+// ---------------------------------------------------------------- TIX art: animated kaiju (feet at x,y, facing right)
+function arDrawBot(g,m,paint,x,y,sc,dir,t,st){ const M=AR_BOTS[m]; if(!M) return; st=st||{}; const tier=M.tier, pc=AR_PAINTS[paint]||AR_PAINTS[0];
+  const P=[{m:"#6d7280",l:"#a0a7b6",d:"#2b2f3a"},{m:"#5f6b84",l:"#9aa9c6",d:"#252b3b"},{m:"#727c98",l:"#bcc6de",d:"#283046"},{m:"#878ea8",l:"#e2e7f5",d:"#2a2d44"}][tier];
+  const flash=st.hit>0&&Math.floor(t*30)%2===0, C=c=>flash?"#ffffff":c, pulse=.55+.45*Math.sin(t*5+x*.01), roar=Math.min(1,(st.atk||0)*1.8), br=Math.sin(t*2.2)*1.5, sw=Math.sin(t*2.6)*4, TOOTH="#eef0f4";
+  g.save(); g.translate(Math.round(x),Math.round(y)); if(dir<0) g.scale(-1,1);
+  g.fillStyle="rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(0,0,(tier>=3?46:34)*sc,5*sc,0,0,Math.PI*2); g.fill();
+  if(tier>=2&&!st.ko){ const cy=-(M.h*.5)*sc, rr=M.h*.75*sc, gr=g.createRadialGradient(0,cy,0,0,cy,rr); gr.addColorStop(0,pc); gr.addColorStop(1,"rgba(0,0,0,0)"); g.globalAlpha=(tier>=3?.22:.13)*pulse; g.fillStyle=gr; g.fillRect(-rr,cy-rr,rr*2,rr*2); g.globalAlpha=1; }
+  if(st.ko){ g.rotate(1.3); g.translate(4*sc,-8*sc); } g.translate((st.atk||0)*16*sc,0);
+  const R=(a,b,w,h,c)=>{ g.fillStyle=C(c); g.fillRect(Math.round(a*sc),Math.round(b*sc),Math.max(1,Math.round(w*sc)),Math.max(1,Math.round(h*sc))); };
+  const Pg=(pts,c,al)=>{ g.fillStyle=C(c); if(al!=null) g.globalAlpha=al; g.beginPath(); pts.forEach(([px,py],i)=>i?g.lineTo(px*sc,py*sc):g.moveTo(px*sc,py*sc)); g.closePath(); g.fill(); g.globalAlpha=1; };
+  const E=(cx,cy,rx,ry,c,al)=>{ g.fillStyle=C(c); if(al!=null) g.globalAlpha=al; g.beginPath(); g.ellipse(cx*sc,cy*sc,Math.max(.5,rx*sc),Math.max(.5,ry*sc),0,0,Math.PI*2); g.fill(); g.globalAlpha=1; };
+  const Gl=(a,b,w,h,al)=>{ g.globalAlpha=(al==null?1:al)*pulse; R(a,b,w,h,pc); g.globalAlpha=1; };
+  const Ey=(a,b,w,h)=>{ g.globalAlpha=.35*pulse; R(a-2,b-2,w+4,h+4,pc); g.globalAlpha=1; R(a,b,w,h,flash?"#fff":pc); R(a+w-Math.max(1,w/3),b,Math.max(1,w/3),Math.max(1,h/2),"#ffffff"); };
+  const Teeth=(a,b,n,sp,dn)=>{ for(let k=0;k<n;k++) Pg([[a+k*sp,b],[a+k*sp+sp*.5,b+(dn||3)],[a+k*sp+sp,b]],TOOTH); };
+  const Spk=(a,b,len,ang,w,c)=>{ const dx=Math.cos(ang)*len, dy=Math.sin(ang)*len, nx=-Math.sin(ang)*w, ny=Math.cos(ang)*w; Pg([[a-nx,b-ny],[a+dx,b+dy],[a+nx,b+ny]],c); };
+  const Neck=(x0,y0,cx,cy,x1,y1,w,c)=>{ g.strokeStyle=C(c); g.lineWidth=w*sc; g.lineCap="round"; g.beginPath(); g.moveTo(x0*sc,y0*sc); g.quadraticCurveTo(cx*sc,cy*sc,x1*sc,y1*sc); g.stroke(); };
+  const Fire=(a,b,len)=>{ if(len<=0) return; for(let k=0;k<6;k++){ const f=k/6; g.globalAlpha=(1-f)*.9; R(a+f*len,b-1-f*3+Math.sin(t*40+k)*1.5,len/5,3+f*6,k<2?"#fff6c0":k<4?"#ffb43c":"#ff4a2a"); } g.globalAlpha=1; };
+  if(m==="rookie"){ Pg([[-8,-16],[-30,-8+sw],[-29,-4+sw],[-8,-9]],P.d); Spk(-20,-11+sw*.6,5,-1.9,2,pc);
+    R(-10,-16,8,16,P.d); R(3,-16,8,16,P.d); R(-12,-3,11,3,P.m); R(2,-3,11,3,P.m);
+    R(-12,-38+br,24,24,P.m); R(-7,-33+br,13,16,P.l); Gl(-2,-28+br,4,4); R(10,-32+br,9,4,P.d); R(17,-32+br,3,6,P.l);
+    const hb=-52+br; R(-4,hb,24,10,P.m); R(2,hb+10+roar*4,18,4,P.d); Teeth(10,hb+10,3,3,2); Ey(12,hb+3,5,3); Pg([[2,hb],[6,hb-9],[9,hb]],pc); Spk(-6,-40+br,6,-2.4,2,P.l); }
+  else if(m==="patrol"){ R(-14,-20,10,20,P.d); R(2,-20,10,20,P.d); R(-22,-46+br,9,40,P.d); R(-25,-8,13,7,P.m);
+    Pg([[-20,-20],[-23,-48+br],[-8,-62+br],[14,-57+br],[20,-30],[14,-20]],P.m); R(-18,-54+br,11,4,pc); R(-13,-60+br,10,4,pc); R(-21,-44+br,8,3,pc);
+    Gl(2,-44+br,9,9); R(4,-42+br,5,5,P.d);
+    R(14,-42+br,12,26,P.l); R(15,-40+br,10,3,P.m); R(12,-18,16,9,P.m); for(let k=0;k<3;k++) Spk(15+k*5,-18,4,-1.6,1.5,pc);
+    const hb=-60+br; R(14,hb,20,17,P.m); R(15,hb+3,18,3,P.d); Ey(25,hb+6,5,3); R(18,hb+13+roar*6,16,5,P.d); Teeth(19,hb+13,4,3,3); }
+  else if(m==="vanguard"){ Pg([[-10,-30],[-44,-12+sw],[-42,-6+sw],[-10,-20]],P.d); for(let k=0;k<3;k++) Spk(-18-k*8,-24+sw*(k/3)-k*1.5,6,-1.9,2,pc);
+    R(-14,-26,12,26,P.d); R(4,-26,12,26,P.d); R(-16,-4,15,4,P.m); R(3,-4,15,4,P.m);
+    R(-16,-62+br,32,38,P.m); for(let k=0;k<4;k++) R(-4,-56+br+k*8,14,5,P.l); for(let k=0;k<4;k++) Spk(-16,-58+br+k*9,9,Math.PI*1.1,3,pc);
+    R(-22,-72+br,16,11,P.d); R(-8,-70+br,22,6,P.l); R(-24,-74+br,5,5,pc); Gl(13,-70+br,4,6); if(roar) Gl(17,-71+br,10*roar,8,.9);
+    R(14,-56+br,8,24,P.d); for(let k=0;k<3;k++) Spk(16+k*3,-32+br,5,1.3,1.2,P.l);
+    const hb=-78+br; R(10,hb,22,16,P.m); Pg([[24,hb],[40,hb-15],[31,hb+3]],P.l); Pg([[15,hb],[19,hb-8],[22,hb]],P.l); Ey(17,hb+4,5,3); R(14,hb+14+roar*6,18,5,P.d); Teeth(16,hb+14,4,3.5,3); }
+  else if(m==="paladin"){ Pg([[-14,-38],[-62,-14+sw],[-64,-8+sw],[-14,-22]],P.d); for(let k=0;k<4;k++) Spk(-24-k*9,-28+sw*(k/4)-k*2,7,-1.8,2.5,pc);
+    R(-18,-34,15,34,P.d); R(5,-34,15,34,P.d); R(-19,-26,17,5,P.m); R(4,-26,17,5,P.m); R(-21,-5,19,5,P.m); R(3,-5,19,5,P.m);
+    for(let k=0;k<5;k++){ g.globalAlpha=.6+.4*pulse; Pg([[-20,-80+k*10+br],[-36-(k===1||k===2?4:0),-88+k*10+br],[-20,-71+k*10+br]],pc); g.globalAlpha=1; }
+    R(-20,-82+br,40,50,P.m); R(-14,-76+br,28,14,P.l); E(0,-55+br,8,8,P.d); E(0,-55+br,6*(.8+.2*pulse),6*(.8+.2*pulse),pc); E(0,-55+br,2.5,2.5,"#ffffff");
+    R(-26,-82+br,12,10,P.l); R(14,-82+br,12,10,P.l); R(18,-74+br,10,32,P.d); Pg([[24,-46+br],[44,-64+br],[30,-42+br]],P.l); Pg([[-24,-48+br],[-34,-30+br],[-20,-44+br]],P.l);
+    const hb=-100+br; R(-2,hb,26,18,P.m); for(let k=0;k<3;k++) Spk(2+k*7,hb,9-k,-1.75+k*.2,2.5,k===1?pc:P.l); Ey(14,hb+5,7,3); R(6,hb+16+roar*7,20,6,P.d); Teeth(8,hb+16,5,3.5,3); if(roar) Gl(10,hb+17,14,roar*6,.8); }
+  else if(m==="glimmer"){ const fl=Math.sin(t*2)*5, cy=-60+fl;
+    for(let k=0;k<6;k++){ const ox=-18+k*7; for(let j=0;j<7;j++){ const wv=Math.sin(t*3+k+j*.7)*(1.5+j*.7); R(ox+wv,cy+12+j*6,3,6,j%2?P.d:P.m); if(j===6) Pg([[ox+wv-1,cy+54],[ox+wv+1.5,cy+60],[ox+wv+4,cy+54]],TOOTH); } }
+    E(0,cy,26,18,P.m); E(0,cy+2,20,13,pc,.35*pulse+.15); E(-6,cy-4,6,4,"#ffffff",.25); R(-26,cy+8,52,5,P.l); for(let k=0;k<6;k++) Pg([[-16+k*6,cy+13],[-13+k*6,cy+13+4+roar*3],[-10+k*6,cy+13]],TOOTH); Ey(6,cy-3,8,5); for(let k=0;k<4;k++) E(-14+k*9,cy-12+Math.abs(k-1.5)*2,1.5,1.5,pc,pulse); }
+  else if(m==="seer"){ const fl=Math.sin(t*2)*4, cy=-54+fl, fp=Math.sin(t*7)*.5+.5;
+    Pg([[-2,cy-6],[-40,cy-42+fp*22],[-48,cy+4],[-6,cy+6]],P.d,.95);
+    Pg([[0,cy-6],[-28,cy-54+fp*28],[-52,cy-24+fp*12],[-36,cy+16],[0,cy+8]],P.m); E(-26,cy-18+fp*12,7,7,pc,.6+.4*pulse); E(-26,cy-18+fp*12,3,3,P.d); E(-40,cy-6+fp*6,3,3,pc,.7);
+    Pg([[0,cy+6],[-30,cy+30],[-14,cy+38],[2,cy+14]],P.l,.95); E(-16,cy+26,3,3,pc,.8);
+    if(roar||Math.sin(t*3)>.95){ g.strokeStyle=C("#cfe9ff"); g.lineWidth=1.5*sc; g.beginPath(); let px=-10,py=cy-30; g.moveTo(px*sc,py*sc); for(let k=0;k<5;k++){ px-=7; py+=(k%2?8:-6); g.lineTo(px*sc,py*sc); } g.stroke(); }
+    R(-6,cy-10,14,32,P.l); for(let k=0;k<5;k++) R(-6,cy-6+k*6,14,2,P.d); for(let k=0;k<3;k++) R(-2+k*4,cy+22,2,10+k,P.d);
+    R(6,cy-17,14,12,P.m); Ey(12,cy-15,6,6); Pg([[14,cy-17],[22,cy-34],[18,cy-17]],P.l); Pg([[10,cy-17],[12,cy-32],[14,cy-17]],P.l); Gl(21,cy-36,4,4); Gl(11,cy-34,3,3); }
+  else if(m==="leviathan"){ const fl=Math.sin(t*1.6)*5, cy=-70+fl;
+    for(let k=0;k<8;k++){ const ox=-22+k*6; for(let j=0;j<10;j++){ const wv=Math.sin(t*2.5+k*.9+j*.5)*(2+j*.9); R(ox+wv,cy+14+j*6,j>7?3:4,6,j%2?P.d:P.m); if(j%3===1) E(ox+wv+2,cy+17+j*6,1.2,1.2,pc,pulse); } }
+    Pg([[-26,cy+16],[-22,cy-24],[-6,cy-50],[10,cy-24],[16,cy+16]],P.m); Pg([[-6,cy-50],[-26,cy-56],[-16,cy-36]],pc,.8); Pg([[-6,cy-50],[8,cy-58],[4,cy-38]],pc,.8); R(-18,cy-10,30,3,P.l);
+    Ey(4,cy-4,7,5); Ey(-8,cy,4,3); Ey(6,cy+6,4,3); Ey(-12,cy-12,3,3); Ey(-2,cy-16,3,3); Pg([[4,cy+14],[12,cy+20+roar*6],[-2,cy+16]],P.d);
+    for(let k=0;k<6;k++){ const a=t*.8+k*1.05; E(Math.cos(a)*40-4,cy+Math.sin(a)*26,1.3,1.3,"#ffffff",.5+.5*Math.sin(t*4+k)); } }
+  else if(m==="hound"){ Pg([[-26,-30],[-42,-40+sw],[-40,-35+sw],[-26,-25]],P.d);
+    const lg=Math.sin(t*3)*1; R(-22,-16,6,16+lg,P.d); R(-12,-16,6,16-lg,P.d); R(8,-16,6,16-lg,P.d); R(16,-16,6,16+lg,P.d);
+    Pg([[-28,-17],[-26,-34+br],[10,-41+br],[22,-30],[20,-15]],P.m); for(let k=0;k<3;k++) R(-16+k*6,-30+br,3,11,P.d); for(let k=0;k<4;k++) Spk(-22+k*8,-35+br-k*1.5,6,-1.75,2,pc);
+    const hb=-46+br; R(16,hb,18,13,P.m); R(20,hb+11+roar*6,18,6,P.d); Teeth(21,hb+11,5,3,3); Ey(26,hb+3,5,3); Pg([[18,hb],[20,hb-8],[24,hb]],P.d); R(33,hb+4,3,4,P.d); }
+  else if(m==="panther"){ Pg([[-12,-34],[-36,-24+sw],[-32,-18+sw],[-12,-26]],P.d); for(let k=0;k<3;k++) Spk(-20-k*5,-28+sw*(k/3),4,-1.9,1.5,P.l);
+    R(-16,-36,11,15,P.d); R(-13,-22,6,18,P.d); R(-18,-4,13,4,P.m); R(2,-36,11,15,P.d); R(5,-22,6,18,P.d); R(3,-4,13,4,P.m); for(let k=0;k<3;k++){ Pg([[12+k*3,-4],[15+k*3,-1],[12+k*3,-1]],TOOTH); }
+    R(-15,-62+br,7,24,P.d); Pg([[-16,-34],[-19,-64+br],[0,-74+br],[16,-63+br],[12,-34]],P.m); R(-3,-60+br,14,15,P.l); Gl(1,-56+br,6,3); Gl(1,-50+br,6,3);
+    for(let k=0;k<5;k++) Spk(-18+k*4,-62+br-k*2.5,8,-2.1+k*.12,2,k%2?pc:P.l);
+    R(10,-64+br,8,28,P.d); for(let k=0;k<3;k++) Pg([[12+k*3,-37+br],[16+k*3,-27+br],[15+k*3,-37+br]],P.l);
+    const hb=-84+br; R(4,hb,16,15,P.m); R(18,hb+4,15,7,P.m); R(31,hb+4,3,3,P.d); R(18,hb+11+roar*7,14,4,P.d); Teeth(19,hb+11,4,3,3); Pg([[21,hb+11+roar*7],[22.5,hb+8+roar*7],[24,hb+11+roar*7]],TOOTH);
+    Pg([[5,hb],[7,hb-13],[11,hb]],P.m); Pg([[11,hb],[14,hb-11],[17,hb]],P.l); R(10,hb+4,10,2,P.d); Ey(13,hb+3,6,3); }
+  else if(m==="rex"){ const fp=Math.sin(t*3)*.5+.5;
+    Pg([[-32,-42],[-74,-20+sw],[-78,-24+sw],[-34,-30]],P.d); for(let k=0;k<4;k++) Spk(-40-k*9,-34+sw*(k/4)+k*3,6,-1.8,2,pc);
+    Pg([[-14,-56+br],[-50,-98+fp*22],[-34,-76+fp*10],[-66,-84+fp*18],[-22,-58+br]],P.d); g.globalAlpha=.3; Pg([[-16,-58+br],[-48,-94+fp*22],[-36,-76+fp*10],[-62,-82+fp*18],[-22,-58+br]],pc); g.globalAlpha=1;
+    R(-28,-26,10,26,P.d); R(-12,-24,9,24,P.d); R(8,-24,9,24,P.d); R(18,-26,10,26,P.d); for(const lx of [-28,-12,8,18]) Pg([[lx+8,-3],[lx+12,0],[lx+8,0]],TOOTH);
+    Pg([[-36,-24],[-32,-54+br],[10,-60+br],[28,-40],[24,-22]],P.m); R(-24,-30,42,6,P.l); for(let k=0;k<5;k++) Spk(-28+k*8,-55+br-k*1,7,-1.7,2.2,pc);
+    const heads=[[0,-98,-.6],[1,-82,0],[2,-66,.5]];
+    for(const [i,hy0,lean] of heads){ const hx=18+i*7+Math.sin(t*1.8+i*2.1)*4+(roar*5), hy=hy0+br+Math.cos(t*2+i*1.7)*4;
+      Neck(10+i*3,-52+br,14+i*4+lean*10,(hy-52)/2+lean*6,hx+2,hy+6,7,i===1?P.l:P.m); R(hx,hy,16,10,P.m); R(hx+4,hy+8+roar*5,13,4,P.d); Teeth(hx+5,hy+8,3,3,2); Ey(hx+8,hy+2,4,3); Spk(hx+2,hy,8,-2.6,2,pc); Fire(hx+17,hy+8+roar*2,roar*26); } }
+  if(st.stun>0){ for(let k=0;k<3;k++){ const a=t*5+k*2.1; R(Math.cos(a)*14-2,-(M.h||80)-8+Math.sin(a)*4,4,4,"#ffd36a"); } }
   g.restore(); }
 function arBotCanvas(m,paint,w,h){ const cv=document.createElement("canvas"); cv.width=w*2; cv.height=h*2; cv.style.width=w+"px"; cv.style.height=h+"px"; cv.className="arpv"; const g=cv.getContext("2d");
-  const draw=t=>{ g.clearRect(0,0,cv.width,cv.height); g.fillStyle="#0b0a1c"; g.fillRect(0,0,cv.width,cv.height); g.fillStyle="#1c1840"; g.fillRect(0,cv.height*.82,cv.width,cv.height*.18); g.fillStyle=AR_PAINTS[paint]||"#38e8ff"; g.globalAlpha=.25; g.fillRect(cv.width*.2,cv.height*.82,cv.width*.6,4); g.globalAlpha=1; arDrawBot(g,m,paint,cv.width/2-6,cv.height*.84,cv.height/95,1,t,{}); };
+  const draw=t=>{ g.clearRect(0,0,cv.width,cv.height); g.fillStyle="#0b0a1c"; g.fillRect(0,0,cv.width,cv.height); g.fillStyle="#1c1840"; g.fillRect(0,cv.height*.82,cv.width,cv.height*.18); g.fillStyle=AR_PAINTS[paint]||"#38e8ff"; g.globalAlpha=.25; g.fillRect(cv.width*.2,cv.height*.82,cv.width*.6,4); g.globalAlpha=1; arDrawBot(g,m,paint,cv.width/2-4,cv.height*.86,cv.height/124,1,t,{}); };
   let raf=0; const loop=n=>{ if(!cv.isConnected&&raf>3){ return; } raf++; draw(n/1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); return cv; }
 
 // ---------------------------------------------------------------- the hub
-function arHot(){ return [{x:ARX.metro,hw:60,label:"Take the metro",act:()=>openMetro()},{x:ARX.shop,hw:120,label:"Robot Shop: buy a fighting robot",act:()=>openArShop()},{x:ARX.forge,hw:120,label:"Card Forge: turn items into cards",act:()=>openArForge()},{x:ARX.bay,hw:120,label:"Robot Bay: loadout, repairs and tune-ups",act:()=>openArBay()},{x:ARX.gate,hw:170,label:"Enter Neon Arena: fight!",act:()=>openArGate()},{x:ARX.board,hw:110,label:"Arena rankings",act:()=>openArBoard()}]; }
+function arHot(){ return [{x:ARX.metro,hw:60,label:"Take the metro",act:()=>openMetro()},{x:ARX.shop,hw:120,label:"TIX Shop: buy a fighting TIX",act:()=>openArShop()},{x:ARX.forge,hw:120,label:"Card Forge: turn items into cards",act:()=>openArForge()},{x:ARX.bay,hw:120,label:"TIX Bay: loadout, repairs and tune-ups",act:()=>openArBay()},{x:ARX.gate,hw:170,label:"Enter Neon Arena: fight!",act:()=>openArGate()},{x:ARX.board,hw:110,label:"Arena rankings",act:()=>openArBoard()}]; }
 function drawArenaHub(t){ const W=SCENES.arena.w, X0=camX, X1=camX+VW, P=3;
   const sky=["#07030f","#0c0520","#120629","#180830","#1d0a2e"]; for(let i=0;i<5;i++){ ctx.fillStyle=sky[i]; ctx.fillRect(camX,i*54,VW,54); }
   for(let i=0;i<34;i++){ const sx=(i*197)%W, sy=8+(i*41)%110; if(sx<X0||sx>X1) continue; ctx.fillStyle=Math.sin(t*2+i)>.5?"#ffffff":"#6a4a90"; ctx.fillRect(sx,sy,P,P); }
@@ -8307,21 +8353,21 @@ function drawArenaHub(t){ const W=SCENES.arena.w, X0=camX, X1=camX+VW, P=3;
     for(let k=0;k<4;k++){ ctx.strokeStyle=k%2?"#ff3fa8":"#38e8ff"; ctx.globalAlpha=.35+.25*Math.sin(t*3+k); ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(cx,262,330-k*46,190-k*34,0,Math.PI,0); ctx.stroke(); } ctx.globalAlpha=1;
     neonText("NEON ARENA",cx,104,30,"#ff3fa8",flick(31,t)); ctx.fillStyle="#08050f"; ctx.fillRect(cx-90,150,180,112); ctx.fillStyle="#38e8ff"; ctx.fillRect(cx-94,146,188,4); ctx.fillRect(cx-94,146,4,116); ctx.fillRect(cx+90,146,4,116);
     // holo fight inside the gate
-    const ph=t*1.6; arDrawBot(ctx,["patrol","panther","seer","rex","paladin","leviathan"][Math.floor(t/6)%6],Math.floor(t/6)%8,cx-36+Math.sin(ph)*6,250,.85,1,t,{atk:Math.max(0,Math.sin(ph*2))*.6});
-    arDrawBot(ctx,["hound","glimmer","vanguard","panther","rex","seer"][Math.floor(t/6)%6],(Math.floor(t/6)+3)%8,cx+36-Math.sin(ph)*6,250,.85,-1,t,{atk:Math.max(0,-Math.sin(ph*2))*.6,hit:Math.sin(ph*2)>.9?1:0});
+    const ph=t*1.6; arDrawBot(ctx,["patrol","panther","seer","rex","paladin","leviathan"][Math.floor(t/6)%6],Math.floor(t/6)%8,cx-40+Math.sin(ph)*6,252,.78,1,t,{atk:Math.max(0,Math.sin(ph*2))*.6});
+    arDrawBot(ctx,["hound","glimmer","vanguard","panther","rex","seer"][Math.floor(t/6)%6],(Math.floor(t/6)+3)%8,cx+40-Math.sin(ph)*6,252,.78,-1,t,{atk:Math.max(0,-Math.sin(ph*2))*.6,hit:Math.sin(ph*2)>.9?1:0});
     for(let k=0;k<26;k++){ const sx=cx-300+k*24, sy=232+((k*7)%3)*6; ctx.fillStyle=(Math.sin(t*6+k)>.3)?"#2a1a4a":"#3a2a60"; ctx.fillRect(sx,sy-((Math.sin(t*5+k*1.7)>.7)?4:0),12,14); } }
-  // robot shop with a turntable display
-  if(X0<ARX.shop+220&&X1>ARX.shop-220){ const x=ARX.shop; ctx.fillStyle="#141a34"; ctx.fillRect(x-190,110,380,152); ctx.fillStyle="#0a0e20"; ctx.fillRect(x-170,150,340,112); neonText("ROBOT SHOP",x,136,20,"#38e8ff",flick(5,t));
-    const ms=Object.keys(AR_BOTS).filter(k=>k!=="rookie"), mi=Math.floor(t/3)%ms.length; ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.2; ctx.fillRect(x-60,250,120,6); ctx.globalAlpha=1; arDrawBot(ctx,ms[mi],mi%8,x,250,1.1,Math.sin(t*.9)>0?1:-1,t,{});
+  // TIX shop with a turntable display
+  if(X0<ARX.shop+220&&X1>ARX.shop-220){ const x=ARX.shop; ctx.fillStyle="#141a34"; ctx.fillRect(x-190,110,380,152); ctx.fillStyle="#0a0e20"; ctx.fillRect(x-170,150,340,112); neonText("TIX SHOP",x,136,20,"#38e8ff",flick(5,t));
+    const ms=Object.keys(AR_BOTS).filter(k=>k!=="rookie"), mi=Math.floor(t/3)%ms.length; ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.2; ctx.fillRect(x-60,250,120,6); ctx.globalAlpha=1; arDrawBot(ctx,ms[mi],mi%8,x,252,.92,Math.sin(t*.9)>0?1:-1,t,{});
     pText(ctx,AR_BOTS[ms[mi]].n,x,160,"#cfe8ff",2,true); }
   // card forge with floating cards
   if(X0<ARX.forge+220&&X1>ARX.forge-220){ const x=ARX.forge; ctx.fillStyle="#241020"; ctx.fillRect(x-190,110,380,152); neonText("CARD FORGE",x,136,20,"#ff9a3c",flick(9,t));
     ctx.fillStyle="#120608"; ctx.fillRect(x-60,180,120,82); const fg=.6+.4*Math.sin(t*9); ctx.fillStyle=`rgba(255,${120+Math.floor(fg*80)},40,.9)`; ctx.fillRect(x-44,214,88,40); ctx.fillStyle="#ffd36a"; ctx.fillRect(x-30,222,60,22);
     for(let k=0;k<5;k++){ const a=t*1.2+k*1.256, fx=x+Math.cos(a)*130, fy=190+Math.sin(a*1.3)*24; ctx.fillStyle=["#38e8ff","#ff3fa8","#43f0a4","#ffd36a","#b06bff"][k]; ctx.fillRect(fx-9,fy-13,18,26); ctx.fillStyle="#0a0a14"; ctx.fillRect(fx-6,fy-10,12,20); ctx.fillStyle=["#38e8ff","#ff3fa8","#43f0a4","#ffd36a","#b06bff"][k]; ctx.fillRect(fx-3,fy-3,6,6); } }
-  // robot bay with your active robot
-  if(X0<ARX.bay+220&&X1>ARX.bay-220){ const x=ARX.bay; ctx.fillStyle="#10202a"; ctx.fillRect(x-190,110,380,152); neonText("ROBOT BAY",x,136,20,"#43f0a4",flick(13,t)); ctx.fillStyle="#08121a"; ctx.fillRect(x-150,154,300,108);
+  // TIX bay with your active TIX
+  if(X0<ARX.bay+220&&X1>ARX.bay-220){ const x=ARX.bay; ctx.fillStyle="#10202a"; ctx.fillRect(x-190,110,380,152); neonText("TIX BAY",x,136,20,"#43f0a4",flick(13,t)); ctx.fillStyle="#08121a"; ctx.fillRect(x-150,154,300,108);
     for(let k=0;k<6;k++){ ctx.fillStyle=k%2?"#ffd36a":"#141414"; ctx.fillRect(x-150+k*50,154,50,8); }
-    const b=save&&save.arena&&save.arena.bots&&save.arena.bots[save.arena.act]; if(b&&AR_BOTS[b.m]){ arDrawBot(ctx,b.m,b.p,x,256,1.1,1,t,{}); pText(ctx,b.nm,x,174,"#d8ffe8",2,true); } else pText(ctx,"NO ROBOT YET",x,206,"#7ab89a",2,true); }
+    const b=save&&save.arena&&save.arena.bots&&save.arena.bots[save.arena.act]; if(b&&AR_BOTS[b.m]){ arDrawBot(ctx,b.m,b.p,x,258,.9,1,t,{}); pText(ctx,b.nm,x,174,"#d8ffe8",2,true); } else pText(ctx,"NO TIX YET",x,206,"#7ab89a",2,true); }
   // rankings screen
   if(X0<ARX.board+170&&X1>ARX.board-170){ const x=ARX.board; ctx.fillStyle="#1a1530"; ctx.fillRect(x-130,118,260,144); ctx.fillStyle="#05040c"; ctx.fillRect(x-118,128,236,110); pText(ctx,"RANKINGS",x,136,"#ffd36a",2,true);
     const top=arTop(3); top.forEach((r,i)=>pText(ctx,`${i+1}. ${String(r.name).slice(0,12)} ${r.pts}`,x-108,162+i*22,i===0?"#ff3fa8":"#cfc6ff",2)); if(!top.length) pText(ctx,"NO FIGHTS YET",x,180,"#8a82b0",2,true); ctx.fillStyle="#2a2450"; ctx.fillRect(x-8,238,16,24); }
@@ -8333,25 +8379,25 @@ function arTop(n){ const rows=[]; for(const [uid,h] of Object.entries(homes||{})
 
 // ---------------------------------------------------------------- panels
 function arHeader(body){ const A=arS(), r=arRank(A.pts); body.append(el("div",{class:"arhead"},el("span",{class:"pill",style:`border-color:${r.c};color:${r.c}`,text:`🏟 ${r.n} · ${A.pts} pts`}),el("span",{class:"pill",text:`₵${Math.floor(save.credits).toLocaleString()}`}),el("span",{class:"pill",text:`🔷 ${save.chips} chips`}),el("span",{class:"pill",text:`🃏 ${arCardsTotal(A)} cards`}))); }
-function openArShop(){ const A=arS(); const body=panel("Robot Shop","Pick a fighter. Humanoids are tough, Aliens have the strongest cards, Cyber Beasts attack fastest."); currentView="arshop"; arHeader(body);
-  body.append(el("div",{class:"sub",text:"Type matchups: Humanoid beats Cyber Beast, Cyber Beast beats Alien, Alien beats Humanoid (+15% damage). You can own "+AR_MAXBOTS+" robots."}));
-  if(!A.starter){ const st=el("div",{class:"arbot hot"}); st.append(arBotCanvas("rookie",0,96,96),el("div",{class:"arbi"},el("strong",{text:"Free starter: Rookie Frame"}),el("div",{class:"sub",text:"Every new fighter gets one. 2 card slots."}),el("button",{class:"btn hot",type:"button",text:"Claim it free",onclick:()=>{ arBuy("rookie"); }}))); body.append(st); }
+function openArShop(){ const A=arS(); const body=panel("TIX Shop","Pick a fighter. Humanoids are tough, Aliens have the strongest cards, Cyber Beasts attack fastest."); currentView="arshop"; arHeader(body);
+  body.append(el("div",{class:"sub",text:"Type matchups: Humanoid beats Cyber Beast, Cyber Beast beats Alien, Alien beats Humanoid (+15% damage). You can own "+AR_MAXBOTS+" TIX."}));
+  if(!A.starter){ const st=el("div",{class:"arbot hot"}); st.append(arBotCanvas("rookie",0,96,96),el("div",{class:"arbi"},el("strong",{text:"Free starter: Scrapling"}),el("div",{class:"sub",text:"Every new fighter gets one. 2 card slots."}),el("button",{class:"btn hot",type:"button",text:"Claim it free",onclick:()=>{ arBuy("rookie"); }}))); body.append(st); }
   for(const ty of ["h","a","b"]){ body.append(el("h3",{class:"arh3",text:`${AR_TY[ty].ic} ${AR_TY[ty].n}s · ${AR_TY[ty].d}`}));
     for(const [m,M] of Object.entries(AR_BOTS)){ if(M.ty!==ty||m==="rookie") continue; const can=save.credits>=M.price&&save.chips>=M.ch&&A.bots.length<AR_MAXBOTS; const own=A.bots.filter(b=>b.m===m).length;
       const row=el("div",{class:"arbot"}); row.append(arBotCanvas(m,(M.tier*3)%8,96,96),el("div",{class:"arbi"},el("strong",{text:M.n+(own?` (you own ${own})`:"")}),el("div",{class:"sub",text:M.d}),el("div",{class:"arst",text:`❤ ${M.hp} HP · ⚔ ${M.atk} · ⏱ ${M.aps}/s · 🃏 ${M.slots} slots`}),
         el("button",{class:"btn"+(can?" hot":""),type:"button",disabled:!can||null,text:`Buy · ₵${M.price.toLocaleString()}${M.ch?` + ${M.ch} chips`:""}`,onclick:()=>arBuy(m)}))); body.append(row); } } }
-function arBuy(m){ const A=arS(), M=AR_BOTS[m]; if(!M) return; if(A.bots.length>=AR_MAXBOTS) return toast(`You can own ${AR_MAXBOTS} robots. Sell one at the Robot Bay first.`);
+function arBuy(m){ const A=arS(), M=AR_BOTS[m]; if(!M) return; if(A.bots.length>=AR_MAXBOTS) return toast(`You can own ${AR_MAXBOTS} TIX. Sell one at the TIX Bay first.`);
   if(m==="rookie"){ if(A.starter) return; A.starter=1; } else { if(save.credits<M.price||save.chips<M.ch) return toast("Not enough credits or chips yet."); save.credits-=M.price; save.chips-=M.ch; }
   const b={id:arNewId(),m,nm:M.n,p:(M.tier*3)%8,lv:1,cond:100,slots:Array(M.slots).fill(null)}; A.bots.push(b); A.act=A.bots.length-1; persist(); hud(); beep(523,.1,"triangle"); setTimeout(()=>beep(784,.12,"triangle"),110);
-  toast(`🤖 ${M.n} is yours! It's waiting in the Robot Bay. Forge some cards and slot them in.`,"#43f0a4"); try{ stTrack("act","Bought robot "+M.n); }catch(e){} openArShop(); }
-function openArForge(tab){ const A=arS(); tab=tab||"forge"; const body=panel("Card Forge","Melt down items you own into cards for your robot. Rarer items make stronger cards."); currentView="arforge:"+tab; arHeader(body);
+  toast(`🤖 ${M.n} is yours! It's waiting in the TIX Bay. Forge some cards and slot them in.`,"#43f0a4"); try{ stTrack("act","Bought TIX "+M.n); }catch(e){} openArShop(); }
+function openArForge(tab){ const A=arS(); tab=tab||"forge"; const body=panel("Card Forge","Melt down items you own into cards for your TIX. Rarer items make stronger cards."); currentView="arforge:"+tab; arHeader(body);
   const tabs=el("div",{class:"row"}); [["forge","🔥 Forge"],["fuse","✨ Fuse 3 → 1"],["mine","🃏 My cards"],["guide","📖 Recipes"]].forEach(([k,t])=>tabs.append(el("button",{class:"btn"+(tab===k?" hot":""),type:"button",text:t,onclick:()=>openArForge(k)}))); body.append(tabs);
   if(tab==="forge"){ const inv=invList().map(([id,n])=>[id,n,arForgeOut(id)]).filter(x=>x[2]);
     body.append(el("div",{class:"sub",text:"Tap an item to see the card it makes. The item is used up. Parts, weapons, food, drinks, club items, hacks, decor and more all make different cards."}));
     if(!inv.length){ body.append(el("div",{class:"empty",text:"Nothing to forge yet. Salvage, buy or win items around the city, then come back."})); return; }
     const g=el("div",{class:"grid"}); for(const [id,n,k] of inv){ const c=arCard(k); g.append(itemCard(id,n,`→ ${c.F.ic} ${c.n}`,()=>arForgeAsk(id))); } body.append(g); }
   else if(tab==="fuse"){ const ready=Object.entries(arCardsFree(A)).filter(([k,n])=>n>=3&&arCard(k).t<3);
-    body.append(el("div",{class:"sub",text:"Fuse 3 copies of the same card into 1 card of the next tier. Cards slotted in a robot don't count."}));
+    body.append(el("div",{class:"sub",text:"Fuse 3 copies of the same card into 1 card of the next tier. Cards slotted in a TIX don't count."}));
     if(!ready.length) body.append(el("div",{class:"empty",text:"No card has 3 free copies yet."}));
     for(const [k,n] of ready){ const c=arCard(k), nk=c.f+":"+(c.t+1), fee=AR_FUSE_CR[c.t]; body.append(el("div",{class:"arcardrow"},arCardEl(k,n),el("span",{text:"→"}),arCardEl(nk),el("button",{class:"btn hot",type:"button",disabled:save.credits<fee||null,text:`Fuse · ₵${fee}`,onclick:()=>{ if(save.credits<fee) return; save.credits-=fee; A.cards[k]-=3; if(A.cards[k]<=0) delete A.cards[k]; A.cards[nk]=(A.cards[nk]||0)+1; persist(); hud(); beep(880,.15,"triangle"); toast(`✨ Fused into ${arCard(nk).n}!`,"#ffd36a"); openArForge("fuse"); }}))); } }
   else if(tab==="mine"){ const all=Object.entries(A.cards).sort((a,b)=>arCard(b[0]).t-arCard(a[0]).t); const free=arCardsFree(A);
@@ -8364,8 +8410,8 @@ function arForgeAsk(id){ const A=arS(), k=arForgeOut(id); if(!k) return; const c
   const can=(save.inv[id]||0)>0&&save.credits>=fee&&save.chips>=ch; body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openArForge("forge")}),el("button",{class:"btn hot",type:"button",disabled:!can||null,text:`Forge · ₵${fee}${ch?` + ${ch} chips`:""}`,onclick:()=>{
     if(!((save.inv[id]||0)>0)||save.credits<fee||save.chips<ch) return; addItem(id,-1); save.credits-=fee; save.chips-=ch; A.cards[k]=(A.cards[k]||0)+1; persist(); hud(); [330,494,660,988].forEach((f,i)=>setTimeout(()=>beep(f,.08,"square",.04),i*70)); toast(`🔥 Forged ${c.F.ic} ${c.n}!`,"#ff9a3c"); try{ stTrack("act","Forged "+c.n); }catch(e){}
     if((save.inv[id]||0)>0) arForgeAsk(id); else openArForge("forge"); }}))); }
-function openArBay(sel){ const A=arS(); const body=panel("Robot Bay","Your robots. Slot cards, repair damage, tune up stats and pick who fights."); currentView="arbay"; arHeader(body);
-  if(!A.bots.length){ body.append(el("div",{class:"empty",text:"No robots yet. Visit the Robot Shop next door. Your first one is free."}),el("button",{class:"btn hot",type:"button",text:"Go to the Robot Shop",onclick:()=>openArShop()})); return; }
+function openArBay(sel){ const A=arS(); const body=panel("TIX Bay","Your TIX. Slot cards, repair damage, tune up stats and pick who fights."); currentView="arbay"; arHeader(body);
+  if(!A.bots.length){ body.append(el("div",{class:"empty",text:"No TIX yet. Visit the TIX Shop next door. Your first one is free."}),el("button",{class:"btn hot",type:"button",text:"Go to the TIX Shop",onclick:()=>openArShop()})); return; }
   const i=sel!=null?clamp(sel,0,A.bots.length-1):A.act, b=A.bots[i], M=AR_BOTS[b.m], S=arStats(b);
   const pick=el("div",{class:"row"}); A.bots.forEach((x,k)=>pick.append(el("button",{class:"btn"+(k===i?" hot":""),type:"button",text:(k===A.act?"★ ":"")+x.nm,onclick:()=>openArBay(k)}))); body.append(pick);
   const top=el("div",{class:"arbot"}); top.append(arBotCanvas(b.m,b.p,120,120)); const info=el("div",{class:"arbi"}); top.append(info);
@@ -8378,24 +8424,24 @@ function openArBay(sel){ const A=arS(); const body=panel("Robot Bay","Your robot
   body.append(top,el("h3",{class:"arh3",text:`🃏 Card slots (${b.slots.filter(Boolean).length}/${b.slots.length})`}));
   const slots=el("div",{class:"arslots"}); b.slots.forEach((k,s)=>{ const box=el("button",{class:"arslot"+(k?" on":""),type:"button",onclick:()=>arSlotPick(i,s)}); if(k){ const c=arCard(k); box.append(el("span",{class:"arci",text:c.F.ic}),el("strong",{text:c.n}),el("small",{text:AR_KIND[c.F.k]})); } else box.append(el("span",{class:"arci",text:"+"}),el("small",{text:"Empty slot"})); slots.append(box); }); body.append(slots);
   const cust=el("div",{class:"row"}); cust.append(el("span",{class:"sub",text:"Paint:"})); AR_PAINTS.forEach((c,k)=>cust.append(el("button",{class:"arsw"+(b.p===k?" on":""),type:"button",title:AR_PAINTN[k],"aria-label":AR_PAINTN[k]+" paint",style:`background:${c}`,onclick:()=>{ b.p=k; persist(); openArBay(i); }})));
-  const nm=el("input",{type:"text",maxlength:"18",value:b.nm,"aria-label":"Robot name",class:"arnm"}); cust.append(nm,el("button",{class:"btn",type:"button",text:"Rename",onclick:()=>{ const v=nm.value.replace(/[<>]/g,"").trim().slice(0,18); if(!v) return; try{ if(typeof nameBlocked==="function"&&nameBlocked(v)) return toast("Pick a different name."); }catch(e){} b.nm=v; persist(); openArBay(i); }})); body.append(cust);
-  const refund=Math.floor(M.price*.5); if(A.bots.length>1||M.price>0) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:M.price?`Sell for ₵${refund.toLocaleString()} (cards come back)`:"Scrap the Rookie Frame (cards come back)",onclick:()=>{ const ok=el("div",{class:"row"}); const pb=panel("Robot Bay · Sell robot",`Sell ${b.nm}? Its cards go back to your collection.`); pb.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Keep it",onclick:()=>openArBay(i)}),el("button",{class:"btn hot",type:"button",text:M.price?`Sell · +₵${refund.toLocaleString()}`:"Scrap it",onclick:()=>{ A.bots.splice(i,1); save.credits+=refund; A.act=clamp(A.act>=i&&A.act>0?A.act-1:A.act,0,Math.max(0,A.bots.length-1)); persist(); hud(); openArBay(); }}))); }}))); }
-function arSlotPick(bi,s){ const A=arS(), b=A.bots[bi]; if(!b) return; const cur=b.slots[s]; const body=panel("Robot Bay · Slot a card",`Pick a card for slot ${s+1} of ${b.nm}.`); currentView="arslot";
+  const nm=el("input",{type:"text",maxlength:"18",value:b.nm,"aria-label":"TIX name",class:"arnm"}); cust.append(nm,el("button",{class:"btn",type:"button",text:"Rename",onclick:()=>{ const v=nm.value.replace(/[<>]/g,"").trim().slice(0,18); if(!v) return; try{ if(typeof nameBlocked==="function"&&nameBlocked(v)) return toast("Pick a different name."); }catch(e){} b.nm=v; persist(); openArBay(i); }})); body.append(cust);
+  const refund=Math.floor(M.price*.5); if(A.bots.length>1||M.price>0) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:M.price?`Sell for ₵${refund.toLocaleString()} (cards come back)`:"Release the Scrapling (cards come back)",onclick:()=>{ const ok=el("div",{class:"row"}); const pb=panel("TIX Bay · Sell TIX",`Sell ${b.nm}? Its cards go back to your collection.`); pb.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Keep it",onclick:()=>openArBay(i)}),el("button",{class:"btn hot",type:"button",text:M.price?`Sell · +₵${refund.toLocaleString()}`:"Release it",onclick:()=>{ A.bots.splice(i,1); save.credits+=refund; A.act=clamp(A.act>=i&&A.act>0?A.act-1:A.act,0,Math.max(0,A.bots.length-1)); persist(); hud(); openArBay(); }}))); }}))); }
+function arSlotPick(bi,s){ const A=arS(), b=A.bots[bi]; if(!b) return; const cur=b.slots[s]; const body=panel("TIX Bay · Slot a card",`Pick a card for slot ${s+1} of ${b.nm}.`); currentView="arslot";
   const row=el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openArBay(bi)})); if(cur) row.append(el("button",{class:"btn",type:"button",text:"Empty this slot",onclick:()=>{ b.slots[s]=null; persist(); openArBay(bi); }})); body.append(row);
   const free=arCardsFree(A), keys=Object.keys(free).sort((a,c)=>arCard(c).t-arCard(a).t);
   if(!keys.length) body.append(el("div",{class:"empty",text:"No free cards. Forge some at the Card Forge."}),el("button",{class:"btn hot",type:"button",text:"Go to the Card Forge",onclick:()=>openArForge()}));
-  const g=el("div",{class:"arcards"}); for(const k of keys){ const c=el("button",{class:"arpick",type:"button",onclick:()=>{ if(b.slots.filter((x,j)=>j!==s&&x&&arCard(x).f===arCard(k).f).length>=2) return toast("Max 2 cards of the same kind per robot."); if(arCard(k).F.k==="x"&&b.slots.some((x,j)=>j!==s&&x&&arCard(x).F.k==="x"&&arCard(x).f===arCard(k).f)) return toast("Only one of each passive card per robot."); b.slots[s]=k; persist(); beep(700,.06,"triangle"); openArBay(bi); }}); c.append(arCardEl(k,free[k])); g.append(c); } body.append(g); }
+  const g=el("div",{class:"arcards"}); for(const k of keys){ const c=el("button",{class:"arpick",type:"button",onclick:()=>{ if(b.slots.filter((x,j)=>j!==s&&x&&arCard(x).f===arCard(k).f).length>=2) return toast("Max 2 cards of the same kind per TIX."); if(arCard(k).F.k==="x"&&b.slots.some((x,j)=>j!==s&&x&&arCard(x).F.k==="x"&&arCard(x).f===arCard(k).f)) return toast("Only one of each passive card per TIX."); b.slots[s]=k; persist(); beep(700,.06,"triangle"); openArBay(bi); }}); c.append(arCardEl(k,free[k])); g.append(c); } body.append(g); }
 function openArBoard(){ const A=arS(); const body=panel("Neon Arena · Rankings",`Season ${A.season} · Ranks: ${AR_RANKS.map(r=>r[0]+" "+r[1]).join(" · ")}`); currentView="arboard"; arHeader(body);
   const top=arTop(25); if(!top.length) body.append(el("div",{class:"empty",text:"Nobody has fought yet this season. Be the first."}));
   const list=el("div",{class:"list"}); top.forEach((r,i)=>{ const rk=arRank(r.pts); list.append(el("div",{class:"li"+(r.uid===myId?" me":"")},el("span",{class:"pill",style:`color:${rk.c};border-color:${rk.c}`,text:`#${i+1} ${rk.n}`}),el("span",{style:"flex:1",text:`${r.name}${r.tr?" 🏆×"+r.tr:""}`}),el("span",{class:"sub",text:`${r.pts} pts · ${r.w}W ${r.l}L`}))); }); body.append(list);
   body.append(el("div",{class:"sub",text:`Each new month starts a new season: you get chips for the best rank you reached (${AR_RANKS.map((r,i)=>r[0]+" "+AR_SEASON_CH[i]).join(", ")}), and points are halved.`})); }
-function openArGate(){ const A=arS(), b=arActive(); const body=panel("Neon Arena · Gate","Pick a fight. Your robot fights on its own. You play the cards."); currentView="argate"; arHeader(body);
-  if(!b){ body.append(el("div",{class:"empty",text:"You need a robot first. The Robot Shop gives you one free."}),el("button",{class:"btn hot",type:"button",text:"Go to the Robot Shop",onclick:()=>openArShop()})); return; }
+function openArGate(){ const A=arS(), b=arActive(); const body=panel("Neon Arena · Gate","Pick a fight. Your TIX fights on its own. You play the cards."); currentView="argate"; arHeader(body);
+  if(!b){ body.append(el("div",{class:"empty",text:"You need a TIX first. The TIX Shop gives you one free."}),el("button",{class:"btn hot",type:"button",text:"Go to the TIX Shop",onclick:()=>openArShop()})); return; }
   const r=arRank(A.pts), fee=AR_FEE[r.i]; const S=arStats(b);
-  body.append(el("div",{class:"arbot"},arBotCanvas(b.m,b.p,96,96),el("div",{class:"arbi"},el("strong",{text:`${b.nm} · Lv ${b.lv} · Power ${arPower(b)}`}),el("div",{class:"arst",text:`❤ ${Math.round(S.hp*(.5+b.cond/200))}/${S.hp} HP (condition ${b.cond}%) · 🃏 ${b.slots.filter(Boolean).length}/${b.slots.length} cards`}),b.cond<40?el("div",{class:"sub",style:"color:#ff9a3c",text:"Your robot is badly damaged. Repair it at the Robot Bay."}):null,!b.slots.some(Boolean)?el("div",{class:"sub",style:"color:#ff9a3c",text:"No cards slotted. Forge some cards first, your robot will only punch."}):null)));
+  body.append(el("div",{class:"arbot"},arBotCanvas(b.m,b.p,96,96),el("div",{class:"arbi"},el("strong",{text:`${b.nm} · Lv ${b.lv} · Power ${arPower(b)}`}),el("div",{class:"arst",text:`❤ ${Math.round(S.hp*(.5+b.cond/200))}/${S.hp} HP (condition ${b.cond}%) · 🃏 ${b.slots.filter(Boolean).length}/${b.slots.length} cards`}),b.cond<40?el("div",{class:"sub",style:"color:#ff9a3c",text:"Your TIX is badly damaged. Repair it at the TIX Bay."}):null,!b.slots.some(Boolean)?el("div",{class:"sub",style:"color:#ff9a3c",text:"No cards slotted. Forge some cards first, your TIX will only punch."}):null)));
   const fights=el("div",{class:"argates"});
-  fights.append(arGateBtn("🎯 Practice","vs a training bot. Free. No rewards, no wear.",true,()=>arFightStart({mode:"practice"})));
-  fights.append(arGateBtn(`⚔ Ranked fight · ₵${fee}`,`vs another player's robot or an arena rival near your rank. Win: credits, chips, rank points and a chance at a rare part.`,save.credits>=fee,()=>arFightStart({mode:"ranked",fee})));
+  fights.append(arGateBtn("🎯 Practice","vs a training dummy. Free. No rewards, no wear.",true,()=>arFightStart({mode:"practice"})));
+  fights.append(arGateBtn(`⚔ Ranked fight · ₵${fee}`,`vs another player's TIX or an arena rival near your rank. Win: credits, chips, rank points and a chance at a rare part.`,save.credits>=fee,()=>arFightStart({mode:"ranked",fee})));
   const T=A.tour&&A.tour.w===arWeek()?A.tour:null, tfee=300+r.i*200, done=A.tourW===arWeek();
   fights.append(arGateBtn(done?"🏆 Weekly tournament: won this week!":T&&T.paid?`🏆 Tournament · round ${T.r+1} of 3`:`🏆 Weekly tournament · ₵${tfee}`,done?"Come back next week for a new bracket.":"3 rounds in a row against tougher rivals. Win all 3 for a big prize, a trophy and a guaranteed rare part. Lose and you're out for the week.",!done&&(T&&T.paid||save.credits>=tfee),()=>arTourNext(tfee)));
   body.append(fights,el("div",{class:"sub",text:`Record ${A.w}W ${A.l}L · Best ${AR_RANKS[arTierI(A.best)][0]} · Trophies ${A.trophies||0}`})); }
@@ -8410,13 +8456,13 @@ function arRivalBuild(ti,boost){ const pool=Object.entries(AR_BOTS).filter(([m,M
   const lv=clamp(1+ti*2+Math.floor(Math.random()*2)+(boost||0),1,10), ct=clamp(Math.floor(ti*.7)+(boost?1:0),0,3), fams=Object.keys(AR_FAM), cards=[]; let pas=0;
   for(let i=0;i<M.slots;i++){ let f; do{ f=fams[Math.floor(Math.random()*fams.length)]; } while(AR_FAM[f].k==="x"&&(pas||Math.random()<.6)); if(AR_FAM[f].k==="x") pas=1; cards.push(f+":"+clamp(ct-(Math.random()<.3?1:0),0,3)); }
   return {nm:AR_RIVALS[Math.floor(Math.random()*AR_RIVALS.length)],bot:{m,p:Math.floor(Math.random()*8),lv},cards,who:"Arena rival"}; }
-function arPickOpponent(){ const A=arS(), cand=[]; for(const [uid,h] of Object.entries(homes||{})){ if(uid===myId) continue; const o=arCleanPub(h&&h.ar); if(o&&o.cards.length&&Math.abs(o.pts-A.pts)<=320) cand.push({nm:o.bot.nm,bot:o.bot,cards:o.cards,who:(names[uid]||h.name||"Runner")+"'s robot",uid,pts:o.pts}); }
+function arPickOpponent(){ const A=arS(), cand=[]; for(const [uid,h] of Object.entries(homes||{})){ if(uid===myId) continue; const o=arCleanPub(h&&h.ar); if(o&&o.cards.length&&Math.abs(o.pts-A.pts)<=320) cand.push({nm:o.bot.nm,bot:o.bot,cards:o.cards,who:(names[uid]||h.name||"Runner")+"'s TIX",uid,pts:o.pts}); }
   if(cand.length&&Math.random()<.75) return cand[Math.floor(Math.random()*cand.length)]; const pw=arActive()?arPower(arActive()):0, pti=pw<320?0:pw<460?1:pw<640?2:pw<880?3:pw<1150?4:5; return arRivalBuild(Math.min(5,Math.max(arRank(A.pts).i,pti-1))); }
 function arFighter(src,cond){ const b={m:src.bot.m,lv:src.bot.lv||1,slots:src.cards||[]}; const M=AR_BOTS[b.m], S=arStats(b), hpMul=cond==null?1:(.5+cond/200);
   const cards=(src.cards||[]).map(k=>arCard(k)).filter(c=>c&&c.F.k!=="x").map(c=>({c,cd:c.F.cd*(M.ty==="a"?.88:1),ch:.35+Math.random()*.2}));
   return {nm:src.nm||M.n,who:src.who||"",m:b.m,p:src.bot.p||0,ty:M.ty,max:Math.round(S.hp*hpMul),hp:Math.round(S.hp*hpMul),atk:S.atk,aps:S.aps,cp:M.ty==="a"?1.25:1,def:M.ty==="h"?.15:0,cards,swing:Math.random()*.4,shield:0,shUntil:0,stun:0,haze:0,bleed:0,bleedD:0,haste:0,anim:{atk:0,hit:0},x:0}; }
 function arFightStart(o){ if($("#gwin")) return; const A=arS(), b=arActive(); if(!b) return openArShop(); closePanel();
-  let op; if(o.mode==="practice") op={nm:"Training Bot",bot:{m:"rookie",p:6,lv:1},cards:["spike:0"],who:"Practice"}; else if(o.mode==="tour") op=arRivalBuild(Math.min(5,arRank(A.pts).i+o.round),1+o.round); else { op=arPickOpponent(); save.credits-=o.fee; persist(); hud(); }
+  let op; if(o.mode==="practice") op={nm:"Training Dummy",bot:{m:"rookie",p:6,lv:1},cards:["spike:0"],who:"Practice"}; else if(o.mode==="tour") op=arRivalBuild(Math.min(5,arRank(A.pts).i+o.round),1+o.round); else { op=arPickOpponent(); save.credits-=o.fee; persist(); hud(); }
   const me=arFighter({nm:b.nm,bot:{m:b.m,p:b.p,lv:b.lv},cards:b.slots.filter(Boolean),who:save.name||myName},o.mode==="practice"?100:b.cond), en=arFighter(op,null);
   me.x=-1; en.x=1; ARF={o,me,en,op,t:0,over:false,auto:!!(save.arAuto),fx:[],nums:[],last:performance.now(),open:true,paused:false,cd:3.2,bi:A.act};
   arShell(); beep(220,.3,"sawtooth",.04); requestAnimationFrame(arLoop); }
@@ -8425,7 +8471,7 @@ function arShell(){ const F=ARF; const wrap=el("div",{id:"gwin",class:"arena",ro
     el("button",{class:"btn"+(F.auto?" hot":""),type:"button",id:"arAuto",title:"Auto-play cards (A)",text:"🤖 Auto",onclick:()=>arToggleAuto()}),el("button",{class:"btn hot",type:"button",text:"✕",title:"Leave (Esc)","aria-label":"Leave fight",onclick:()=>arAskLeave()}));
   const box=el("div",{class:"arbox"}); const cv=document.createElement("canvas"); cv.className="arcv"; box.append(cv); const cards=el("div",{class:"arbar",id:"arBar"});
   F.me.cards.forEach((c,i)=>{ const b=el("button",{class:"arplay k-"+c.c.F.k,type:"button",onclick:()=>arPlay(F.me,F.en,i,true)},el("i",{class:"arfill"}),el("span",{class:"arci",text:c.c.F.ic}),el("strong",{text:c.c.n}),el("kbd",{text:String(i+1)})); cards.append(b); c.el=b; });
-  if(!F.me.cards.length) cards.append(el("div",{class:"sub",style:"padding:10px",text:"No cards slotted. Your robot can only punch. Forge cards at the Card Forge."}));
+  if(!F.me.cards.length) cards.append(el("div",{class:"sub",style:"padding:10px",text:"No cards slotted. Your TIX can only punch. Forge cards at the Card Forge."}));
   const modal=el("div",{class:"anmodal",id:"arModal",hidden:true}); box.append(modal); wrap.append(bar,box,cards); $("#game").appendChild(wrap); try{ releaseKeys&&releaseKeys(); }catch(e){}
   F.cv=cv; F.c=cv.getContext("2d"); F.box=box; const fit=()=>{ const r=box.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1); if(r.width<10) return; cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); cv.style.width=r.width+"px"; cv.style.height=r.height+"px"; F.dpr=dpr; F.w=r.width; F.h=r.height; };
   F.fit=fit; fit(); try{ F.ro=new ResizeObserver(fit); F.ro.observe(box); }catch(e){ addEventListener("resize",fit); } }
@@ -8464,11 +8510,11 @@ function arRender(){ const F=ARF, g=F.c, W=F.w, H=F.h; g.setTransform(F.dpr,0,0,
   for(let k=0;k<Math.floor(W/14);k++){ const y=H*.2+((k*7)%4)*H*.07, jump=Math.sin(t*6+k*1.3)>.75?-4:0; g.fillStyle=["#2a1a4a","#3a2060","#24304e","#4a1a40"][k%4]; g.fillRect(k*14,y+jump,10,12); g.fillRect(k*14+2,y-6+jump,6,6); }
   for(let k=0;k<3;k++){ g.save(); g.globalAlpha=.08; g.fillStyle=k%2?"#ff3fa8":"#38e8ff"; g.beginPath(); const bx=W*(.2+k*.3)+Math.sin(t*.7+k)*W*.1; g.moveTo(bx,H*.78); g.lineTo(bx-60,0); g.lineTo(bx+60,0); g.fill(); g.restore(); }
   const fy=H>W*1.1?H*.66:H*.8; g.fillStyle="#140c2c"; g.fillRect(-20,fy,W+40,H-fy); g.strokeStyle="#ff3fa8"; g.globalAlpha=.55+.2*Math.sin(t*3); g.lineWidth=3; g.beginPath(); g.ellipse(W/2,fy+8,W*.42,18,0,0,Math.PI*2); g.stroke(); g.strokeStyle="#38e8ff"; g.globalAlpha=.4; g.beginPath(); g.ellipse(W/2,fy+8,W*.3,12,0,0,Math.PI*2); g.stroke(); g.globalAlpha=1;
-  const sc=Math.max(.9,Math.min(3,H/170,W/240)), xL=W*.28, xR=W*.72;
-  for(const f of [F.me,F.en]){ const side=f===F.me?-1:1, x=side<0?xL:xR; if(f.shUntil>F.t&&f.shield>0){ g.strokeStyle="#7ad8ff"; g.globalAlpha=.45+.2*Math.sin(t*10); g.lineWidth=3; g.beginPath(); g.ellipse(x,fy-40*sc,46*sc,56*sc,0,0,Math.PI*2); g.stroke(); g.globalAlpha=1; }
+  const sc=Math.max(.8,Math.min(2.6,H/210,W/270)), xL=W*.28, xR=W*.72;
+  for(const f of [F.me,F.en]){ const side=f===F.me?-1:1, x=side<0?xL:xR; if(f.shUntil>F.t&&f.shield>0){ g.strokeStyle="#7ad8ff"; g.globalAlpha=.45+.2*Math.sin(t*10); g.lineWidth=3; g.beginPath(); g.ellipse(x,fy-50*sc,56*sc,66*sc,0,0,Math.PI*2); g.stroke(); g.globalAlpha=1; }
     if(f.haze>F.t){ g.fillStyle="#b06bff"; for(let k=0;k<7;k++){ g.globalAlpha=.18; g.beginPath(); g.arc(x+Math.sin(t*2+k)*30*sc,fy-30*sc-k*8*sc,18*sc,0,Math.PI*2); g.fill(); } g.globalAlpha=1; }
     arDrawBot(g,f.m,f.p,x,fy,sc,-side,t,{atk:f.anim.atk/.3,hit:f.anim.hit,stun:f.stun>F.t?1:0,ko:f.hp<=0}); if(f.bleed>F.t){ g.fillStyle="#ff3a4a"; for(let k=0;k<3;k++) g.fillRect(x-10+k*9,fy-20*sc+((t*40+k*13)%30),3,5); } }
-  for(const x of F.fx){ const a=1-x.t/.6, from=x.from<0?xL:xR, to=x.from<0?xR:xL, self=x.from<0?xL:xR, y=fy-40*sc; g.globalAlpha=a; g.strokeStyle=x.col; g.fillStyle=x.col; g.lineWidth=4*sc;
+  for(const x of F.fx){ const a=1-x.t/.6, from=x.from<0?xL:xR, to=x.from<0?xR:xL, self=x.from<0?xL:xR, y=fy-50*sc; g.globalAlpha=a; g.strokeStyle=x.col; g.fillStyle=x.col; g.lineWidth=4*sc;
     if(x.k==="beam"){ g.beginPath(); g.moveTo(from,y); g.lineTo(to,y); g.stroke(); g.lineWidth=1.5*sc; g.strokeStyle="#ffffff"; g.stroke(); }
     else if(x.k==="bolt"){ g.beginPath(); g.moveTo(from,y); for(let k=1;k<=8;k++) g.lineTo(from+(to-from)*k/8,y+(Math.random()-.5)*30*sc); g.stroke(); }
     else if(x.k==="bomb"){ g.beginPath(); g.arc(to,y,(10+x.t*120)*sc,0,Math.PI*2); g.stroke(); }
@@ -8477,7 +8523,7 @@ function arRender(){ const F=ARF, g=F.c, W=F.w, H=F.h; g.setTransform(F.dpr,0,0,
     else if(x.k==="heal"||x.k==="drain"){ for(let k=0;k<6;k++){ const px=self+(k-2.5)*12*sc, py=y+20*sc-x.t*80*sc-k*4; g.fillStyle="#43f0a4"; g.fillRect(px-1,py-5,3,11); g.fillRect(px-5,py-1,11,3); } if(x.k==="drain"){ g.strokeStyle="#43f0a4"; g.setLineDash([6,6]); g.beginPath(); g.moveTo(to,y); g.lineTo(self,y); g.stroke(); g.setLineDash([]); } }
     else if(x.k==="stun"){ g.beginPath(); g.arc(to,y-30*sc,(8+x.t*40)*sc,0,Math.PI*2); g.stroke(); }
     g.globalAlpha=1; }
-  g.font=`700 ${Math.round(14*Math.min(1.5,sc))}px Silkscreen, monospace`; g.textAlign="center"; for(const n of F.nums){ const x=(n.side<0?xL:xR)+n.dx, y=fy-90*sc-n.t*50; g.globalAlpha=1-n.t/1.1; g.fillStyle="#000"; g.fillText(n.txt,x+2,y+2); g.fillStyle=n.col; g.fillText(n.txt,x,y); } g.globalAlpha=1;
+  g.font=`700 ${Math.round(14*Math.min(1.5,sc))}px Silkscreen, monospace`; g.textAlign="center"; for(const n of F.nums){ const x=(n.side<0?xL:xR)+n.dx, y=fy-118*sc-n.t*50; g.globalAlpha=1-n.t/1.1; g.fillStyle="#000"; g.fillText(n.txt,x+2,y+2); g.fillStyle=n.col; g.fillText(n.txt,x,y); } g.globalAlpha=1;
   g.restore();
   const bw=Math.min(300,W*.42); for(const f of [F.me,F.en]){ const left=f===F.me, x=left?12:W-12-bw, y=10; g.fillStyle="#0b0820"; g.fillRect(x,y,bw,40); g.strokeStyle=left?"#38e8ff":"#ff3fa8"; g.lineWidth=2; g.strokeRect(x,y,bw,40);
     g.fillStyle="#3a0a14"; g.fillRect(x+6,y+24,bw-12,10); const pct=f.hp/f.max; g.fillStyle=pct>.5?"#43f0a4":pct>.25?"#ffd36a":"#ff5a5a"; g.fillRect(x+6,y+24,(bw-12)*pct,10); if(f.shUntil>F.t&&f.shield>0){ g.fillStyle="#7ad8ff"; g.fillRect(x+6,y+21,Math.min(bw-12,(bw-12)*f.shield/f.max),3); }
@@ -8487,17 +8533,17 @@ function arRender(){ const F=ARF, g=F.c, W=F.w, H=F.h; g.setTransform(F.dpr,0,0,
   if(F.banner){ const a=Math.min(1,(1.4-F.banner.t)*3); g.globalAlpha=a; g.font="700 18px Silkscreen, monospace"; g.fillStyle=F.banner.side<0?"#38e8ff":"#ff3fa8"; g.fillText(F.banner.txt,W/2,H*.12+44); g.globalAlpha=1; }
   if(F.cd>0){ g.font=`700 ${Math.round(Math.min(W,H)*.2)}px Silkscreen, monospace`; g.fillStyle="#ffd36a"; g.fillText(F.cd>1?String(Math.ceil(F.cd-1)):"FIGHT!",W/2,H*.5); } }
 function arEnd(win,forfeit){ const F=ARF; if(!F||F.done) return; F.done=true; F.over=true; const A=arS(), b=A.bots[F.bi]; const kids=[]; let title=win?"VICTORY!":"DEFEAT";
-  if(F.o.mode==="practice"){ kids.push(el("p",{text:win?"The training bot is scrap. Nice timing.":"Even the training bot got you. Try slotting more cards."})); }
+  if(F.o.mode==="practice"){ kids.push(el("p",{text:win?"The training dummy is scrap. Nice timing.":"Even the training dummy got you. Try slotting more cards."})); }
   else { const r=arRank(A.pts); if(b){ b.cond=Math.max(0,b.cond-(win?6+Math.floor(Math.random()*7):12+Math.floor(Math.random()*9))); }
     if(F.o.mode==="ranked"){ const opPts=F.op&&F.op.pts!=null?F.op.pts:A.pts, adv=clamp(Math.round((opPts-A.pts)/40),-6,8);
       if(win){ const gain=20+adv+Math.floor(Math.random()*5), cr=Math.round(F.o.fee*2.6+Math.random()*F.o.fee*.6), ch=2+r.i*2; A.pts+=gain; A.w++; save.credits+=cr; save.chips+=ch; kids.push(el("p",{text:`+${gain} rank points · +₵${cr} · +${ch} chips`}));
         if(Math.random()<.35+r.i*.04){ const id=rollItem(.4+r.i*.5); addItem(id); kids.push(el("p",{style:`color:${RAR[BY[id].r].c}`,text:`Loot: ${BY[id].n} (${BY[id].r})`})); } try{ addXp(25+r.i*8,"Neon Arena win"); }catch(e){} }
-      else { const loss=10+Math.floor(Math.random()*5)-Math.min(4,Math.max(0,adv)); A.pts=Math.max(0,A.pts-loss); A.l++; kids.push(el("p",{text:`-${loss} rank points${forfeit?" (left the fight)":""}. Your robot took damage: repair it at the Robot Bay.`})); }
+      else { const loss=10+Math.floor(Math.random()*5)-Math.min(4,Math.max(0,adv)); A.pts=Math.max(0,A.pts-loss); A.l++; kids.push(el("p",{text:`-${loss} rank points${forfeit?" (left the fight)":""}. Your TIX took damage: repair it at the TIX Bay.`})); }
       const nr=arRank(A.pts); if(nr.i>r.i){ kids.push(el("p",{style:`color:${nr.c}`,text:`⬆ Promoted to ${nr.n}!`})); try{ broadcastSys(`reached ${nr.n} rank in Neon Arena!`); }catch(e){} } else if(nr.i<r.i) kids.push(el("p",{text:`Dropped to ${nr.n}.`}));
       A.best=Math.max(A.best,A.pts); A.seasonBest=Math.max(A.seasonBest||0,A.pts); }
     else if(F.o.mode==="tour"){ const T=A.tour; if(win&&T){ T.r++; if(T.r>=3){ A.tourW=arWeek(); A.tour=null; A.trophies=(A.trophies||0)+1; A.tourWins=(A.tourWins||0)+1; const cr=(F.o.fee||300)*6, ch=25+r.i*10, id=rollItem(2.5); addItem(id); save.credits+=cr; save.chips+=ch; title="🏆 CHAMPION!";
           kids.push(el("p",{text:`You won the weekly tournament! +₵${cr.toLocaleString()} · +${ch} chips · a trophy`}),el("p",{style:`color:${RAR[BY[id].r].c}`,text:`Prize part: ${BY[id].n} (${BY[id].r})`})); try{ broadcastSys("won the Neon Arena weekly tournament! 🏆"); }catch(e){} }
-        else kids.push(el("p",{text:`Round ${T.r} cleared! ${3-T.r} to go. Your robot keeps its damage between rounds.`})); }
+        else kids.push(el("p",{text:`Round ${T.r} cleared! ${3-T.r} to go. Your TIX keeps its damage between rounds.`})); }
       else { A.tourW=arWeek(); A.tour=null; kids.push(el("p",{text:"Knocked out of this week's tournament. A new bracket opens next week."})); } } }
   persist(); hud(); [win?523:330,win?659:262,win?784:196].forEach((f,i)=>setTimeout(()=>beep(f,.18,"triangle",.05),i*150));
   const btns=[["Back to the arena",()=>{ arClose(); openArGate(); },1]]; if(F.o.mode==="tour"&&win&&A.tour&&A.tour.r<3) btns.unshift(["Next round",()=>{ arClose(); arTourNext(); },1]);
