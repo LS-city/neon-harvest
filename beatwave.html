@@ -119,7 +119,7 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
       <span class="t">Car</span><select id="carStyle"><option value="coupe">80s Coupe</option><option value="super">Supercar</option><option value="muscle">Muscle car</option><option value="hover">Hover car</option><option value="none">No car</option></select>
       <label class="t">Paint <input type="color" id="carCol" value="#ff2e88"></label>
       <label class="t">Glow <input type="color" id="carGlow" value="#00f0ff"></label>
-      <span class="t" style="margin-left:6px">Person</span><select id="personPos"><option value="roof">Riding on the roof</option><option value="road">Dancing beside the car</option><option value="none">Hidden</option></select>
+      <span class="t" style="margin-left:6px">Person</span><select id="personPos"><option value="interp">Interpretive dancer (center stage)</option><option value="roof">Riding on the roof</option><option value="road">Dancing beside the car</option><option value="none">Hidden</option></select>
     </div>
     <div class="err" id="linkErr"></div>
     <div style="display:none"><input type="text" id="link"><button id="loadLink"></button><button id="fxOver" class="on"></button><button id="modeBtn"></button><div id="gameHelp"><a id="gameTab" href="#"></a></div></div>
@@ -675,6 +675,7 @@ function trigger(k){const m=KEYMAP[k];const P=GENRES[genre].pal;dancerHit(m);m.e
   else if(m.type==='chord'){fx.hue=(fx.hue+35)%360;const n=12;for(let i=0;i<n;i++)lasers.push({a:Math.PI*(1.04+i/(n-1)*.92),life:1,c:m.i});}
   else comets.push({x:-40,y:hz*(.85-m.i*.075),life:1,c:m.i});
   try{rideHit(m);}catch(_){}
+  try{interpHit(m);}catch(_){}
 }
 let last=performance.now(),scroll=0;const wave=new Float32Array(2048);
 function hexA(h,a){const n=parseInt(h.slice(1),16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';}
@@ -682,6 +683,7 @@ function hexA(h,a){const n=parseInt(h.slice(1),16);return 'rgba('+(n>>16&255)+',
 const GRID_MODES=[['flat','FLAT'],['waves','WAVES'],['hills','HILLS'],['tunnel','TUNNEL'],['vortex','VORTEX'],['eq','EQUALIZER']];
 let ride={grid:'waves',auto:true,car:'coupe',col:'#ff2e88',glow:'#00f0ff',person:'roof'};
 try{Object.assign(ride,JSON.parse(localStorage.getItem('bw_ride')||'{}'));}catch(_){}
+if(!ride.interpSet){ride.person='interp';ride.interpSet=1;}
 const gW={flat:0,waves:0,hills:0,tunnel:0,vortex:0,eq:0};gW[ride.grid]=1;
 let gRip=[],steer=0,steerT=0,brake=0,flame=0,gBar=-1,gT=0,lastAuto=0;
 function saveRide(){try{localStorage.setItem('bw_ride',JSON.stringify(ride));}catch(_){}}
@@ -747,6 +749,7 @@ function drawCar(x,y,s,P,now){const st=ride.car;if(st==='none')return null;const
 function drawRide(now,dt,P){steer+=(steerT-steer)*Math.min(1,dt*3);steerT*=Math.pow(.6,dt);brake=Math.max(0,brake-dt*3);flame=Math.max(0,flame-dt*3.5);
   const iC=steer*4.5;const[gx,gy]=gpt(iC,.9,gT);const s=.82;const bob=fx.kick*7+Math.sin(now/180)*1.2;
   if(hype>.35){g.strokeStyle=hexA(ride.glow,(hype-.35)*.9);g.lineWidth=2;for(let k=0;k<6;k++){const yy=H*.7+((now/3+k*90)%(H*.3));g.beginPath();g.moveTo(k%2?W*.08:W*.92,yy);g.lineTo(k%2?W*.02:W*.98,yy+40);g.stroke();}}
+  if(ride.person==='interp'){const q=gpt(steer*5,.58,gT);drawCar(q[0],q[1]-bob*.5,.42,P,now);drawInterp(now,dt,P);return;}
   let roofY=null;if(ride.person==='road'){const q=gpt(steer*4.5-2.6,.86,gT);drawPerson(now,dt,q[0],q[1],2.6);}
   const ry=drawCar(gx,gy-bob,s,P,now);if(ry!=null)roofY=gy-bob+ry;
   if(ride.person==='roof'){if(roofY!=null)drawPerson(now,dt,gx,roofY+6,2.2);else drawPerson(now,dt,gx,gy,2.6);}}
@@ -754,6 +757,86 @@ function drawRide(now,dt,P){steer+=(steerT-steer)*Math.min(1,dt*3);steerT*=Math.
 function drawPerson(now,dt,x,y,Z){const act=loopOn||clockOn||(performance.now()-lastHit<2500);const ph=(clockOn&&ctx)?(ctx.currentTime-t0)/spb():now/1000*bpm/60;
   if(view!=='dancer')updPose(dt,ph,act);const foot=drawFigure();const air=Math.max(0,pose.air.cur);
   g.save();g.imageSmoothingEnabled=false;g.shadowColor=look.glow;g.shadowBlur=GL*(8+fx.kick*12);g.translate(x,0);g.scale(Math.abs(sxv)<.15?.15*Math.sign(sxv||1):sxv,1);g.drawImage(spr,-40*Z,y-(foot+air)*Z,80*Z,80*Z);g.restore();g.imageSmoothingEnabled=true;g.shadowBlur=0;}
+/* ================= INTERPRETIVE DANCER =================
+   A big glowing silhouette that interprets what you play. Every key is a gesture with a feeling:
+   chords set the emotion (major = open and reaching, minor = curling inward), melody notes make a hand reach
+   (higher note = higher reach), bass grounds the hips, snares snap accents, hats make the hands flutter,
+   CRASH is a leap and a spin. Joints move on springs (soft for chords, sharp for snares) so it flows;
+   ribbons trail from the hands and afterimages follow every move. */
+const ID={t:0,side:1,face:1,faceT:1,mood:0,air:0,airV:0,lastG:0,flut:0,pulse:0,ghosts:[],gT:0,rib:[[],[]],motes:[]};
+const IDK=['hip','lhand','rhand','lfoot','rfoot','lean','head','reach'];
+const IDS={};IDK.forEach(k=>IDS[k]={x:0,y:0,vx:0,vy:0,tx:0,ty:0,w:6,hold:0});
+const IFLOOR=()=>H*.86, IHIP=()=>H*.86-139;
+function idSet(k,x,y,w,hold){const s=IDS[k];s.tx=x;s.ty=y;if(w)s.w=w;s.hold=hold||0;}
+function idInit(){const fx0=cx,f=IFLOOR(),h=IHIP();IDS.hip.x=fx0;IDS.hip.y=h;IDS.lhand.x=fx0-60;IDS.lhand.y=h+10;IDS.rhand.x=fx0+60;IDS.rhand.y=h+10;IDS.lfoot.x=fx0-40;IDS.lfoot.y=f;IDS.rfoot.x=fx0+40;IDS.rfoot.y=f;ID.inited=1;}
+function isMinorNow(){try{const d=(magic&&clockOn&&ctx)?degAt(ctx.currentTime):0;const n=chordNotes(d);return (n[1]-n[0])===3;}catch(_){return false;}}
+function interpHit(m){if(ride.person!=='interp'||!ID.inited)return;const hx=IDS.hip.tx||cx,h=IHIP(),now=performance.now();ID.lastG=now;
+  if(m.type==='chord'){const minor=isMinorNow();ID.mood+=((minor?-1:1)-ID.mood)*.6;const s=ID.side=-ID.side,v=m.i%3;
+    if(!minor){ // open, reaching, lifting
+      if(v===0){idSet('lhand',hx-135,h-200,4.5,1.1);idSet('rhand',hx+135,h-192,4.5,1.1);idSet('lean',-.18,0,4,1.1);idSet('head',-.35,0,4,1.1);}
+      else if(v===1){idSet(s>0?'rhand':'lhand',hx+s*185,h-160,4.5,1.2);idSet(s>0?'lhand':'rhand',hx-s*120,h-60,4.5,1.2);idSet(s>0?'lfoot':'rfoot',hx-s*120,IFLOOR()-70,4,1.2);idSet('lean',s*.35,0,4,1.2);idSet('head',s*.3,0,4,1.2);}
+      else{idSet('lhand',hx-30,h-232,5,1);idSet('rhand',hx+30,h-240,5,1);idSet('hip',hx,h-20,5,1);idSet('head',-.5,0,4,1);}}
+    else{ // curling inward, introspective
+      if(v===0){idSet('lhand',hx+25,h-150,4,1.3);idSet('rhand',hx-25,h-175,4,1.3);idSet('lean',.38,0,3.5,1.3);idSet('head',.6,0,3.5,1.3);idSet('hip',hx,h+35,3.5,1.3);}
+      else if(v===1){idSet(s>0?'rhand':'lhand',hx+s*60,h-120,4,1.3);idSet(s>0?'lhand':'rhand',hx+s*90,h-40,4,1.3);idSet('lean',s*.45,0,3.5,1.3);idSet('head',s*.5+.3,0,3.5,1.3);idSet('hip',hx-s*25,h+25,3.5,1.3);}
+      else{idSet('lhand',hx-120,h+40,4,1.2);idSet('rhand',hx+120,h+50,4,1.2);idSet('lean',.6,0,3,1.2);idSet('head',.7,0,3,1.2);idSet('hip',hx,h+45,3,1.2);}}
+    ID.reachBurst=1;}
+  else if(m.type==='lead'){const s=ID.side=-ID.side,ht=30+m.i*22;idSet(s>0?'rhand':'lhand',hx+s*(112+m.i*5),h-ht,9,.55);idSet('lean',s*.12-(m.i/9)*.15,0,7,.55);idSet('head',-(m.i/9)*.4+s*.15,0,7,.55);
+    const hd=IDS[s>0?'rhand':'lhand'];for(let k=0;k<5;k++)ID.motes.push({x:hd.x,y:hd.y,vx:rnd(-40,40),vy:rnd(-90,-20),life:1,c:m.i});}
+  else if(m.type==='bass'){const s=m.i%2?1:-1;idSet('hip',hx+s*35,h+40,6,.6);idSet('lfoot',hx-75,IFLOOR(),6,.6);idSet('rfoot',hx+75,IFLOOR(),6,.6);idSet('lean',s*.1,0,6,.6);}
+  else if(m.type==='drum'){const d=DRUMS[m.i];
+    if(d==='kick')ID.pulse=1;
+    else if(d==='snare'||d==='clap'){const s=ID.side=-ID.side;idSet(s>0?'rhand':'lhand',hx+s*210,h-120+rnd(-40,40),20,.25);idSet('head',s*.6,0,20,.25);}
+    else if(d==='hat'||d==='ohat')ID.flut=Math.min(1,ID.flut+.5);
+    else if(d==='tomlo'||d==='tomhi'){const s=d==='tomlo'?-1:1;idSet(s>0?'rfoot':'lfoot',hx+s*150,IFLOOR()-50,12,.35);idSet('lean',-s*.2,0,10,.35);}
+    else if(d==='crash'){ID.airV=-430;ID.faceT=-ID.faceT;idSet('lhand',hx-170,h-205,8,.8);idSet('rhand',hx+170,h-205,8,.8);idSet('lfoot',hx-90,IFLOOR()-60,8,.8);idSet('rfoot',hx+90,IFLOOR()-40,8,.8);idSet('head',-.5,0,8,.8);ID.reachBurst=1.5;}
+    else if(d==='perc'){ID.flut=1;}}}
+// 2-bone IK: elbow/knee position from root, target, bone lengths, bend side
+function ik(ax,ay,tx,ty,a,b,bend){let dx=tx-ax,dy=ty-ay,d=Math.hypot(dx,dy);const md=a+b-.5;if(d>md){tx=ax+dx/d*md;ty=ay+dy/d*md;dx=tx-ax;dy=ty-ay;d=md;}d=Math.max(d,Math.abs(a-b)+.5);
+  const ca=(a*a+d*d-b*b)/(2*a*d),ang=Math.atan2(dy,dx)+bend*Math.acos(Math.max(-1,Math.min(1,ca)));return[[ax+Math.cos(ang)*a,ay+Math.sin(ang)*a],[tx,ty]];}
+function idTick(dt,now){if(!ID.inited)idInit();const T=now/1000,beat=(clockOn&&ctx)?(ctx.currentTime-t0)/spb():T*bpm/60,amp=.35+hype*.9,h=IHIP(),f=IFLOOR();
+  let lowE=0;for(let i=0;i<6;i++)lowE+=specS[i];lowE/=6;
+  // the always-on flow: a slow figure-8 in the hips and drifting arms, bigger when the music is hot
+  const sw=Math.sin(beat*Math.PI/2),sw2=Math.sin(beat*Math.PI);
+  const idle={hip:[cx+sw*28*amp,h+Math.abs(sw2)*12*amp+lowE*14],lhand:[cx-95-sw*40*amp,h-30-Math.sin(beat*Math.PI/2+1)*70*amp],rhand:[cx+95-sw*40*amp,h-30-Math.sin(beat*Math.PI/2+2.2)*70*amp],lfoot:[cx-45+sw*8,f],rfoot:[cx+45+sw*8,f],lean:[sw*.12*amp,0],head:[Math.sin(beat*Math.PI/4)*.2,0]};
+  for(const k of IDK){const S=IDS[k];if(S.hold>0)S.hold-=dt;else if(idle[k]){S.tx+=(idle[k][0]-S.tx)*Math.min(1,dt*1.6);S.ty+=(idle[k][1]-S.ty)*Math.min(1,dt*1.6);if(S.w>5)S.w+=(5-S.w)*Math.min(1,dt*2);}
+    const w=S.w,kk=w*w,c=2*w;S.vx+=(kk*(S.tx-S.x)-c*S.vx)*dt;S.vy+=(kk*(S.ty-S.y)-c*S.vy)*dt;S.x+=S.vx*dt;S.y+=S.vy*dt;}
+  // leap + spin
+  ID.airV+=1100*dt;ID.air=Math.min(0,ID.air+ID.airV*dt);if(ID.air>=0&&ID.airV>0){ID.air=0;ID.airV=0;}
+  ID.face+=(ID.faceT-ID.face)*Math.min(1,dt*5);ID.pulse=Math.max(0,ID.pulse-dt*5);ID.flut=Math.max(0,ID.flut-dt*2);ID.mood*=Math.pow(.85,dt);ID.reachBurst=Math.max(0,(ID.reachBurst||0)-dt);}
+function idPose(){const hip=IDS.hip,lean=IDS.lean.x,headT=IDS.head.x,air=ID.air,fl=ID.flut*6;
+  const hx=hip.x,hy=hip.y+air,neck=[hx+Math.sin(lean)*96,hy-Math.cos(lean)*96],pe=1+ID.pulse*.04;
+  const perp=[Math.cos(lean),Math.sin(lean)],sh=[[neck[0]-perp[0]*25*pe,neck[1]-perp[1]*25*pe],[neck[0]+perp[0]*25*pe,neck[1]+perp[1]*25*pe]];
+  const head=[neck[0]+Math.sin(lean+headT)*28,neck[1]-Math.cos(lean+headT)*28];
+  const hands=[[IDS.lhand.x+rnd(-fl,fl),IDS.lhand.y+air+rnd(-fl,fl)],[IDS.rhand.x+rnd(-fl,fl),IDS.rhand.y+air+rnd(-fl,fl)]];
+  const arms=[ik(sh[0][0],sh[0][1],hands[0][0],hands[0][1],60,56,1),ik(sh[1][0],sh[1][1],hands[1][0],hands[1][1],60,56,-1)];
+  const hp=[[hx-14,hy],[hx+14,hy]],feet=[[IDS.lfoot.x,Math.min(IFLOOR(),IDS.lfoot.y+air*.6)],[IDS.rfoot.x,Math.min(IFLOOR(),IDS.rfoot.y+air*.6)]];
+  const legs=[ik(hp[0][0],hp[0][1],feet[0][0],feet[0][1],72,70,1),ik(hp[1][0],hp[1][1],feet[1][0],feet[1][1],72,70,-1)];
+  return{hip:[hx,hy],neck,sh,head,arms,hp,legs,hands:arms.map(a=>a[1])};}
+function idDrawBody(Q,col,fill,alpha,wMul,face){g.save();g.globalAlpha=alpha;const sx=face;g.translate(Q.hip[0],0);g.scale(sx,1);g.translate(-Q.hip[0],0);
+  g.lineCap='round';g.lineJoin='round';const seg=(a,b,w)=>{g.lineWidth=w*wMul;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();};
+  for(const pass of [0,1]){g.strokeStyle=pass?fill:col;const add=pass?0:7;
+    Q.legs.forEach((L,i)=>{seg(Q.hp[i],L[0],18+add);seg(L[0],L[1],14+add);const fd=i?1:-1;seg(L[1],[L[1][0]+fd*13,L[1][1]+2],9+add);});
+    g.fillStyle=pass?fill:col;g.beginPath();g.moveTo(Q.sh[0][0],Q.sh[0][1]);g.lineTo(Q.sh[1][0],Q.sh[1][1]);g.lineTo(Q.hp[1][0]+(pass?0:4),Q.hp[1][1]);g.lineTo(Q.hp[0][0]-(pass?0:4),Q.hp[0][1]);g.closePath();g.fill();g.lineWidth=add+2;g.stroke();
+    seg(Q.neck,Q.head,10+add);Q.arms.forEach((A,i)=>{seg(Q.sh[i],A[0],13+add);seg(A[0],A[1],10+add);});
+    g.beginPath();g.arc(Q.head[0],Q.head[1],17+add/2,0,Math.PI*2);g.fill();}
+  g.restore();}
+function idRibbon(tr,c1,c2,wid){if(tr.length<3)return;for(let i=1;i<tr.length;i++){const a=tr[i-1],b=tr[i],u=i/tr.length;g.strokeStyle=u>.5?c2:c1;g.globalAlpha=Math.min(1,u*1.15)*.9;g.lineWidth=Math.max(1,wid*u);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();}g.globalAlpha=1;}
+function drawInterp(now,dt,P){idTick(dt,now);const Q=idPose(),glow=look.glow||P.wave,f=IFLOOR();
+  // spotlight + light pool
+  const sp=g.createLinearGradient(0,0,0,f);sp.addColorStop(0,hexA(glow,0));sp.addColorStop(1,hexA(glow,.10+ID.pulse*.08+hype*.06));g.fillStyle=sp;g.beginPath();g.moveTo(cx-40,0);g.lineTo(cx+40,0);g.lineTo(cx+260,f);g.lineTo(cx-260,f);g.closePath();g.fill();
+  const pool=g.createRadialGradient(Q.hip[0],f,10,Q.hip[0],f,240);pool.addColorStop(0,hexA(glow,.4+ID.pulse*.3));pool.addColorStop(1,hexA(glow,0));g.save();g.translate(0,f);g.scale(1,.18);g.fillStyle=pool;g.beginPath();g.arc(Q.hip[0],0,240,0,Math.PI*2);g.fill();g.restore();
+  // ribbons from both hands
+  const rw=14+hype*18+(ID.reachBurst||0)*12;Q.hands.forEach((hn,i)=>{const tr=ID.rib[i];tr.push([hn[0],hn[1]]);if(tr.length>52)tr.shift();});
+  g.save();g.lineCap='round';g.shadowColor=P.acc;g.shadowBlur=GL*14;idRibbon(ID.rib[0],P.acc,P.sun[0],rw);idRibbon(ID.rib[1],P.wave,P.acc,rw);g.restore();
+  // afterimages
+  ID.gT-=dt;if(ID.gT<=0){ID.gT=.07;ID.ghosts.push({Q,face:ID.face});if(ID.ghosts.length>6)ID.ghosts.shift();}
+  g.save();g.shadowBlur=0;ID.ghosts.forEach((G0,i)=>idDrawBody(G0.Q,hexA(P.acc,1),hexA(P.acc,1),.05+i*.025*(.5+hype),.92,G0.face));g.restore();
+  // the dancer: dark silhouette, glowing outline
+  g.save();g.shadowColor=glow;g.shadowBlur=GL*(22+ID.pulse*20);idDrawBody(Q,glow,'#0a0614',1,1,ID.face);g.restore();
+  // little light motes thrown by melody notes
+  ID.motes=ID.motes.filter(o=>(o.life-=dt*.7)>0);if(ID.motes.length>120)ID.motes.splice(0,ID.motes.length-120);ID.motes.forEach(o=>{o.x+=o.vx*dt;o.y+=o.vy*dt;o.vy+=10*dt;g.fillStyle='hsla('+((180+o.c*18+fx.hue)%360)+',100%,75%,'+o.life+')';g.fillRect(o.x,o.y,3,3);});
+  g.globalAlpha=1;}
 function draw(now){
   const dt=Math.min((now-last)/1000,.05);last=now;const P=GENRES[genre].pal;
   vq.sort((a,b)=>a.t-b.t);
