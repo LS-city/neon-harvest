@@ -385,6 +385,7 @@ textarea{resize:vertical;min-height:68px}
       <div class="signin">
         <button class="btn" id="signin" data-a="signin">Sign in to unlock</button>
         <div class="mt" id="who" role="status">Sign in opens your card, vault and radar.</div>
+        <button class="btn alt" id="coverBack" data-a="closeDex" style="margin-top:10px">← Back to NEON HARVEST</button>
       </div>
     </div>
   </div>
@@ -396,6 +397,7 @@ textarea{resize:vertical;min-height:68px}
 (() => {
 "use strict";
 const NH=(()=>{try{return parent!==window?parent.NHMYDEX:null}catch(e){return null}})();
+if(!NH){const cb=document.getElementById("coverBack");if(cb)cb.hidden=true;}
 if(!NH||!NH.db()||!NH.uid()){document.querySelector("#who").textContent="Open MyDex from inside NEON HARVEST, signed in.";document.querySelector("#signin").hidden=true;return}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -634,6 +636,8 @@ function nextMoment(){ if(momentOn||!momentQ.length||!ready)return; momentOn=tru
 let toastT=0;function toast(t){let e=$("#toast");if(!e){e=document.createElement("div");e.id="toast";e.setAttribute("role","status");$("#stage").appendChild(e)}e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,2600)}
 function sheet(html,keep){reqId++;const st=keep&&$("#sheet")?$("#sheet").scrollTop:0,had=keep&&$("#sheet");$("#ov").innerHTML=`<div id="scrim" data-a="close"></div><section id="sheet" class="live${had?" still":""}" role="dialog" aria-modal="true">${html}</section>`;if(st)$("#sheet").scrollTop=st;watch()}
 function closeSheet(){reqId++;$("#ov").innerHTML=""}
+// Esc: close the open sheet, otherwise go back to NEON HARVEST (keys stay inside this frame once you click in it)
+addEventListener("keydown",e=>{if(e.key!=="Escape")return;e.preventDefault();if($("#sheet")){closeSheet();return}if(NH&&typeof A!=="undefined"&&A.closeDex)A.closeDex()});
 const sh=t=>`<div class="sh"><h2>${esc(t)}</h2><button class="x" data-a="close" aria-label="Close">×</button></div>`;
 
 /* animate only badges on screen, so 100 live badges do not drain a phone */
