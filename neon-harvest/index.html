@@ -14045,7 +14045,11 @@ function persist(){ hud(); try{ bytesPetsSync(); }catch(e){} clearTimeout(saveTi
 // so a change made in the last half second used to be lost.
 function flushNow(){ if(saveTimer){ clearTimeout(saveTimer); saveTimer=null; try{ flush(); }catch(e){} } }
 addEventListener("pagehide",flushNow); document.addEventListener("visibilitychange",()=>{ if(document.hidden) flushNow(); });
+let SAVE_LOCK=false;
+// one safety copy of the cloud save per day, kept for 3 days (data/users/<uid>/bak0..bak2)
+function saveBackup(raw){ try{ if(!DB||!myId||!raw||!raw.name) return; const day=Math.floor(Date.now()/864e5), k="bak"+(day%3); const last=+localStorage.getItem("nh_bak_day")||0; if(last===day) return; DB.doc(`data/users/${myId}/${k}`).set({day,at:Date.now(),save:JSON.stringify(raw)}).then(()=>{ try{ localStorage.setItem("nh_bak_day",String(day)); }catch(e){} }).catch(()=>{}); }catch(e){} }
 async function flush(){
+  if(SAVE_LOCK) return;
   save.savedAt=Date.now(); const data=JSON.parse(JSON.stringify(save));
   try{ localStorage.setItem("nh_save",JSON.stringify(data)); localStorage.setItem("nh_save_uid",myId||""); if(DB&&myId) localStorage.setItem("nh_save_dirty","1"); }catch(e){}
   // nh_save_dirty stays set until the cloud confirms this save, so an unfinished save can be recovered on the next visit.
@@ -15577,7 +15581,7 @@ setInterval(hud,1000);
     try{ const snap=await db.doc(`data/users/${myId}/save`).get(); if(snap.exists){ const cloud=snap.data(); let use=cloud;
         // If this device's last save never reached the cloud (the app was closed mid-save), keep the newer copy from this device.
         try{ const ls=JSON.parse(localStorage.getItem("nh_save")||"null"); if(localStorage.getItem("nh_save_dirty")==="1"&&localStorage.getItem("nh_save_uid")===myId&&ls&&(+ls.savedAt||0)>(+cloud.savedAt||0)) use=ls; }catch(e){}
-        save=sanitizeSave(use); hud(); if(use!==cloud) persist(); } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
+        let okLoad=true; try{ save=sanitizeSave(use); }catch(se){ okLoad=false; SAVE_LOCK=true; console.error("save load failed",se); toast("Your save couldn't load. Nothing will be overwritten. Please report this.","#ff5a6a"); } if(okLoad){ hud(); if(use!==cloud) persist(); saveBackup(cloud); } } else { let lu=""; try{ lu=localStorage.getItem("nh_save_uid")||""; }catch(e){} if(lu&&lu!==myId){ save=defaultSave(); myName=(await u.name())||"Runner"; hud(); } } if(save.name){ myName=save.name; names[myId]=myName; } else { persist(); } }catch(e){}
     db.collection("market").orderBy("at","desc").limit(60).onSnapshot(s=>{ market=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>BY[m.item]&&typeof m.seller==="string"&&+m.price>0); const ids=[...new Set(market.map(m=>m.seller))]; resolveNames(ids);  refreshView("trade");},()=>{});
     db.collection("viprooms").onSnapshot(s=>{ const prev=vipRooms; vipRooms={}; s.docs.forEach(d=>{ const v=d.data()||{}; if(!VIP_BY[d.id]) return; vipRooms[d.id]={by:typeof v.by==="string"?v.by:"",until:+v.until||0,open:v.open!==false,invites:Array.isArray(v.invites)?v.invites.filter(x=>typeof x==="string").slice(0,40):[],at:+v.at||0}; });
       resolveNames(Object.values(vipRooms).map(v=>v.by).filter(Boolean));
