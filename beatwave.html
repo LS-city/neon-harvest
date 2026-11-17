@@ -620,7 +620,6 @@ recBtn.onclick=async()=>{
   if(recorder){recorder.stop();return;}
   initAudio();if(!window.MediaRecorder){alertBox('Your browser can\'t record video. Try Chrome or Edge.');return;}
   const mode=document.getElementById('recMode').value;let stream;
-  if(mode!=='dancer')mode='visuals';
   if(mode==='visuals'||mode==='dancer'){setView(mode);S=1.5;cv.width=1920;cv.height=1080;stream=new MediaStream([...cv.captureStream(60).getVideoTracks(),...recDest.stream.getAudioTracks()]);}
   else{
     if(!frame.src){alertBox('Load your game first (SHOW ON SCREEN), then record.');return;}
