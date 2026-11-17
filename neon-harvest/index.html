@@ -303,6 +303,41 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #prompt .hphint{font-size:10px;color:#7fa9b8;margin-right:2px}
 #game.mobile #prompt.multi{flex-direction:column;align-items:stretch}
 #game.mobile #prompt .hpchip{min-height:38px;font-size:12px}
+#gwin.arena{background:#08051a}
+#gwin.arena .arbox{flex:1;min-height:0;position:relative;overflow:hidden}
+#gwin.arena .arcv{display:block}
+#gwin.arena .anmodal{position:absolute;inset:0;z-index:5;background:rgba(3,2,10,.7);display:flex;align-items:center;justify-content:center;padding:12px}#gwin.arena .anmodal[hidden]{display:none}
+#gwin.arena .anmc{background:#0f0c26;border:3px solid #38e8ff;padding:16px 18px;max-width:520px;width:100%;max-height:100%;overflow:auto;box-shadow:6px 6px 0 rgba(0,0,0,.6)}
+#gwin.arena .anmc h3{margin:0 0 8px;font-family:'Press Start 2P','Silkscreen',monospace;font-size:16px;line-height:1.5;color:#38e8ff}#gwin.arena .anmc p{margin:6px 0}
+#gwin.arena .anmodal.win .anmc{border-color:#ffd36a}#gwin.arena .anmodal.win h3{color:#ffd36a}#gwin.arena .anmodal.lose .anmc{border-color:#ff5a5a}#gwin.arena .anmodal.lose h3{color:#ff5a5a}
+#gwin.arena .anmb{margin-top:12px;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+#gwin.arena .arbar{display:flex;gap:8px;padding:8px max(10px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));background:#0b0820;border-top:2px solid #2a2f58;overflow-x:auto;flex:none}
+.arplay{position:relative;overflow:hidden;flex:1 1 0;min-width:96px;max-width:200px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#14102e;border:2px solid #3c3a7a;color:#8a86b8;font:inherit;font-size:12px;cursor:pointer;padding:6px}
+.arplay .arfill{position:absolute;left:0;right:0;top:0;background:rgba(0,0,0,.55);pointer-events:none}
+.arplay>*:not(.arfill){position:relative}
+.arplay.ready{color:#fff;border-color:#38e8ff;box-shadow:0 0 12px rgba(56,232,255,.45)}.arplay.ready.k-e{border-color:#43f0a4;box-shadow:0 0 12px rgba(67,240,164,.45)}
+.arplay kbd{position:absolute;top:3px;left:5px;font-size:10px;color:#8a86b8}
+.arci{font-size:20px;line-height:1}
+.arhead{display:flex;gap:6px;flex-wrap:wrap}
+.arh3{margin:12px 0 4px;font-size:14px;color:#cfc6ff}
+.arbot{display:flex;gap:12px;align-items:center;background:#0d0b22;border:1px solid #2a2f58;padding:8px;margin:6px 0}.arbot.hot{border-color:#43f0a4}
+.arpv{flex:none;image-rendering:pixelated;border:1px solid #2a2f58}
+.arbi{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.arst{font-size:12px;color:#9fd8ff}
+.arcond{width:100%;max-width:240px;height:8px;background:#2a0a14}.arcond i{display:block;height:100%}
+.arcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:8px}
+.arcard{background:#0d0b22;border:2px solid var(--rc,#3c3a7a);padding:8px;display:flex;flex-direction:column;gap:3px;text-align:left;min-width:0}
+.arcard .arct{display:flex;gap:6px;align-items:center}.arcard .arct strong{flex:1;color:var(--rc)}.arcn{color:#ffd36a;font-weight:700}
+.arck{font-size:10px;letter-spacing:.08em;color:#8a86b8;text-transform:uppercase}.arcd{font-size:12px}.arcs{font-size:11px;color:#9fd8ff}
+.arcardrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}.arcardrow .arcard{max-width:240px}
+.arpick{padding:0;background:none;border:0;font:inherit;color:inherit;cursor:pointer;text-align:left}.arpick:hover .arcard,.arpick:focus-visible .arcard{filter:brightness(1.3)}
+.arslots{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.arslot{min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:#0d0b22;border:2px dashed #3c3a7a;color:#8a86b8;font:inherit;cursor:pointer;padding:6px}.arslot.on{border-style:solid;border-color:#38e8ff;color:#fff}.arslot small{font-size:11px;color:#8a86b8}
+.arsw{width:28px;height:28px;border:2px solid #0d0b22;cursor:pointer;padding:0}.arsw.on{outline:2px solid #fff}
+.arnm{background:#0d0b22;border:1px solid #3c3a7a;color:#fff;padding:6px 8px;min-height:36px;font:inherit;width:160px;max-width:100%}
+.argates{display:grid;gap:8px;margin:8px 0}.argate{display:flex;flex-direction:column;gap:4px;text-align:left;background:#14102e;border:2px solid #ff3fa8;color:#fff;font:inherit;padding:12px 14px;cursor:pointer}.argate span{font-size:12px;color:#cfc6ff}.argate.off{border-color:#3c3a7a;opacity:.6;cursor:default}
+.list .li.me{border-color:#38e8ff}
+@media (max-width:640px){ .arplay{min-width:72px;font-size:11px} .arbot{flex-wrap:wrap} }
 #gwin.anon{background:#04030c}
 #gwin.anon .anres{flex:1;display:flex;gap:10px;align-items:center;min-width:0;overflow:hidden;font:600 13px 'IBM Plex Mono',monospace;white-space:nowrap}
 #gwin.anon .anr{padding:3px 8px;border:1px solid #2a2f58;border-radius:3px;background:#0b0a22}#gwin.anon .anr.d{color:#43f0a4}#gwin.anon .anr.p{color:#38e8ff}#gwin.anon .anr.p.full{color:#ff5a5a;border-color:#ff5a5a}#gwin.anon .anr.t{color:#cfc6ff}
@@ -3390,7 +3425,7 @@ function payBail(){ const c=bailCost(); if(save.credits<c){ toast(`Bail is ₵${
 
 /* ---------- role actions near you ---------- */
 function near(px,py,r){ return Math.abs(px-me.x)<r&&Math.abs(py-me.y)<55; }
-const NO_CRIME=["home","vip","ascend","line","void","dexhub"];
+const NO_CRIME=["home","vip","ascend","line","arena","void","dexhub"];
 function roleActions(){ const A=[]; if(jailed()||me.dead) return A; const sc=me.scene, rk=pRole(), L=cityGen(sc);
   const ps=[...peers.values()].filter(p=>p.by&&p.s===sc&&(p.home||null)===curHomeKey()&&near(p.dx,p.dy,70)&&!p.jl).sort((a,b)=>Math.abs(a.dx-me.x)-Math.abs(b.dx-me.x));
   for(const p of ps){ const nm=nameOf(p.by);
@@ -4179,6 +4214,7 @@ const SCENES={
   streamdome:{w:2400, spawn:200},
   racers:{w:7000, spawn:200},
   anon:{w:2600, spawn:200},
+  arena:{w:3200, spawn:220},
   outskirts:{w:2400, spawn:200},
   wilds:{w:800, spawn:400},
   simcity:{w:5200, spawn:240},
@@ -4292,6 +4328,7 @@ function hotspotsBase(sc){
   if(sc==="datasim") return dsimHot();
   if(sc==="hhomes") return hhHot();
   if(sc==="anon") return anonHot();
+  if(sc==="arena") return arHot();
   if(sc==="outskirts") return owGateHot();
   if(sc==="wilds") return [];
   if(sc==="hhfloor") return hhFloorHot();
@@ -4658,7 +4695,7 @@ function stepInner(now){
 }
 function render(){
   let _dzs=[0,0]; try{ _dzs=dzShake(); }catch(e){} ctx.setTransform(scale,0,0,scale,-camX*scale+_dzs[0]*scale,_dzs[1]*scale);
-  if(me.scene==="street"){ drawStreet(T); drawSimEntrance(T); } else if(me.scene==="simcity") drawSim(T); else if(me.scene==="zerocool") drawZeroCool(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="anon") drawAnonHub(T); else if(me.scene==="outskirts") drawOwGate(T); else if(me.scene==="wilds") drawOwWildsBg(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
+  if(me.scene==="street"){ drawStreet(T); drawSimEntrance(T); } else if(me.scene==="simcity") drawSim(T); else if(me.scene==="zerocool") drawZeroCool(T); else if(me.scene==="bar") drawBar(T); else if(me.scene==="byte") drawByte(T); else if(me.scene==="grid") drawGrid(T); else if(me.scene==="smacked") drawSmacked(T); else if(me.scene==="neonrow") drawRow(T); else if(me.scene==="line") drawLine(T); else if(me.scene==="datasim") drawDsim(T); else if(me.scene==="hhomes") drawHHomes(T); else if(me.scene==="hhfloor") drawHHFloor(T); else if(me.scene==="dexhub") drawDex(T); else if(me.scene==="cyberbuys") drawCbStore(T); else if(me.scene==="club") drawClub(T); else if(me.scene==="void") drawVoid(T); else if(me.scene==="den") drawDen(T); else if(me.scene==="rowin") drawRowIn(T); else if(me.scene==="linx") drawLinx(T); else if(me.scene==="vip") drawVip(T); else if(me.scene==="assembly") drawAssembly(T); else if(me.scene==="ascend") drawStarShow(T); else if(me.scene==="clash") drawClash(T); else if(me.scene==="civic") drawCivic(T); else if(me.scene==="prison") drawPrison(T); else if(me.scene==="streamdome") drawStreamDome(T); else if(me.scene==="racers") drawCarDisplay(T); else if(me.scene==="anon") drawAnonHub(T); else if(me.scene==="arena") drawArenaHub(T); else if(me.scene==="outskirts") drawOwGate(T); else if(me.scene==="wilds") drawOwWildsBg(T); else drawHome(T); try{ drawCityProps(T); }catch(e){} if(me.scene==="bar"||me.scene==="club") drawVipDoors(T);
   drawRPMachines(T);
   try{ const _st=dzOn(); if(_st&&_st.k==="kaiju"&&WX_OUT.includes(me.scene)) drawKaijuBack(_st,T,ctx,camX); }catch(e){}
   drawBytesTerminals(T);
@@ -4998,7 +5035,7 @@ const HELP=[
     ["NRC (Neon Row Coins)",["Everyone earns these by playing. Spend them only at Neon Row stores."]]],rel:["earnmoney","earnchips","dcc","nrc"]},
   {id:"travel",icon:"🚇",n:"Getting around",sub:"The street, the Metro and Fast Travel",secs:[
     ["Sector 9",["The main street: your apartment (Apt 7C), The Glitch bar, Parts Depot, Cyber Buys & More, the Trade Board, Scrap Alley and The Third Eye club."]],
-    ["The Metro (free)",["Runs to Byte Market, The Grid, Smacked Shop, Neon Row, the Gamers Den, Harvest Assembly, Linx Land, the Civic Center, Harvest Homes, the Stream Dome, Companion Clash, Project ANON, MyDex Hub and The Line (12/11).","Rust Gate Prison is where you end up if you're arrested."]],
+    ["The Metro (free)",["Runs to Byte Market, The Grid, Smacked Shop, Neon Row, the Gamers Den, Harvest Assembly, Linx Land, the Civic Center, Harvest Homes, the Stream Dome, Companion Clash, Project ANON, Neon Arena, MyDex Hub and The Line (12/11).","Rust Gate Prison is where you end up if you're arrested."]],
     ["Fast Travel",["Press T (or ☰ → Fast travel on phones) to jump to any Metro line or straight to key spots: your apartment, The Glitch, Parts Depot, Cyber Buys, the Trade Board, Scrap Alley, The Third Eye, Byte Bowl Noodles, the Courier Hub, Volt Armory, the UPLOAD arcade and your Linx Land plot.","You can't fast travel mid-fight in The Void."]],
     ["Find people",["Tap ONLINE at the top to see who's playing and where, and jump to them."]]]},
   {id:"rules",icon:"🛡",n:"House rules & safety",sub:"Be decent, report, block",secs:[
@@ -5157,6 +5194,7 @@ const HELP=[
     ["Also inside",["Lift weights for a Void buff, grab a canteen tray to heal, and buy snacks and phone cards at the commissary.","Visitors can see who's locked up and use the hoops, library, chapel and commissary too."]]],rel:["crime"]},
   {id:"outskirts",icon:"⛺",n:"The Outskirts",sub:"Open-world wasteland: salvage and build a hideout",where:"Metro → The Outskirts → walk through the Gate",steps:["Walk anywhere: WASD/arrows on PC, or tap where you want to go. Tap things to use them. M opens the map.","Salvage heaps, car wrecks, crates and server racks for scrap and parts. Spots refill after 8 to 16 minutes. The far side has the best loot.","What you find goes in your pack. Stash it at the gate or at a Stash crate in your hideout. Halvorsen drones patrol the far side: if one zaps you, you drop half your pack. Sprint (Shift) to escape.","Claim a free plot for ₵500 and press 🔨 Build. Place floors, walls, doors, furniture, neon, signs, graffiti and posters with your own pictures, in any color.","Tech costs parts: Generators power Mining Rigs (chips), Server Racks grow your pack, Turrets fight raiders, the Antenna shows patrols. Raiders come for hideouts with tech while you're home: tap them to zap them."]},
   {id:"anon",icon:"◆",n:"Project ANON",sub:"Real-time strategy vs Halvorsen Corp",where:"Metro → Project ANON → War Room",steps:["Walk into the War Room and pick an Operation or a Skirmish (Easy, Normal or Hard).","Drones mine glowing data crystals and bring the data to your Core. Data pays for everything. Power (from Cores and Power Relays) is your unit cap.","Select a drone to build: Node Forge (Runners, Glitchers, Hackers), Code Lab (upgrades), Mech Bay (Mechs), Firewall Turrets and more Relays.","PC: left-click or drag to select, right-click to move, attack, mine or set a rally point. A = attack-move. Phones: tap to select, tap the ground to move, use ▭ Box and ⚔ Army.","Destroy every Halvorsen building to win. Operations pay a one-time bonus. Skirmish wins pay credits (first 3 a day)."]},
+  {id:"arena",icon:"🏟",n:"Neon Arena",sub:"Robot fights: robots, cards and ranks",where:"Metro → Neon Arena",steps:["Robot Shop: claim a free Rookie Frame, then buy Humanoids (tough), Aliens (strongest cards) or Cyber Beasts (fastest attacks). Humanoid beats Beast, Beast beats Alien, Alien beats Humanoid.","Card Forge: melt items you own into cards. PC parts and weapons make Power cards, food, drinks, club items and hacks make Effect cards, decor and accessories make Passive cards. The item's rarity sets the tier (I to IV). Fuse 3 of the same card into the next tier.","Robot Bay: slot cards into your robot, repair damage after fights, tune it up to Lv 10 with credits and a PC part, paint and rename it.","Fights: your robot attacks on its own. Tap a card (or press 1 to 5) when it lights up. 🤖 Auto plays cards for you. 75 seconds, most HP left wins.","Ranked fights cost a small fee and pay credits, chips, rank points and sometimes a rare part. Ranks: Bronze, Silver, Gold, Platinum, Diamond, Neon. The weekly tournament is 3 fights in a row for a trophy and a big prize. A new season starts every month."]},
   {id:"cardisplay",icon:"🚗",n:"Cars & trucks",sub:"Buy and customize rides",where:"Metro → Harvest Homes → Neon Motors (far end)",steps:["Buy any of 15 hover cars and trucks at Neon Motors with credits.","Customize them in the resident garage next door: paint, decals, underglow, spoilers, light trails and a plate.","The old Car Display closed. If you owned a plot, your 500 chips were refunded."],secs:[
     ["Good to know",["Everyone walking by sees your rides. Release a plot to get half your chips back."]]]}]},
 
@@ -6685,7 +6723,7 @@ function curHomeKey(){ return me.scene==="rowin"?"row:"+(rowInSlot||""):me.scene
 function visitHome(owner){ const h=homes[owner]||{}; viewHome={owner,display:Array.from({length:6},(_,i)=>BY[(h.display||[])[i]]?h.display[i]:null),label:nameOf(owner)}; me.visiting=owner; go("home",160); toast(`Welcome to ${nameOf(owner)}'s apartment`); }
 function inviteToHome(by){ if(!ROOM||!by){ toast("Invites need a signed-in claude.ai session."); return; } ROOM.emit("invite",{to:by}).then(()=>toast(`Invite sent to ${nameOf(by)}`)).catch(()=>toast("Couldn't send the invite. Try again.")); }
 function onlinePlayers(){ const seen=new Map(); for(const p of peers.values()) if(p.by&&p.by!==myId&&!seen.has(p.by)) seen.set(p.by,p); return [...seen.values()]; }
-function sceneName(s){ return {simcity:"Sim City (underground)",zerocool:"Zero Cool (Sim City)",rowin:(rowStores[rowInSlot]&&rowStores[rowInSlot].name)||"a Neon Row store",dexhub:"MyDex Hub",datasim:"Data Sim HQ",hhomes:"Harvest Homes",hhfloor:"a Harvest Homes hallway",racers:"the Car Display",anon:"Project ANON",outskirts:"The Outskirts",wilds:"out in the Outskirts",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",line:"The Line (12/11)"}[s]||"somewhere"; }
+function sceneName(s){ return {simcity:"Sim City (underground)",zerocool:"Zero Cool (Sim City)",rowin:(rowStores[rowInSlot]&&rowStores[rowInSlot].name)||"a Neon Row store",dexhub:"MyDex Hub",datasim:"Data Sim HQ",hhomes:"Harvest Homes",hhfloor:"a Harvest Homes hallway",racers:"the Car Display",anon:"Project ANON",arena:"Neon Arena",outskirts:"The Outskirts",wilds:"out in the Outskirts",streamdome:"the Stream Dome theater",civic:"the Civic Center",prison:"Rust Gate Prison",street:"Sector 9",bar:"The Glitch",home:"an apartment",vip:"a backroom",assembly:"Harvest Assembly",byte:"Byte Market",grid:"The Grid",smacked:"Smacked Shop",neonrow:"Neon Row",cyberbuys:"Cyber Buys & More",club:"The Third Eye",void:"THE VOID (a cabinet in the Gamers Den)",den:"the Gamers Den",linx:"Linx Land",ascend:"Elysium (God Particle)",clash:"Companion Clash",line:"The Line (12/11)"}[s]||"somewhere"; }
 function openIntercom(){
   const body=panel("Intercom","Invite anyone who's online to your apartment. They get a card with a button that brings them straight here.");
   const here=onlinePlayers().filter(p=>p.s==="home"&&p.home===myId);
@@ -6697,7 +6735,7 @@ function openIntercom(){
 }
 
 /* ============================================================ METRO */
-const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},hhomes:{n:"Harvest Homes",x:140,d:"High-tech apartment towers: your apartment, your neighbors, elevators to every floor"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},den:{n:"Gamers Den",x:140,d:"Gamer & anime bar: themed booths, Den menu, jukebox, event boards and THE VOID arcade cabinet"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},anon:{n:"Project ANON",x:140,d:"Real-time strategy war vs Halvorsen Corp: the War Room and the Ops Board"},outskirts:{n:"The Outskirts",x:140,d:"Open-world wasteland past the city wall: salvage, build your own hideout"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
+const METRO={street:{n:"Sector 9",x:2650,d:"Home, The Glitch, Parts Depot, Scrap Alley"},dexhub:{n:"MyDex Hub",x:140,d:"Your player card, badges, the Badge Forge and real-life encounters"},hhomes:{n:"Harvest Homes",x:140,d:"High-tech apartment towers: your apartment, your neighbors, elevators to every floor"},clash:{n:"Companion Clash",x:140,d:"Companion battles, expeditions for parts, and Companion Customs (colors and gear)"},byte:{n:"Byte Market",x:140,d:"NPC stalls, prebuilt rigs, Courier Hub"},grid:{n:"The Grid",x:140,d:"Wager duels: chess, tic-tac-toe, rock paper scissors, plus the UPLOAD arcade"},smacked:{n:"Smacked Shop",x:140,d:"Real-life rewards: redeem, get a code, pick up in person"},neonrow:{n:"Neon Row",x:140,d:"Local business storefronts: visit partner stores and redeem their rewards"},den:{n:"Gamers Den",x:140,d:"Gamer & anime bar: themed booths, Den menu, jukebox, event boards and THE VOID arcade cabinet"},assembly:{n:"Harvest Assembly",x:140,d:"High-tech warehouse: take a shift at one of 10 assembly bays and earn ₵ per build"},linx:{n:"Linx Land",x:140,d:"Buy a plot (one per player) and run Credit Miners that mine ₵ while you're away"},line:{n:"The Line (12/11)",x:140,d:"Rassir's 12/11: a Game Boy-style road-trip RPG to the Colorado border. Rewards for every chapter"},civic:{n:"Civic Center",x:200,d:"City Hall & roles, Precinct 9, Clinic, elections, Black Market alley"},anon:{n:"Project ANON",x:140,d:"Real-time strategy war vs Halvorsen Corp: the War Room and the Ops Board"},arena:{n:"Neon Arena",x:220,d:"Robot fights: the Robot Shop, the Card Forge, the Robot Bay and ranked fights"},outskirts:{n:"The Outskirts",x:140,d:"Open-world wasteland past the city wall: salvage, build your own hideout"},streamdome:{n:"Stream Dome",x:200,d:"Movie theater: one big screen, seats and house lights. Play an MP4 from your device for everyone"},prison:{n:"Rust Gate Prison",x:200,d:"Visit the yard and see who's locked up"}};
 function openMetro(){ openFastTravel(); }
 const FT_SPOTS=[
   {g:"Sector 9",n:"Your apartment (Apt 7C)",d:"Stash, shelves, workbench, mining rack, living room",s:"home",x:200,home:true},
@@ -6720,6 +6758,8 @@ const FT_SPOTS=[
   {g:"Hot spots",n:"Car Display",d:"Dealership, garage and player car plots",s:"racers",x:()=>CD_DEAL[0]},
   {g:"Hot spots",n:"The Outskirts Gate",d:"Open world: salvage parts and build your hideout",s:"outskirts",x:()=>OWG.gate},
   {g:"Hot spots",n:"Project ANON War Room",d:"Real-time strategy: build a base and crush Halvorsen Corp",s:"anon",x:()=>ANH.war},
+  {g:"Hot spots",n:"Neon Arena",d:"Robot fights: buy a robot, forge cards, climb the ranks",s:"arena",x:()=>ARX.gate},
+  {g:"Hot spots",n:"Neon Arena · Card Forge",d:"Turn your items into fighting cards",s:"arena",x:()=>ARX.forge},
   {g:"Hot spots",n:"Neon Motors (Harvest Homes)",d:"Buy and customize your cars and trucks",s:"hhomes",x:()=>HH_GAR.deal},
   {g:"Hot spots",n:"MyDex Hub",d:"Open MyDex and forge items into badges",s:"dexhub",x:()=>DEX_X.term},
   {g:"Hot spots",n:"Data Sim (The Grid)",d:"Play Rassir's Data Sim and earn ₵ and chips for every Data Box",s:"grid",x:()=>DS_GRID.cab},
@@ -8140,6 +8180,331 @@ function drawAnonHub(t){ const W=SCENES.anon.w, X0=camX, X1=camX+VW, P=3, fr=Mat
   // ground: pixel tiles with a neon seam
   for(let x=Math.floor(X0/48)*48;x<X1;x+=48){ ctx.fillStyle=(x/48)%2?"#121528":"#101324"; ctx.fillRect(x,262,48,80); ctx.fillStyle="#1d2440"; ctx.fillRect(x,262,48,P); ctx.fillStyle="#0b0e1c"; ctx.fillRect(x,262,P,80); if((x/48)%3===0){ ctx.fillStyle=Math.floor(t*2+x)%2?"#17607e":"#38e8ff"; ctx.fillRect(x+21,268,P*2,P); } }
   if(X0<260) anHubDraw("metro",fr,140,262); }
+
+// ================================================================ NEON ARENA: robot fights.
+// Buy a fighting robot (Humanoid, Alien or Cyber Beast), forge your items into cards at the Card Forge,
+// slot the cards into your robot and fight in the arena. Ranked fights are against other players' saved
+// builds (homes/<uid>.ar) or arena rivals. Everything lives in save.arena.
+const ARX={metro:140,shop:700,forge:1300,bay:1880,gate:2450,board:3000};
+const AR_TY={h:{n:"Humanoid",ic:"🤖",d:"Takes 15% less damage."},a:{n:"Alien",ic:"👽",d:"Cards hit 25% harder and recharge 12% faster."},b:{n:"Cyber Beast",ic:"🐺",d:"The fastest attacks in the arena."}};
+const AR_BEATS={h:"b",b:"a",a:"h"};
+const AR_BOTS={
+  rookie:{n:"Rookie Frame",ty:"h",tier:0,hp:100,atk:8,aps:1,slots:2,price:0,ch:0,d:"A free starter frame from the arena. Basic, but it fights."},
+  patrol:{n:"Patrol Frame",ty:"h",tier:1,hp:125,atk:10,aps:1,slots:3,price:900,ch:0,d:"A sturdy security frame. Good all-rounder."},
+  vanguard:{n:"Vanguard Mk II",ty:"h",tier:2,hp:165,atk:13,aps:1,slots:4,price:3200,ch:25,d:"Military plating with shoulder cannons."},
+  paladin:{n:"Titan Paladin",ty:"h",tier:3,hp:215,atk:16,aps:.95,slots:5,price:9000,ch:90,d:"A walking fortress with a glowing core."},
+  glimmer:{n:"Glimmer Wisp",ty:"a",tier:1,hp:95,atk:9,aps:1.05,slots:3,price:950,ch:0,d:"A floating light-being. Fragile, but its cards sting."},
+  seer:{n:"Void Seer",ty:"a",tier:2,hp:125,atk:11,aps:1.05,slots:4,price:3400,ch:25,d:"Sees a second ahead. Wears a halo of static."},
+  leviathan:{n:"Star Leviathan",ty:"a",tier:3,hp:165,atk:14,aps:1.05,slots:5,price:9500,ch:90,d:"Something old from between the stars."},
+  hound:{n:"Scrap Hound",ty:"b",tier:1,hp:110,atk:8,aps:1.35,slots:3,price:900,ch:0,d:"A junkyard dog with a jaw like a vice."},
+  panther:{n:"Neon Panther",ty:"b",tier:2,hp:140,atk:10,aps:1.45,slots:4,price:3300,ch:25,d:"Sleek, silent and very fast."},
+  rex:{n:"Chrome Rex",ty:"b",tier:3,hp:190,atk:13,aps:1.4,slots:5,price:9300,ch:90,d:"A chrome tyrant lizard. Back spikes included."}};
+const AR_FAM={
+  laser:{n:"Laser Lance",k:"p",ic:"🔆",cd:6,dmg:30,fx:"beam",d:"A focused beam. One big hit.",from:["gpu"]},
+  over:{n:"Overclock Strike",k:"p",ic:"⚡",cd:4,dmg:20,haste:3,fx:"slash",d:"A fast hit, then attacks speed up for 3s.",from:["cpu","core"]},
+  logic:{n:"Logic Bomb",k:"p",ic:"💣",cd:6,dmg:26,pierce:1,fx:"bomb",d:"Blows straight through shields.",from:["chip"]},
+  spike:{n:"Data Spike",k:"p",ic:"📍",cd:3,dmg:16,fx:"beam",d:"A quick, cheap jab.",from:["ram","ssd","hdd","mobo","floppy"]},
+  arc:{n:"Arc Surge",k:"p",ic:"🌩",cd:8,dmg:32,stun:.6,fx:"bolt",d:"Lightning that briefly stuns.",from:["psu","batt","cable","miner"]},
+  cyclone:{n:"Cyclone Blades",k:"p",ic:"🌀",cd:6,dmg:9,hits:3,fx:"spin",d:"Three spinning hits.",from:["fan"]},
+  blade:{n:"Blade Rush",k:"p",ic:"🗡",cd:5,dmg:24,bleed:4,fx:"slash",d:"A slash that bleeds for 4s.",from:["weapon"]},
+  shock:{n:"Shock Punch",k:"p",ic:"👊",cd:4,dmg:19,fx:"bolt",d:"A heavy jolt.",from:["kbd","mouse","screen","cam","phone","console"]},
+  crash:{n:"System Crash",k:"e",ic:"⛔",cd:11,stun:1.6,fx:"stun",d:"Freezes the enemy.",from:["hack","enc"]},
+  drain:{n:"Power Drain",k:"e",ic:"🧲",cd:8,dmg:14,heal:14,fx:"drain",d:"Steals HP from the enemy.",from:["gadget"]},
+  nanite:{n:"Repair Nanites",k:"e",ic:"🩹",cd:9,heal:24,fx:"heal",d:"Heals your robot.",from:["food"]},
+  shield:{n:"Ion Shield",k:"e",ic:"🛡",cd:9,shield:28,dur:5,fx:"shield",d:"Absorbs damage for 5s.",from:["drink"]},
+  haze:{n:"Haze Cloud",k:"e",ic:"🌫",cd:10,haze:4,fx:"haze",d:"The enemy misses 45% of attacks for 4s.",from:["trip"]},
+  plate:{n:"Armor Plating",k:"x",ic:"🧱",hp:.08,d:"+8% max HP, always on.",from:["build","decor"]},
+  servo:{n:"Servo Boost",k:"x",ic:"⚙",aps:.07,d:"+7% attack speed, always on.",from:["acc","den"]}};
+const AR_KIND={p:"Power",e:"Effect",x:"Passive"};
+const AR_TM=[1,1.4,1.85,2.4], AR_TD=[1,1.15,1.3,1.5], AR_TP=[1,1.6,2.3,3.2], AR_ROM=["I","II","III","IV"], AR_RAR=["common","uncommon","rare","epic"];
+const AR_FORGE_CR=[40,120,320,800], AR_FORGE_CH=[0,2,6,18], AR_FUSE_CR=[80,240,600];
+const AR_RANKS=[["Bronze",0,"#c98a4a"],["Silver",200,"#c9d2e0"],["Gold",500,"#ffd36a"],["Platinum",900,"#7af0e0"],["Diamond",1400,"#8ac8ff"],["Neon",2000,"#ff3fa8"]];
+const AR_FEE=[20,40,80,140,220,320], AR_SEASON_CH=[10,25,50,90,150,250];
+const AR_RIVALS=["Rust Bucket","Unit KX-9","Bolt Baron","Gear Ghoul","Sparkjaw","Nullbyte","Ironclad Ivy","Static Sal","Pixel Reaper","Torque","Hex Hound","Glitch Gator","Volt Vandal","Chrome Duchess","Socket Sam","Overclock Ollie","Mother Board","Lugnut","Fuse Box Fiona","Kilowatt Kid"];
+const AR_PAINTS=["#38e8ff","#ff3fa8","#43f0a4","#ffd36a","#ff9a3c","#b06bff","#f2efe6","#ff5a5a"], AR_PAINTN=["Cyan","Pink","Green","Gold","Orange","Violet","White","Red"];
+const AR_PCPART=new Set(["chip","fan","mobo","gpu","ram","ssd","psu","cpu","core","hdd","screen","cam","batt","cable","kbd","mouse","phone","console"]);
+const AR_MAXBOTS=6;
+function arSeason(){ const d=new Date(); return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0"); }
+function arWeek(){ return String(Math.floor((Date.now()/864e5+3)/7)); }
+function arDef(){ return {bots:[],act:0,cards:{},pts:0,w:0,l:0,best:0,season:arSeason(),tourW:"",tourWins:0,trophies:0,seasonBest:0,starter:0}; }
+// never throws: a broken arena save just resets the arena, never the player
+function arClean(a){ try{ const d=arDef(); if(!a||typeof a!=="object") return d; const ck=k=>{ const [f,t]=String(k).split(":"); return AR_FAM[f]&&/^[0-3]$/.test(t); };
+    d.bots=(Array.isArray(a.bots)?a.bots:[]).filter(b=>b&&AR_BOTS[b.m]).slice(0,AR_MAXBOTS).map((b,i)=>{ const M=AR_BOTS[b.m]; const sl=(Array.isArray(b.slots)?b.slots:[]).slice(0,M.slots).map(k=>k&&ck(k)?String(k):null); while(sl.length<M.slots) sl.push(null);
+      return {id:typeof b.id==="string"?b.id.slice(0,16):"b"+i+Date.now().toString(36),m:b.m,nm:String(b.nm||M.n).replace(/[<>]/g,"").slice(0,18),p:clamp(Math.floor(+b.p)||0,0,AR_PAINTS.length-1),lv:clamp(Math.floor(+b.lv)||1,1,10),cond:clamp(Math.round(+b.cond),0,100)||(b.cond===0?0:100),slots:sl}; });
+    d.act=clamp(Math.floor(+a.act)||0,0,Math.max(0,d.bots.length-1));
+    if(a.cards&&typeof a.cards==="object") for(const [k,n] of Object.entries(a.cards)) if(ck(k)&&+n>0) d.cards[k]=Math.min(999,Math.floor(+n));
+    for(const k of ["pts","w","l","best","tourWins","trophies","seasonBest","starter"]) d[k]=Math.max(0,Math.floor(+a[k])||0);
+    d.season=typeof a.season==="string"?a.season.slice(0,8):arSeason(); d.tourW=typeof a.tourW==="string"?a.tourW.slice(0,12):""; if(a.tour&&typeof a.tour==="object"&&a.tour.w===arWeek()) d.tour={w:a.tour.w,r:clamp(Math.floor(+a.tour.r)||0,0,3),paid:!!a.tour.paid,fee:Math.max(0,Math.floor(+a.tour.fee)||0)};
+    return d; }catch(e){ return arDef(); } }
+function arS(){ if(!save.arena||typeof save.arena!=="object") save.arena=arDef(); const A=save.arena; if(!Array.isArray(A.bots)) A.bots=[]; if(!A.cards) A.cards={}; arSeasonCheck(A); return A; }
+function arSeasonCheck(A){ const s=arSeason(); if(A.season===s) return; const ti=arTierI(A.seasonBest||A.pts), ch=AR_SEASON_CH[ti]; A.season=s; A.pts=Math.floor(A.pts*.5); A.seasonBest=A.pts;
+  if(A.w+A.l>0){ save.chips+=ch; setTimeout(()=>toast(`🏟 New Neon Arena season! Last season you reached ${AR_RANKS[ti][0]}: +${ch} chips. Your points were halved.`,"#ff3fa8"),1500); } }
+function arTierI(p){ let i=0; AR_RANKS.forEach((r,k)=>{ if(p>=r[1]) i=k; }); return i; }
+function arRank(p){ const i=arTierI(p); return {i,n:AR_RANKS[i][0],c:AR_RANKS[i][2],next:AR_RANKS[i+1]?AR_RANKS[i+1][1]:null}; }
+function arCard(k){ const [f,t]=String(k).split(":"); const F=AR_FAM[f]; if(!F) return null; const ti=+t; return {k,f,t:ti,F,n:`${F.n} ${AR_ROM[ti]}`}; }
+function arCardDesc(k){ const c=arCard(k); if(!c) return ""; const F=c.F, m=AR_TM[c.t], dm=AR_TD[c.t], pm=AR_TP[c.t], s=[];
+  if(F.dmg) s.push(`${Math.round(F.dmg*m)}${F.hits?"×"+F.hits:""} dmg`); if(F.heal) s.push(`+${Math.round(F.heal*m)} HP`); if(F.shield) s.push(`${Math.round(F.shield*m)} shield`); if(F.stun) s.push(`stun ${(F.stun*dm).toFixed(1)}s`); if(F.haze) s.push(`haze ${(F.haze*dm).toFixed(1)}s`); if(F.bleed) s.push(`bleed ${F.bleed}s`); if(F.haste) s.push("haste 3s"); if(F.pierce) s.push("pierces shields");
+  if(F.hp) s.push(`+${Math.round(F.hp*pm*100)}% max HP`); if(F.aps) s.push(`+${Math.round(F.aps*pm*100)}% attack speed`); if(F.cd) s.push(`${F.cd}s recharge`); return s.join(" · "); }
+function arFamFor(it){ for(const [f,F] of Object.entries(AR_FAM)) if(F.from.includes(it.t)) return f; return null; }
+function arForgeOut(id){ const it=BY[id]; if(!it||it.bound) return null; const f=arFamFor(it); if(!f) return null; const t=Math.max(0,AR_RAR.indexOf(it.r)); return f+":"+t; }
+function arCardsFree(A){ const used={}; for(const b of A.bots) for(const k of b.slots) if(k) used[k]=(used[k]||0)+1; const out={}; for(const [k,n] of Object.entries(A.cards)){ const f=n-(used[k]||0); if(f>0) out[k]=f; } return out; }
+function arCardsTotal(A){ return Object.values(A.cards).reduce((a,b)=>a+b,0); }
+function arStats(b){ const M=AR_BOTS[b.m], lv=b.lv||1; let hp=M.hp*(1+.06*(lv-1)), atk=M.atk*(1+.05*(lv-1)), aps=M.aps; for(const k of b.slots){ const c=k&&arCard(k); if(c&&c.F.k==="x"){ if(c.F.hp) hp*=1+c.F.hp*AR_TP[c.t]; if(c.F.aps) aps*=1+c.F.aps*AR_TP[c.t]; } }
+  return {hp:Math.round(hp),atk:Math.round(atk*10)/10,aps:Math.round(aps*100)/100}; }
+function arPower(b){ const s=arStats(b); let p=s.hp*.4+s.atk*s.aps*6; for(const k of b.slots){ const c=k&&arCard(k); if(c) p+=(c.t+1)*14; } return Math.round(p); }
+function arActive(){ const A=arS(); return A.bots[A.act]||null; }
+function arNewId(){ return "b"+Date.now().toString(36)+Math.floor(Math.random()*999); }
+function arTuneCost(b){ const M=AR_BOTS[b.m], lv=b.lv; return {cr:Math.round(Math.max(400,M.price)*.12*lv),r:lv<=3?"common":lv<=6?"uncommon":lv<=8?"rare":"epic"}; }
+function arTunePart(r){ const ri=AR_RAR.indexOf(r); return invList().filter(([id])=>{ const it=BY[id]; return it&&!it.bound&&AR_PCPART.has(it.t)&&AR_RAR.indexOf(it.r)>=ri; }).sort((a,b)=>BY[a[0]].v-BY[b[0]].v)[0]; }
+function arRepairCost(b){ const M=AR_BOTS[b.m]; return Math.ceil((100-b.cond)*Math.max(300,M.price)/500); }
+// what other players see in homes/<uid>.ar
+function arPub(){ try{ const A=save&&save.arena; if(!A||!A.bots||!A.bots.length) return null; const b=A.bots[A.act]||A.bots[0]; return {pts:A.pts,w:A.w,l:A.l,tr:A.trophies||0,bot:{m:b.m,nm:b.nm,p:b.p,lv:b.lv},cards:b.slots.filter(Boolean).slice(0,5)}; }catch(e){ return null; } }
+function arCleanPub(o){ if(!o||typeof o!=="object"||!o.bot||!AR_BOTS[o.bot.m]) return null; const M=AR_BOTS[o.bot.m];
+  return {pts:Math.max(0,Math.floor(+o.pts)||0),w:Math.max(0,Math.floor(+o.w)||0),l:Math.max(0,Math.floor(+o.l)||0),tr:Math.max(0,Math.floor(+o.tr)||0),bot:{m:o.bot.m,nm:String(o.bot.nm||M.n).replace(/[<>]/g,"").slice(0,18),p:clamp(Math.floor(+o.bot.p)||0,0,7),lv:clamp(Math.floor(+o.bot.lv)||1,1,10)},cards:(Array.isArray(o.cards)?o.cards:[]).filter(k=>arCard(k)).slice(0,M.slots)}; }
+
+// ---------------------------------------------------------------- robot art (pixel blocks, feet at x,y, facing right)
+function arDrawBot(g,m,paint,x,y,sc,dir,t,st){ const M=AR_BOTS[m]; if(!M) return; st=st||{}; const P=Math.max(1,Math.round(2*sc)), tier=M.tier;
+  const metal=["#6f7480","#8c95a8","#b4bccc","#dde2ee"][tier], dark=["#2a2e38","#262b38","#2c3242","#303648"][tier], pc=AR_PAINTS[paint]||AR_PAINTS[0], glow=Math.sin(t*4)>-.6?pc:"#ffffff";
+  g.save(); g.translate(Math.round(x),Math.round(y)); if(dir<0) g.scale(-1,1); if(st.ko){ g.rotate(dir<0?-1.2:1.2); g.translate(0,-4*sc); }
+  const lunge=(st.atk||0)*14*sc; g.translate(lunge,0); const R=(a,b,w,h,c)=>{ g.fillStyle=c; g.fillRect(Math.round(a*sc),Math.round(b*sc),Math.max(P,Math.round(w*sc)),Math.max(P,Math.round(h*sc))); };
+  const flash=st.hit>0&&Math.floor(t*30)%2===0; const C=c=>flash?"#ffffff":c;
+  if(M.ty==="h"){ const bob=Math.round(Math.sin(t*3)*1); const step=Math.sin(t*6)*(st.walk?3:0);
+    R(-11,-22+0,8,22,C(dark)); R(3,-22,8,22,C(dark)); R(-12,-4,10,4,C(metal)); R(2,-4,10,4,C(metal));
+    R(-15,-47+bob,30,26,C(metal)); R(-13,-45+bob,26,4,C(dark)); R(-5,-38+bob,10,8,C(tier?pc:"#9aa3b5"));
+    R(-21,-45+bob,7,20,C(dark)); R(14,-45+bob+Math.round(step),7,20,C(dark)); R(-22,-27+bob,9,6,C(metal)); R(13,-27+bob,9,6,C(metal));
+    R(-8,-61+bob,16,14,C(metal)); R(-6,-57+bob,12,4,C(glow));
+    if(tier>=2){ R(-25,-50+bob,12,7,C(pc)); R(13,-50+bob,12,7,C(pc)); }
+    if(tier>=3){ R(-2,-70+bob,4,9,C(pc)); R(-3,-36+bob,6,6,C(glow)); R(-15,-22,30,3,C(pc)); }
+    if(tier===0){ R(-1,-66+bob,2,5,C("#9aa3b5")); R(-2,-68+bob,4,2,C("#ff5a5a")); } }
+  else if(M.ty==="a"){ const fl=Math.sin(t*2.2)*4, cy=-42+fl;
+    for(let k=0;k<3+tier;k++){ const ox=-12+k*(24/(2+tier)); for(let j=0;j<5;j++){ const wv=Math.sin(t*4+k+j*.8)*3; R(ox+wv,cy+12+j*5,4,5,C(j%2?dark:metal)); } }
+    R(-18,cy-12,36,24,C(metal)); R(-14,cy-16,28,4,C(metal)); R(-14,cy+12,28,4,C(metal)); R(-20,cy-6,4,12,C(metal)); R(16,cy-6,4,12,C(metal));
+    R(-8,cy-6,16,12,C(dark)); R(-5,cy-3,10,6,C(glow)); R(-2,cy-2,4,4,C("#ffffff"));
+    if(tier>=2){ R(-22,cy-24,44,2,C(pc)); R(-24,cy-22,4,2,C(pc)); R(20,cy-22,4,2,C(pc)); }
+    if(tier>=3){ R(-14,cy-30,4,12,C(pc)); R(10,cy-30,4,12,C(pc)); R(-26,cy,6,3,C(pc)); R(20,cy,6,3,C(pc)); R(-12,cy-10,5,4,C(glow)); R(7,cy-10,5,4,C(glow)); } }
+  else { const run=st.walk?Math.sin(t*12)*3:Math.sin(t*3)*.6, big=tier>=3?1.15:1;
+    R(-22,-14,5,14+run,C(dark)); R(-12,-14,5,14-run,C(dark)); R(8,-14,5,14-run,C(dark)); R(17,-14,5,14+run,C(dark));
+    R(-26,-31*big,46,17*big,C(metal)); R(-24,-17,42,3,C(dark)); R(-36,-31*big+2,12,4,C(metal)); R(-40,-31*big,6,3,C(pc));
+    R(16,-40*big,20*big,15*big,C(metal)); R(30*big,-33*big,8,6,C(metal)); R(32*big,-29*big,8,3,C(dark)); R(26*big,-36*big,5,4,C(glow));
+    if(tier===2){ R(18,-46,4,6,C(metal)); R(25,-46,4,6,C(metal)); R(-22,-30,36,2,C(pc)); }
+    if(tier>=3){ for(let k=0;k<5;k++) R(-20+k*8,-40*big,4,8,C(pc)); R(34*big,-28*big,10,3,C("#ffffff")); }
+    if(tier<=1){ R(-18,-28,20,3,C(pc)); } }
+  if(st.stun>0){ for(let k=0;k<3;k++){ const a=t*5+k*2.1; R(Math.cos(a)*14-2,-78+Math.sin(a)*4,4,4,"#ffd36a"); } }
+  g.restore(); }
+function arBotCanvas(m,paint,w,h){ const cv=document.createElement("canvas"); cv.width=w*2; cv.height=h*2; cv.style.width=w+"px"; cv.style.height=h+"px"; cv.className="arpv"; const g=cv.getContext("2d");
+  const draw=t=>{ g.clearRect(0,0,cv.width,cv.height); g.fillStyle="#0b0a1c"; g.fillRect(0,0,cv.width,cv.height); g.fillStyle="#1c1840"; g.fillRect(0,cv.height*.82,cv.width,cv.height*.18); g.fillStyle=AR_PAINTS[paint]||"#38e8ff"; g.globalAlpha=.25; g.fillRect(cv.width*.2,cv.height*.82,cv.width*.6,4); g.globalAlpha=1; arDrawBot(g,m,paint,cv.width/2-6,cv.height*.84,cv.height/95,1,t,{}); };
+  let raf=0; const loop=n=>{ if(!cv.isConnected&&raf>3){ return; } raf++; draw(n/1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); return cv; }
+
+// ---------------------------------------------------------------- the hub
+function arHot(){ return [{x:ARX.metro,hw:60,label:"Take the metro",act:()=>openMetro()},{x:ARX.shop,hw:120,label:"Robot Shop: buy a fighting robot",act:()=>openArShop()},{x:ARX.forge,hw:120,label:"Card Forge: turn items into cards",act:()=>openArForge()},{x:ARX.bay,hw:120,label:"Robot Bay: loadout, repairs and tune-ups",act:()=>openArBay()},{x:ARX.gate,hw:170,label:"Enter Neon Arena: fight!",act:()=>openArGate()},{x:ARX.board,hw:110,label:"Arena rankings",act:()=>openArBoard()}]; }
+function drawArenaHub(t){ const W=SCENES.arena.w, X0=camX, X1=camX+VW, P=3;
+  const sky=["#07030f","#0c0520","#120629","#180830","#1d0a2e"]; for(let i=0;i<5;i++){ ctx.fillStyle=sky[i]; ctx.fillRect(camX,i*54,VW,54); }
+  for(let i=0;i<34;i++){ const sx=(i*197)%W, sy=8+(i*41)%110; if(sx<X0||sx>X1) continue; ctx.fillStyle=Math.sin(t*2+i)>.5?"#ffffff":"#6a4a90"; ctx.fillRect(sx,sy,P,P); }
+  for(let i=0;i<4;i++){ const bx=ARX.gate-300+i*200; if(bx<X0-60||bx>X1+60) continue; const a=Math.sin(t*.8+i)*.5; ctx.save(); ctx.globalAlpha=.10; ctx.fillStyle=i%2?"#ff3fa8":"#38e8ff"; ctx.beginPath(); ctx.moveTo(bx,262); ctx.lineTo(bx+a*260-40,0); ctx.lineTo(bx+a*260+40,0); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  for(let i=0;i<30;i++){ const x=Math.floor((i*173)%W/P)*P, w=60+(i*29)%60, h=50+(i*61)%110; if(x+w<X0||x>X1) continue; ctx.fillStyle=i%2?"#0f0a22":"#120c28"; ctx.fillRect(x,262-h,w,h); for(let k=0;k<5;k++){ if((i+k)%3) continue; ctx.fillStyle=(i+k)%4?"#5a1a58":"#2a6a8a"; ctx.fillRect(x+8+k*10,262-h+12,5,P); } }
+  // the arena dome
+  if(X0<ARX.gate+360&&X1>ARX.gate-360){ const cx=ARX.gate; ctx.fillStyle="#170d30"; ctx.beginPath(); ctx.ellipse(cx,262,330,190,0,Math.PI,0); ctx.fill();
+    for(let k=0;k<4;k++){ ctx.strokeStyle=k%2?"#ff3fa8":"#38e8ff"; ctx.globalAlpha=.35+.25*Math.sin(t*3+k); ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(cx,262,330-k*46,190-k*34,0,Math.PI,0); ctx.stroke(); } ctx.globalAlpha=1;
+    neonText("NEON ARENA",cx,104,30,"#ff3fa8",flick(31,t)); ctx.fillStyle="#08050f"; ctx.fillRect(cx-90,150,180,112); ctx.fillStyle="#38e8ff"; ctx.fillRect(cx-94,146,188,4); ctx.fillRect(cx-94,146,4,116); ctx.fillRect(cx+90,146,4,116);
+    // holo fight inside the gate
+    const ph=t*1.6; arDrawBot(ctx,["patrol","panther","seer","rex","paladin","leviathan"][Math.floor(t/6)%6],Math.floor(t/6)%8,cx-36+Math.sin(ph)*6,250,.85,1,t,{atk:Math.max(0,Math.sin(ph*2))*.6});
+    arDrawBot(ctx,["hound","glimmer","vanguard","panther","rex","seer"][Math.floor(t/6)%6],(Math.floor(t/6)+3)%8,cx+36-Math.sin(ph)*6,250,.85,-1,t,{atk:Math.max(0,-Math.sin(ph*2))*.6,hit:Math.sin(ph*2)>.9?1:0});
+    for(let k=0;k<26;k++){ const sx=cx-300+k*24, sy=232+((k*7)%3)*6; ctx.fillStyle=(Math.sin(t*6+k)>.3)?"#2a1a4a":"#3a2a60"; ctx.fillRect(sx,sy-((Math.sin(t*5+k*1.7)>.7)?4:0),12,14); } }
+  // robot shop with a turntable display
+  if(X0<ARX.shop+220&&X1>ARX.shop-220){ const x=ARX.shop; ctx.fillStyle="#141a34"; ctx.fillRect(x-190,110,380,152); ctx.fillStyle="#0a0e20"; ctx.fillRect(x-170,150,340,112); neonText("ROBOT SHOP",x,136,20,"#38e8ff",flick(5,t));
+    const ms=Object.keys(AR_BOTS).filter(k=>k!=="rookie"), mi=Math.floor(t/3)%ms.length; ctx.fillStyle="#38e8ff"; ctx.globalAlpha=.2; ctx.fillRect(x-60,250,120,6); ctx.globalAlpha=1; arDrawBot(ctx,ms[mi],mi%8,x,250,1.1,Math.sin(t*.9)>0?1:-1,t,{});
+    pText(ctx,AR_BOTS[ms[mi]].n,x,160,"#cfe8ff",2,true); }
+  // card forge with floating cards
+  if(X0<ARX.forge+220&&X1>ARX.forge-220){ const x=ARX.forge; ctx.fillStyle="#241020"; ctx.fillRect(x-190,110,380,152); neonText("CARD FORGE",x,136,20,"#ff9a3c",flick(9,t));
+    ctx.fillStyle="#120608"; ctx.fillRect(x-60,180,120,82); const fg=.6+.4*Math.sin(t*9); ctx.fillStyle=`rgba(255,${120+Math.floor(fg*80)},40,.9)`; ctx.fillRect(x-44,214,88,40); ctx.fillStyle="#ffd36a"; ctx.fillRect(x-30,222,60,22);
+    for(let k=0;k<5;k++){ const a=t*1.2+k*1.256, fx=x+Math.cos(a)*130, fy=190+Math.sin(a*1.3)*24; ctx.fillStyle=["#38e8ff","#ff3fa8","#43f0a4","#ffd36a","#b06bff"][k]; ctx.fillRect(fx-9,fy-13,18,26); ctx.fillStyle="#0a0a14"; ctx.fillRect(fx-6,fy-10,12,20); ctx.fillStyle=["#38e8ff","#ff3fa8","#43f0a4","#ffd36a","#b06bff"][k]; ctx.fillRect(fx-3,fy-3,6,6); } }
+  // robot bay with your active robot
+  if(X0<ARX.bay+220&&X1>ARX.bay-220){ const x=ARX.bay; ctx.fillStyle="#10202a"; ctx.fillRect(x-190,110,380,152); neonText("ROBOT BAY",x,136,20,"#43f0a4",flick(13,t)); ctx.fillStyle="#08121a"; ctx.fillRect(x-150,154,300,108);
+    for(let k=0;k<6;k++){ ctx.fillStyle=k%2?"#ffd36a":"#141414"; ctx.fillRect(x-150+k*50,154,50,8); }
+    const b=save&&save.arena&&save.arena.bots&&save.arena.bots[save.arena.act]; if(b&&AR_BOTS[b.m]){ arDrawBot(ctx,b.m,b.p,x,256,1.1,1,t,{}); pText(ctx,b.nm,x,174,"#d8ffe8",2,true); } else pText(ctx,"NO ROBOT YET",x,206,"#7ab89a",2,true); }
+  // rankings screen
+  if(X0<ARX.board+170&&X1>ARX.board-170){ const x=ARX.board; ctx.fillStyle="#1a1530"; ctx.fillRect(x-130,118,260,144); ctx.fillStyle="#05040c"; ctx.fillRect(x-118,128,236,110); pText(ctx,"RANKINGS",x,136,"#ffd36a",2,true);
+    const top=arTop(3); top.forEach((r,i)=>pText(ctx,`${i+1}. ${String(r.name).slice(0,12)} ${r.pts}`,x-108,162+i*22,i===0?"#ff3fa8":"#cfc6ff",2)); if(!top.length) pText(ctx,"NO FIGHTS YET",x,180,"#8a82b0",2,true); ctx.fillStyle="#2a2450"; ctx.fillRect(x-8,238,16,24); }
+  for(let x=Math.floor(X0/48)*48;x<X1;x+=48){ ctx.fillStyle=(x/48)%2?"#151028":"#120d24"; ctx.fillRect(x,262,48,80); ctx.fillStyle="#2a1a48"; ctx.fillRect(x,262,48,P); if((x/48)%4===0){ ctx.fillStyle=Math.floor(t*2+x)%2?"#ff3fa8":"#5a1a48"; ctx.fillRect(x+20,270,8,P); } }
+  if(X0<260){ ctx.fillStyle="#0a0712"; ctx.fillRect(80,190,120,72); ctx.fillStyle="#9fd8ff"; ctx.fillRect(84,194,112,4); pText(ctx,"METRO",140,206,"#9fd8ff",2,true); } }
+function arTop(n){ const rows=[]; for(const [uid,h] of Object.entries(homes||{})){ const o=arCleanPub(h&&h.ar); if(o&&(o.w+o.l)>0) rows.push({uid,name:(uid===myId?(save.name||myName):(names[uid]||h.name||"Runner")),pts:o.pts,w:o.w,l:o.l,tr:o.tr,o}); }
+  if(myId&&save&&save.arena&&(save.arena.w+save.arena.l)>0&&!rows.some(r=>r.uid===myId)) rows.push({uid:myId,name:save.name||myName,pts:save.arena.pts,w:save.arena.w,l:save.arena.l,tr:save.arena.trophies||0});
+  return rows.sort((a,b)=>b.pts-a.pts).slice(0,n); }
+
+// ---------------------------------------------------------------- panels
+function arHeader(body){ const A=arS(), r=arRank(A.pts); body.append(el("div",{class:"arhead"},el("span",{class:"pill",style:`border-color:${r.c};color:${r.c}`,text:`🏟 ${r.n} · ${A.pts} pts`}),el("span",{class:"pill",text:`₵${Math.floor(save.credits).toLocaleString()}`}),el("span",{class:"pill",text:`🔷 ${save.chips} chips`}),el("span",{class:"pill",text:`🃏 ${arCardsTotal(A)} cards`}))); }
+function openArShop(){ const A=arS(); const body=panel("Robot Shop","Pick a fighter. Humanoids are tough, Aliens have the strongest cards, Cyber Beasts attack fastest."); currentView="arshop"; arHeader(body);
+  body.append(el("div",{class:"sub",text:"Type matchups: Humanoid beats Cyber Beast, Cyber Beast beats Alien, Alien beats Humanoid (+15% damage). You can own "+AR_MAXBOTS+" robots."}));
+  if(!A.starter){ const st=el("div",{class:"arbot hot"}); st.append(arBotCanvas("rookie",0,96,96),el("div",{class:"arbi"},el("strong",{text:"Free starter: Rookie Frame"}),el("div",{class:"sub",text:"Every new fighter gets one. 2 card slots."}),el("button",{class:"btn hot",type:"button",text:"Claim it free",onclick:()=>{ arBuy("rookie"); }}))); body.append(st); }
+  for(const ty of ["h","a","b"]){ body.append(el("h3",{class:"arh3",text:`${AR_TY[ty].ic} ${AR_TY[ty].n}s · ${AR_TY[ty].d}`}));
+    for(const [m,M] of Object.entries(AR_BOTS)){ if(M.ty!==ty||m==="rookie") continue; const can=save.credits>=M.price&&save.chips>=M.ch&&A.bots.length<AR_MAXBOTS; const own=A.bots.filter(b=>b.m===m).length;
+      const row=el("div",{class:"arbot"}); row.append(arBotCanvas(m,(M.tier*3)%8,96,96),el("div",{class:"arbi"},el("strong",{text:M.n+(own?` (you own ${own})`:"")}),el("div",{class:"sub",text:M.d}),el("div",{class:"arst",text:`❤ ${M.hp} HP · ⚔ ${M.atk} · ⏱ ${M.aps}/s · 🃏 ${M.slots} slots`}),
+        el("button",{class:"btn"+(can?" hot":""),type:"button",disabled:!can||null,text:`Buy · ₵${M.price.toLocaleString()}${M.ch?` + ${M.ch} chips`:""}`,onclick:()=>arBuy(m)}))); body.append(row); } } }
+function arBuy(m){ const A=arS(), M=AR_BOTS[m]; if(!M) return; if(A.bots.length>=AR_MAXBOTS) return toast(`You can own ${AR_MAXBOTS} robots. Sell one at the Robot Bay first.`);
+  if(m==="rookie"){ if(A.starter) return; A.starter=1; } else { if(save.credits<M.price||save.chips<M.ch) return toast("Not enough credits or chips yet."); save.credits-=M.price; save.chips-=M.ch; }
+  const b={id:arNewId(),m,nm:M.n,p:(M.tier*3)%8,lv:1,cond:100,slots:Array(M.slots).fill(null)}; A.bots.push(b); A.act=A.bots.length-1; persist(); hud(); beep(523,.1,"triangle"); setTimeout(()=>beep(784,.12,"triangle"),110);
+  toast(`🤖 ${M.n} is yours! It's waiting in the Robot Bay. Forge some cards and slot them in.`,"#43f0a4"); try{ stTrack("act","Bought robot "+M.n); }catch(e){} openArShop(); }
+function openArForge(tab){ const A=arS(); tab=tab||"forge"; const body=panel("Card Forge","Melt down items you own into cards for your robot. Rarer items make stronger cards."); currentView="arforge:"+tab; arHeader(body);
+  const tabs=el("div",{class:"row"}); [["forge","🔥 Forge"],["fuse","✨ Fuse 3 → 1"],["mine","🃏 My cards"],["guide","📖 Recipes"]].forEach(([k,t])=>tabs.append(el("button",{class:"btn"+(tab===k?" hot":""),type:"button",text:t,onclick:()=>openArForge(k)}))); body.append(tabs);
+  if(tab==="forge"){ const inv=invList().map(([id,n])=>[id,n,arForgeOut(id)]).filter(x=>x[2]);
+    body.append(el("div",{class:"sub",text:"Tap an item to see the card it makes. The item is used up. Parts, weapons, food, drinks, club items, hacks, decor and more all make different cards."}));
+    if(!inv.length){ body.append(el("div",{class:"empty",text:"Nothing to forge yet. Salvage, buy or win items around the city, then come back."})); return; }
+    const g=el("div",{class:"grid"}); for(const [id,n,k] of inv){ const c=arCard(k); g.append(itemCard(id,n,`→ ${c.F.ic} ${c.n}`,()=>arForgeAsk(id))); } body.append(g); }
+  else if(tab==="fuse"){ const ready=Object.entries(arCardsFree(A)).filter(([k,n])=>n>=3&&arCard(k).t<3);
+    body.append(el("div",{class:"sub",text:"Fuse 3 copies of the same card into 1 card of the next tier. Cards slotted in a robot don't count."}));
+    if(!ready.length) body.append(el("div",{class:"empty",text:"No card has 3 free copies yet."}));
+    for(const [k,n] of ready){ const c=arCard(k), nk=c.f+":"+(c.t+1), fee=AR_FUSE_CR[c.t]; body.append(el("div",{class:"arcardrow"},arCardEl(k,n),el("span",{text:"→"}),arCardEl(nk),el("button",{class:"btn hot",type:"button",disabled:save.credits<fee||null,text:`Fuse · ₵${fee}`,onclick:()=>{ if(save.credits<fee) return; save.credits-=fee; A.cards[k]-=3; if(A.cards[k]<=0) delete A.cards[k]; A.cards[nk]=(A.cards[nk]||0)+1; persist(); hud(); beep(880,.15,"triangle"); toast(`✨ Fused into ${arCard(nk).n}!`,"#ffd36a"); openArForge("fuse"); }}))); } }
+  else if(tab==="mine"){ const all=Object.entries(A.cards).sort((a,b)=>arCard(b[0]).t-arCard(a[0]).t); const free=arCardsFree(A);
+    if(!all.length) body.append(el("div",{class:"empty",text:"No cards yet. Forge some from your items."})); const g=el("div",{class:"arcards"}); for(const [k,n] of all) g.append(arCardEl(k,n,(n-(free[k]||0))?`${n-(free[k]||0)} slotted`:"")); body.append(g); }
+  else { const g=el("div",{class:"arcards"}); for(const [f,F] of Object.entries(AR_FAM)){ const items=Object.values(BY).filter(i=>F.from.includes(i.t)).length; g.append(arCardEl(f+":0",null,`From: ${F.from.join(", ")} (${items} items)`)); } body.append(el("div",{class:"sub",text:`Tiers follow the item's rarity: common → I, uncommon → II, rare → III, epic → IV. Forging costs ₵${AR_FORGE_CR.join(" / ₵")} and ${AR_FORGE_CH.join(" / ")} chips by tier.`}),g); } }
+function arCardEl(k,n,note){ const c=arCard(k); if(!c) return el("span"); const col=["#a8b3c6","#43f0a4","#4aa8ff","#cf72ff"][c.t];
+  return el("div",{class:"arcard k-"+c.F.k,style:`--rc:${col}`},el("div",{class:"arct"},el("span",{class:"arci",text:c.F.ic}),el("strong",{text:c.n}),n>1?el("span",{class:"arcn",text:"×"+n}):null),el("div",{class:"arck",text:AR_KIND[c.F.k]+" card"}),el("div",{class:"arcd",text:c.F.d}),el("div",{class:"arcs",text:arCardDesc(k)}),note?el("div",{class:"arcs",style:"color:#ffd36a",text:note}):null); }
+function arForgeAsk(id){ const A=arS(), k=arForgeOut(id); if(!k) return; const c=arCard(k), fee=AR_FORGE_CR[c.t], ch=AR_FORGE_CH[c.t]; const body=panel("Card Forge · Forge a card","The item goes into the fire and comes out as a card."); currentView="arforgeask";
+  body.append(el("div",{class:"arcardrow"},itemCard(id,save.inv[id]||0,BY[id].r),el("span",{style:"font-size:24px",text:"🔥→"}),arCardEl(k)));
+  const can=(save.inv[id]||0)>0&&save.credits>=fee&&save.chips>=ch; body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openArForge("forge")}),el("button",{class:"btn hot",type:"button",disabled:!can||null,text:`Forge · ₵${fee}${ch?` + ${ch} chips`:""}`,onclick:()=>{
+    if(!((save.inv[id]||0)>0)||save.credits<fee||save.chips<ch) return; addItem(id,-1); save.credits-=fee; save.chips-=ch; A.cards[k]=(A.cards[k]||0)+1; persist(); hud(); [330,494,660,988].forEach((f,i)=>setTimeout(()=>beep(f,.08,"square",.04),i*70)); toast(`🔥 Forged ${c.F.ic} ${c.n}!`,"#ff9a3c"); try{ stTrack("act","Forged "+c.n); }catch(e){}
+    if((save.inv[id]||0)>0) arForgeAsk(id); else openArForge("forge"); }}))); }
+function openArBay(sel){ const A=arS(); const body=panel("Robot Bay","Your robots. Slot cards, repair damage, tune up stats and pick who fights."); currentView="arbay"; arHeader(body);
+  if(!A.bots.length){ body.append(el("div",{class:"empty",text:"No robots yet. Visit the Robot Shop next door. Your first one is free."}),el("button",{class:"btn hot",type:"button",text:"Go to the Robot Shop",onclick:()=>openArShop()})); return; }
+  const i=sel!=null?clamp(sel,0,A.bots.length-1):A.act, b=A.bots[i], M=AR_BOTS[b.m], S=arStats(b);
+  const pick=el("div",{class:"row"}); A.bots.forEach((x,k)=>pick.append(el("button",{class:"btn"+(k===i?" hot":""),type:"button",text:(k===A.act?"★ ":"")+x.nm,onclick:()=>openArBay(k)}))); body.append(pick);
+  const top=el("div",{class:"arbot"}); top.append(arBotCanvas(b.m,b.p,120,120)); const info=el("div",{class:"arbi"}); top.append(info);
+  info.append(el("strong",{text:`${b.nm} · Lv ${b.lv}`}),el("div",{class:"sub",text:`${AR_TY[M.ty].ic} ${M.n} (${AR_TY[M.ty].n}) · Power ${arPower(b)}`}),el("div",{class:"arst",text:`❤ ${S.hp} HP · ⚔ ${S.atk} · ⏱ ${S.aps}/s`}));
+  const cb=el("div",{class:"arcond"},el("i",{style:`width:${b.cond}%;background:${b.cond>60?"#43f0a4":b.cond>30?"#ffd36a":"#ff5a5a"}`})); info.append(el("div",{class:"sub",text:`Condition ${b.cond}% (fights at ${Math.round(50+b.cond/2)}% HP)`}),cb);
+  const acts=el("div",{class:"row"}); if(i!==A.act) acts.append(el("button",{class:"btn hot",type:"button",text:"★ Make this my fighter",onclick:()=>{ A.act=i; persist(); openArBay(i); }}));
+  const rc=arRepairCost(b); if(b.cond<100) acts.append(el("button",{class:"btn"+(save.credits>=rc?" hot":""),type:"button",disabled:save.credits<rc||null,text:`🔧 Repair · ₵${rc}`,onclick:()=>{ if(save.credits<rc) return; save.credits-=rc; b.cond=100; persist(); hud(); beep(660,.1,"triangle"); toast("🔧 Good as new.","#43f0a4"); openArBay(i); }}));
+  if(b.lv<10){ const tc=arTuneCost(b), part=arTunePart(tc.r); acts.append(el("button",{class:"btn",type:"button",disabled:(!part||save.credits<tc.cr)||null,title:part?`Uses ${BY[part[0]].n}`:"",text:`⬆ Tune-up to Lv ${b.lv+1} · ₵${tc.cr} + 1 ${tc.r}+ PC part`,onclick:()=>{ const p2=arTunePart(tc.r); if(!p2||save.credits<tc.cr) return; save.credits-=tc.cr; addItem(p2[0],-1); b.lv++; persist(); hud(); [523,659,784].forEach((f,k)=>setTimeout(()=>beep(f,.1,"triangle"),k*90)); toast(`⬆ ${b.nm} is now Lv ${b.lv}! (used ${BY[p2[0]].n})`,"#43f0a4"); openArBay(i); }})); }
+  info.append(acts);
+  body.append(top,el("h3",{class:"arh3",text:`🃏 Card slots (${b.slots.filter(Boolean).length}/${b.slots.length})`}));
+  const slots=el("div",{class:"arslots"}); b.slots.forEach((k,s)=>{ const box=el("button",{class:"arslot"+(k?" on":""),type:"button",onclick:()=>arSlotPick(i,s)}); if(k){ const c=arCard(k); box.append(el("span",{class:"arci",text:c.F.ic}),el("strong",{text:c.n}),el("small",{text:AR_KIND[c.F.k]})); } else box.append(el("span",{class:"arci",text:"+"}),el("small",{text:"Empty slot"})); slots.append(box); }); body.append(slots);
+  const cust=el("div",{class:"row"}); cust.append(el("span",{class:"sub",text:"Paint:"})); AR_PAINTS.forEach((c,k)=>cust.append(el("button",{class:"arsw"+(b.p===k?" on":""),type:"button",title:AR_PAINTN[k],"aria-label":AR_PAINTN[k]+" paint",style:`background:${c}`,onclick:()=>{ b.p=k; persist(); openArBay(i); }})));
+  const nm=el("input",{type:"text",maxlength:"18",value:b.nm,"aria-label":"Robot name",class:"arnm"}); cust.append(nm,el("button",{class:"btn",type:"button",text:"Rename",onclick:()=>{ const v=nm.value.replace(/[<>]/g,"").trim().slice(0,18); if(!v) return; try{ if(typeof nameBlocked==="function"&&nameBlocked(v)) return toast("Pick a different name."); }catch(e){} b.nm=v; persist(); openArBay(i); }})); body.append(cust);
+  const refund=Math.floor(M.price*.5); if(A.bots.length>1||M.price>0) body.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:M.price?`Sell for ₵${refund.toLocaleString()} (cards come back)`:"Scrap the Rookie Frame (cards come back)",onclick:()=>{ const ok=el("div",{class:"row"}); const pb=panel("Robot Bay · Sell robot",`Sell ${b.nm}? Its cards go back to your collection.`); pb.append(el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Keep it",onclick:()=>openArBay(i)}),el("button",{class:"btn hot",type:"button",text:M.price?`Sell · +₵${refund.toLocaleString()}`:"Scrap it",onclick:()=>{ A.bots.splice(i,1); save.credits+=refund; A.act=clamp(A.act>=i&&A.act>0?A.act-1:A.act,0,Math.max(0,A.bots.length-1)); persist(); hud(); openArBay(); }}))); }}))); }
+function arSlotPick(bi,s){ const A=arS(), b=A.bots[bi]; if(!b) return; const cur=b.slots[s]; const body=panel("Robot Bay · Slot a card",`Pick a card for slot ${s+1} of ${b.nm}.`); currentView="arslot";
+  const row=el("div",{class:"row"},el("button",{class:"btn",type:"button",text:"Back",onclick:()=>openArBay(bi)})); if(cur) row.append(el("button",{class:"btn",type:"button",text:"Empty this slot",onclick:()=>{ b.slots[s]=null; persist(); openArBay(bi); }})); body.append(row);
+  const free=arCardsFree(A), keys=Object.keys(free).sort((a,c)=>arCard(c).t-arCard(a).t);
+  if(!keys.length) body.append(el("div",{class:"empty",text:"No free cards. Forge some at the Card Forge."}),el("button",{class:"btn hot",type:"button",text:"Go to the Card Forge",onclick:()=>openArForge()}));
+  const g=el("div",{class:"arcards"}); for(const k of keys){ const c=el("button",{class:"arpick",type:"button",onclick:()=>{ if(b.slots.filter((x,j)=>j!==s&&x&&arCard(x).f===arCard(k).f).length>=2) return toast("Max 2 cards of the same kind per robot."); if(arCard(k).F.k==="x"&&b.slots.some((x,j)=>j!==s&&x&&arCard(x).F.k==="x"&&arCard(x).f===arCard(k).f)) return toast("Only one of each passive card per robot."); b.slots[s]=k; persist(); beep(700,.06,"triangle"); openArBay(bi); }}); c.append(arCardEl(k,free[k])); g.append(c); } body.append(g); }
+function openArBoard(){ const A=arS(); const body=panel("Neon Arena · Rankings",`Season ${A.season} · Ranks: ${AR_RANKS.map(r=>r[0]+" "+r[1]).join(" · ")}`); currentView="arboard"; arHeader(body);
+  const top=arTop(25); if(!top.length) body.append(el("div",{class:"empty",text:"Nobody has fought yet this season. Be the first."}));
+  const list=el("div",{class:"list"}); top.forEach((r,i)=>{ const rk=arRank(r.pts); list.append(el("div",{class:"li"+(r.uid===myId?" me":"")},el("span",{class:"pill",style:`color:${rk.c};border-color:${rk.c}`,text:`#${i+1} ${rk.n}`}),el("span",{style:"flex:1",text:`${r.name}${r.tr?" 🏆×"+r.tr:""}`}),el("span",{class:"sub",text:`${r.pts} pts · ${r.w}W ${r.l}L`}))); }); body.append(list);
+  body.append(el("div",{class:"sub",text:`Each new month starts a new season: you get chips for the best rank you reached (${AR_RANKS.map((r,i)=>r[0]+" "+AR_SEASON_CH[i]).join(", ")}), and points are halved.`})); }
+function openArGate(){ const A=arS(), b=arActive(); const body=panel("Neon Arena · Gate","Pick a fight. Your robot fights on its own. You play the cards."); currentView="argate"; arHeader(body);
+  if(!b){ body.append(el("div",{class:"empty",text:"You need a robot first. The Robot Shop gives you one free."}),el("button",{class:"btn hot",type:"button",text:"Go to the Robot Shop",onclick:()=>openArShop()})); return; }
+  const r=arRank(A.pts), fee=AR_FEE[r.i]; const S=arStats(b);
+  body.append(el("div",{class:"arbot"},arBotCanvas(b.m,b.p,96,96),el("div",{class:"arbi"},el("strong",{text:`${b.nm} · Lv ${b.lv} · Power ${arPower(b)}`}),el("div",{class:"arst",text:`❤ ${Math.round(S.hp*(.5+b.cond/200))}/${S.hp} HP (condition ${b.cond}%) · 🃏 ${b.slots.filter(Boolean).length}/${b.slots.length} cards`}),b.cond<40?el("div",{class:"sub",style:"color:#ff9a3c",text:"Your robot is badly damaged. Repair it at the Robot Bay."}):null,!b.slots.some(Boolean)?el("div",{class:"sub",style:"color:#ff9a3c",text:"No cards slotted. Forge some cards first, your robot will only punch."}):null)));
+  const fights=el("div",{class:"argates"});
+  fights.append(arGateBtn("🎯 Practice","vs a training bot. Free. No rewards, no wear.",true,()=>arFightStart({mode:"practice"})));
+  fights.append(arGateBtn(`⚔ Ranked fight · ₵${fee}`,`vs another player's robot or an arena rival near your rank. Win: credits, chips, rank points and a chance at a rare part.`,save.credits>=fee,()=>arFightStart({mode:"ranked",fee})));
+  const T=A.tour&&A.tour.w===arWeek()?A.tour:null, tfee=300+r.i*200, done=A.tourW===arWeek();
+  fights.append(arGateBtn(done?"🏆 Weekly tournament: won this week!":T&&T.paid?`🏆 Tournament · round ${T.r+1} of 3`:`🏆 Weekly tournament · ₵${tfee}`,done?"Come back next week for a new bracket.":"3 rounds in a row against tougher rivals. Win all 3 for a big prize, a trophy and a guaranteed rare part. Lose and you're out for the week.",!done&&(T&&T.paid||save.credits>=tfee),()=>arTourNext(tfee)));
+  body.append(fights,el("div",{class:"sub",text:`Record ${A.w}W ${A.l}L · Best ${AR_RANKS[arTierI(A.best)][0]} · Trophies ${A.trophies||0}`})); }
+function arGateBtn(t,d,ok,f){ return el("button",{class:"argate"+(ok?"":" off"),type:"button",disabled:!ok||null,onclick:f},el("strong",{text:t}),el("span",{text:d})); }
+function arTourNext(tfee){ const A=arS(); if(A.tourW===arWeek()) return; if(!A.tour||A.tour.w!==arWeek()) A.tour={w:arWeek(),r:0,paid:false};
+  if(!A.tour.paid){ if(save.credits<tfee) return toast("Not enough credits for the entry fee."); save.credits-=tfee; A.tour.paid=true; A.tour.fee=tfee; persist(); hud(); }
+  arFightStart({mode:"tour",round:A.tour.r,fee:A.tour.fee||tfee}); }
+
+// ---------------------------------------------------------------- fights
+let ARF=null;
+function arRivalBuild(ti,boost){ const pool=Object.entries(AR_BOTS).filter(([m,M])=>m!=="rookie"&&M.tier===(ti<=1?1:ti<=3?2:3)); const [m,M]=pool[Math.floor(Math.random()*pool.length)];
+  const lv=clamp(1+ti*2+Math.floor(Math.random()*2)+(boost||0),1,10), ct=clamp(Math.floor(ti*.7)+(boost?1:0),0,3), fams=Object.keys(AR_FAM), cards=[]; let pas=0;
+  for(let i=0;i<M.slots;i++){ let f; do{ f=fams[Math.floor(Math.random()*fams.length)]; } while(AR_FAM[f].k==="x"&&(pas||Math.random()<.6)); if(AR_FAM[f].k==="x") pas=1; cards.push(f+":"+clamp(ct-(Math.random()<.3?1:0),0,3)); }
+  return {nm:AR_RIVALS[Math.floor(Math.random()*AR_RIVALS.length)],bot:{m,p:Math.floor(Math.random()*8),lv},cards,who:"Arena rival"}; }
+function arPickOpponent(){ const A=arS(), cand=[]; for(const [uid,h] of Object.entries(homes||{})){ if(uid===myId) continue; const o=arCleanPub(h&&h.ar); if(o&&o.cards.length&&Math.abs(o.pts-A.pts)<=320) cand.push({nm:o.bot.nm,bot:o.bot,cards:o.cards,who:(names[uid]||h.name||"Runner")+"'s robot",uid,pts:o.pts}); }
+  if(cand.length&&Math.random()<.75) return cand[Math.floor(Math.random()*cand.length)]; const pw=arActive()?arPower(arActive()):0, pti=pw<320?0:pw<460?1:pw<640?2:pw<880?3:pw<1150?4:5; return arRivalBuild(Math.min(5,Math.max(arRank(A.pts).i,pti-1))); }
+function arFighter(src,cond){ const b={m:src.bot.m,lv:src.bot.lv||1,slots:src.cards||[]}; const M=AR_BOTS[b.m], S=arStats(b), hpMul=cond==null?1:(.5+cond/200);
+  const cards=(src.cards||[]).map(k=>arCard(k)).filter(c=>c&&c.F.k!=="x").map(c=>({c,cd:c.F.cd*(M.ty==="a"?.88:1),ch:.35+Math.random()*.2}));
+  return {nm:src.nm||M.n,who:src.who||"",m:b.m,p:src.bot.p||0,ty:M.ty,max:Math.round(S.hp*hpMul),hp:Math.round(S.hp*hpMul),atk:S.atk,aps:S.aps,cp:M.ty==="a"?1.25:1,def:M.ty==="h"?.15:0,cards,swing:Math.random()*.4,shield:0,shUntil:0,stun:0,haze:0,bleed:0,bleedD:0,haste:0,anim:{atk:0,hit:0},x:0}; }
+function arFightStart(o){ if($("#gwin")) return; const A=arS(), b=arActive(); if(!b) return openArShop(); closePanel();
+  let op; if(o.mode==="practice") op={nm:"Training Bot",bot:{m:"rookie",p:6,lv:1},cards:["spike:0"],who:"Practice"}; else if(o.mode==="tour") op=arRivalBuild(Math.min(5,arRank(A.pts).i+o.round),1+o.round); else { op=arPickOpponent(); save.credits-=o.fee; persist(); hud(); }
+  const me=arFighter({nm:b.nm,bot:{m:b.m,p:b.p,lv:b.lv},cards:b.slots.filter(Boolean),who:save.name||myName},o.mode==="practice"?100:b.cond), en=arFighter(op,null);
+  me.x=-1; en.x=1; ARF={o,me,en,op,t:0,over:false,auto:!!(save.arAuto),fx:[],nums:[],last:performance.now(),open:true,paused:false,cd:3.2,bi:A.act};
+  arShell(); beep(220,.3,"sawtooth",.04); requestAnimationFrame(arLoop); }
+function arShell(){ const F=ARF; const wrap=el("div",{id:"gwin",class:"arena",role:"dialog","aria-label":"Neon Arena fight"});
+  const bar=el("div",{class:"g1bar"},el("strong",{text:"NEON ARENA"}),el("span",{class:"g1sub",text:F.o.mode==="practice"?"Practice":F.o.mode==="tour"?`Weekly tournament · Round ${F.o.round+1} of 3`:"Ranked fight"}),
+    el("button",{class:"btn"+(F.auto?" hot":""),type:"button",id:"arAuto",title:"Auto-play cards (A)",text:"🤖 Auto",onclick:()=>arToggleAuto()}),el("button",{class:"btn hot",type:"button",text:"✕",title:"Leave (Esc)","aria-label":"Leave fight",onclick:()=>arAskLeave()}));
+  const box=el("div",{class:"arbox"}); const cv=document.createElement("canvas"); cv.className="arcv"; box.append(cv); const cards=el("div",{class:"arbar",id:"arBar"});
+  F.me.cards.forEach((c,i)=>{ const b=el("button",{class:"arplay k-"+c.c.F.k,type:"button",onclick:()=>arPlay(F.me,F.en,i,true)},el("i",{class:"arfill"}),el("span",{class:"arci",text:c.c.F.ic}),el("strong",{text:c.c.n}),el("kbd",{text:String(i+1)})); cards.append(b); c.el=b; });
+  if(!F.me.cards.length) cards.append(el("div",{class:"sub",style:"padding:10px",text:"No cards slotted. Your robot can only punch. Forge cards at the Card Forge."}));
+  const modal=el("div",{class:"anmodal",id:"arModal",hidden:true}); box.append(modal); wrap.append(bar,box,cards); $("#game").appendChild(wrap); try{ releaseKeys&&releaseKeys(); }catch(e){}
+  F.cv=cv; F.c=cv.getContext("2d"); F.box=box; const fit=()=>{ const r=box.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1); if(r.width<10) return; cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); cv.style.width=r.width+"px"; cv.style.height=r.height+"px"; F.dpr=dpr; F.w=r.width; F.h=r.height; };
+  F.fit=fit; fit(); try{ F.ro=new ResizeObserver(fit); F.ro.observe(box); }catch(e){ addEventListener("resize",fit); } }
+function arToggleAuto(){ if(!ARF) return; ARF.auto=!ARF.auto; save.arAuto=ARF.auto?1:0; const b=$("#arAuto"); if(b) b.classList.toggle("hot",ARF.auto); }
+function arModal(title,kids,btns,cls){ const m=$("#arModal"); if(!m) return; m.hidden=false; m.className="anmodal"+(cls?" "+cls:""); m.replaceChildren(el("div",{class:"anmc"},el("h3",{text:title}),...kids,el("div",{class:"row anmb"},...btns.map(([t,f,hot])=>el("button",{class:"btn"+(hot?" hot":""),type:"button",text:t,onclick:f}))))); }
+function arAskLeave(){ const F=ARF; if(!F) return; if(F.over){ arClose(); return; } F.paused=true; arModal("Leave the fight?",[el("p",{text:F.o.mode==="practice"?"It's only practice.":"Leaving counts as a loss. Entry fees aren't refunded."})],[["Keep fighting",()=>{ $("#arModal").hidden=true; F.paused=false; F.last=performance.now(); }],["Leave",()=>{ if(F.o.mode!=="practice") arEnd(false,true); else arClose(); },1]]); }
+function arClose(){ const w=$("#gwin"); if(w&&w.classList.contains("arena")) w.remove(); if(ARF){ ARF.open=false; try{ ARF.ro&&ARF.ro.disconnect(); }catch(e){} } ARF=null; persist(); try{ hud(); }catch(e){} }
+function arDmg(src,dst,amt,o){ o=o||{}; const F=ARF; if(dst.hp<=0) return 0; let d=amt*(AR_BEATS[src.ty]===dst.ty?1.15:1); if(!o.card&&Math.random()<(src.haze>F.t?.45:0)){ arNum(dst,"MISS","#8a8aa8"); return 0; }
+  let crit=!o.card&&Math.random()<.08; if(crit) d*=1.6; d*=1-dst.def; d*=.88+Math.random()*.24; d=Math.max(1,Math.round(d));
+  if(dst.shield>0&&dst.shUntil>F.t&&!o.pierce){ const ab=Math.min(dst.shield,d); dst.shield-=ab; d-=ab; if(ab) arNum(dst,"-"+ab+" 🛡","#7ad8ff"); }
+  if(d>0){ dst.hp=Math.max(0,dst.hp-d); dst.anim.hit=.25; arNum(dst,(crit?"CRIT ":"")+d,crit?"#ffd36a":o.card?"#ff7ad8":"#ffffff"); F.shake=Math.min(.35,(F.shake||0)+(crit||o.card?.18:.06)); } return d; }
+function arNum(f,txt,col){ ARF.nums.push({side:f===ARF.me?-1:1,txt:String(txt),col,t:0,dx:(Math.random()-.5)*30}); }
+function arPlay(src,dst,i,human){ const F=ARF; if(!F||F.over||F.paused||F.cd>0) return; const s=src.cards[i]; if(!s||s.ch<1||src.stun>F.t||src.hp<=0) return;
+  s.ch=0; const c=s.c, Fm=c.F, m=AR_TM[c.t]*src.cp, dm=AR_TD[c.t]; F.fx.push({k:Fm.fx||"beam",from:src===F.me?-1:1,t:0,col:["#a8b3c6","#43f0a4","#4aa8ff","#cf72ff"][c.t]}); src.anim.atk=.3; F.banner={txt:`${src===F.me?"":"⚠ "}${Fm.ic} ${c.n}`,t:0,side:src===F.me?-1:1};
+  if(Fm.dmg){ const hits=Fm.hits||1; for(let h=0;h<hits;h++) setTimeout(()=>{ if(ARF===F&&!F.over) arDmg(src,dst,Fm.dmg*m,{card:1,pierce:Fm.pierce}); },h*180); }
+  if(Fm.heal){ const hh=Math.round(Fm.heal*m); src.hp=Math.min(src.max,src.hp+hh); arNum(src,"+"+hh,"#43f0a4"); }
+  if(Fm.shield){ src.shield=Math.round(Fm.shield*m); src.shUntil=F.t+Fm.dur; }
+  if(Fm.stun) dst.stun=Math.max(dst.stun,F.t+Fm.stun*dm); if(Fm.haze) dst.haze=F.t+Fm.haze*dm; if(Fm.bleed){ dst.bleed=F.t+Fm.bleed; dst.bleedD=2.2*AR_TM[c.t]; } if(Fm.haste) src.haste=F.t+3;
+  beep(Fm.k==="p"?300+c.t*120:600,.12,Fm.k==="p"?"sawtooth":"triangle",.05); }
+function arStep(f,o,dt){ const F=ARF; if(f.hp<=0) return; for(const s of f.cards) if(s.ch<1) s.ch=Math.min(1,s.ch+dt/s.cd);
+  if(f.bleed>F.t){ f.bleedT=(f.bleedT||0)+dt; if(f.bleedT>=.5){ f.bleedT=0; f.hp=Math.max(0,f.hp-Math.round(f.bleedD)); arNum(f,Math.round(f.bleedD),"#ff5a5a"); } }
+  if(f.stun>F.t) return; f.swing+=dt*f.aps*(f.haste>F.t?1.5:1); if(f.swing>=1){ f.swing=0; f.anim.atk=.22; arDmg(f,o,f.atk); beep(160+Math.random()*60,.04,"square",.025); } }
+function arAI(f,o,smart){ const F=ARF; if(f.stun>F.t) return; f.think=(f.think||0)-1; if(f.think>0) return; f.think=smart?8:14+Math.floor(Math.random()*20);
+  f.cards.forEach((s,i)=>{ if(s.ch<1) return; const Fm=s.c.F; if(Fm.heal&&!Fm.dmg&&f.hp>f.max*.7) return; if(Fm.shield&&f.shUntil>F.t) return; if((Fm.stun||Fm.haze)&&(o.stun>F.t||o.haze>F.t)) return; arPlay(f,o,i); }); }
+function arLoop(now){ const F=ARF; if(!F||!F.open) return; const dt=Math.min(.05,(now-F.last)/1000); F.last=now;
+  if(!F.paused){ if(F.cd>0){ const was=Math.ceil(F.cd); F.cd-=dt; if(Math.ceil(F.cd)!==was&&F.cd>0) beep(440,.08,"square",.04); if(F.cd<=0) beep(880,.2,"square",.05); }
+    else if(!F.over){ F.t+=dt; arStep(F.me,F.en,dt); arStep(F.en,F.me,dt); if(F.auto) arAI(F.me,F.en,true); arAI(F.en,F.me,F.o.mode!=="practice");
+      if(F.me.hp<=0||F.en.hp<=0||F.t>=75){ const win=F.en.hp<=0?true:F.me.hp<=0?false:(F.me.hp/F.me.max>=F.en.hp/F.en.max); F.over=true; setTimeout(()=>{ if(ARF===F) arEnd(win); },1200); } } }
+  for(const f of [F.me,F.en]){ f.anim.atk=Math.max(0,f.anim.atk-dt); f.anim.hit=Math.max(0,f.anim.hit-dt); }
+  F.fx=F.fx.filter(x=>(x.t+=dt)<.6); F.nums=F.nums.filter(n=>(n.t+=dt)<1.1); if(F.banner&&(F.banner.t+=dt)>1.4) F.banner=null; F.shake=Math.max(0,(F.shake||0)-dt);
+  F.me.cards.forEach(s=>{ if(!s.el) return; const ready=s.ch>=1&&!F.over&&F.cd<=0&&F.me.stun<=F.t; s.el.classList.toggle("ready",ready); const fl=s.el.firstChild; if(fl) fl.style.height=Math.round((1-s.ch)*100)+"%"; });
+  try{ arRender(); }catch(e){ console.warn(e); } requestAnimationFrame(arLoop); }
+function arRender(){ const F=ARF, g=F.c, W=F.w, H=F.h; g.setTransform(F.dpr,0,0,F.dpr,0,0); const t=performance.now()/1000;
+  const sh=F.shake>0?(Math.random()-.5)*F.shake*18:0; g.save(); g.translate(sh,0);
+  g.fillStyle="#08051a"; g.fillRect(-20,0,W+40,H); for(let k=0;k<4;k++){ g.fillStyle=k%2?"#120a30":"#0e0828"; g.fillRect(-20,H*.12+k*H*.09,W+40,H*.09); }
+  for(let k=0;k<Math.floor(W/14);k++){ const y=H*.2+((k*7)%4)*H*.07, jump=Math.sin(t*6+k*1.3)>.75?-4:0; g.fillStyle=["#2a1a4a","#3a2060","#24304e","#4a1a40"][k%4]; g.fillRect(k*14,y+jump,10,12); g.fillRect(k*14+2,y-6+jump,6,6); }
+  for(let k=0;k<3;k++){ g.save(); g.globalAlpha=.08; g.fillStyle=k%2?"#ff3fa8":"#38e8ff"; g.beginPath(); const bx=W*(.2+k*.3)+Math.sin(t*.7+k)*W*.1; g.moveTo(bx,H*.78); g.lineTo(bx-60,0); g.lineTo(bx+60,0); g.fill(); g.restore(); }
+  const fy=H>W*1.1?H*.66:H*.8; g.fillStyle="#140c2c"; g.fillRect(-20,fy,W+40,H-fy); g.strokeStyle="#ff3fa8"; g.globalAlpha=.55+.2*Math.sin(t*3); g.lineWidth=3; g.beginPath(); g.ellipse(W/2,fy+8,W*.42,18,0,0,Math.PI*2); g.stroke(); g.strokeStyle="#38e8ff"; g.globalAlpha=.4; g.beginPath(); g.ellipse(W/2,fy+8,W*.3,12,0,0,Math.PI*2); g.stroke(); g.globalAlpha=1;
+  const sc=Math.max(.9,Math.min(3,H/170,W/240)), xL=W*.28, xR=W*.72;
+  for(const f of [F.me,F.en]){ const side=f===F.me?-1:1, x=side<0?xL:xR; if(f.shUntil>F.t&&f.shield>0){ g.strokeStyle="#7ad8ff"; g.globalAlpha=.45+.2*Math.sin(t*10); g.lineWidth=3; g.beginPath(); g.ellipse(x,fy-40*sc,46*sc,56*sc,0,0,Math.PI*2); g.stroke(); g.globalAlpha=1; }
+    if(f.haze>F.t){ g.fillStyle="#b06bff"; for(let k=0;k<7;k++){ g.globalAlpha=.18; g.beginPath(); g.arc(x+Math.sin(t*2+k)*30*sc,fy-30*sc-k*8*sc,18*sc,0,Math.PI*2); g.fill(); } g.globalAlpha=1; }
+    arDrawBot(g,f.m,f.p,x,fy,sc,-side,t,{atk:f.anim.atk/.3,hit:f.anim.hit,stun:f.stun>F.t?1:0,ko:f.hp<=0}); if(f.bleed>F.t){ g.fillStyle="#ff3a4a"; for(let k=0;k<3;k++) g.fillRect(x-10+k*9,fy-20*sc+((t*40+k*13)%30),3,5); } }
+  for(const x of F.fx){ const a=1-x.t/.6, from=x.from<0?xL:xR, to=x.from<0?xR:xL, self=x.from<0?xL:xR, y=fy-40*sc; g.globalAlpha=a; g.strokeStyle=x.col; g.fillStyle=x.col; g.lineWidth=4*sc;
+    if(x.k==="beam"){ g.beginPath(); g.moveTo(from,y); g.lineTo(to,y); g.stroke(); g.lineWidth=1.5*sc; g.strokeStyle="#ffffff"; g.stroke(); }
+    else if(x.k==="bolt"){ g.beginPath(); g.moveTo(from,y); for(let k=1;k<=8;k++) g.lineTo(from+(to-from)*k/8,y+(Math.random()-.5)*30*sc); g.stroke(); }
+    else if(x.k==="bomb"){ g.beginPath(); g.arc(to,y,(10+x.t*120)*sc,0,Math.PI*2); g.stroke(); }
+    else if(x.k==="spin"){ for(let k=0;k<3;k++){ const ang=x.t*20+k*2.1; g.fillRect(to+Math.cos(ang)*36*sc-4,y+Math.sin(ang)*20*sc-4,8,8); } }
+    else if(x.k==="slash"){ g.beginPath(); g.arc(to,y,34*sc,-1.2+x.t*3,.2+x.t*3); g.stroke(); }
+    else if(x.k==="heal"||x.k==="drain"){ for(let k=0;k<6;k++){ const px=self+(k-2.5)*12*sc, py=y+20*sc-x.t*80*sc-k*4; g.fillStyle="#43f0a4"; g.fillRect(px-1,py-5,3,11); g.fillRect(px-5,py-1,11,3); } if(x.k==="drain"){ g.strokeStyle="#43f0a4"; g.setLineDash([6,6]); g.beginPath(); g.moveTo(to,y); g.lineTo(self,y); g.stroke(); g.setLineDash([]); } }
+    else if(x.k==="stun"){ g.beginPath(); g.arc(to,y-30*sc,(8+x.t*40)*sc,0,Math.PI*2); g.stroke(); }
+    g.globalAlpha=1; }
+  g.font=`700 ${Math.round(14*Math.min(1.5,sc))}px Silkscreen, monospace`; g.textAlign="center"; for(const n of F.nums){ const x=(n.side<0?xL:xR)+n.dx, y=fy-90*sc-n.t*50; g.globalAlpha=1-n.t/1.1; g.fillStyle="#000"; g.fillText(n.txt,x+2,y+2); g.fillStyle=n.col; g.fillText(n.txt,x,y); } g.globalAlpha=1;
+  g.restore();
+  const bw=Math.min(300,W*.42); for(const f of [F.me,F.en]){ const left=f===F.me, x=left?12:W-12-bw, y=10; g.fillStyle="#0b0820"; g.fillRect(x,y,bw,40); g.strokeStyle=left?"#38e8ff":"#ff3fa8"; g.lineWidth=2; g.strokeRect(x,y,bw,40);
+    g.fillStyle="#3a0a14"; g.fillRect(x+6,y+24,bw-12,10); const pct=f.hp/f.max; g.fillStyle=pct>.5?"#43f0a4":pct>.25?"#ffd36a":"#ff5a5a"; g.fillRect(x+6,y+24,(bw-12)*pct,10); if(f.shUntil>F.t&&f.shield>0){ g.fillStyle="#7ad8ff"; g.fillRect(x+6,y+21,Math.min(bw-12,(bw-12)*f.shield/f.max),3); }
+    g.font="700 12px Silkscreen, monospace"; g.textAlign=left?"left":"right"; g.fillStyle="#fff"; g.fillText(`${AR_TY[f.ty].ic} ${f.nm}`,left?x+8:x+bw-8,y+16); g.textAlign=left?"right":"left"; g.fillStyle="#cfc6ff"; g.fillText(`${Math.ceil(f.hp)}/${f.max}`,left?x+bw-8:x+8,y+16); }
+  g.textAlign="center"; g.font="700 13px Silkscreen, monospace"; g.fillStyle="#cfc6ff"; g.fillText(F.en.who,W-12-bw/2,64); g.fillText(`${Math.max(0,Math.ceil(75-F.t))}s`,W/2,30);
+  if(AR_BEATS[F.me.ty]===F.en.ty||AR_BEATS[F.en.ty]===F.me.ty){ g.fillStyle=AR_BEATS[F.me.ty]===F.en.ty?"#43f0a4":"#ff9a3c"; g.fillText(AR_BEATS[F.me.ty]===F.en.ty?"TYPE ADVANTAGE +15%":"ENEMY TYPE ADVANTAGE",W/2,48); }
+  if(F.banner){ const a=Math.min(1,(1.4-F.banner.t)*3); g.globalAlpha=a; g.font="700 18px Silkscreen, monospace"; g.fillStyle=F.banner.side<0?"#38e8ff":"#ff3fa8"; g.fillText(F.banner.txt,W/2,H*.12+44); g.globalAlpha=1; }
+  if(F.cd>0){ g.font=`700 ${Math.round(Math.min(W,H)*.2)}px Silkscreen, monospace`; g.fillStyle="#ffd36a"; g.fillText(F.cd>1?String(Math.ceil(F.cd-1)):"FIGHT!",W/2,H*.5); } }
+function arEnd(win,forfeit){ const F=ARF; if(!F||F.done) return; F.done=true; F.over=true; const A=arS(), b=A.bots[F.bi]; const kids=[]; let title=win?"VICTORY!":"DEFEAT";
+  if(F.o.mode==="practice"){ kids.push(el("p",{text:win?"The training bot is scrap. Nice timing.":"Even the training bot got you. Try slotting more cards."})); }
+  else { const r=arRank(A.pts); if(b){ b.cond=Math.max(0,b.cond-(win?6+Math.floor(Math.random()*7):12+Math.floor(Math.random()*9))); }
+    if(F.o.mode==="ranked"){ const opPts=F.op&&F.op.pts!=null?F.op.pts:A.pts, adv=clamp(Math.round((opPts-A.pts)/40),-6,8);
+      if(win){ const gain=20+adv+Math.floor(Math.random()*5), cr=Math.round(F.o.fee*2.6+Math.random()*F.o.fee*.6), ch=2+r.i*2; A.pts+=gain; A.w++; save.credits+=cr; save.chips+=ch; kids.push(el("p",{text:`+${gain} rank points · +₵${cr} · +${ch} chips`}));
+        if(Math.random()<.35+r.i*.04){ const id=rollItem(.4+r.i*.5); addItem(id); kids.push(el("p",{style:`color:${RAR[BY[id].r].c}`,text:`Loot: ${BY[id].n} (${BY[id].r})`})); } try{ addXp(25+r.i*8,"Neon Arena win"); }catch(e){} }
+      else { const loss=10+Math.floor(Math.random()*5)-Math.min(4,Math.max(0,adv)); A.pts=Math.max(0,A.pts-loss); A.l++; kids.push(el("p",{text:`-${loss} rank points${forfeit?" (left the fight)":""}. Your robot took damage: repair it at the Robot Bay.`})); }
+      const nr=arRank(A.pts); if(nr.i>r.i){ kids.push(el("p",{style:`color:${nr.c}`,text:`⬆ Promoted to ${nr.n}!`})); try{ broadcastSys(`reached ${nr.n} rank in Neon Arena!`); }catch(e){} } else if(nr.i<r.i) kids.push(el("p",{text:`Dropped to ${nr.n}.`}));
+      A.best=Math.max(A.best,A.pts); A.seasonBest=Math.max(A.seasonBest||0,A.pts); }
+    else if(F.o.mode==="tour"){ const T=A.tour; if(win&&T){ T.r++; if(T.r>=3){ A.tourW=arWeek(); A.tour=null; A.trophies=(A.trophies||0)+1; A.tourWins=(A.tourWins||0)+1; const cr=(F.o.fee||300)*6, ch=25+r.i*10, id=rollItem(2.5); addItem(id); save.credits+=cr; save.chips+=ch; title="🏆 CHAMPION!";
+          kids.push(el("p",{text:`You won the weekly tournament! +₵${cr.toLocaleString()} · +${ch} chips · a trophy`}),el("p",{style:`color:${RAR[BY[id].r].c}`,text:`Prize part: ${BY[id].n} (${BY[id].r})`})); try{ broadcastSys("won the Neon Arena weekly tournament! 🏆"); }catch(e){} }
+        else kids.push(el("p",{text:`Round ${T.r} cleared! ${3-T.r} to go. Your robot keeps its damage between rounds.`})); }
+      else { A.tourW=arWeek(); A.tour=null; kids.push(el("p",{text:"Knocked out of this week's tournament. A new bracket opens next week."})); } } }
+  persist(); hud(); [win?523:330,win?659:262,win?784:196].forEach((f,i)=>setTimeout(()=>beep(f,.18,"triangle",.05),i*150));
+  const btns=[["Back to the arena",()=>{ arClose(); openArGate(); },1]]; if(F.o.mode==="tour"&&win&&A.tour&&A.tour.r<3) btns.unshift(["Next round",()=>{ arClose(); arTourNext(); },1]);
+  if(!F.open||!$("#arModal")){ toast(`${title} ${kids.map(k=>k.textContent).join(" ")}`,"#ff3fa8"); return; } arModal(title,kids,btns,win?"win":"lose"); }
+addEventListener("keydown",e=>{ const F=ARF; if(!F||!F.open) return; const t=e.target; if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return; e.stopImmediatePropagation(); const k=e.key;
+  if(k==="Escape"){ e.preventDefault(); const m=$("#arModal"); if(m&&!m.hidden){ if(F.over) { arClose(); openArGate(); } else { m.hidden=true; F.paused=false; F.last=performance.now(); } } else arAskLeave(); return; }
+  if(/^[1-5]$/.test(k)){ e.preventDefault(); arPlay(F.me,F.en,+k-1,true); return; } if(k==="a"||k==="A"){ e.preventDefault(); arToggleAuto(); } },true);
 
 // ================================================================ THE OUTSKIRTS: a shared open-world wasteland outside the city.
 // Top-down pixel art (same pipeline as Project ANON). Walk anywhere, salvage scrap and parts, dodge Halvorsen patrols,
@@ -14054,7 +14419,7 @@ async function flush(){
   try{ localStorage.setItem("nh_save",JSON.stringify(data)); localStorage.setItem("nh_save_uid",myId||""); if(DB&&myId) localStorage.setItem("nh_save_dirty","1"); }catch(e){}
   // nh_save_dirty stays set until the cloud confirms this save, so an unfinished save can be recovered on the next visit.
   if(DB&&myId){ try{ await DB.doc(`data/users/${myId}/save`).set(data); try{ if(JSON.parse(localStorage.getItem("nh_save")||"{}").savedAt===data.savedAt) localStorage.removeItem("nh_save_dirty"); }catch(e){} }catch(e){}
-    const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{},(save.t1211&&save.t1211.beat||[]).length,save.hh||null,null,owPub()]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},t1211:(save.t1211&&save.t1211.beat||[]).length,hh:cleanHH(save.hh),nf:null,ho:owPub(),at:Date.now()}); }catch(e){} } }
+    const hsPub={off:save.home.off,plants:save.home.plants,clean:save.home.clean}; const sig=JSON.stringify([save.display,save.look,save.name,save.duelWins||0,save.decor,save.voidKills||0,(save.upload||{}).cleared||0,save.room,hsPub,clashCard(),save.arcade||{},(save.t1211&&save.t1211.beat||[]).length,save.hh||null,null,owPub(),arPub()]); if(sig!==lastHomeSig){ lastHomeSig=sig; try{ await DB.doc("homes/"+myId).set({display:save.display,look:save.look,name:save.name||"",wins:save.duelWins||0,kills:save.voidKills||0,up:(save.upload||{}).cleared||0,decor:save.decor,room:save.room,hs:hsPub,vibe:homeVibe().v,clash:clashCard(),arc:save.arcade||{},t1211:(save.t1211&&save.t1211.beat||[]).length,hh:cleanHH(save.hh),nf:null,ho:owPub(),ar:arPub(),at:Date.now()}); }catch(e){} } }
 }
 function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") return d; try{ s=JSON.parse(JSON.stringify(s)); }catch(e){ return d; } const o={...d,...s}; o.credits=+o.credits||0; o.chips=+o.chips||0; o.rp=Math.max(0,+o.rp||0); if(!o.rpDay||typeof o.rpDay!=="object") o.rpDay={d:"",n:0}; o.rpLog=(Array.isArray(s.rpLog)?s.rpLog:[]).filter(e=>e&&isFinite(+e.t)&&isFinite(+e.n)&&+e.n>0).slice(0,40).map(e=>({t:+e.t,n:Math.floor(+e.n),s:String(e.s||"Work").slice(0,40)}));
   o.inv=Object.fromEntries(Object.entries(o.inv||{}).filter(([k,v])=>BY[k]&&v>0).map(([k,v])=>[k,Math.floor(v)])); o.display=Array.from({length:6},(_,i)=>BY[(s.display||[])[i]]?s.display[i]:null);
@@ -14063,6 +14428,7 @@ function sanitizeSave(s){ const d=defaultSave(); if(!s||typeof s!=="object") ret
   o.land=s.land&&Number.isInteger(s.land.plot)&&s.land.plot>=0&&s.land.plot<1000?{plot:s.land.plot,at:+s.land.at||0}:null;
   o.landRigs=(Array.isArray(s.landRigs)?s.landRigs:[]).filter(r=>r&&BY[r.id]&&BY[r.id].k==="cminer").slice(0,6).map(r=>({id:r.id,since:Math.min(Date.now(),+r.since||Date.now())}));
   delete o.book;
+  if(s.arena) { try{ o.arena=arClean(s.arena); }catch(e){ delete o.arena; } } else delete o.arena;
   o.conGames=Object.fromEntries(Object.entries(s.conGames&&typeof s.conGames==="object"?s.conGames:{}).filter(([k,v])=>CON_BY[k]&&Array.isArray(v)).map(([k,v])=>[k,[...new Set(v.filter(n=>Number.isInteger(n)&&n>=0&&n<7))]]));
   o.conIns=Object.fromEntries(Object.entries(s.conIns&&typeof s.conIns==="object"?s.conIns:{}).filter(([k,v])=>CON_BY[k]&&Number.isInteger(v)&&v>=0&&v<7&&(o.conGames[k]||[]).includes(v)));
   { const tt=s.t1211&&typeof s.t1211==="object"?s.t1211:{}; o.t1211={beat:[...new Set((Array.isArray(tt.beat)?tt.beat:[]).filter(n=>Number.isInteger(n)&&n>=1&&n<=7))].sort((a,b)=>a-b),lv:Math.max(0,Math.floor(+tt.lv)||0),rare:Math.max(0,Math.min(7,Math.floor(+tt.rare)||0))}; if(+tt.done>0) o.t1211.done=+tt.done; if(typeof tt.sav==="string"&&tt.sav.length<60000){ o.t1211.sav=tt.sav; o.t1211.savAt=+tt.savAt||0; } }
@@ -14363,7 +14729,7 @@ const WX_SEASONS=[
 const WX={clear:{n:"Clear night",ic:"🌙"},rain:{n:"Rain",ic:"🌧"},storm:{n:"Thunderstorm",ic:"⛈"},fog:{n:"Fog",ic:"🌫"},snow:{n:"Snow",ic:"🌨"},blizzard:{n:"Blizzard",ic:"❄"},
   leaves:{n:"Falling leaves",ic:"🍂"},blossom:{n:"Cherry blossoms",ic:"🌸"},heat:{n:"Heat wave",ic:"🔥"},acid:{n:"Acid rain",ic:"☣"},aurora:{n:"Aurora",ic:"🌌"}};
 const WX_SEASON_MS=7*864e5, WX_SLOT_MS=20*6e4, WX_EPOCH=Date.UTC(2026,0,5,5);
-const WX_OUT=["street","byte","grid","neonrow","civic","prison","hhomes","racers","linx","clash","anon","outskirts","line","smacked"];
+const WX_OUT=["street","byte","grid","neonrow","civic","prison","hhomes","racers","linx","clash","anon","arena","outskirts","line","smacked"];
 let wxLock=null, wxLast="", wxFlash=0, wxBolt=null, wxNextBolt=0;
 // owner-set cycle: mode season|random|list, how often it changes, how long a season lasts
 let wxCfg={mode:"season",slotMin:20,list:[],seasonH:168};
