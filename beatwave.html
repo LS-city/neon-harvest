@@ -292,7 +292,10 @@ function initAudio(){
   noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const nd=noiseBuf.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
   setDelay();
 }
-const vol=()=>document.getElementById('vol').value/100;
+const vol=()=>{const v=document.getElementById('vol').value/100;return v*v;};
+// the volume slider works live (and is remembered)
+{const vs=document.getElementById('vol');try{const sv=localStorage.getItem('bw_vol');if(sv!=null)vs.value=sv;}catch(_){}
+  vs.addEventListener('input',()=>{try{localStorage.setItem('bw_vol',vs.value);}catch(_){}if(master&&ctx){const t=ctx.currentTime;master.gain.cancelScheduledValues(t);master.gain.setValueAtTime(master.gain.value,t);master.gain.linearRampToValueAtTime(Math.max(0,vol()),t+.04);}});}
 function setDelay(){if(!delay)return;delay.delayTime.value=(60/bpm)*(genre==='techno'?0.5:0.75);}
 function env(gn,t,peak,dec,att=0.003){gn.gain.setValueAtTime(0.0001,t);gn.gain.exponentialRampToValueAtTime(peak,t+att);gn.gain.exponentialRampToValueAtTime(0.0001,t+dec);}
 function G(){return ctx.createGain();}
@@ -437,7 +440,7 @@ function sound(k,t,vel=1){const m=KEYMAP[k],g=GENRES[genre];
   else playLead(g.root+12+semi(m.i),t);
   }finally{bus=null;busV=1;}
   vq.push({t,k,vel});}
-function click(t,accent){const o=osc('square',accent?1800:1200,t,.03),gn=G();env(gn,t,.12,.03);o.connect(gn);gn.connect(ctx.destination);}
+function click(t,accent){const o=osc('square',accent?1800:1200,t,.03),gn=G();env(gn,t,.12,.03);o.connect(gn);gn.connect(master);}
 
 /* ================= LOOPER ================= */
 let bpm=100,loop=[],layer=0,loopOn=false,loopRec=false,t0=0,schedTo=0,timer=null,quant=true,metro=true;
