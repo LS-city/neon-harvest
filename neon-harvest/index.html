@@ -303,6 +303,34 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
 #prompt .hphint{font-size:10px;color:#7fa9b8;margin-right:2px}
 #game.mobile #prompt.multi{flex-direction:column;align-items:stretch}
 #game.mobile #prompt .hpchip{min-height:38px;font-size:12px}
+#gwin.story{background:#000}
+#gwin.story .exbox{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none}
+#gwin.story .excv{display:block}
+.exhud{position:absolute;top:10px;right:12px;display:flex;gap:10px;align-items:center;font-size:12px;color:#cfc6ff;pointer-events:none;text-shadow:0 1px 2px #000}
+.exm{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.45);padding:3px 7px}
+.exbar{display:inline-block;width:70px;height:6px;background:#2a0a14}.exbar>i{display:block;height:100%}
+.exobj{position:absolute;top:10px;left:12px;max-width:55%;font-size:12px;color:#d8d0ff;background:rgba(0,0,0,.45);padding:4px 8px;pointer-events:none}.exobj:empty{display:none}
+.exsub{position:absolute;left:50%;transform:translateX(-50%);bottom:22%;max-width:min(640px,88%);text-align:center;color:#eee;background:rgba(0,0,0,.6);padding:8px 12px;font-size:14px;line-height:1.5;pointer-events:none}
+.exdlg{position:absolute;left:50%;transform:translateX(-50%);bottom:14%;width:min(680px,92%);background:rgba(6,4,12,.92);border:2px solid #3a3058;padding:12px 16px;color:#eee;cursor:pointer}
+.exdlg.tenant{border-color:#5a5a6a;color:#cfd2dc;font-style:italic}.exwho{font-size:11px;letter-spacing:.1em;color:#ff7a8a;margin-bottom:4px;text-transform:uppercase}.extxt{font-size:15px;line-height:1.55}.exnext{text-align:right;font-size:10px;color:#8a82b0;margin-top:6px}
+.exmodal{position:absolute;inset:0;z-index:6;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px}.exmodal[hidden]{display:none}
+.exmc{background:#0b0912;border:2px solid #5a1a2a;padding:16px 18px;max-width:560px;width:100%;max-height:100%;overflow:auto;color:#e8e2f0}
+.exmc h3{margin:0 0 10px;font-family:'Press Start 2P','Silkscreen',monospace;font-size:15px;line-height:1.5;color:#ff3a5a}.exmc p{margin:6px 0;line-height:1.5}.exmb{margin-top:12px;gap:8px;flex-wrap:wrap}
+.exchs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-top:8px}.exchs .btn{text-align:left}
+.exends{display:grid;gap:6px}.exend{border:1px solid #3a3048;padding:8px;display:flex;flex-direction:column;gap:2px}.exend.got{border-color:#ffd36a}.exend span{font-size:12px;color:#a8a0c0}
+.exset{display:flex;align-items:center;gap:8px;margin:8px 0}
+.exfree{color:#ffd36a;border:1px solid #ffd36a;padding:6px 8px}.exlock{color:#6a6278;border:1px dashed #3a3048;padding:6px 8px}
+.exreact{width:120px;height:120px;margin:10px auto;background:#1a1426;border:2px solid #3a3058;cursor:pointer}.exreact.on{background:#fff}
+.expong{display:block;width:100%;max-width:480px;aspect-ratio:8/5;margin:8px auto;image-rendering:pixelated;background:#000;touch-action:none}
+.exkeyd{font-family:'Press Start 2P',monospace;font-size:22px;letter-spacing:.3em;text-align:center;margin:8px 0;color:#ff3a4a}
+.exkeys{display:grid;grid-template-columns:repeat(3,64px);gap:6px;justify-content:center}.exkeys .btn{min-height:48px;font-size:18px}
+.expad{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:10px calc(10px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(10px + env(safe-area-inset-left,0px));pointer-events:none}
+.expad>div{display:flex;gap:8px;pointer-events:auto}.expb{min-width:58px;min-height:58px;font-size:16px;background:rgba(20,14,32,.75);touch-action:none;user-select:none;-webkit-user-select:none}
+#game.mobile #gwin.story .expad,body.touch #gwin.story .expad{display:flex}
+@media (pointer:coarse){ #gwin.story .expad{display:flex} }
+.exbtn{border-color:#ff3a5a;color:#ffb3c0}
+body:has(#gwin.story) #zkAlert{display:none!important}
+@media (max-width:600px){ .exobj{max-width:calc(100% - 24px);font-size:11px} .exhud{top:38px;right:auto;left:12px;gap:6px;font-size:11px} .expb{min-width:46px;min-height:52px;font-size:14px;padding:0 6px} .expad>div{gap:5px} .exsub{bottom:auto;top:66px;font-size:13px} .exdlg{bottom:auto;top:66px} }
 #gwin.arena{background:#08051a}
 #gwin.arena .arbox{flex:1;min-height:0;position:relative;overflow:hidden}
 #gwin.arena .arcv{display:block}
@@ -591,6 +619,7 @@ input.num,select{font-family:var(--f-ui);background:#0d0818;color:var(--text);bo
       <button class="btn" id="btnMsg" type="button">Messages [M]</button>
       <button class="btn" id="btnTravel" type="button" title="Fast travel anywhere (T)">Fast Travel [T]</button>
       <button class="btn" id="btnQuests" type="button" title="Story quests (Q)">Quests [Q]</button>
+      <button class="btn" id="btnExit" type="button" title="Story Mode: EXIT (psychological horror)">🚪 Story: EXIT</button>
       <button class="btn" id="btnRole" type="button" title="Your role (R)">Role [R]</button>
       <button class="btn" id="btnHelp" type="button">How to Play [H]</button>
       <button class="btn" id="btnSnd" type="button" aria-pressed="false">Sound off</button>
@@ -5002,7 +5031,7 @@ function tabEdge(t){ if(!t||t._edge) { if(t) t.classList.toggle("end",t.scrollLe
 function closePanel(){ currentView=null; tryOn=null; $("#overlay").hidden=true; $("#overlay").innerHTML=""; }
 $("#overlay").addEventListener("pointerdown",e=>{ if(e.target.id==="overlay") closePanel(); });
 $("#overlay").addEventListener("click",e=>{ if(e.target.closest&&e.target.closest(".panel .tabs")) panelFresh=1; setTimeout(()=>{ panelFresh=0; },0); },true);
-$("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrcpill").onclick=()=>openNRC(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnRole").onclick=()=>openRoleMenu(); { const rc=$("#rolechip"); if(rc){ rc.onclick=()=>{ if(rchipA&&rchipA.length){ rchipA[0].f(); rchipT=0; } else openRoleMenu(); }; rc.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); rc.click(); } }); } } $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
+$("#btnBag").onclick=()=>openStash(); $("#rppill").onclick=()=>openRP(); $("#nrcpill").onclick=()=>openNRC(); $("#btnQuests").onclick=()=>openQuestLog(); $("#btnExit").onclick=()=>{ if($("#gwin")) return toast("Close the game window you have open first."); openExit(false); }; $("#btnRole").onclick=()=>openRoleMenu(); { const rc=$("#rolechip"); if(rc){ rc.onclick=()=>{ if(rchipA&&rchipA.length){ rchipA[0].f(); rchipT=0; } else openRoleMenu(); }; rc.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); rc.click(); } }); } } $("#btnChar").onclick=()=>{ tryOn=null; openWardrobe("name"); };
 /* ============================================================ HOW TO PLAY */
 const HELP=[
  {id:"start",icon:"🚀",n:"Getting started",topics:[
@@ -5194,6 +5223,7 @@ const HELP=[
     ["Also inside",["Lift weights for a Void buff, grab a canteen tray to heal, and buy snacks and phone cards at the commissary.","Visitors can see who's locked up and use the hoops, library, chapel and commissary too."]]],rel:["crime"]},
   {id:"outskirts",icon:"⛺",n:"The Outskirts",sub:"Open-world wasteland: salvage and build a hideout",where:"Metro → The Outskirts → walk through the Gate",steps:["Walk anywhere: WASD/arrows on PC, or tap where you want to go. Tap things to use them. M opens the map.","Salvage heaps, car wrecks, crates and server racks for scrap and parts. Spots refill after 8 to 16 minutes. The far side has the best loot.","What you find goes in your pack. Stash it at the gate or at a Stash crate in your hideout. Halvorsen drones patrol the far side: if one zaps you, you drop half your pack. Sprint (Shift) to escape.","Claim a free plot for ₵500 and press 🔨 Build. Place floors, walls, doors, furniture, neon, signs, graffiti and posters with your own pictures, in any color.","Tech costs parts: Generators power Mining Rigs (chips), Server Racks grow your pack, Turrets fight raiders, the Antenna shows patrols. Raiders come for hideouts with tech while you're home: tap them to zap them."]},
   {id:"anon",icon:"◆",n:"Project ANON",sub:"Real-time strategy vs Halvorsen Corp",where:"Metro → Project ANON → War Room",steps:["Walk into the War Room and pick an Operation or a Skirmish (Easy, Normal or Hard).","Drones mine glowing data crystals and bring the data to your Core. Data pays for everything. Power (from Cores and Power Relays) is your unit cap.","Select a drone to build: Node Forge (Runners, Glitchers, Hackers), Code Lab (upgrades), Mech Bay (Mechs), Firewall Turrets and more Relays.","PC: left-click or drag to select, right-click to move, attack, mine or set a rally point. A = attack-move. Phones: tap to select, tap the ground to move, use ▭ Box and ⚔ Army.","Destroy every Halvorsen building to win. Operations pay a one-time bonus. Skirmish wins pay credits (first 3 a day)."]},
+  {id:"exit",icon:"🚪",n:"Story Mode: EXIT",sub:"A psychological horror story, separate from free roam",where:"Title screen, or the 🚪 Story: EXIT button at the top",steps:["You clock out of a shift and the city won't let you leave. Find the Exit. About 2 hours, 10 chapters, 4 endings.","Controls: ◀ ▶ or A / D to walk, Shift to run, F flashlight, E to use or hide, L to listen, Esc to pause. On phones, use the on-screen buttons.","Keep your flashlight battery and your Signal (your grip on what's real) up. The dark, and the Tenant, drain your Signal. At zero you black out and retry.","Each chapter hides one resident's lost memory. Find all 10, turn down every deal the Tenant offers, and leave no one behind to earn the true ending.","Endings unlock titles and wardrobe rewards in free roam. Story Mode has its own save and never touches your runner."]},
   {id:"arena",icon:"🏟",n:"Neon Arena",sub:"TIX fights: TIX, cards and ranks",where:"Metro → Neon Arena",steps:["TIX Shop: claim a free Scrapling, then buy kaiju TIX: Humanoids (Gorrak, Ironhorn, Colossus Prime: tough), Aliens (Jellyfang, Voltmoth, Kraxis: strongest cards) or Cyber Beasts (Scrapjaw, Lycan-X the cyber werewolf, Hydraxis the three-headed dragon: fastest attacks). Humanoid beats Beast, Beast beats Alien, Alien beats Humanoid.","Card Forge: melt items you own into cards. PC parts and weapons make Power cards, food, drinks, club items and hacks make Effect cards, decor and accessories make Passive cards. The item's rarity sets the tier (I to IV). Fuse 3 of the same card into the next tier.","TIX Bay: slot cards into your TIX, repair damage after fights, tune it up to Lv 10 with credits and a PC part, paint and rename it.","Fights: your TIX attacks on its own. Tap a card (or press 1 to 5) when it lights up. 🤖 Auto plays cards for you. 75 seconds, most HP left wins.","Ranked fights cost a small fee and pay credits, chips, rank points and sometimes a rare part. Ranks: Bronze, Silver, Gold, Platinum, Diamond, Neon. The weekly tournament is 3 fights in a row for a trophy and a big prize. A new season starts every month."]},
   {id:"cardisplay",icon:"🚗",n:"Cars & trucks",sub:"Buy and customize rides",where:"Metro → Harvest Homes → Neon Motors (far end)",steps:["Buy any of 15 hover cars and trucks at Neon Motors with credits.","Customize them in the resident garage next door: paint, decals, underglow, spoilers, light trails and a plate.","The old Car Display closed. If you owned a plot, your 500 chips were refunded."],secs:[
     ["Good to know",["Everyone walking by sees your rides. Release a plot to get half your chips back."]]]}]},
@@ -8552,6 +8582,447 @@ addEventListener("keydown",e=>{ const F=ARF; if(!F||!F.open) return; const t=e.t
   if(k==="Escape"){ e.preventDefault(); const m=$("#arModal"); if(m&&!m.hidden){ if(F.over) { arClose(); openArGate(); } else { m.hidden=true; F.paused=false; F.last=performance.now(); } } else arAskLeave(); return; }
   if(/^[1-5]$/.test(k)){ e.preventDefault(); arPlay(F.me,F.en,+k-1,true); return; } if(k==="a"||k==="A"){ e.preventDefault(); arToggleAuto(); } },true);
 
+// ================================================================ STORY MODE: EXIT (psychological horror, 10 chapters)
+// A separate mode from free roam. Its progress lives in its OWN save (localStorage nh_exit_v1_<uid> + data/users/<uid>/story)
+// and never reads or writes the free-roam character save, except to hand out ending rewards (wardrobe unlocks + a title).
+const EX_GROUND=290, EX_VH=340;
+const EX_END={wake:{n:"Wake Up",t:"Night Shift",aura:"Glitch"},stay:{n:"Stay",t:"Resident",aura:"Shadow smoke"},harvest:{n:"Harvested",t:"The Tenant",aura:"Binary rain"},free:{n:"Be Free",t:"Free",aura:"Golden glow",hat:"Halo"}};
+const EX_RES=[{n:"Hollis",m:"A ring of keys to doors that no longer exist"},{n:"Teo",m:"A guitar pick with a song title scratched in"},{n:"Mara",m:"A hospital badge with a photo that keeps changing"},{n:"Dex",m:"A timecard punched every day for 11 years"},{n:"June",m:"Her initials on a high-score table"},{n:"Nadia",m:"A last-call bell"},{n:"Sol",m:"A recipe card for his mother's soup"},{n:"Ray",m:"A ticket punch and one unpunched ticket"},{n:"Wren",m:"A floppy disk labeled DO NOT PRINT"},{n:"Ivo",m:"An undelivered package, addressed to you"}];
+let EXS=null, EX=null;
+function exKey(){ return "nh_exit_v1_"+(myId||"guest"); }
+function exDef(){ return {v:1,ch:0,best:0,mem:[],deals:[],mara:0,endings:[],strobe:1,vol:.8,at:0}; }
+function exClean(o){ try{ const d=exDef(); if(!o||typeof o!=="object") return d; d.ch=clamp(Math.floor(+o.ch)||0,0,9); d.best=clamp(Math.floor(+o.best)||0,0,9); d.best=Math.max(d.best,d.ch);
+    d.mem=[...new Set((Array.isArray(o.mem)?o.mem:[]).map(n=>Math.floor(+n)).filter(n=>n>=0&&n<10))]; d.deals=[...new Set((Array.isArray(o.deals)?o.deals:[]).map(n=>Math.floor(+n)).filter(n=>n>=1&&n<=3))];
+    d.mara=o.mara?1:0; d.endings=[...new Set((Array.isArray(o.endings)?o.endings:[]).filter(e=>EX_END[e]))]; d.strobe=o.strobe===0?0:1; d.vol=clamp(+o.vol,0,1); if(isNaN(d.vol)) d.vol=.8; d.at=+o.at||0; return d; }catch(e){ return exDef(); } }
+function exLoad(){ let o=null; try{ o=JSON.parse(localStorage.getItem(exKey())||"null"); }catch(e){} EXS=exClean(o);
+  try{ if(DB&&myId) DB.doc(`data/users/${myId}/story`).get().then(sn=>{ if(!sn||!sn.exists) return; let c=null; try{ c=exClean(JSON.parse(sn.data().s||"null")); }catch(e){ return; } if((c.at||0)>(EXS.at||0)){ EXS=c; try{ localStorage.setItem(exKey(),JSON.stringify(EXS)); }catch(e){} if($("#gwin.story")&&EX&&EX.menu) exMenu(); } }).catch(()=>{}); }catch(e){} }
+function exSave(){ if(!EXS) return; EXS.at=Date.now(); const s=JSON.stringify(EXS); try{ localStorage.setItem(exKey(),s); }catch(e){} try{ if(DB&&myId) DB.doc(`data/users/${myId}/story`).set({s,at:EXS.at}).catch(()=>{}); }catch(e){} }
+function exEligible(){ return EXS.mem.length>=10&&!EXS.deals.length&&EXS.mara===1; }
+
+// ---------------------------------------------------------------- sound (Web Audio, all synthesized)
+const EXA={};
+function exAC(){ try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended") AC.resume(); return AC; }catch(e){ return null; } }
+function exVol(){ return EXS?EXS.vol:.8; }
+function exDroneStart(kind){ const ac=exAC(); if(!ac) return; exDroneStop(); const out=ac.createGain(); out.gain.value=0; out.connect(ac.destination); out.gain.linearRampToValueAtTime(.06*exVol(),ac.currentTime+3);
+  const lp=ac.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=kind==="club"?420:260; lp.connect(out); const nodes=[];
+  const base={homes:55,street:49,row:46.25,factory:41.2,arcade:58.27,club:65.4,hall:51.9,tunnel:36.7,office:61.7,exit:43.65}[kind]||49;
+  for(const [m,ty,v] of [[1,"sawtooth",.5],[1.5,"sine",.6],[2.01,"triangle",.25],[.5,"sine",.7]]){ const o=ac.createOscillator(); o.type=ty; o.frequency.value=base*m; const g=ac.createGain(); g.gain.value=v; const lfo=ac.createOscillator(), lg=ac.createGain(); lfo.frequency.value=.05+Math.random()*.15; lg.gain.value=v*.5; lfo.connect(lg).connect(g.gain); o.connect(g).connect(lp); o.start(); lfo.start(); nodes.push(o,lfo); }
+  EXA.drone={out,nodes}; }
+function exDroneStop(){ const d=EXA.drone; if(!d) return; const ac=AC; try{ d.out.gain.cancelScheduledValues(ac.currentTime); d.out.gain.setValueAtTime(d.out.gain.value,ac.currentTime); d.out.gain.linearRampToValueAtTime(0,ac.currentTime+.8); setTimeout(()=>{ d.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} }); try{ d.out.disconnect(); }catch(e){} },1000); }catch(e){} EXA.drone=null; }
+function exNoise(dur,f,q,vol,pan,type){ const ac=exAC(); if(!ac||!exVol()) return; const n=Math.max(1,Math.floor(ac.sampleRate*dur)), b=ac.createBuffer(1,n,ac.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+  const s=ac.createBufferSource(); s.buffer=b; const fl=ac.createBiquadFilter(); fl.type=type||"bandpass"; fl.frequency.value=f; fl.Q.value=q; const g=ac.createGain(); g.gain.setValueAtTime(vol*exVol(),ac.currentTime); g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+dur);
+  let node=s.connect(fl).connect(g); try{ if(pan!=null&&ac.createStereoPanner){ const p=ac.createStereoPanner(); p.pan.value=clamp(pan,-1,1); node=node.connect(p); } }catch(e){} node.connect(ac.destination); s.start(); }
+function exTone(f,dur,ty,vol,slide){ const ac=exAC(); if(!ac||!exVol()) return; const o=ac.createOscillator(), g=ac.createGain(); o.type=ty||"sine"; o.frequency.setValueAtTime(f,ac.currentTime); if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(20,f*slide),ac.currentTime+dur);
+  g.gain.setValueAtTime(.0001,ac.currentTime); g.gain.exponentialRampToValueAtTime(vol*exVol(),ac.currentTime+Math.min(.08,dur/3)); g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+dur); o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+dur+.05); }
+function exStep(pan,heavy){ exNoise(heavy?.16:.07,heavy?120:900,heavy?1.2:2,heavy?.35:.06,pan,heavy?"lowpass":"bandpass"); }
+function exWhisper(len){ const ac=exAC(); if(!ac||!exVol()) return; const dur=Math.min(4,.4+len*.045); for(let k=0;k<Math.ceil(dur*5);k++) setTimeout(()=>exNoise(.16,1800+Math.random()*2200,6,.07,(Math.random()-.5)*.6),k*200); }
+function exSting(){ for(const f of [61.7,65.4,92.5,98]) exTone(f,2.4,"sawtooth",.05,1.02); exNoise(1.6,300,.7,.12,0,"lowpass"); }
+function exHeart(){ exTone(55,.18,"sine",.35,.6); setTimeout(()=>exTone(52,.16,"sine",.28,.6),180); }
+
+// ---------------------------------------------------------------- the Tenant and residents
+function exDrawTenant(g,x,y,dir,t,al,hunting){ if(al<=0) return; g.save(); g.globalAlpha=al; g.translate(x,y); if(dir<0) g.scale(-1,1); const sway=Math.sin(t*1.3)*1.5;
+  g.fillStyle="#07060b"; g.fillRect(-7,-30,5,30); g.fillRect(3,-30,5,30); g.beginPath(); g.moveTo(-16,-28); g.lineTo(-11,-96+sway); g.lineTo(11,-96+sway); g.lineTo(17,-28); g.closePath(); g.fill();
+  g.fillStyle="#0e0c16"; g.fillRect(-14,-98+sway,28,8); g.fillRect(-19,-92+sway,5,58); g.fillRect(15,-92+sway,5,58); g.fillRect(-21,-36+sway,7,6); g.fillRect(15,-36+sway,7,6);
+  g.fillStyle="#1a1824"; g.fillRect(-12,-121+sway,24,20); g.fillStyle="#05050a"; g.fillRect(-10,-119+sway,20,16);
+  for(let i=0;i<34;i++){ const v=Math.floor(Math.random()*200); g.fillStyle=`rgb(${v},${v},${v+20})`; g.fillRect(-10+Math.floor(Math.random()*10)*2,-119+sway+Math.floor(Math.random()*8)*2,2,2); }
+  if(hunting){ g.fillStyle="rgba(255,255,255,.85)"; g.fillRect(-5,-114+sway,3,2); g.fillRect(3,-114+sway,3,2); g.fillRect(-3,-108+sway,7,1); }
+  g.restore(); }
+function exResLook(i){ const L={...DEFAULT_LOOK}; L.skin=[5,0,4,6,2,5,0,4,6,2][i%10]; L.style=(i*3)%8; L.jacket=(i*5)%12; L.pants=(i*7)%12; L.hat=[0,4,0,5,0,10,0,11,0,1][i%10]; L.hair=(i*2)%10; L.visor=0; L.pet=0; L.aura=0; L.back=0; return L; }
+
+// ---------------------------------------------------------------- the window, input and loop
+function openExit(fromTitle){ if($("#gwin")) return; try{ closeTitle(); }catch(e){} try{ closePanel(); }catch(e){} if(!EXS) exLoad(); exAC();
+  const w=el("div",{id:"gwin",class:"story",role:"dialog","aria-label":"Story Mode: EXIT"}); const box=el("div",{class:"exbox"}); const cv=document.createElement("canvas"); cv.className="excv"; box.append(cv);
+  const hud=el("div",{class:"exhud"}), obj=el("div",{class:"exobj"}), sub=el("div",{class:"exsub",hidden:true}), dlg=el("div",{class:"exdlg",hidden:true}), modal=el("div",{class:"exmodal",hidden:true});
+  const pad=el("div",{class:"expad"}); const pb=(t,k,lab)=>{ const b=el("button",{class:"btn expb",type:"button","aria-label":lab,text:t}); b.addEventListener("pointerdown",e=>{ e.preventDefault(); exKeyDown(k); }); for(const ev of ["pointerup","pointerleave","pointercancel"]) b.addEventListener(ev,()=>exKeyUp(k)); return b; };
+  pad.append(el("div",{class:"expl"},pb("◀","left","Move left"),pb("▶","right","Move right")),el("div",{class:"expr"},pb("RUN","run","Run"),pb("🔦","light","Flashlight"),pb("E","act","Interact or hide"),pb("⏸","pause","Pause")));
+  box.append(hud,obj,sub,dlg,modal,pad); w.append(box); $("#game").appendChild(w); try{ releaseKeys&&releaseKeys(); }catch(e){}
+  EX={fromTitle:!!fromTitle,cv,g:cv.getContext("2d"),box,hud,obj,sub,dlg,modal,keys:{},open:true,last:performance.now(),t:0,menu:true,P:null,A:null,lights:[],f:{},paused:true,raf:0,fade:0};
+  EX.dk=document.createElement("canvas"); EX.dkg=EX.dk.getContext("2d");
+  const fit=()=>{ const r=box.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1); if(r.width<10) return; cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); cv.style.width=r.width+"px"; cv.style.height=r.height+"px"; EX.dpr=dpr; EX.W=r.width; EX.H=r.height; EX.dk.width=cv.width; EX.dk.height=cv.height; };
+  EX.fit=fit; fit(); try{ EX.ro=new ResizeObserver(fit); EX.ro.observe(box); }catch(e){ addEventListener("resize",fit); }
+  exMenu(); EX.raf=requestAnimationFrame(exLoop); }
+function exClose(){ exDroneStop(); const ft=EX&&EX.fromTitle; const w=$("#gwin.story"); if(w) w.remove(); if(EX){ EX.open=false; try{ EX.ro&&EX.ro.disconnect(); }catch(e){} } EX=null; if(ft){ try{ renderTitle(titleState); }catch(e){} } }
+function exKeyDown(k){ if(!EX) return; if(k==="pause"){ exPause(); return; } if(EX.modalOpen) return; if(k==="act"){ if(EX.dlgOpen){ exDlgNext(); return; } if(!EX.paused) exAct(); return; } if(k==="light"){ if(!EX.paused) exToggleLight(); return; } EX.keys[k]=true; }
+function exKeyUp(k){ if(EX) EX.keys[k]=false; }
+const EX_KMAP={ArrowLeft:"left",a:"left",A:"left",ArrowRight:"right",d:"right",D:"right",Shift:"run",f:"light",F:"light",e:"act",E:"act",Enter:"act"," ":"act",l:"listen",L:"listen"};
+addEventListener("keydown",e=>{ if(!EX||!EX.open) return; const t=e.target; if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA")) return; e.stopImmediatePropagation();
+  if(e.key==="Escape"){ e.preventDefault(); if(EX.modalOpen&&EX.modalEsc){ EX.modalEsc(); return; } if(EX.menu) { if(EX.menuBack) EX.menuBack(); return; } exPause(); return; }
+  if(EX.modalOpen){ if(EX.modalKey) EX.modalKey(e); return; } const k=EX_KMAP[e.key]; if(!k) return; e.preventDefault(); if(e.repeat&&(k==="act"||k==="light"||k==="listen")) return; if(k==="listen"){ if(EX.A&&EX.A.listen&&!EX.paused) EX.A.listen(); return; } exKeyDown(k); },true);
+addEventListener("keyup",e=>{ if(!EX||!EX.open) return; if(EX.modalOpen&&EX.modalKey){ EX.modalKey(e); e.stopImmediatePropagation(); return; } const k=EX_KMAP[e.key]; if(k){ exKeyUp(k); e.stopImmediatePropagation(); } },true);
+function exPause(){ if(!EX||EX.menu||EX.modalOpen) return; EX.paused=true; exModal("Paused",[el("p",{text:`Chapter ${EX.ci+1}: ${EX_CH[EX.ci].n} · Memories ${EXS.mem.length}/10`}),exObjEl()],[["Resume",()=>{ exModalClose(); EX.paused=false; EX.last=performance.now(); },1],["Restart chapter",()=>{ exModalClose(); exStartChapter(EX.ci); }],["Quit to the story menu",()=>{ exModalClose(); exDroneStop(); exMenu(); }]],()=>{ exModalClose(); EX.paused=false; EX.last=performance.now(); }); }
+function exObjEl(){ return el("p",{class:"sub",text:"Objective: "+(EX.objText||"")}); }
+function exModal(title,kids,btns,onEsc){ const m=EX.modal; m.hidden=false; EX.modalOpen=true; EX.modalEsc=onEsc||null; m.replaceChildren(el("div",{class:"exmc"},el("h3",{text:title}),...kids,el("div",{class:"row exmb"},...btns.map(([t,f,hot,dis])=>el("button",{class:"btn"+(hot?" hot":""),type:"button",disabled:dis||null,text:t,onclick:f})))));
+  setTimeout(()=>{ const b=m.querySelector(".btn.hot")||m.querySelector(".btn"); b&&b.focus(); },30); }
+function exModalClose(){ if(!EX) return; EX.modalKey=null; EX.modal.hidden=true; EX.modal.replaceChildren(); EX.modalOpen=false; EX.modalEsc=null; }
+function exObj(t){ EX.objText=t; EX.obj.textContent=t?"▸ "+t:""; }
+function exSub(t,dur,who){ if(!EX) return; const s=EX.sub; s.hidden=false; s.replaceChildren(who?el("b",{text:who+": "}):"",document.createTextNode(t)); clearTimeout(EX.subT); EX.subT=setTimeout(()=>{ if(EX) EX.sub.hidden=true; },dur||3500); if(who==="The Tenant") exWhisper(t.length); }
+// blocking dialog: lines = [[who,text], ...]
+function exSay(lines,done){ EX.dlgQ=lines.slice(); EX.dlgDone=done||null; EX.dlgOpen=true; EX.paused=true; for(const k in EX.keys) EX.keys[k]=false; exDlgNext(); }
+function exDlgNext(){ if(!EX.dlgQ||!EX.dlgQ.length){ EX.dlg.hidden=true; EX.dlgOpen=false; EX.paused=false; EX.last=performance.now(); const d=EX.dlgDone; EX.dlgDone=null; if(d) d(); return; }
+  const [who,txt]=EX.dlgQ.shift(); EX.dlg.hidden=false; EX.dlg.className="exdlg"+(who==="The Tenant"?" tenant":""); EX.dlg.replaceChildren(who?el("div",{class:"exwho",text:who}):"",el("div",{class:"extxt",text:txt}),el("div",{class:"exnext",text:"E / tap ▸"})); if(who==="The Tenant") exWhisper(txt.length); }
+function exChoice(title,txt,opts){ EX.paused=true; for(const k in EX.keys) EX.keys[k]=false; exModal(title,[el("p",{text:txt})],opts.map(([t,f,hot])=>[t,()=>{ exModalClose(); EX.paused=false; EX.last=performance.now(); f(); },hot])); }
+function exMem(i){ if(EXS.mem.includes(i)) return; EXS.mem.push(i); exSave(); exTone(392,1.2,"sine",.12,1); setTimeout(()=>exTone(587,1.4,"sine",.1,1),250); exSub(`Memory found: ${EX_RES[i].n}. ${EX_RES[i].m}. (${EXS.mem.length}/10)`,5000); }
+function exDeal(n,title,txt,onTake,onRefuse){ exChoice(title,txt,[["Take the deal",()=>{ if(!EXS.deals.includes(n)){ EXS.deals.push(n); exSave(); } exSting(); onTake(); }],["Refuse",()=>{ exSub("You refuse. Somewhere, something sighs.",3500); onRefuse&&onRefuse(); },1]]); }
+
+// ---------------------------------------------------------------- the player
+function exPlayerReset(x,dir){ const P=EX.P||{}; Object.assign(P,{x,dir:dir||1,vx:0,hide:null,light:P.light!=null?P.light:true,bat:P.bat!=null?P.bat:100,sig:100,stam:100,phase:0,step:0,inv:0}); EX.P=P; }
+function exToggleLight(){ const P=EX.P; if(!P||P.hide) return; if(EX.A&&EX.A.noLight){ exSub(EX.A.noLight,2500); return; } if(!P.light&&P.bat<=0){ exSub("The flashlight is dead. Find a battery.",2500); return; } P.light=!P.light; exTone(P.light?1800:1200,.05,"square",.05); }
+function exNear(){ const P=EX.P, A=EX.A; let best=null, bd=1e9; for(const h of A.hot||[]){ if(h.cond&&!h.cond()) continue; const d=Math.abs(h.x-P.x); if(d<(h.r||40)&&d<bd){ bd=d; best=h; } } return best; }
+function exAct(){ const P=EX.P; if(P.hide){ P.hide=null; exNoise(.2,500,1,.08); return; } const h=exNear(); if(h){ h.act(); return; } }
+function exHideAt(x){ const P=EX.P; P.hide={x}; P.x=x; P.light=false; exNoise(.25,400,1,.1); exSub("You hide. Hold still. Press E to come out.",2500); }
+
+// lights: world-space circles + the flashlight cone
+function exLit(x,y){ for(const L of EX.lights){ const dx=x-L.x, dy=y-L.y; if(dx*dx+dy*dy<L.r*L.r*.5) return true; } const P=EX.P; if(P.light&&!P.hide){ const dx=(x-P.x)*P.dir; if(dx>0&&dx<250&&Math.abs(y-(EX_GROUND-50))<dx*.45+40) return true; } return false; }
+function exLoop(now){ if(!EX||!EX.open) return; const rdt=Math.min(.1,(now-EX.last)/1000), dt=Math.min(.05,rdt); EX.last=now; EX.t+=dt; EX.rdt=rdt;
+  if(!EX.menu&&!EX.paused&&EX.A){ exUpdate(dt); } try{ exRender(); }catch(e){ console.warn(e); } EX.raf=requestAnimationFrame(exLoop); }
+function exUpdate(dt){ const P=EX.P, A=EX.A, K=EX.keys;
+  let mv=0; if(!P.hide&&!EX.locked){ if(K.left) mv-=1; if(K.right) mv+=1; } const run=K.run&&P.stam>5&&mv!==0; const sp=(run?128:72)*(A.slow||1);
+  P.vx=mv*sp; if(mv) P.dir=mv; P.x=clamp(P.x+P.vx*dt,A.minX!=null?A.minX:20,(A.maxX!=null?A.maxX:A.w-20)); P.phase+=Math.abs(P.vx)*dt*.08;
+  P.stam=clamp(P.stam+(run?-22:14)*dt,0,100); if(mv){ P.step+=dt*(run?3.2:2); if(P.step>1){ P.step=0; exStep(0,false); } }
+  if(P.light&&!P.hide){ P.bat=Math.max(0,P.bat-dt*(A.batDrain||.55)); if(P.bat<=0){ P.light=false; exSub("The flashlight dies.",2500); } }
+  for(const b of A.bats||[]) if(!b.got&&Math.abs(b.x-P.x)<24){ b.got=1; P.bat=Math.min(100,P.bat+60); exTone(880,.12,"square",.06); exSub("Battery. +60%",1800); }
+  // the Tenant
+  const T=A.T; if(T&&T.mode!=="off") exTenant(T,dt);
+  // Signal
+  let drain=0; if(T&&T.mode!=="off"&&T.al>.2){ const d=Math.abs(T.x-P.x); if(d<260) drain+=(260-d)/260*(T.mode==="chase"?14:7); }
+  const lit=P.light||EX.lights.some(L=>Math.abs(L.x-P.x)<L.r*.7); if(!lit&&!P.hide&&!A.noDarkDrain) drain+=1.2;
+  if(A.sigDrain) drain+=A.sigDrain(dt)||0;
+  P.sig=clamp(P.sig+(drain>0?-drain:(lit||P.hide?4:1.5))*dt,0,100);
+  if(P.sig<35){ EX.hb=(EX.hb||0)+dt; if(EX.hb>(P.sig<15?.7:1.1)){ EX.hb=0; exHeart(); } }
+  if(P.sig<=0) exBlackout();
+  if(A.update) A.update(dt);
+  exHud(); }
+function exTenant(T,dt){ const P=EX.P, A=EX.A; T.t=(T.t||0)+dt; const dx=P.x-T.x, d=Math.abs(dx);
+  if(T.mode==="patrol"){ if(T.wait>0) T.wait-=dt; else { const tgt=T.dir>0?T.b:T.a; T.x+=Math.sign(tgt-T.x)*T.spd*dt; if(Math.abs(tgt-T.x)<4){ T.dir*=-1; T.wait=1.2; } }
+    if(!P.hide&&!T.blind&&(d<60||(d<230&&Math.sign(dx)===T.dir&&(P.light||(EX.keys.run&&P.vx)||exLit(P.x,EX_GROUND-40))))){ T.mode="chase"; T.lost=0; exSting(); exSub("It sees you. RUN.",2000); } }
+  else if(T.mode==="chase"){ T.dir=Math.sign(dx)||T.dir; T.x+=T.dir*(T.cspd||104)*dt; if(P.hide){ if(!T.sawHide&&d<110) T.sawHide=1; T.lost+=dt; if(T.lost>2.4&&!T.sawHide){ T.mode=T.home||"patrol"; T.sawHide=0; exSub("Its footsteps move away.",2500); } } else { T.lost=0; T.sawHide=0; }
+    if(d<20&&(!P.hide||T.sawHide)){ exCaught(); return; } }
+  else if(T.mode==="walk"){ T.x+=Math.sign(T.to-T.x)*T.spd*dt; T.dir=Math.sign(T.to-T.x)||T.dir; if(Math.abs(T.to-T.x)<4){ T.mode="off"; T.al=0; if(T.onArrive) T.onArrive(); } if(!P.hide&&d<40){ exCaught(); return; } if(!P.hide&&d<200&&Math.sign(dx)===T.dir&&(P.light||P.vx)){ T.mode="chase"; T.lost=0; exSting(); exSub("It sees you. RUN.",2000); } }
+  else if(T.mode==="stalk"){ T.al=exLit(T.x,EX_GROUND-60)?Math.max(0,T.al-dt*4):Math.min(1,T.al+dt*.6); }
+  if(T.mode!=="stalk") T.al=1;
+  T.stepT=(T.stepT||0)+dt; if((T.mode==="patrol"||T.mode==="chase"||T.mode==="walk")&&T.stepT>(T.mode==="chase"?.32:.6)){ T.stepT=0; exStep(clamp((T.x-P.x)/300,-1,1),true); } }
+function exCaught(){ const P=EX.P; P.sig=0; exBlackout(); }
+function exBlackout(){ if(EX.blacking) return; EX.blacking=true; EX.paused=true; exSting(); EX.static=1;
+  setTimeout(()=>{ if(!EX) return; EX.static=0; EX.blacking=false; exModal("You blacked out.",[el("p",{text:"The city lets you wake up again. It always does."})],[["Try again",()=>{ exModalClose(); const cp=EX.A&&EX.A.checkpoint; if(cp) cp(); else exStartChapter(EX.ci); },1]]); },1600); }
+function exHud(){ const P=EX.P; const bat=Math.round(P.bat), sig=Math.round(P.sig); if(EX._hb===bat+"|"+sig+"|"+EXS.mem.length+"|"+(P.light?1:0)) return; EX._hb=bat+"|"+sig+"|"+EXS.mem.length+"|"+(P.light?1:0);
+  EX.hud.replaceChildren(el("span",{class:"exm",title:"Flashlight battery",text:`🔦 ${bat}%`+(P.light?"":" (off)")}),el("span",{class:"exm",title:"Signal: your grip on what's real"},"〰 ",el("i",{class:"exbar"},el("i",{style:`width:${sig}%;background:${sig>50?"#9fd8ff":sig>25?"#ffd36a":"#ff5a5a"}`}))),el("span",{class:"exm",title:"Lost memories found",text:`◈ ${EXS.mem.length}/10`})); }
+
+// ---------------------------------------------------------------- rendering
+function exRender(){ const g=EX.g, W=EX.W, H=EX.H, dpr=EX.dpr; g.setTransform(dpr,0,0,dpr,0,0); g.fillStyle="#000"; g.fillRect(0,0,W,H);
+  if(EX.menu||!EX.A){ exRenderMenuBg(g,W,H); return; }
+  const A=EX.A, P=EX.P, k=H/EX_VH, vw=W/k; EX.vw=vw; let cam=clamp(P.x-vw*.42,0,Math.max(0,A.w-vw)); if(A.w<vw) cam=-(vw-A.w)/2; EX.cam=cam; const t=EX.t;
+  g.setTransform(dpr*k,0,0,dpr*k,-cam*dpr*k,0); EX.lights=[];
+  A.draw(g,t,cam,vw);
+  // hidden player shows as a pair of eyes in the dark
+  if(P.hide){ g.fillStyle="rgba(255,255,255,.6)"; g.fillRect(P.x-4,EX_GROUND-62,2,2); g.fillRect(P.x+2,EX_GROUND-62,2,2); }
+  else { const drain=clamp(1-(EX.ci*.08)-(P.sig<50?.2:0),0,1); try{ g.filter=`saturate(${drain.toFixed(2)})`; }catch(e){} drawStick(g,P.x,EX_GROUND,1,{dir:P.dir,phase:P.phase,moving:!!P.vx,look:save.look},t); try{ g.filter="none"; }catch(e){}
+    if(EX.ci>=4){ g.globalAlpha=.25; drawStick(g,P.x-P.vx*.18,EX_GROUND,1,{dir:P.dir,phase:P.phase-.6,moving:!!P.vx,look:save.look},t-.3); g.globalAlpha=1; } }
+  if(A.drawFg) A.drawFg(g,t);
+  const T=A.T; if(T&&T.mode!=="off"&&(T.al||0)>0) exDrawTenant(g,T.x,EX_GROUND,T.dir||1,t,T.al,T.mode==="chase");
+  // darkness with light cut-outs
+  const dk=EX.dkg, cw=EX.dk.width, ch=EX.dk.height; dk.setTransform(1,0,0,1,0,0); dk.globalCompositeOperation="source-over"; dk.clearRect(0,0,cw,ch); dk.fillStyle=`rgba(2,1,6,${(A.dark!=null?A.dark:.9)*.92})`; dk.fillRect(0,0,cw,ch);
+  dk.globalCompositeOperation="destination-out"; const S=(x)=>(x-cam)*k*dpr, SY=y=>y*k*dpr;
+  for(const L of EX.lights){ const r=L.r*k*dpr, gr=dk.createRadialGradient(S(L.x),SY(L.y),0,S(L.x),SY(L.y),r); gr.addColorStop(0,`rgba(0,0,0,${L.a||1})`); gr.addColorStop(1,"rgba(0,0,0,0)"); dk.fillStyle=gr; dk.fillRect(S(L.x)-r,SY(L.y)-r,r*2,r*2); }
+  if(P.light&&!P.hide){ const fl=P.bat<15&&Math.random()<.25?.35:1, ox=S(P.x+P.dir*8), oy=SY(EX_GROUND-50), len=260*k*dpr; const gr=dk.createRadialGradient(ox,oy,0,ox,oy,len); gr.addColorStop(0,`rgba(0,0,0,${fl})`); gr.addColorStop(.7,`rgba(0,0,0,${fl*.85})`); gr.addColorStop(1,"rgba(0,0,0,0)");
+    dk.fillStyle=gr; dk.beginPath(); dk.moveTo(ox,oy); dk.arc(ox,oy,len,P.dir>0?-.42:Math.PI-.42,P.dir>0?.42:Math.PI+.42); dk.closePath(); dk.fill(); const g2=dk.createRadialGradient(S(P.x),SY(EX_GROUND-40),0,S(P.x),SY(EX_GROUND-40),60*k*dpr); g2.addColorStop(0,"rgba(0,0,0,.55)"); g2.addColorStop(1,"rgba(0,0,0,0)"); dk.fillStyle=g2; dk.fillRect(0,0,cw,ch); }
+  else { const g2=dk.createRadialGradient(S(P.x),SY(EX_GROUND-40),0,S(P.x),SY(EX_GROUND-40),46*k*dpr); g2.addColorStop(0,"rgba(0,0,0,.3)"); g2.addColorStop(1,"rgba(0,0,0,0)"); dk.fillStyle=g2; dk.fillRect(0,0,cw,ch); }
+  g.setTransform(1,0,0,1,0,0); g.drawImage(EX.dk,0,0);
+  if(A.drawOver){ g.setTransform(dpr*k,0,0,dpr*k,-cam*dpr*k,0); A.drawOver(g,t); }
+  g.setTransform(dpr,0,0,dpr,0,0);
+  // interaction prompt
+  const h=exNear(); if(h&&!EX.paused&&!P.hide){ g.font="700 13px Silkscreen, monospace"; g.textAlign="center"; const sx=(h.x-cam)*k; g.fillStyle="rgba(0,0,0,.6)"; const tw=g.measureText(h.label).width+16; g.fillRect(sx-tw/2,(EX_GROUND-150)*k-14,tw,20); g.fillStyle="#e8e2ff"; g.fillText((MOBILE?"":"[E] ")+h.label,sx,(EX_GROUND-150)*k); }
+  // signal distortion, vignette, grain
+  const sig=P.sig; if(sig<60){ const a=(60-sig)/60; g.globalAlpha=a*.35; for(let i=0;i<6;i++){ const y=Math.random()*H; g.drawImage(EX.cv,0,y*dpr,W*dpr,6*dpr,(Math.random()-.5)*30*a,y,W,6); } g.globalAlpha=1; g.fillStyle=`rgba(80,0,20,${a*.18})`; g.fillRect(0,0,W,H); }
+  const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75); vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,.75)"); g.fillStyle=vg; g.fillRect(0,0,W,H);
+  g.globalAlpha=.05; for(let i=0;i<60;i++){ g.fillStyle=Math.random()<.5?"#fff":"#000"; g.fillRect(Math.random()*W,Math.random()*H,2,2); } g.globalAlpha=1;
+  if(EX.static){ for(let i=0;i<500;i++){ const v=Math.floor(Math.random()*255); g.fillStyle=`rgb(${v},${v},${v})`; g.fillRect(Math.random()*W,Math.random()*H,4,3); } }
+  if(EX.fade>0){ g.fillStyle=`rgba(0,0,0,${Math.min(1,EX.fade)})`; g.fillRect(0,0,W,H); EX.fade=Math.max(0,EX.fade-(EX.rdt||.016)*1.2); }
+  if(EX.card){ const c=EX.card; c.t=(performance.now()-c.s)/1000; const a=Math.min(1,c.t*1.5,Math.max(0,(c.d-c.t)*1.5)); g.fillStyle=`rgba(0,0,0,${Math.min(1,a+.2)})`; g.fillRect(0,0,W,H); g.globalAlpha=a; g.textAlign="center"; g.fillStyle="#d8d0ff"; g.font="700 13px Silkscreen, monospace"; g.fillText(c.a,W/2,H/2-26); g.font=`700 ${Math.round(Math.min(30,W/18))}px 'Press Start 2P', Silkscreen, monospace`; g.fillStyle="#ff3a5a"; g.fillText(c.b,W/2,H/2+10); g.globalAlpha=1; if(c.t>=c.d){ EX.card=null; if(c.done) c.done(); } } }
+function exRenderMenuBg(g,W,H){ const t=EX.t; g.fillStyle="#050309"; g.fillRect(0,0,W,H); for(let i=0;i<40;i++){ const x=(i*97+t*8)%W, y=H*.55+((i*37)%40); g.fillStyle=i%3?"#120a20":"#1d0f2e"; g.fillRect(x,y-((i*53)%140),30,((i*53)%140)+2); }
+  g.fillStyle="#020104"; g.fillRect(0,H*.78,W,H); const dx=W*.7, dy=H*.78; g.fillStyle=`rgba(255,255,255,${.65+.25*Math.sin(t*2)})`; g.fillRect(dx-14,dy-60,28,60); g.fillStyle="rgba(255,255,255,.08)"; g.beginPath(); g.moveTo(dx-14,dy); g.lineTo(dx-120,H); g.lineTo(dx+120,H); g.lineTo(dx+14,dy); g.fill();
+  exDrawTenant(g,dx+40,dy,-1,t,.9,false); const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.2,W/2,H/2,Math.max(W,H)*.7); vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,.85)"); g.fillStyle=vg; g.fillRect(0,0,W,H); }
+function exCard(a,b,d,done){ EX.card={a,b,t:0,s:performance.now(),d:d||3.2,done}; }
+// lamp helper for area drawing: registers a light and draws the fixture
+function exLamp(g,x,top,on,col,r){ g.fillStyle="#15121c"; g.fillRect(x-2,top,4,EX_GROUND-top); g.fillRect(x-10,top-4,20,5); if(on){ const fl=on===2?(Math.random()<.12?0:1):1; if(fl){ g.fillStyle=col||"#ffe2a0"; g.fillRect(x-7,top+1,14,3); EX.lights.push({x,y:top+40,r:r||110,a:.9}); } } }
+function exGlow(x,y,r,a){ EX.lights.push({x,y,r,a:a||.8}); }
+function exGround(g,x0,x1,c1,c2){ for(let x=Math.floor(x0/40)*40;x<x1;x+=40){ g.fillStyle=(x/40)%2?c1:c2; g.fillRect(x,EX_GROUND,40,EX_VH-EX_GROUND); } }
+function exWall(g,x0,x1,top,col){ g.fillStyle=col; g.fillRect(x0,top,x1-x0,EX_GROUND-top); }
+function exDoor(g,x,col,label,open){ g.fillStyle="#0a0810"; g.fillRect(x-22,EX_GROUND-88,44,88); g.fillStyle=col||"#2a2238"; g.fillRect(x-19,EX_GROUND-85,38,85); if(open){ g.fillStyle="#000"; g.fillRect(x-16,EX_GROUND-82,32,82); } g.fillStyle="#8a7a5a"; g.fillRect(x+11,EX_GROUND-44,4,4); if(label) pText(g,label,x,EX_GROUND-100,"#9a90b8",2,true); }
+function exCloset(g,x){ g.fillStyle="#120e18"; g.fillRect(x-20,EX_GROUND-96,40,96); g.fillStyle="#1e1828"; g.fillRect(x-17,EX_GROUND-93,16,93); g.fillRect(x+1,EX_GROUND-93,16,93); g.fillStyle="#0a080e"; for(let k=0;k<6;k++) g.fillRect(x-15,EX_GROUND-86+k*8,12,2); }
+
+// ---------------------------------------------------------------- menu, chapters, endings
+const EX_CH=[{n:"Closing Time",b:()=>exCh1()},{n:"The Loop",b:()=>exCh2()},{n:"Residents",b:()=>exCh3()},{n:"The Print Floor",b:()=>exCh4()},{n:"Static",b:()=>exCh5()},{n:"The Tenant",b:()=>exCh6()},{n:"Rooms That Aren't There",b:()=>exCh7()},{n:"Below the Grid",b:()=>exCh8()},{n:"The Top Floor",b:()=>exCh9()},{n:"EXIT",b:()=>exCh10()}];
+function exMenu(view){ if(!EX) return; EX.menu=true; EX.A=null; EX.paused=true; EX.dlg.hidden=true; EX.dlgOpen=false; EX.sub.hidden=true; exObj(""); EX.hud.replaceChildren(); exModalClose(); EX.menuBack=()=>exMenu();
+  let note=false; try{ note=!localStorage.getItem("nh_exit_note"); }catch(e){}
+  if(note&&view!=="go"){ exModal("STORY MODE: EXIT",[el("p",{text:"A psychological horror story set in NEON HARVEST after closing time. About 2 hours, 10 chapters, 4 endings."}),el("p",{class:"sub",text:"Content note: dread, darkness, being chased, unsettling imagery and flashing lights. Nothing graphic. You can turn the strobe lights off in Settings."}),el("p",{class:"sub",text:"Best with sound on. Your story has its own save and never touches your free-roam runner."})],[["I understand",()=>{ try{ localStorage.setItem("nh_exit_note","1"); }catch(e){} exMenu(); },1],["Back to NEON HARVEST",()=>exClose()]],()=>exClose()); EX.menuBack=()=>exClose(); return; }
+  if(view==="chapters"){ exModal("Chapters",[el("p",{class:"sub",text:"Replay any chapter you've reached. Memories, deals and choices you've made stay as they are."}),el("div",{class:"exchs"},...EX_CH.map((c,i)=>el("button",{class:"btn"+(i===EXS.ch?" hot":""),type:"button",disabled:i>EXS.best||null,text:i>EXS.best?`${i+1}. ▒▒▒▒▒▒`:`${i+1}. ${c.n}`,onclick:()=>{ exModalClose(); exStartChapter(i); }})))],[["Back",()=>exMenu()]],()=>exMenu()); return; }
+  if(view==="endings"){ exModal("Endings",[el("div",{class:"exends"},...Object.entries(EX_END).map(([k,E])=>el("div",{class:"exend"+(EXS.endings.includes(k)?" got":"")},el("strong",{text:EXS.endings.includes(k)?E.n:"▒▒ ▒▒▒▒"}),el("span",{text:EXS.endings.includes(k)?`Title "${E.t}" · ${E.aura} aura${E.hat?" · "+E.hat:""}`:"Not found yet"})))),el("p",{class:"sub",text:`Memories ${EXS.mem.length}/10 · Deals taken ${EXS.deals.length}/3 · Mara: ${EXS.mara?"saved":"not saved"}`})],[["Back",()=>exMenu()]],()=>exMenu()); return; }
+  if(view==="settings"){ exModal("Settings",[el("label",{class:"exset"},el("input",{type:"checkbox",checked:EXS.strobe?null:true,onchange:e=>{ EXS.strobe=e.target.checked?0:1; exSave(); }}),el("span",{text:" Turn off strobe and flashing lights"})),el("label",{class:"exset"},el("span",{text:"Story volume "}),el("input",{type:"range",min:"0",max:"1",step:".05",value:String(EXS.vol),oninput:e=>{ EXS.vol=+e.target.value; exSave(); }}))],[["Back",()=>exMenu()]],()=>exMenu()); return; }
+  if(view==="new"){ exModal("Start a new story?",[el("p",{text:"Chapters, memories, deals and choices reset. Endings you've unlocked and your rewards stay."})],[["Cancel",()=>exMenu()],["Start over",()=>{ const keep={endings:EXS.endings,strobe:EXS.strobe,vol:EXS.vol}; EXS=Object.assign(exDef(),keep); exSave(); exModalClose(); exStartChapter(0); },1]],()=>exMenu()); return; }
+  const started=EXS.ch>0||EXS.mem.length||EXS.endings.length;
+  exModal("STORY MODE: EXIT",[el("p",{class:"sub",text:"You clocked out. The city didn't let you leave."}),el("p",{class:"sub",text:`Chapter ${EXS.ch+1} of 10: ${EX_CH[EXS.ch].n} · Memories ${EXS.mem.length}/10 · Endings ${EXS.endings.length}/4`})],
+    [[started?`Continue: Chapter ${EXS.ch+1}`:"Begin",()=>{ exModalClose(); exStartChapter(EXS.ch); },1],["Chapters",()=>exMenu("chapters")],["Endings",()=>exMenu("endings")],["Settings",()=>exMenu("settings")],...(started?[["New story",()=>exMenu("new")]]:[]),["Back to NEON HARVEST",()=>exClose()]],()=>exClose());
+  EX.menuBack=()=>exClose(); }
+function exStartChapter(i){ if(!EX) return; exModalClose(); EX.ci=i; EXS.ch=i; EXS.best=Math.max(EXS.best,i); exSave(); EX.menu=false; EX.menuBack=null; EX.f={}; EX.dlg.hidden=true; EX.dlgOpen=false; EX.sub.hidden=true; EX.locked=false;
+  const A=EX_CH[i].b(); EX.A=A; exPlayerReset(A.spawn||60,1); EX.P.bat=100; EX.P.light=!A.noLight; EX.P.sig=100; for(const k in EX.keys) EX.keys[k]=false;
+  exDroneStart(A.theme); EX.paused=true; exObj(""); exHud(); exCard(`CHAPTER ${i+1}`,EX_CH[i].n.toUpperCase(),3.4,()=>{ if(!EX||EX.ci!==i) return; EX.paused=false; EX.last=performance.now(); if(A.start) A.start(); }); exTone(41,3,"sawtooth",.06,.9); }
+function exChapterDone(){ if(!EX||EX.f._done) return; EX.f._done=1; const i=EX.ci; EX.paused=true; exDroneStop(); exTone(196,1.6,"sine",.08,.5); if(i>=9) return; EXS.ch=i+1; EXS.best=Math.max(EXS.best,i+1); exSave(); EX.fade=1.6; setTimeout(()=>{ if(EX&&EX.ci===i) exStartChapter(i+1); },1400); }
+
+// shared background bits
+function exBldg(g,x0,x1,top,c,winC,seed){ g.fillStyle=c; g.fillRect(x0,top,x1-x0,EX_GROUND-top); for(let x=x0+12;x<x1-16;x+=26) for(let y=top+14;y<EX_GROUND-60;y+=28){ const h=((x*7+y*13+(seed||0))%11); if(h<2){ g.fillStyle=winC||"#2a2238"; g.fillRect(x,y,12,14); } else { g.fillStyle="#0b0911"; g.fillRect(x,y,12,14); } } }
+function exVis(x,cam,vw,m){ return x>cam-(m||200)&&x<cam+vw+(m||200); }
+function exHideHot(x,label){ return {x,r:28,label:label||"Hide",cond:()=>!EX.P.hide,act:()=>exHideAt(x)}; }
+
+// ================= CHAPTER 1: CLOSING TIME (Harvest Homes lobby)
+function exCh1(){ const f=EX.f; const A={theme:"homes",w:1500,spawn:220,dark:.9,bats:[{x:960}],
+  hot:[{x:120,r:40,label:"Front door",act:()=>{ if(!f.intercom) return exSub("Locked. From the outside.",2500); EX.fade=1.3; EX.P.x=1380; EX.P.dir=-1; f.loops=(f.loops||0)+1; exTone(80,1.6,"sawtooth",.05,.8); exSub(f.loops>1?"The lobby again. It's always the lobby.":"The door opens... onto the lobby. The same lobby.",3500); }},
+    {x:300,r:36,label:"Clock",act:()=>exSub("25:00. That isn't a time.",3000)},
+    {x:480,r:36,label:"Intercom",act:()=>{ if(f.intercom) return exSub("Static. Then, very quietly, breathing.",2500); f.intercom=1; exTone(1200,.1,"square",.05); exSay([["Intercom","*crackle*"],["Intercom","\"I'll be right down.\""],[null,"That was your voice. You've never said that."]],()=>{ exObj("Find another way out of the lobby"); f.tq=6; }); }},
+    {x:610,r:36,label:"Elevator",act:()=>exSub("No power. The floor numbers above it count down anyway: 9... 8... 7...",4000)},
+    {x:720,r:44,label:"Mailboxes",act:()=>{ if(EXS.mem.includes(0)) return exSub("Rows of little locked doors.",2000); if(EX.P.light){ f.mb=(f.mb||0)+1; exSub(f.mb>1?"At the edge of the beam, one little door swings shut. Like it doesn't want to be seen. Not while the light is on.":"All locked. You'd swear one was open a second ago.",4200); } else { exMem(0); exSay([[null,"In the dark, one mailbox hangs open. Inside: a ring of keys, cold as ice."],[null,"The tag reads: HOLLIS · NIGHT LANDLORD · ALL DOORS. None of the keys fit anything here."]]); } }},
+    exHideHot(380,"Hide in the closet"),exHideHot(840,"Hide in the closet"),exHideHot(1190,"Hide in the closet"),
+    {x:1330,r:40,label:"Service hatch",act:()=>{ if(!f.open) return exSub(f.intercom?"Bolted. Something on the other side is breathing.":"Bolted shut.",3000); exChapterDone(); }}],
+  start(){ exObj("Go home. The front door is to the left"); exSay([[null,"Your shift is over. Harvest Homes is quiet. Too quiet for this time of night."],[null,"◀ ▶ or A / D to walk. Shift to run. F for the flashlight. E to look, use or hide. Esc to pause."],[null,"The flashlight eats batteries. The dark eats your Signal (the bar at the top). Keep both up."]]); },
+  update(dt){ if(f.tq>0){ f.tq-=dt; if(f.tq<=0){ exSub("Footsteps on the stairs. Coming down. Get in a closet. NOW.",4500); exObj("Hide in a closet (E)"); exSting();
+        A.T={mode:"walk",x:1470,to:60,spd:36,dir:-1,al:1,home:"walk",onArrive:()=>{ Object.assign(A.T,{mode:"walk",to:1470,al:1,onArrive:()=>{ A.T.mode="off"; f.open=1; exSub("Upstairs, a door closes. Then, by the service hatch: click. A bolt slides open.",5000); exObj("The service hatch, far right"); }}); }}; } } },
+  draw(g,t,cam,vw){ g.fillStyle="#0c0a12"; g.fillRect(0,40,A.w,EX_GROUND-40); g.fillStyle="#120f1a"; for(let x=0;x<A.w;x+=60) g.fillRect(x,40,2,EX_GROUND-40); g.fillStyle="#08070c"; g.fillRect(0,EX_GROUND-14,A.w,14);
+    exGround(g,0,A.w,"#100d16","#0d0b12"); exDoor(g,120,"#3a1a24","EXIT"); g.fillStyle="#1a1622"; g.fillRect(270,120,60,30); pText(g,Math.sin(t*3)>-.2?"25:00":"25 00",300,130,"#ff3a4a",2,true); exGlow(300,135,50,.6);
+    g.fillStyle="#1e1a28"; g.fillRect(470,160,22,34); g.fillStyle=f.intercom?"#ff3a4a":"#3a3448"; g.fillRect(476,166,10,4); if(f.intercom) exGlow(481,170,30,.5);
+    g.fillStyle="#191522"; g.fillRect(580,EX_GROUND-110,60,110); g.fillStyle="#0a0910"; g.fillRect(608,EX_GROUND-110,4,110); pText(g,String(9-Math.floor(t/2)%10),610,EX_GROUND-122,"#ffb43c",2,true);
+    for(let r=0;r<5;r++) for(let c=0;c<6;c++){ const open=!EXS.mem.includes(0)&&!EX.P.light&&r===2&&c===3; g.fillStyle=open?"#000":"#2a2434"; g.fillRect(686+c*12,EX_GROUND-150+r*16,10,13); }
+    for(const x of [380,840,1190]) exCloset(g,x);
+    g.fillStyle="#14111c"; for(let k=0;k<8;k++) g.fillRect(1400+k*12,EX_GROUND-k*14-14,100-k*12,14);
+    g.fillStyle="#2a2434"; g.fillRect(1310,EX_GROUND-46,40,40); g.fillStyle=f.open?"#43f0a4":"#ff3a4a"; g.fillRect(1326,EX_GROUND-30,8,4);
+    exLamp(g,200,60,2,"#ffd99a",120); exLamp(g,760,60,1,"#ffd99a",90); exLamp(g,1100,60,2,"#c8e0ff",100);
+    for(const b of A.bats) if(!b.got){ g.fillStyle="#ffd36a"; g.fillRect(b.x-4,EX_GROUND-10,8,10); g.fillStyle="#2a2a2a"; g.fillRect(b.x-2,EX_GROUND-12,4,2); } } };
+  return A; }
+
+// ================= CHAPTER 2: THE LOOP (Neon Street)
+const EX_ANOM=["eyes","sign","lamp","door","window","figure","vend","clock","dark","exit"];
+function exCh2(){ const f=EX.f; f.prog=0; f.last=null; const A={theme:"street",w:1700,spawn:70,dark:.86,bats:[],
+  hot:[{x:150,r:40,label:"Notice board",act:()=>exSay([[null,"A notice, printed neat and new:"],[null,"IF ANYTHING IS DIFFERENT, TURN BACK. IF NOTHING IS DIFFERENT, KEEP WALKING."],[null,"Somebody has scratched underneath: \"eight times. it's eight times. don't trust the light.\""]])},
+    {x:900,r:40,label:"Busker's guitar case",cond:()=>f.anom==="music"&&!EXS.mem.includes(1),act:()=>{ exMem(1); exSay([[null,"The music has stopped. The case is open and empty, except for one guitar pick."],[null,"Scratched into it: \"Teo · For the walk home.\""]]); }},
+    exHideHot(560,"Hide in the doorway"),exHideHot(1240,"Hide in the doorway")],
+  start(){ exObj("Get off this street"); exNewLap(true); },
+  update(dt){ const P=EX.P; if(P.x>420) f.far=1; if(P.x>=A.w-28) exLapDecide("keep"); else if(f.far&&P.x<=24) exLapDecide("back");
+    if(f.anom!=="music"){ f.mt=(f.mt||0)+dt; if(f.mt>.55){ f.mt=0; const d=Math.abs(P.x-900); if(d<700) exTone([262,294,330,392,330,294,262,220][(f.mi=(f.mi||0)+1)%8],.5,"triangle",.05*(1-d/700),1); } }
+    if(f.anom==="self"&&!f.selfGone&&P.x>1220){ f.selfGone=1; P.bat=100; exSting(); exSub("It's gone. Your flashlight is full again. You didn't change the battery.",4000); }
+    if(f.anom==="figure"&&Math.abs(P.x-1150)<120&&!f.figT){ f.figT=1; exTone(70,1,"sine",.12,.8); } },
+  draw(g,t,cam,vw){ const a=f.anom; g.fillStyle="#0a0712"; g.fillRect(0,0,A.w,EX_GROUND); for(let i=0;i<9;i++) exBldg(g,i*200,i*200+190,60+(i*37)%60,"#0f0b18",a==="window"&&i===4?"#7a0a14":"#2a2238",i*31);
+    if(a==="window"){ EX.lights.push({x:810,y:150,r:40,a:.4}); }
+    exGround(g,0,A.w,"#100c18","#0d0a14"); g.fillStyle="#1a1426"; g.fillRect(0,EX_GROUND,A.w,4);
+    g.fillStyle="#2a2238"; g.fillRect(120,EX_GROUND-70,60,46); g.fillStyle="#d8d0ff"; g.fillRect(124,EX_GROUND-66,52,38); pText(g,"NOTICE",150,EX_GROUND-58,"#1a1426",1,true);
+    g.fillStyle="#1a1426"; g.fillRect(212,EX_GROUND-120,4,120); g.fillStyle="#2a5a3a"; g.fillRect(190,EX_GROUND-136,48,18); pText(g,"EXIT "+(8-f.prog),214,EX_GROUND-130,"#d8ffe8",2,true);
+    g.fillStyle="#d8c8a8"; g.fillRect(470,EX_GROUND-150,50,70); g.fillStyle="#3a2a20"; g.fillRect(480,EX_GROUND-136,30,30); const ex=a==="eyes"?Math.sign(EX.P.x-495)*2:0; g.fillStyle="#fff"; g.fillRect(484+ex+2,EX_GROUND-126,6,4); g.fillRect(498+ex+2,EX_GROUND-126,6,4); g.fillStyle="#000"; g.fillRect(486+ex*1.5,EX_GROUND-125,3,3); g.fillRect(500+ex*1.5,EX_GROUND-125,3,3); pText(g,"SMILE!",495,EX_GROUND-96,"#3a2a20",1,true);
+    g.fillStyle="#2a0a1a"; g.fillRect(610,EX_GROUND-176,90,22); pText(g,a==="sign"?"SELDOON":"NOODLES",655,EX_GROUND-170,"#ff3fa8",2,true); exGlow(655,EX_GROUND-165,60,.5);
+    g.fillStyle="#141022"; g.fillRect(380,EX_GROUND-180,40,24); pText(g,a==="clock"?"25:01":"25:00",400,EX_GROUND-172,"#ff3a4a",1,true);
+    const lamps=[300,700,1100,1500].concat(a==="lamp"?[1300]:[]); lamps.forEach((x,i)=>exLamp(g,x,70,a==="dark"?(i===2?1:0):1,"#ffd99a",115));
+    if(a!=="door") exDoor(g,1300,"#24304a",null); else { g.fillStyle="#0f0b18"; g.fillRect(1278,EX_GROUND-88,44,88); }
+    exDoor(g,560,"#2a2238"); exDoor(g,1240,"#2a2238");
+    g.fillStyle="#1a1a2a"; g.fillRect(990,EX_GROUND-92,44,92); g.fillStyle=a==="vend"?"#ff3a4a":"#38e8ff"; g.fillRect(996,EX_GROUND-84,32,34); if(a==="vend"){ g.fillStyle="#000"; g.fillRect(1004,EX_GROUND-74,4,4); g.fillRect(1016,EX_GROUND-74,4,4); g.fillRect(1006,EX_GROUND-62,12,2); } exGlow(1012,EX_GROUND-66,50,.5);
+    g.fillStyle="#3a2a1a"; g.fillRect(880,EX_GROUND-14,44,14); if(a==="music"){ g.fillStyle="#1a0f08"; g.fillRect(884,EX_GROUND-12,36,10); if(!EXS.mem.includes(1)){ g.fillStyle="#ffd36a"; g.fillRect(900,EX_GROUND-9,4,4); exGlow(902,EX_GROUND-8,22,.6); } } else { drawStick(g,930,EX_GROUND,1,{dir:-1,phase:t*.5,moving:false,look:exResLook(1)},t); }
+    if(a==="figure"){ try{ g.filter="grayscale(1) brightness(.5)"; }catch(e){} drawStick(g,1150,EX_GROUND,1,{dir:1,phase:0,moving:false,look:exResLook(3)},0); try{ g.filter="none"; }catch(e){} }
+    if(a==="self"&&!f.selfGone){ drawStick(g,1450,EX_GROUND,1,{dir:1,phase:0,moving:false,look:save.look},0); }
+    if(a==="exit"){ g.fillStyle="#2a5a3a"; g.fillRect(1600,EX_GROUND-136,48,18); pText(g,"EXIT ◂",1624,EX_GROUND-130,"#d8ffe8",2,true); } } };
+  return A; }
+function exNewLap(first){ const f=EX.f; f.far=0; f.selfGone=0; f.figT=0; EX.P.x=70; EX.P.dir=1; if(!first) EX.fade=1;
+  let a=null; if(first) a=null; else if(f.prog===5&&!f.selfDone){ a="self"; f.selfDone=1; } else if(f.prog>=3&&!EXS.mem.includes(1)&&!f.teo){ a="music"; f.teo=1; } else if(Math.random()<.55){ do{ a=EX_ANOM[Math.floor(Math.random()*EX_ANOM.length)]; } while(a===f.last); }
+  f.anom=a; f.last=a||f.last; }
+function exLapDecide(c){ const f=EX.f; if(f.prog>=8||f._done) return; const ok=f.anom?c==="back":c==="keep"; if(ok){ f.prog++; exTone(523,.3,"sine",.07); } else { if(f.prog>0) exSub(c==="keep"?"Wrong. Something was different. The sign resets.":"Wrong. Nothing was different. The sign resets.",3500); f.prog=0; exTone(70,1,"sawtooth",.08,.7); }
+  if(f.prog>=8){ EX.paused=true; exSub("The sign reads EXIT 0. The street ends.",3000); setTimeout(()=>exChapterDone(),2000); return; } exNewLap(); }
+
+// ================= CHAPTER 3: RESIDENTS (Neon Row)
+function exCh3(){ const f=EX.f; const homes=[520,780,1000,1230,1480,1760]; f.st=homes.map((x,i)=>({x,home:x,i})); const A={theme:"row",w:2100,spawn:80,dark:.88,bats:[{x:700},{x:1420}],
+  hot:[{x:1100,r:40,label:"The woman who blinks",act:()=>{ if(f.mara) return exSub("Mara mouths your name. She's trying to remember it for you.",3500); f.mara=1; exSay([["Mara","...You blinked. They don't blink."],["Mara","I'm Mara. I've been here three years. Or one night. It's hard to tell."],["Mara","Keep your light on them. They only move when nobody's looking."],["Mara","And if something tall offers to help you... please. Don't say yes."]]); }},
+    {x:1610,r:40,label:"Pharmacy counter",act:()=>{ if(EXS.mem.includes(2)) return exSub("Empty shelves.",2000); if(!EX.P.light) return exSub("Too dark to see the counter.",2500); exMem(2); exSay([[null,"A hospital badge on the counter. MARA VOSS, NIGHT NURSE."],[null,"The photo changes every time you look at it. Younger. Older. Smiling. Gone."]]); }},
+    {x:2050,r:40,label:"Keep walking",act:()=>exChapterDone()},exHideHot(640,"Hide in the doorway"),exHideHot(1360,"Hide in the doorway"),exHideHot(1900,"Hide in the doorway")],
+  start(){ exObj("Get through Neon Row. Keep your light on them"); exSub("People. Standing in the street. None of them are moving.",4000); },
+  update(dt){ const P=EX.P; for(const s of f.st){ const lit=exLit(s.x,EX_GROUND-50); const d=P.x-s.x; s.lit=lit; if(!lit&&Math.abs(d)<520&&!P.hide){ s.x+=Math.sign(d)*40*dt; s.moved=(s.moved||0)+dt; if(s.moved>.8&&Math.random()<.02) exStep(clamp(-d/300,-1,1),false); }
+      if(Math.abs(P.x-s.x)<22&&!P.hide){ P.sig=Math.max(0,P.sig-35); P.x=clamp(P.x-Math.sign(d||1)*-90,20,A.w-20); s.x=s.home; exSting(); exSub("A cold hand on your face. It whispers your address.",3000); } }
+    if(!f.deal&&P.x>1300){ f.deal=1; EX.paused=true; exSay([[null,"In the shop window, your reflection isn't alone. Something tall stands behind it, face full of static."],["The Tenant","These people slow you down. You look tired."],["The Tenant","I can open the road for you. Right now. All the way to the end."]],()=>exDeal(1,"The Tenant's offer","Skip the rest of Neon Row. The road opens all the way to the end.",()=>{ exSub("The street folds. You're at the end of it. Behind you, Mara is shaking her head.",4000); setTimeout(()=>exChapterDone(),2500); })); } },
+  draw(g,t,cam,vw){ g.fillStyle="#0a0712"; g.fillRect(0,0,A.w,EX_GROUND); for(let i=0;i<11;i++) exBldg(g,i*200,i*200+186,50+(i*53)%70,"#100b1a","#2a1a30",i*17); exGround(g,0,A.w,"#110c18","#0e0a14");
+    for(const x of [640,1360,1900]) exDoor(g,x,"#2a1a30");
+    g.fillStyle="#1c1626"; g.fillRect(1260,EX_GROUND-120,120,80); g.fillStyle="#05040a"; g.fillRect(1266,EX_GROUND-114,108,68); if(EX.P.x>1200&&EX.P.x<1440){ g.globalAlpha=.35; try{ g.filter="grayscale(.6)"; }catch(e){} drawStick(g,1300+(EX.P.x-1300)*.2,EX_GROUND-48,.55,{dir:EX.P.dir,phase:EX.P.phase,moving:!!EX.P.vx,look:save.look},t); try{ g.filter="none"; }catch(e){} if(f.deal||EX.P.x>1270) exDrawTenant(g,1340,EX_GROUND-46,-1,t,.7,true); g.globalAlpha=1; }
+    g.fillStyle="#102a20"; g.fillRect(1560,EX_GROUND-150,100,22); pText(g,"PHARMACY",1610,EX_GROUND-144,"#43f0a4",2,true); exGlow(1610,EX_GROUND-138,50,.4);
+    [300,900,1500,2000].forEach((x,i)=>exLamp(g,x,70,i===1?2:1,"#c8d8ff",105));
+    for(const s of f.st){ try{ g.filter="grayscale(1) brightness(.75)"; }catch(e){} drawStick(g,s.x,EX_GROUND,1,{dir:EX.P.x>s.x?1:-1,phase:0,moving:false,look:exResLook(s.i+2)},0); try{ g.filter="none"; }catch(e){} }
+    drawStick(g,1100,EX_GROUND,1,{dir:EX.P.x>1100?1:-1,phase:0,moving:false,look:exResLook(2)},t);
+    g.fillStyle="#2a5a3a"; g.fillRect(2030,EX_GROUND-136,48,18); pText(g,"→",2054,EX_GROUND-130,"#d8ffe8",2,true); } };
+  return A; }
+
+// ================= CHAPTER 4: THE PRINT FLOOR (the Assembly)
+function exCh4(){ const f=EX.f; f.seq=[]; const LV=[[1050,"BLUE","#4aa8ff"],[1180,"RED","#ff4a5a"],[1310,"GREEN","#43f0a4"]]; const A={theme:"factory",w:1900,spawn:80,dark:.86,bats:[{x:700},{x:1500}],
+  hot:[{x:430,r:40,label:"Maintenance note",act:()=>exSay([[null,"Taped to the wall: TO STOP THE LINE: RED, then BLUE. GREEN last."],[null,"Under it, in pen: \"stay out of the scanner light with your torch on.\""]])},
+    ...LV.map(([x,n,c])=>({x,r:30,label:n+" lever",cond:()=>!f.solved,act:()=>{ f.seq.push(n); exNoise(.3,300,1,.15); const want=["RED","BLUE","GREEN"]; if(f.seq.some((s,i)=>s!==want[i])){ f.seq=[]; f.fast=(f.fast||1)+.25; exSub("CLUNK. The levers snap back. The scanner speeds up.",3000); } else if(f.seq.length===3){ f.solved=1; exTone(110,2,"sawtooth",.08,.5); exSub("The line grinds to a stop. One last chip rattles to the end of the conveyor.",4000); exObj("Look at the last chip, then the far door"); } else exSub(n+". Something shifts in the machinery.",2000); }})),
+    {x:1560,r:40,label:"The last chip",cond:()=>f.solved,act:()=>{ if(f.chip) return exSub("Your face. Half printed. Still warm.",2500); f.chip=1; exSting(); exSay([[null,"The last chip off the line has a face printed on it."],[null,"It's yours. Half finished. Its eyes are still loading."],[null,"Now you understand the name. NEON HARVEST. The city prints its chips from people. From what they remember."]]); }},
+    {x:1680,r:36,label:"Clock-in machine",act:()=>{ if(EXS.mem.includes(3)) return exSub("It keeps punching cards for no one.",2000); if(!EX.P.light) return exSub("Something's jammed in it. Too dark to see.",2500); exMem(3); exSay([[null,"A timecard is jammed in the slot. DEX OKAFOR, LINE 4."],[null,"Punched in every single day. For eleven years. The last punch says 25:00."]]); }},
+    {x:1860,r:40,label:"Loading door",act:()=>{ if(!f.solved) return exSub("Sealed while the line is running.",2500); exChapterDone(); }},exHideHot(860,"Hide in the locker"),exHideHot(1420,"Hide in the locker")],
+  start(){ exObj("Find a way off the print floor"); exSub("The printers are running. Nobody is working them.",4000); },
+  update(dt){ const P=EX.P; f.bt=(f.bt||0)+dt*(f.fast||1); f.bx=1000+Math.sin(f.bt*.6)*300; if(f.cool>0) f.cool-=dt;
+    if(!f.solved&&P.light&&!P.hide&&Math.abs(P.x-f.bx)<36&&!(f.cool>0)){ f.cool=10; exSting(); exSub("ALARM. The scanner caught your light.",3000); A.T={mode:"chase",x:Math.min(A.w-20,P.x+520),dir:-1,al:1,a:700,b:1700,spd:40,cspd:96,home:"patrol"}; } },
+  draw(g,t,cam,vw){ g.fillStyle="#0b0a10"; g.fillRect(0,30,A.w,EX_GROUND-30); for(let x=0;x<A.w;x+=90){ g.fillStyle="#121019"; g.fillRect(x,30,6,EX_GROUND-30); } exGround(g,0,A.w,"#121018","#0f0d14");
+    for(const x of [250,520,790]){ g.fillStyle="#1e1c28"; g.fillRect(x-50,EX_GROUND-120,100,120); g.fillStyle="#08070c"; g.fillRect(x-40,EX_GROUND-104,80,40); const ph=(t*.7+x)%1; g.fillStyle="#2a5a3a"; g.fillRect(x-40+ph*70,EX_GROUND-92,16,16); g.fillStyle="#d8c8b8"; g.fillRect(x-36+ph*70,EX_GROUND-88,8,8); g.fillStyle="#000"; g.fillRect(x-35+ph*70,EX_GROUND-86,2,2); g.fillRect(x-31+ph*70,EX_GROUND-86,2,2); exGlow(x,EX_GROUND-84,50,.5); if(Math.random()<.02) exNoise(.08,2000,4,.03,0); }
+    g.fillStyle="#1a1822"; g.fillRect(900,EX_GROUND-40,800,10); for(let x=900;x<1700;x+=20){ g.fillStyle="#26232f"; g.fillRect(x+((f.solved?0:t*40)%20),EX_GROUND-40,8,10); }
+    for(const [x,n,c] of LV){ g.fillStyle="#2a2434"; g.fillRect(x-10,EX_GROUND-60,20,60); g.fillStyle=c; g.fillRect(x-4,EX_GROUND-(f.seq.includes(n)||f.solved?40:76),8,20); exGlow(x,EX_GROUND-60,26,.4); }
+    if(!f.solved){ const bx=f.bx||1000; g.fillStyle="rgba(255,60,60,.12)"; g.beginPath(); g.moveTo(bx-6,40); g.lineTo(bx-36,EX_GROUND); g.lineTo(bx+36,EX_GROUND); g.lineTo(bx+6,40); g.fill(); EX.lights.push({x:bx,y:EX_GROUND-60,r:60,a:.5}); }
+    if(f.solved){ g.fillStyle="#2a5a3a"; g.fillRect(1552,EX_GROUND-52,16,12); }
+    g.fillStyle="#2a2434"; g.fillRect(1664,EX_GROUND-70,32,40); g.fillStyle="#ffb43c"; g.fillRect(1672,EX_GROUND-64,16,6);
+    for(const x of [860,1420]) exCloset(g,x); exDoor(g,1860,f.solved?"#2a3a2a":"#3a1a24",f.solved?"OPEN":"SEALED",f.solved);
+    exLamp(g,140,50,1,"#c8e0ff",100); exLamp(g,1240,50,2,"#c8e0ff",100); g.fillStyle="#d8d0ff"; g.fillRect(412,EX_GROUND-110,36,26); } };
+  return A; }
+
+// ================= CHAPTER 5: STATIC (Gamers Den)
+function exCh5(){ const f=EX.f; f.junet=110; const A={theme:"arcade",w:1600,spawn:80,dark:.84,bats:[{x:950}],
+  hot:[{x:200,r:34,label:"Cabinet",act:()=>exSub("On the screen, a tiny pixel you clocks out of a shift. It's tonight.",3500)},
+    {x:330,r:34,label:"Cabinet",act:()=>exSub("A tiny you walks the same street. Lap after lap. It never looks back.",3500)},
+    {x:460,r:34,label:"High-score table",act:()=>exJune()},
+    {x:590,r:34,label:"Cabinet",act:()=>exSub("A tiny you stands in a street full of grey people. One of them is turning its head.",3500)},
+    {x:720,r:34,label:"Cabinet",act:()=>{ exSting(); exSay([[null,"This one shows the lobby. A tiny you, hiding in a closet."],[null,"Outside the closet door stands something tall. In the game, it waited there a long time."],[null,"You never saw it. You were right there, and you never saw it."]]); }},
+    {x:850,r:34,label:"Cabinet",act:()=>exSub("This one shows you, right now, reading this screen. Behind the pixel you, a shape. You don't turn around.",4500)},
+    {x:1080,r:40,label:"PONG? cabinet",act:()=>exPong()},
+    {x:1450,r:40,label:"Back room",act:()=>{ if(!f.open) return exSub("Locked. A sticker on it says: PLAYERS ONLY.",2500); exChapterDone(); }},exHideHot(1250,"Hide behind the cabinet")],
+  start(){ exObj("Find a way through the Gamers Den"); exSub("Every cabinet is on. Every one of them is playing you.",4000); A.T={mode:"stalk",x:1320,dir:-1,al:0}; },
+  update(dt){ if(f.junet>0) f.junet-=dt; if(f.junet<=0&&!f.junegone&&!EXS.mem.includes(4)){ f.junegone=1; exSub("Somewhere behind you, the last letter on a high-score table goes out.",3500); } },
+  draw(g,t,cam,vw){ g.fillStyle="#0a0614"; g.fillRect(0,40,A.w,EX_GROUND-40); exGround(g,0,A.w,"#140a20","#100818");
+    for(const x of [200,330,460,590,720,850,1080]){ g.fillStyle="#1c1030"; g.fillRect(x-24,EX_GROUND-110,48,110); g.fillStyle="#05030a"; g.fillRect(x-18,EX_GROUND-100,36,30); const col=x===1080?"#ffffff":x===460?"#ffd36a":"#38e8ff"; g.fillStyle=col; if(x===460){ const left=Math.max(0,Math.ceil(f.junet/110*3)); pText(g,EXS.mem.includes(4)?"JUN":"JUN".slice(0,f.junegone?0:left),x,EX_GROUND-90,"#ffd36a",1,true); } else if(x===1080){ g.fillRect(x-14,EX_GROUND-92+Math.sin(t*3)*6,2,8); g.fillRect(x+12,EX_GROUND-92-Math.sin(t*3)*6,2,8); g.fillRect(x+Math.sin(t*2)*10,EX_GROUND-88,2,2); } else { g.fillRect(x-4+Math.sin(t+x)*8,EX_GROUND-86,3,6); if(x===720){ g.fillStyle="#555"; g.fillRect(x+6,EX_GROUND-94,4,16); } }
+      exGlow(x,EX_GROUND-85,40,.55); }
+    exDoor(g,1450,f.open?"#2a3a2a":"#2a1a30","PLAYERS ONLY",f.open); exCloset(g,1250); } };
+  return A; }
+function exJune(){ const f=EX.f; if(EXS.mem.includes(4)) return exSub("JUNE. Top score. Forever.",2500); if(f.junegone||f.junet<=0) return exSub("The top score has no name now. Just three blanks. (Restart the chapter to try again.)",4000);
+  let round=0, state="wait", tmr=null, start=0; const sq=el("div",{class:"exreact"}); const info=el("p",{text:"Beat her score before her name fades. Press E or tap the square the moment it turns white. 5 in a row."});
+  const go=()=>{ state="wait"; sq.className="exreact"; clearTimeout(tmr); tmr=setTimeout(()=>{ state="go"; start=performance.now(); sq.className="exreact on"; tmr=setTimeout(()=>{ if(state==="go"){ fail("Too slow."); } },650); },900+Math.random()*1600); };
+  const fail=m=>{ round=0; info.textContent=m+" Start again. 0/5"; exTone(90,.3,"sawtooth",.08); go(); };
+  const hit=()=>{ if(state==="wait"){ fail("Too early."); return; } if(state!=="go") return; state="x"; clearTimeout(tmr); round++; exTone(500+round*120,.1,"square",.06); info.textContent=`${round}/5`; if(round>=5){ clearTimeout(tmr); exModalClose(); EX.paused=false; EX.last=performance.now(); EX.f.react=null; exMem(4); exSay([[null,"NEW HIGH SCORE. The name on the table flickers, then fills back in: JUNE."],[null,"For a second you hear an arcade full of people cheering for her."]]); return; } go(); };
+  sq.onclick=hit; EX.paused=true; exModal("High score: J U N",[info,sq],[["Give up",()=>{ clearTimeout(tmr); EX.f.react=null; exModalClose(); EX.paused=false; EX.last=performance.now(); }]],()=>{ clearTimeout(tmr); EX.f.react=null; exModalClose(); EX.paused=false; }); EX.f.react=hit;
+  EX.modalKey=e=>{ if(e.type!=="keydown"||e.repeat) return; if(e.key==="e"||e.key==="E"||e.key===" "||e.key==="Enter"){ e.preventDefault(); if(EX.f.react) EX.f.react(); } }; go(); }
+function exPong(){ const f=EX.f; if(f.open) return exSub("GAME OVER. The screen just says: GOOD.",2500); EX.paused=true; const cv=document.createElement("canvas"); cv.width=320; cv.height=200; cv.className="expong"; const g=cv.getContext("2d");
+  const S={py:80,gy:80,bx:160,by:100,vx:-140,vy:60,ps:0,gs:0,run:true,msg:"LET IT WIN"}; let last=performance.now(), keys={};
+  const mv=e=>{ const r=cv.getBoundingClientRect(); const y=((e.touches?e.touches[0].clientY:e.clientY)-r.top)/r.height*200; S.py=clamp(y-20,0,160); }; cv.addEventListener("pointermove",mv); cv.addEventListener("touchmove",e=>{ e.preventDefault(); mv(e); },{passive:false});
+  const kd=e=>{ if(e.key==="ArrowUp"||e.key==="w"||e.key==="W") keys.u=e.type==="keydown"; if(e.key==="ArrowDown"||e.key==="s"||e.key==="S") keys.d=e.type==="keydown"; };
+  const end=()=>{ S.run=false; exModalClose(); EX.paused=false; EX.last=performance.now(); };
+  const reset=d=>{ S.bx=160; S.by=100; S.vx=140*d; S.vy=(Math.random()-.5)*160; };
+  const step=now=>{ if(!S.run||!EX) return; const dt=Math.min(.03,(now-last)/1000); last=now; if(keys.u) S.py=Math.max(0,S.py-200*dt); if(keys.d) S.py=Math.min(160,S.py+200*dt);
+    S.gy+=clamp(S.by-20-S.gy,-150*dt,150*dt); S.bx+=S.vx*dt; S.by+=S.vy*dt; if(S.by<0||S.by>196){ S.vy*=-1; S.by=clamp(S.by,0,196); }
+    if(S.bx<14&&S.by>S.py-4&&S.by<S.py+44&&S.vx<0){ S.vx=Math.abs(S.vx)*1.06; S.vy+=(S.by-S.py-20)*4; exTone(440,.04,"square",.05); }
+    if(S.bx>302&&S.by>S.gy-4&&S.by<S.gy+44&&S.vx>0){ S.vx=-Math.abs(S.vx)*1.04; exTone(330,.04,"square",.05); }
+    if(S.bx<0){ S.gs++; exTone(160,.2,"square",.06); if(S.gs>=3){ S.msg="GOOD."; draw(); setTimeout(()=>{ end(); f.open=1; exSting(); exSub("GOOD. The back room clicks open. Behind you, all the cabinets go dark at once.",4500); exObj("The back room"); },900); return; } reset(1); }
+    if(S.bx>320){ S.ps++; exTone(700,.2,"square",.06); if(S.ps>=3){ S.ps=0; S.gs=0; S.msg="AGAIN."; exWhisper(6); } reset(-1); }
+    draw(); requestAnimationFrame(step); };
+  const draw=()=>{ g.fillStyle="#000"; g.fillRect(0,0,320,200); g.fillStyle="#333"; for(let y=0;y<200;y+=12) g.fillRect(159,y,2,6); g.fillStyle="#fff"; g.fillRect(6,S.py,6,40); g.fillRect(308,S.gy,6,40); g.fillRect(S.bx-3,S.by-3,6,6); g.font="16px 'Press Start 2P', monospace"; g.textAlign="center"; g.fillText(S.ps+"   "+S.gs,160,24); g.fillStyle="#ff3a4a"; g.font="10px 'Press Start 2P', monospace"; g.fillText(S.msg,160,190); g.fillStyle="#888"; g.fillText("YOU",60,40); g.fillText("ALSO YOU",250,40); };
+  exModal("PONG?",[el("p",{class:"sub",text:"Move with the mouse, a finger, or ↑ ↓. The other paddle plays exactly like you."}),cv],[["Walk away",()=>end()]],()=>end()); EX.modalKey=kd; requestAnimationFrame(step); }
+
+// ================= CHAPTER 6: THE TENANT (The Third Eye club)
+function exCh6(){ const f=EX.f; const A={theme:"club",w:1900,spawn:80,dark:.93,noLight:"Your flashlight won't turn on. Too much static in here.",noDarkDrain:true,bats:[],
+  hot:[{x:1450,r:36,label:"Last-call bell",act:()=>{ if(f.sil>0||(f.bellCd>0)) return exSub("The bell is still shaking.",1500); f.sil=5; f.bellCd=18; exTone(1320,1.8,"sine",.12,1); setTimeout(()=>exTone(1320,1.6,"sine",.08,1),300); if(!EXS.mem.includes(5)){ exMem(5); exSub("Last call. The music stops. Everyone, everything, freezes for five seconds. (Nadia's bell)",4500); } else exSub("Last call. Five seconds of silence.",2500); }},
+    {x:700,r:36,label:"Free Mara",cond:()=>f.back&&!f.freed,act:()=>{ f.freed=1; EXS.mara=1; exSave(); exSub("You pull Mara free. \"You came back,\" she breathes. \"Nobody comes back.\" RUN!",4000); A.T.mode="chase"; A.T.cspd=86; A.T.x=Math.max(20,EX.P.x-240); exSting(); exObj("Get Mara to the exit"); }},
+    {x:1860,r:40,label:"Exit",cond:()=>f.maraEv,act:()=>{ if(f.back&&!f.freed) return exSub("Not without Mara.",2000); if(!f.back&&!f.ran){ f.ran=1; EXS.mara=0; exSave(); } exChapterDone(); }},
+    exHideHot(450,"Hide in the booth"),exHideHot(1000,"Hide in the booth"),exHideHot(1560,"Hide in the booth")],
+  start(){ exObj("Cross the club. Only move while the strobe is dark"); exSay([[null,"The Third Eye is full. Everyone is dancing. There is no music."],[null,"Something tall walks the dance floor, turning its head with every flash of the strobe."],[null,"When the light flashes, stand still. When it's dark, move."]]); A.T={mode:"patrol",x:900,dir:1,a:600,b:1300,spd:28,cspd:92,al:1,blind:1,home:"patrol"}; },
+  checkpoint:null,
+  update(dt){ const P=EX.P, T=A.T; f.ph=((f.ph||0)+dt)%2.8; const on=f.ph<1.4; f.on=on; if(f.bellCd>0) f.bellCd-=dt;
+    if(f.sil>0){ f.sil-=dt; if(T&&T.mode!=="off"){ T._m=T._m||T.mode; T.mode="stand"; } if(f.sil<=0&&T&&T._m){ T.mode=T._m; T._m=null; } }
+    else if(T&&T.mode==="patrol"&&on&&P.vx&&!P.hide&&Math.abs(P.x-T.x)<330){ T.mode="chase"; T.lost=0; exSting(); exSub("You moved in the light. It turns. It sees you.",2500); }
+    if(on&&!f.sil){ f.bt=(f.bt||0)+dt; if(f.bt>.35){ f.bt=0; exTone(55,.12,"sine",.12,.5); } }
+    if(!f.maraEv&&P.x>1600){ f.maraEv=1; EX.paused=true; exSay([[null,"A hand on your arm. It's Mara. \"You made it this far—\""],[null,"Then she's yanked backward into the crowd. The Tenant has her, back by the middle of the dance floor."],["Mara","GO! Just go!"]],()=>exChoice("Mara is caught","The exit is right there. Mara is back in the middle of the dance floor, with it.",[["Run for the exit",()=>{ f.ran=1; EXS.mara=0; exSave(); exObj("The exit"); exSub("You run. Behind you, the dancing doesn't stop.",3500); A.T.mode="stand"; A.T.x=730; }],["Go back for Mara",()=>{ f.back=1; exCh6Back(); },1]])); } },
+  draw(g,t,cam,vw){ const on=f.on&&!(f.sil>0); g.fillStyle="#08040e"; g.fillRect(0,30,A.w,EX_GROUND-30); exGround(g,0,A.w,"#160a20","#12081a"); for(let x=520;x<1420;x+=40){ g.fillStyle=((x/40)+Math.floor(t*2))%2?"#2a0a3a":"#1a0628"; g.fillRect(x,EX_GROUND,40,10); }
+    const dancers=[560,620,680,760,830,900,980,1050,1120,1200,1270,1340]; dancers.forEach((x,i)=>{ if(f.back&&!f.freed&&x===680) return; try{ g.filter="brightness(.45)"; }catch(e){} drawStick(g,x+(i%2?6:-6),EX_GROUND,1,{dir:i%2?1:-1,phase:on?(t*2+i):(i*1.3),moving:!(f.sil>0)&&!on,look:exResLook(i)},t); try{ g.filter="none"; }catch(e){} });
+    if(f.back&&!f.freed) drawStick(g,700,EX_GROUND,1,{dir:1,phase:0,moving:false,look:exResLook(2)},0); if(f.freed) drawStick(g,EX.P.x-30*EX.P.dir,EX_GROUND,1,{dir:EX.P.dir,phase:EX.P.phase,moving:!!EX.P.vx,look:exResLook(2)},t);
+    for(const x of [450,1000,1560]){ g.fillStyle="#2a0a2a"; g.fillRect(x-30,EX_GROUND-40,60,40); g.fillStyle="#3a1a3a"; g.fillRect(x-30,EX_GROUND-60,8,60); g.fillRect(x+22,EX_GROUND-60,8,60); }
+    g.fillStyle="#1a0a1a"; g.fillRect(1400,EX_GROUND-60,140,60); g.fillStyle="#ffd36a"; g.fillRect(1446,EX_GROUND-72,8,10); exGlow(1450,EX_GROUND-70,30,.6);
+    exDoor(g,1860,"#3a1a24","EXIT"); exGlow(1860,EX_GROUND-100,40,.7);
+    for(let x=100;x<A.w;x+=180) exGlow(x,40,70,.25);
+    if(on){ if(EXS.strobe) for(let x=200;x<A.w;x+=260) EX.lights.push({x,y:EX_GROUND-80,r:240,a:.95}); else for(let x=200;x<A.w;x+=260) EX.lights.push({x,y:EX_GROUND-80,r:200,a:.45}); } },
+  drawOver(g,t){ if(f.on&&!(f.sil>0)&&EXS.strobe){ g.fillStyle="rgba(255,255,255,.06)"; g.fillRect(EX.cam,0,EX.vw,EX_VH); } } };
+  return A; }
+function exCh6Back(){ const A=EX.A, f=EX.f; exObj("Get back to Mara. Only move while the strobe is dark"); exSub("You turn around. Into the crowd.",2500); A.T.mode="patrol"; A.T.a=560; A.T.b=980; A.T.x=860; A.T.spd=24;
+  A.checkpoint=()=>{ exModalClose(); EX.paused=false; EX.P.x=1620; EX.P.sig=100; EX.P.hide=null; f.freed=0; EXS.mara=0; f.back=1; A.T={mode:"patrol",x:860,dir:1,a:560,b:980,spd:24,cspd:92,al:1,blind:1,home:"patrol"}; exObj("Get back to Mara. Only move while the strobe is dark"); EX.last=performance.now(); }; }
+
+// ================= CHAPTER 7: ROOMS THAT AREN'T THERE (Harvest Homes floors)
+function exCh7(){ const f=EX.f; f.stage=0; f.wrong=0; f.room=null; const A={theme:"hall",w:1700,spawn:80,dark:.9,bats:[{x:600},{x:1250}],hot:[],
+  start(){ exObj("Find the right door. Follow the smell of cooking"); exSub("The apartment floors. Every time you blink, the hallway is a different length.",4000); exCh7Hall(); },
+  update(dt){},
+  draw(g,t,cam,vw){ if(f.room) return exCh7Room(g,t); g.fillStyle="#0e0b14"; g.fillRect(0,50,A.w,EX_GROUND-50); g.fillStyle="#2a1a1a"; g.fillRect(0,EX_GROUND-40,A.w,2); exGround(g,0,A.w,"#1a1016","#160d12");
+    for(const d of f.doors||[]){ exDoor(g,d.x,"#2a2030",String(d.n)); if(d.ok&&exLit(d.x,EX_GROUND-60)){ for(let k=0;k<4;k++){ g.fillStyle=`rgba(230,230,240,${.25-.05*k})`; g.fillRect(d.x-10+Math.sin(t*2+k)*6,EX_GROUND-20-k*16-((t*20)%16),12,10); } } }
+    for(const x of f.hides||[]) exCloset(g,x); for(let x=200;x<A.w;x+=420) exLamp(g,x,60,2,"#ffd99a",90); } };
+  return A; }
+function exCh7Hall(){ const A=EX.A, f=EX.f; f.room=null; if(f.hallW){ A.w=f.hallW; f.hallW=0; } A.minX=null; A.maxX=null; const n=7, sp=Math.floor((A.w-260)/(n-1)); const ok=Math.floor(Math.random()*n); const nums=[...Array(n)].map(()=>100+Math.floor(Math.random()*900));
+  f.doors=[...Array(n)].map((_,i)=>({x:200+i*sp,n:nums[i],ok:i===ok})); f.hides=[200+sp*1.5,200+sp*3.5,200+sp*5.5].map(Math.round);
+  A.hot=[...f.doors.map(d=>({x:d.x,r:26,label:"Room "+d.n,act:()=>exCh7Door(d)})),...f.hides.map(x=>exHideHot(x,"Hide in the alcove"))];
+  if(f.stage===2&&!f.dealDone){ f.dealDone=1; setTimeout(()=>{ if(!EX||EX.ci!==6) return; exSay([[null,"Something slides under the nearest door. A key, on a ring of static."],["The Tenant","This one goes straight to the metro. Why wander? You've seen enough doors."]],()=>exDeal(2,"The Tenant's offer","Take the key and skip the rest of the floors.",()=>{ exSub("The key turns in a lock you can't see. The hallway folds away.",3500); setTimeout(()=>exChapterDone(),2500); })); },900); }
+  if(f.wrong>=2&&!A.T) A.T={mode:"patrol",x:A.w-120,dir:-1,a:150,b:A.w-120,spd:34,cspd:96,al:1,home:"patrol"}; EX.P.x=80; EX.P.dir=1; }
+function exCh7Door(d){ const A=EX.A, f=EX.f; EX.fade=1.2; exNoise(.4,300,1,.12);
+  if(!d.ok){ f.wrong++; A.w=Math.min(2400,A.w+150); exSub(f.wrong>=2?"Wrong room. The hallway is longer now. And you're not alone in it.":"Wrong room. The hallway is longer now.",3500); exCh7Hall(); return; }
+  f.stage++; if(f.stage!==2){ f.hallW=A.w; A.w=800; } if(f.stage===1){ f.room="apt"; A.T=null; A.hot=[{x:700,r:40,label:"Leave",act:()=>{ exCh7Hall(); }}]; EX.P.x=120; A.minX=60; A.maxX=760; exSay([[null,"The door has your name on it. Half of it. The other half is someone else's, still being painted in."],[null,"Inside, someone is living in your apartment. They wear your face, your clothes, your look."],[null,"They're eating your dinner. Watching your shows. They don't look up."],[null,"On the fridge, a note in your handwriting: \"don't go back out there.\""]]); }
+  else if(f.stage===2){ exSub("Another hallway. The air smells like soup.",3000); exCh7Hall(); }
+  else { f.room="kitchen"; A.T=null; EX.P.x=120; A.minX=60; A.maxX=760; A.hot=[{x:420,r:40,label:"Recipe card",act:()=>{ if(EXS.mem.includes(6)) return exSub("The soup is still warm. Nobody's here.",2000); exMem(6); exSay([[null,"A recipe card in shaky handwriting: \"Mama's soup. For Sol, when he's tired.\""],[null,"The pot on the stove is still steaming. It smells like someone's home."]]); }},{x:720,r:40,label:"Back stairs to the metro",act:()=>exChapterDone()}]; exSub("A kitchen. Warm. The only warm room you've found.",3500); exObj("Back stairs to the metro"); } }
+function exCh7Room(g,t){ const f=EX.f; g.fillStyle=f.room==="apt"?"#1a1420":"#241812"; g.fillRect(0,50,800,EX_GROUND-50); exGround(g,0,800,"#1e1616","#1a1212"); exGlow(400,120,240,.7);
+  if(f.room==="apt"){ g.fillStyle="#2a2030"; g.fillRect(300,EX_GROUND-50,120,10); g.fillRect(310,EX_GROUND-40,8,40); g.fillRect(402,EX_GROUND-40,8,40); g.fillStyle="#38e8ff"; g.fillRect(520,EX_GROUND-110,90,56); exGlow(565,EX_GROUND-82,60,.5); drawStick(g,460,EX_GROUND,1,{dir:1,phase:0,moving:false,look:save.look},t); g.fillStyle="#d8d0ff"; g.fillRect(180,EX_GROUND-120,40,90); g.fillStyle="#fff"; g.fillRect(190,EX_GROUND-100,14,10); }
+  else { g.fillStyle="#3a2a20"; g.fillRect(360,EX_GROUND-50,140,50); g.fillStyle="#2a2a2a"; g.fillRect(400,EX_GROUND-70,50,20); for(let k=0;k<4;k++){ g.fillStyle=`rgba(240,240,240,${.3-.06*k})`; g.fillRect(410+Math.sin(t*2+k)*6,EX_GROUND-90-k*14-((t*18)%14),14,10); } }
+  exDoor(g,720,"#2a2030",f.room==="apt"?"LEAVE":"STAIRS"); }
+
+// ================= CHAPTER 8: BELOW THE GRID (metro tunnels)
+function exCh8(){ const f=EX.f; f.j=0; const A={theme:"tunnel",w:1400,spawn:80,dark:.94,batDrain:.5,bats:[],hot:[],
+  start(){ exObj("Find your way through the tunnels. Listen for the whistle (L)"); exSay([[null,"The trains are gone. The tunnels keep going."],[null,"Somewhere ahead, a conductor's whistle. At every split, listen (press L, or use the Listen spot) and follow it. Don't trust the maps."]]); exCh8Junction(); },
+  listen(){ const f=EX.f; exNoise(.05,4000,8,.001); const pan=f.side==="L"?-.95:.95; try{ const ac=exAC(); const o=ac.createOscillator(), gg=ac.createGain(), p=ac.createStereoPanner(); o.type="sine"; o.frequency.setValueAtTime(2100,ac.currentTime); o.frequency.linearRampToValueAtTime(1800,ac.currentTime+.7); gg.gain.setValueAtTime(.0001,ac.currentTime); gg.gain.exponentialRampToValueAtTime(.12*exVol(),ac.currentTime+.05); gg.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.8); p.pan.value=pan; o.connect(gg).connect(p).connect(ac.destination); o.start(); o.stop(ac.currentTime+.9); }catch(e){} exSub(`A whistle echoes, faint, from the ${f.side==="L"?"LEFT":"RIGHT"} tunnel.`,3000); },
+  update(dt){ const P=EX.P, T=A.T; if(T&&T.mode==="stalk"){ const lit=exLit(T.x,EX_GROUND-60); if(!lit&&!P.hide){ T.x+=Math.sign(P.x-T.x)*22*dt; } if(Math.abs(T.x-P.x)<22&&T.al>.5) exCaught(); } },
+  draw(g,t,cam,vw){ g.fillStyle="#07070a"; g.fillRect(0,0,A.w,EX_GROUND); g.fillStyle="#0d0d12"; for(let x=0;x<A.w;x+=60){ g.fillRect(x,60,50,EX_GROUND-60); } exGround(g,0,A.w,"#0e0e12","#0b0b0e"); g.fillStyle="#2a2a30"; g.fillRect(0,EX_GROUND+12,A.w,3); g.fillRect(0,EX_GROUND+24,A.w,3);
+    const names=["HOLLIS ST","TEO SQUARE","MARA GENERAL","DEX YARDS","JUNE ARCADE",(save.name||"YOU").toUpperCase()]; g.fillStyle="#1a1a24"; g.fillRect(230,120,150,26); pText(g,names[f.j]||"",305,128,f.j>=5?"#ff3a4a":"#d8d0ff",2,true); if(f.j>=5) exGlow(305,140,120,.9);
+    g.fillStyle="#2a2a36"; g.fillRect(430,150,70,46); g.fillStyle="#0a0a10"; g.fillRect(434,154,62,38); g.strokeStyle="#ff4a5a"; g.lineWidth=2; g.beginPath(); g.moveTo(440,180); g.lineTo(470,170); g.lineTo(f.side==="L"?490:444,f.side==="L"?160:156); g.stroke();
+    if(f.j===2&&!EXS.mem.includes(7)&&!EX.P.light){ g.globalAlpha=.75; g.fillStyle="#3a4a5a"; g.fillRect(640,EX_GROUND-90,120,90); g.fillStyle="#9fd8ff"; g.fillRect(650,EX_GROUND-80,40,30); exGlow(670,EX_GROUND-65,50,.6); g.globalAlpha=1; }
+    if(f.j<5){ g.fillStyle="#000"; g.fillRect(1230,EX_GROUND-120,60,120); g.fillRect(1310,EX_GROUND-120,60,120); pText(g,"L",1260,EX_GROUND-134,"#5a5a6a",2,true); pText(g,"R",1340,EX_GROUND-134,"#5a5a6a",2,true); g.fillStyle="#1a1a24"; g.fillRect(1146,EX_GROUND-30,14,30); }
+    else { g.fillStyle="#2a2a36"; g.fillRect(1150,EX_GROUND-20,240,20); exGlow(1270,EX_GROUND-60,140,.9); }
+    exLamp(g,120,60,2,"#c8e0ff",80); } };
+  return A; }
+function exCh8Junction(){ const A=EX.A, f=EX.f; f.side=Math.random()<.5?"L":"R"; EX.P.x=80; EX.P.dir=1; A.T=f.j>=1?{mode:"stalk",x:1000+Math.random()*150,dir:-1,al:0}:null;
+  if(f.j>=5){ A.hot=[{x:1270,r:80,label:`Your platform (${save.name||"you"})`,act:()=>{ exSay([[null,"The last station is named after you. The platform lights are already on, like it's been expecting you."],[null,"A staircase goes up. Light at the top."]],()=>exChapterDone()); }}]; A.T=null; exObj("The lit platform"); return; }
+  A.hot=[{x:1153,r:30,label:"Listen",act:()=>A.listen()},{x:1260,r:28,label:"Left tunnel",act:()=>exCh8Pick("L")},{x:1340,r:28,label:"Right tunnel",act:()=>exCh8Pick("R")},{x:465,r:40,label:"Tunnel map",act:()=>exSub("The map says go "+(f.side==="L"?"RIGHT":"LEFT")+". Then it changes when you blink.",3500)},
+    {x:700,r:60,label:"Ghost train cab",cond:()=>f.j===2&&!EXS.mem.includes(7)&&!EX.P.light,act:()=>{ exMem(7); exSay([[null,"In the dark, a train cab that isn't there. On the driver's seat: a ticket punch, and one unpunched ticket."],[null,"RAY · CONDUCTOR · LINE 9. The ticket is a one-way. Destination: HOME."]]); }}];
+  if(f.j===2&&!EXS.mem.includes(7)) setTimeout(()=>{ if(EX&&EX.ci===7&&EX.f.j===2) exSub("Something glints on the tracks ahead. Only when your light is off.",3500); },1200); }
+function exCh8Pick(s){ const f=EX.f; EX.fade=1.2; exNoise(.6,200,.7,.12,s==="L"?-.8:.8,"lowpass"); if(s===f.side){ f.j++; exSub(f.j>=5?"The tunnel opens into a station.":"The whistle is closer.",2500); } else { f.j=Math.max(0,f.j-1); exSub("The tunnel bends back on itself. You've been here before.",3000); } exCh8Junction(); }
+
+// ================= CHAPTER 9: THE TOP FLOOR (the Ascend tower)
+function exCh9(){ const f=EX.f; const A={theme:"office",w:1500,spawn:80,dark:.72,noDarkDrain:true,bats:[],
+  hot:[{x:400,r:30,label:"Sticky note",act:()=>exSay([[null,"A sticky note on a monitor, in neat handwriting:"],["Wren","\"The code: the hour that doesn't exist, then the years Dex gave.\""]])},
+    {x:660,r:40,label:"Recording terminal",act:()=>{ if(f.rev) return exSub("The recording loops. The man in it keeps saying yes.",2500); f.rev=1; exSay([[null,"A recording, timestamped 25:00, eleven years ago. A man in a long coat, in this office."],["Recording","\"They said I could leave if I just did one thing for them. So I did one thing.\""],["Recording","\"Then another. Then another. Every time, it was easier than saying no.\""],["Recording","\"Now I keep the lights on. I keep the printers fed. I just need someone to take over.\""],[null,"The man turns to the camera. His face is a screen full of static."],[null,"The Tenant was the first resident. The one who took every deal."]],()=>exObj("Go up. The elevator, far right")); }},
+    {x:1200,r:40,label:"Security screen",act:()=>exKeypad()},
+    {x:1450,r:40,label:"Elevator",act:()=>{ if(!f.rev) return exSub("A card reader blinks: WATCH THE RECORDING FIRST.",2500); exChapterDone(); }}],
+  start(){ exObj("Find out who runs this city"); exSub("The top floor. Warm. Quiet. Screens everywhere.",3500); },
+  update(dt){ const P=EX.P; if(f.rev&&!f.deal&&P.x>950){ f.deal=1; exSay([["The Tenant","You know who I am now. Good. That makes this simpler."],["The Tenant","I'll show you the way out. The real one. Just say yes."]],()=>exDeal(3,"The Tenant's offer","Let it show you the way out.",()=>{ exSub("A door you hadn't noticed lights up at the end of the floor. Something in you goes quiet.",4000); setTimeout(()=>exChapterDone(),2600); })); } },
+  draw(g,t,cam,vw){ g.fillStyle="#140f1e"; g.fillRect(0,40,A.w,EX_GROUND-40); g.fillStyle="#0a0812"; for(let x=0;x<A.w;x+=120) g.fillRect(x,40,4,EX_GROUND-40); exGround(g,0,A.w,"#1c1428","#18121f");
+    for(let i=0;i<10;i++){ const x=160+i*72, y=90+(i%2)*60; g.fillStyle="#0a0a12"; g.fillRect(x,y,60,44); g.fillStyle="#1a2a3a"; g.fillRect(x+3,y+3,54,38); const show=Math.floor(t/4+i)%7===0; if(show&&i===((Math.floor(t/4))%10)){ exDrawTenant(g,x+30,y+42,1,t,.9,true); } else { g.fillStyle=EXS.mem.includes(i)?"#ffd36a":"#5a6a7a"; g.fillRect(x+26,y+16,8,8); g.fillRect(x+24,y+24,12,14); } pText(g,EX_RES[i].n.toUpperCase(),x+30,y+48,"#7a8a9a",1,true); exGlow(x+30,y+22,40,.35); }
+    g.fillStyle="#2a2234"; g.fillRect(630,EX_GROUND-60,60,60); g.fillStyle="#38e8ff"; g.fillRect(640,EX_GROUND-54,40,24); exGlow(660,EX_GROUND-40,40,.6); g.fillStyle="#ffd36a"; g.fillRect(392,EX_GROUND-70,16,14);
+    g.fillStyle="#1a1a2a"; g.fillRect(1170,EX_GROUND-110,60,80); g.fillStyle="#ff3a4a"; g.fillRect(1180,EX_GROUND-100,40,30); exGlow(1200,EX_GROUND-85,40,.5); exDoor(g,1450,"#2a2a3a","LIFT"); exLamp(g,900,50,1,"#ffe8c0",160); } };
+  return A; }
+function exKeypad(){ if(EXS.mem.includes(8)) return exSub("The screen shows a single line: THANK YOU.",2500); EX.paused=true; let code=""; const disp=el("div",{class:"exkeyd",text:"____"});
+  const press=d=>{ if(d==="C"){ code=""; } else if(code.length<4) code+=d; disp.textContent=(code+"____").slice(0,4); exTone(600+(+d||0)*40,.05,"square",.05);
+    if(code.length===4){ if(code==="2511"){ setTimeout(()=>{ exModalClose(); EX.paused=false; EX.last=performance.now(); exMem(8); exSay([[null,"The security screen slides up. Behind it, a floppy disk labeled DO NOT PRINT."],["Wren","\"If you're reading this, you got further than me. Listen.\""],["Wren","\"The door at the end is the city's door. It always leads back in. Don't use its door.\""],["Wren","\"Remember them. All of them. Turn down every deal. And when you're at the end, choose to be free. Not to leave. To be FREE.\""]]); },300); } else { disp.textContent="DENIED"; exTone(90,.4,"sawtooth",.08); code=""; setTimeout(()=>{ disp.textContent="____"; },800); } } };
+  const pad=el("div",{class:"exkeys"},..."123456789C0".split("").map(d=>el("button",{class:"btn",type:"button",text:d,onclick:()=>press(d)})));
+  exModal("Security screen",[el("p",{class:"sub",text:"ENTER CODE"}),disp,pad],[["Step away",()=>{ exModalClose(); EX.paused=false; EX.last=performance.now(); }]],()=>{ exModalClose(); EX.paused=false; }); }
+
+// ================= CHAPTER 10: EXIT
+function exCh10(){ const f=EX.f; const A={theme:"exit",w:2300,spawn:80,dark:.84,noDarkDrain:true,bats:[],
+  hot:[{x:1900,r:40,label:"A package on the doorstep",act:()=>{ if(EXS.mem.includes(9)) return exSub("The box is empty now. You aren't.",2500); exMem(9); exSay([[null,"An undelivered package. IVO · COURIER. Addressed to you, at an apartment you've never lived in."],[null,"Inside is something small and ordinary. You hold it, and you remember."],[null,"You came to this city to start over. Somebody was waiting for you back home. You promised you'd call."],[null,"You never called. The city has been printing that promise into chips for a long, long time."]]); }}],
+  start(){ exObj("Walk to the door"); exSub("The street from before. It runs straight now. At the end, a door, glowing white.",4500); A.T={mode:"stand",x:2160,dir:-1,al:1}; },
+  update(dt){ const P=EX.P; if(!f.end&&P.x>2040){ f.end=1; EX.paused=true; exDroneStop(); exSay([["The Tenant","You came all this way. Most people sit down long before the end."],["The Tenant","That's the door out. It's real. You can go."],["The Tenant","Or you can stay. Rest. Or take my coat, and never be tired again."],[null,"Behind you, the residents are waiting to see what you choose."]],()=>exFinalChoice()); } },
+  draw(g,t,cam,vw){ g.fillStyle="#08060e"; g.fillRect(0,0,A.w,EX_GROUND); for(let i=0;i<12;i++) exBldg(g,i*200,i*200+190,70+(i*29)%50,"#0d0a14","#1e1a28",i*11); exGround(g,0,A.w,"#0f0c16","#0c0a12");
+    for(let i=0;i<10;i++){ const x=300+i*160, got=EXS.mem.includes(i); try{ g.filter=got?"none":"grayscale(1) brightness(.55)"; }catch(e){} drawStick(g,x,EX_GROUND,1,{dir:got?(EX.P.x>x?1:-1):(i%2?1:-1),phase:0,moving:false,look:exResLook(i)},0); try{ g.filter="none"; }catch(e){} if(got){ exGlow(x,EX_GROUND-60,36,.5); } pText(g,EX_RES[i].n.toUpperCase(),x,EX_GROUND+14,got?"#ffd36a":"#4a4458",1,true); }
+    g.fillStyle="#3a2a1a"; g.fillRect(1888,EX_GROUND-14,24,14); exLamp(g,1700,70,2,"#ffd99a",90);
+    g.fillStyle="#fff"; g.fillRect(2200,EX_GROUND-110,50,110); exGlow(2225,EX_GROUND-60,220,1); g.fillStyle="rgba(255,255,255,.07)"; g.beginPath(); g.moveTo(2200,EX_GROUND); g.lineTo(1960,EX_VH); g.lineTo(2300,EX_VH); g.lineTo(2250,EX_GROUND); g.fill(); } };
+  return A; }
+function exFinalChoice(){ const ok=exEligible(); const hint=EXS.mem.length<10?"Someone is still missing.":EXS.deals.length?"You took what it offered.":"You ran.";
+  const opts=[["Wake up",()=>exEnding("wake")],["Stay",()=>exEnding("stay")],["Harvested",()=>exEnding("harvest")]]; if(ok) opts.push(["Be free",()=>exEnding("free"),1]);
+  EX.paused=true; exModal("Choose",[el("p",{text:"Wake up: walk through the door. · Stay: sit down and rest. · Harvested: take the Tenant's coat."}),ok?el("p",{class:"exfree",text:"Be free: refuse the city's door. Open Wren's way. Take everyone with you."}):el("p",{class:"exlock",text:"▒▒ ▒▒▒▒   ·   "+hint})],opts.map(([t,f,h])=>[t,()=>{ exModalClose(); f(); },h])); }
+const EX_ENDTXT={
+  wake:[[null,"You walk through the white door."],[null,"You wake at your desk. End of shift. 23:59. Everything is normal. Your coffee is still warm."],[null,"You laugh at yourself. Grab your jacket. Head for the lobby."],[null,"Above the front door, the clock flips to 25:00."]],
+  stay:[[null,"You sit down on the curb. Just for a minute. Just to rest."],[null,"The street goes quiet. It's easier, not looking for anything."],[null,"A new runner walks down Neon Row with a flashlight, past a line of grey people standing perfectly still."],[null,"One of them is you. You don't blink."]],
+  harvest:[["The Tenant","Thank you."],[null,"The coat is heavy. Then it isn't. Then you can't remember why you wanted to leave."],[null,"Your face fills with static. It doesn't hurt. Nothing does anymore."],[null,"Somewhere far below, a new runner clocks out of a shift. You're already waiting on the stairs."]],
+  free:[[null,"You don't touch the white door. You take out the floppy disk, the keys, the pick, the badge, the timecard, the bell, the card, the ticket, the box."],[null,"You say their names out loud. Hollis. Teo. Mara. Dex. June. Nadia. Sol. Ray. Wren. Ivo."],["The Tenant","No. NO. That isn't how you leave—"],[null,"\"I'm not leaving,\" you say. \"I'm free.\""],[null,"The loop breaks like glass. The lights come back on, and for the first time all night, they're in color."],[null,"The residents walk out beside you. Mara is crying and laughing. Teo is playing again."],[null,"Behind you, the Tenant takes off its monitor. Underneath is a tired man, blinking at the sunrise. He walks out too."],[null,"You take out your phone. You make the call you promised to make."]]};
+function exEnding(k){ const E=EX_END[k]; EX.paused=true; exDroneStop(); if(k==="free"){ EX.A.dark=.2; EX.A.T=null; for(const f2 of [262,330,392,523]) exTone(f2,3,"sine",.06,1); } else exSting();
+  exSay(EX_ENDTXT[k],()=>{ EX.paused=true; const first=!EXS.endings.includes(k); if(first){ EXS.endings.push(k); } EXS.ch=0; exSave(); exReward(k);
+    exCard("ENDING",E.n.toUpperCase(),4,()=>{ exModal(`Ending: ${E.n}`,[el("p",{text:first?`New ending! Reward for free roam: the title "${E.t}" and the ${E.aura} aura${E.hat?" and the "+E.hat:""}. Wear them from your Character menu.`:"You've seen this ending before."}),el("p",{class:"sub",text:`Endings found: ${EXS.endings.length}/4`+(EXS.endings.length<4?". There's more than one way out.":". You found them all.")})],[["Back to the story menu",()=>exMenu(),1],["Back to NEON HARVEST",()=>exClose()]],()=>exMenu()); }); }); }
+function exReward(k){ const E=EX_END[k]; try{ save.owned=save.owned||[]; const give=(slot,name)=>{ const W=WARD[slot]; if(!W||!W.opts) return; const i=W.opts.findIndex(o=>o[0]===name); if(i<0) return; const key=slot+":"+i; if(!save.owned.includes(key)) save.owned.push(key); };
+    give("aura",E.aura); if(E.hat) give("hat",E.hat); save.exitTitles=[...new Set([...(Array.isArray(save.exitTitles)?save.exitTitles:[]),E.t])].slice(0,4); persist(); }catch(e){} }
+
 // ================================================================ THE OUTSKIRTS: a shared open-world wasteland outside the city.
 // Top-down pixel art (same pipeline as Project ANON). Walk anywhere, salvage scrap and parts, dodge Halvorsen patrols,
 // claim a plot and build a hideout you can fully customize (walls, furniture, neon, signs, graffiti, your own posters).
@@ -10245,7 +10716,8 @@ function renderTitle(state){ titleState=state; const t=$("#title"); t.innerHTML=
     card.append(pvl,el("div",{class:"twb",text:save.name?"WELCOME BACK":"WELCOME"}),el("h2",{class:"th tname",text:save.name||"New runner"}),
       el("div",{class:"tacct"},el("span",{class:"tdot",style:"background:var(--amber);box-shadow:0 0 8px var(--amber)"}),el("span",{text:"Playing on this device"})),
       el("p",{class:"sub",text:accessNote()}),
-      el("div",{class:"row tcol"},el("button",{class:"btn hot tbig",type:"button",text:save.name?"Enter Sector 9":"Create my runner",onclick:()=>{ closeTitle(); if(!save.name) openWardrobe("name",true); }})));
+      el("div",{class:"row tcol"},el("button",{class:"btn hot tbig",type:"button",text:save.name?"Enter Sector 9":"Create my runner",onclick:()=>{ closeTitle(); if(!save.name) openWardrobe("name",true); }})),
+      save.name?el("div",{class:"row tcol"},el("button",{class:"btn tbig exbtn",type:"button",text:"🚪 Story Mode: EXIT",onclick:()=>openExit(true)})):null);
     t.append(card); setTimeout(()=>{ const b=t.querySelector(".btn.hot"); b&&b.focus(); },30); return; }
   if(state==="signedout"){
     card.append(el("h2",{class:"th",text:"Sign in to play"}),
@@ -10263,9 +10735,10 @@ function renderTitle(state){ titleState=state; const t=$("#title"); t.innerHTML=
     const parts=Object.values(save.inv).reduce((a,b)=>a+b,0);
     card.append(pv,el("div",{class:"twb",text:"WELCOME BACK"}),el("h2",{class:"th tname",text:myName||save.name||"Runner"}));
     if(IS_ADMIN) card.append(el("div",{class:"tadmin",text:"OWNER ACCESS · SMACKED SHOP"}));
-    card.append(el("div",{class:"row tstats"},el("span",{class:"pill cr",text:`₵ ${Math.floor(save.credits).toLocaleString()}`}),el("span",{class:"pill ch",text:`${Math.floor(save.chips).toLocaleString()} chips`}),el("span",{class:"pill",text:`${parts} parts`}),save.duelWins?el("span",{class:"pill",text:`${save.duelWins} duel wins`}):null),acct,
+    card.append(el("div",{class:"row tstats"},el("span",{class:"pill cr",text:`₵ ${Math.floor(save.credits).toLocaleString()}`}),el("span",{class:"pill ch",text:`${Math.floor(save.chips).toLocaleString()} chips`}),el("span",{class:"pill",text:`${parts} parts`}),save.duelWins?el("span",{class:"pill",text:`${save.duelWins} duel wins`}):null,...(Array.isArray(save.exitTitles)?save.exitTitles:[]).map(x=>el("span",{class:"pill",style:"border-color:#ff3a5a;color:#ffb3c0",text:`EXIT: ${x}`}))),acct,
       el("div",{class:"row tcol"},el("button",{class:"btn hot tbig",type:"button",text:"Enter Sector 9",onclick:()=>{ closeTitle(); beep(660,.08); setTimeout(()=>beep(990,.1),90); }}),
         el("button",{class:"btn",type:"button",text:"Change name or look",onclick:()=>{ closeTitle(); tryOn=null; openWardrobe("name"); }})),
+      el("div",{class:"row tcol"},el("button",{class:"btn tbig exbtn",type:"button",text:"🚪 Story Mode: EXIT",title:"A psychological horror story, separate from free roam",onclick:()=>openExit(true)})),
       (window.claude&&window.claude.signOut?el("button",{class:"btn",type:"button",text:"Sign out",onclick:()=>window.claude.signOut()}):el("p",{class:"sub",text:"Press Enter to play."})));
   }
   t.append(card); setTimeout(()=>{ const b=t.querySelector(".btn.hot"); b&&b.focus(); },30);
