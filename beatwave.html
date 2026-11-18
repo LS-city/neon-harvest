@@ -1296,7 +1296,7 @@ function w3Reset(){const T=W3.T;W3.scene=new T.Scene();W3.glow=[];W3.beat=[];W3.
 /* PLACES: top-level Blender objects named place_Something are separate places. While you play, the world travels to the next one every 8 bars, and on OVERDRIVE. */
 const W3_BARS=4;let w3TravelOn=true;try{w3TravelOn=localStorage.getItem('bw_travel')!=='0';}catch(_){}
 function w3Show(i){W3.pi=i;W3.places.forEach((p,j)=>p.visible=j===i);const p=W3.places[i];try{W3.scene.background=new W3.T.Color((p&&p.userData.sky)||'#07011a');}catch(_){}}
-function w3Travel(){if(W3.places.length<2||W3.trans>0)return;W3.trans=1;W3.next=(W3.pi+1)%W3.places.length;W3.bars=0;}
+function w3Travel(){if(W3.places.length<2||W3.trans>0)return;W3.trans=1;W3.next=(W3.pi+1)%W3.places.length;W3.bars=0;W3.playT=0;}
 function w3Default(){const T=W3.T;w3Reset();W3.custom=false;W3.proc=true;const s=W3.scene;s.background=new T.Color('#07011a');s.fog=new T.Fog('#2a0845',40,260);
   s.add(new T.AmbientLight('#ffffff',.25));
   const grid=new T.GridHelper(400,80,'#ff2e88','#ff2e88');grid.material.transparent=true;grid.material.opacity=.7;s.add(grid);W3.grid=grid;
@@ -1335,7 +1335,7 @@ function draw3D(now,dt,P){if(!W3.on){w3Init();return false;}
   W3.spin.forEach(o=>{o.rotation.y+=dt*(.4+hype*3);});
   if(W3.mixer)W3.mixer.update(dt*bpm/120);
   let warp=0;if(W3.places.length>1){
-    if(w3TravelOn&&ctx&&clockOn){const bar=Math.floor((ctx.currentTime-t0)/(spb()*4));if(bar!==W3.bar){W3.bar=bar;if(ctx.currentTime-lastPressT<3||loopOn){if(++W3.bars>=W3_BARS)w3Travel();}}
+    if(w3TravelOn&&ctx){if(ctx.currentTime-lastPressT<3||loopOn){W3.playT=(W3.playT||0)+dt;const bl=spb()*4;if(W3.playT>=bl){W3.playT-=bl;if(++W3.bars>=W3_BARS)w3Travel();}}
       if(od&&!W3.od)w3Travel();}
     W3.od=od;
     if(W3.trans>0){const b4=W3.trans;W3.trans=Math.max(0,W3.trans-dt*1.2);warp=Math.sin((1-W3.trans)*Math.PI);fx.shake=Math.max(fx.shake,warp*.4);
