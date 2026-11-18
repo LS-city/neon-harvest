@@ -1384,7 +1384,7 @@ async function chInit(){if(CH.on||CH.loading||CH.failed)return;CH.loading=true;
     CH.r=new T.WebGLRenderer({canvas:chc,alpha:true,antialias:true,preserveDrawingBuffer:true});CH.r.setPixelRatio(1);CH.r.setSize(480,600,false);CH.r.setClearColor(0x000000,0);
     const s=CH.scene=new T.Scene();s.add(gltf.scene);
     s.add(new T.HemisphereLight('#ffffff','#40206a',1.3));const key=new T.DirectionalLight('#ffffff',1.8);key.position.set(-3,5,8);s.add(key);
-    CH.rim=new T.DirectionalLight('#00f0ff',2.5);CH.rim.position.set(4,3,-6);s.add(CH.rim);CH.rim2=new T.DirectionalLight('#ff2e88',2);CH.rim2.position.set(-5,2,-5);s.add(CH.rim2);
+    CH.rim=new T.DirectionalLight('#00f0ff',1.4);CH.rim.position.set(4,3,-6);s.add(CH.rim);CH.rim2=new T.DirectionalLight('#ff2e88',.8);CH.rim2.position.set(-5,2,-5);s.add(CH.rim2);
     CH.cam=new T.PerspectiveCamera(32,480/600,.1,100);CH.cam.position.set(0,1.75,8.6);CH.cam.lookAt(0,1.6,0);
     const J={};gltf.scene.traverse(o=>{if(/^Char_(Root|Hips|Torso|Head|ArmL|ArmR|LegL|LegR)$/.test(o.name)){J[o.name.slice(5)]=o;o.userData.r0=o.rotation.clone();o.userData.p0=o.position.clone();}});
     ['Char_Controller','Char_ControllerScreen'].forEach(n=>{const o=gltf.scene.getObjectByName(n);if(o&&J.ArmR)J.ArmR.attach(o);});
@@ -1403,7 +1403,7 @@ function drawChar3D(now,dt,P){if(!CH.on){chInit();return false;}
   R(J.Head,(bnc*.28-.06)*e+k*.22,sw*.2*e,Math.sin(ph*PI/2+1)*.14*e);
   const arm=-(bnc*.35*e+k*.2)-CH.jump*1.6*bnc;R(J.ArmL,arm,0,-CH.jump*.6);R(J.ArmR,arm,0,CH.jump*.6);
   R(J.LegL,Math.sin(ph*PI)*.3*e,0,0);R(J.LegR,-Math.sin(ph*PI)*.3*e,0,0);
-  try{CH.rim.color.set(P.wave);CH.rim2.color.set(P.acc);}catch(_){}CH.rim.intensity=2.2+k*3;
+  try{CH.rim.color.set(P.wave);CH.rim2.color.set(P.acc);}catch(_){}CH.rim.intensity=1.2+k*2.2;
   CH.r.render(CH.scene,CH.cam);
   const h=H*.66,w=h*480/600,x=cx+steer*60-w/2,foot=H*.97,y=foot-h;
   g.save();g.globalCompositeOperation='lighter';const pool=g.createRadialGradient(cx+steer*60,foot-h*.04,4,cx+steer*60,foot-h*.04,w*.55);pool.addColorStop(0,hexA(P.wave,.35+k*.3));pool.addColorStop(1,hexA(P.wave,0));g.fillStyle=pool;g.fillRect(x-w*.2,foot-h*.2,w*1.4,h*.3);g.restore();
