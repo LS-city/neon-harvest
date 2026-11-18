@@ -79,6 +79,20 @@ aside{display:flex;flex-direction:column;gap:12px}
 .tgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .sty{flex-direction:column;align-items:stretch;padding:5px;gap:5px;border-radius:10px;background:var(--panel2)}
 .sty canvas{width:100%;aspect-ratio:16/9;border-radius:6px;background:#000;display:block}
+div.sty{border:1px solid var(--line);display:flex;cursor:pointer;position:relative}
+div.sty:hover{border-color:var(--pink)}
+.addl{position:absolute;top:8px;right:8px;width:26px;height:26px;padding:0;justify-content:center;border-radius:50%;background:rgba(10,6,20,.8);border-color:var(--cyan);color:var(--cyan);font-size:16px;font-weight:700}
+.addl.in{background:var(--cyan);color:#022}
+.lnum{position:absolute;top:8px;left:8px;background:var(--pink);color:#22000f;font-weight:700;font-size:11px;border-radius:4px;padding:1px 6px}
+.layer{display:grid;grid-template-columns:22px 78px minmax(0,1fr) 30px auto;gap:6px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 6px;margin-top:6px}
+.layer b{background:var(--pink);color:#22000f;border-radius:4px;font-size:11px;text-align:center;padding:1px 0}
+.layer span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.layer output{font-size:11px;text-align:right}
+.layer .lb{display:flex;gap:2px}
+.layer .lb button{padding:2px 5px;font-size:11px}
+.sub{color:var(--muted);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:14px 0 6px}
+.blends{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.blends .sty span{font-size:11px}
 .sty span{font-size:12px;text-align:left;padding:0 3px 2px;overflow:hidden;text-overflow:ellipsis}
 .sty.on{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink) inset}
 .sty.on span{color:var(--pink)}
@@ -166,10 +180,12 @@ body.exporting aside,body.exporting .transport,body.exporting .tl-btns,body.expo
 
   <aside>
     <div class="card">
-      <h3>Styles</h3>
+      <h3>Styles <button id="clearStyles">Clear</button></h3>
       <div class="styles" id="styles"></div>
       <div id="styleDesc">No filter</div>
-      <div class="row"><label>Intensity</label><input type="range" id="amt" min="0" max="100" value="75"><output id="amtO">75</output></div>
+      <div id="layers"></div>
+      <div class="sub">Ready-made blends</div>
+      <div class="blends" id="blends"></div>
     </div>
 
     <div class="card">
@@ -350,7 +366,7 @@ if(lb>0.){float ar=res.x/res.y;if(lb>ar){if(abs(v.y-.5)>ar/lb*.5)c=vec3(0.);}els
 gl_FragColor=vec4(clamp(c,0.,1.),1.);
 }`;
 
-let U={},glOK=false;
+let U={},glOK=false,srcTex=null,fbs=[],fbW=0,fbH=0;
 (function initGL(){
   if(!gl)return;
   function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));return null}return s}
@@ -361,7 +377,7 @@ let U={},glOK=false;
   const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
   const loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-  const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+  srcTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,srcTex);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
@@ -510,6 +526,29 @@ function render(s,a,W,H,lbv,useAdj){
   gl.uniform1f(U.warm,A.warm/100);gl.uniform1f(U.grain,A.grain/100*.6);gl.uniform1f(U.vig,A.vig/100*.9);
   gl.uniform1f(U.lb,lbv);gl.drawArrays(gl.TRIANGLES,0,6);
 }
+function ensureFB(W,H){
+  if(fbW===W&&fbH===H&&fbs.length)return;
+  if(!fbs.length)for(let i=0;i<2;i++)fbs.push({t:gl.createTexture(),f:gl.createFramebuffer()});
+  fbs.forEach(o=>{gl.bindTexture(gl.TEXTURE_2D,o.t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,o.f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,o.t,0)});
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);fbW=W;fbH=H;
+}
+function runStack(st,W,H,lbv,useAdj){
+  if(glc.width!==W||glc.height!==H){glc.width=W;glc.height=H}
+  const layers=st.length?st:[{id:0,amt:0}];
+  if(layers.length>1)ensureFB(W,H);
+  let input=srcTex;
+  layers.forEach((L,i)=>{
+    const last=i===layers.length-1;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,last?null:fbs[i%2].f);
+    gl.bindTexture(gl.TEXTURE_2D,input);
+    render(L.id,L.amt,W,H,last?lbv:0,last&&useAdj);
+    if(!last)input=fbs[i%2].t;
+  });
+  gl.bindTexture(gl.TEXTURE_2D,srcTex);
+}
 function fontFor(key,size){return{sans:`700 ${size}px "Space Grotesk", sans-serif`,bebas:`${size*1.2}px "Bebas Neue", sans-serif`,vhs:`${size*1.25}px VT323, monospace`,serif:`italic 600 ${size}px "Playfair Display", serif`}[key]}
 function drawCaption(ctx,W,H){
   const txt=$('capText').value.trim();if(!txt)return;
@@ -528,11 +567,10 @@ function drawStamp(ctx,W,H){
 }
 function renderThumbs(){
   const [,,sw,sh]=outSize();const tw=192,th=Math.max(2,Math.round(192*sh/sw));
-  STYLES.forEach(s=>{
-    render(s.id,s.id?.85:0,tw,th,s.lb||0,false);
-    const k=Math.min(192/tw,108/th),dw=tw*k,dh=th*k;
-    s.cx.fillStyle='#000';s.cx.fillRect(0,0,192,108);s.cx.drawImage(glc,(192-dw)/2,(108-dh)/2,dw,dh);
-  });
+  const k=Math.min(192/tw,108/th),dw=tw*k,dh=th*k;
+  const put=cx=>{cx.fillStyle='#000';cx.fillRect(0,0,192,108);cx.drawImage(glc,(192-dw)/2,(108-dh)/2,dw,dh)};
+  STYLES.forEach(s=>{runStack(s.id?[{id:s.id,amt:.85}]:[],tw,th,s.lb||0,false);put(s.cx)});
+  BLENDS.forEach(b=>{runStack(b.layers.map(l=>({id:l[0],amt:l[1]})),tw,th,b.lb||0,false);put(b.cx)});
 }
 function composeMix(W,H,t){
   if(!readyClips().length){drawDemo(t);mctx.fillStyle='#000';mctx.fillRect(0,0,W,H);drawSrc(mctx,demo,W,H);return}
@@ -563,7 +601,7 @@ function frame(){
   if(out.width!==W||out.height!==H||!frame.sized){frame.sized=1;out.width=W;out.height=H;$('stage').style.aspectRatio=W>=H?'16/9':'4/5';$('tres').textContent=W+'×'+H}
   composeMix(W,H,t);
   try{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,mix)}catch(e){return}
-  render(styleId,+$('amt').value/100,W,H,+$('lb').value,true);
+  runStack(stack,W,H,+$('lb').value,true);
   octx.drawImage(glc,0,0);
   if($('stamp').checked)drawStamp(octx,W,H);
   drawCaption(octx,W,H);
@@ -575,22 +613,66 @@ function frame(){
 }
 
 // ---------- styles UI ----------
+let stack=[];
+const BLENDS=[
+ {name:'Dream tape',layers:[[7,.6],[2,.7]]},
+ {name:'Dream cinema',layers:[[7,.55],[1,.8]]},
+ {name:'Neon tape',layers:[[6,.7],[2,.6]]},
+ {name:'Moody film',layers:[[3,.6],[5,.65]]},
+ {name:'Noir tape',layers:[[4,.9],[2,.5]]},
+ {name:'Glitchy home movie',layers:[[8,.7],[9,.35]]}
+];
 STYLES.forEach(s=>{
-  const b=document.createElement('button');b.className='sty';b.title=s.desc;
-  b.innerHTML='<canvas width="192" height="108"></canvas><span>'+s.name+'</span>';
-  b.onclick=()=>pickStyle(s.id);$('styles').appendChild(b);
-  s.el=b;s.cx=b.querySelector('canvas').getContext('2d');
+  const d=document.createElement('div');d.className='sty';d.title=s.desc;d.tabIndex=0;
+  d.innerHTML='<canvas width="192" height="108"></canvas><span>'+s.name+'</span>'+(s.id?'<b class="lnum" hidden></b><button class="addl" title="Layer this style on top">＋</button>':'');
+  d.onclick=e=>{if(e.target.closest('.addl'))toggleLayer(s.id);else solo(s.id)};
+  d.onkeydown=e=>{if(e.key==='Enter')solo(s.id)};
+  $('styles').appendChild(d);s.el=d;s.cx=d.querySelector('canvas').getContext('2d');s.add=d.querySelector('.addl');s.num=d.querySelector('.lnum');
 });
-function pickStyle(id){
-  styleId=id;const s=STYLES[id];
-  STYLES.forEach(x=>x.el.classList.toggle('on',x.id===id));
-  $('styleDesc').textContent=s.desc;
-  if(s.lb){$('lb').value=String(s.lb);lbAuto=true}else if(lbAuto){$('lb').value='0';lbAuto=false}
-  if(s.stamp){$('stamp').checked=true;stampAuto=true}else if(stampAuto){$('stamp').checked=false;stampAuto=false}
+BLENDS.forEach(b=>{
+  const d=document.createElement('button');d.className='sty';d.title=b.layers.map(l=>STYLES[l[0]].name).join(' + ');
+  d.innerHTML='<canvas width="192" height="108"></canvas><span>'+b.name+'</span>';
+  d.onclick=()=>{stack=b.layers.map(l=>({id:l[0],amt:l[1]}));styleChanged()};
+  $('blends').appendChild(d);b.el=d;b.cx=d.querySelector('canvas').getContext('2d');
+});
+function solo(id){const prev=stack.find(l=>l.id===id);stack=id?[{id,amt:prev?prev.amt:.75}]:[];styleChanged()}
+function toggleLayer(id){
+  const i=stack.findIndex(l=>l.id===id);
+  if(i>=0)stack.splice(i,1);
+  else{if(stack.length>=4){toast('You can stack up to 4 styles.');return}stack.push({id,amt:.65})}
+  styleChanged();
 }
-pickStyle(0);
+function styleChanged(){
+  const lbS=stack.map(l=>STYLES[l.id]).find(s=>s.lb),vhs=stack.some(l=>STYLES[l.id].stamp);
+  if(lbS&&(lbAuto||$('lb').value==='0')){$('lb').value=String(lbS.lb);lbAuto=true}else if(!lbS&&lbAuto){$('lb').value='0';lbAuto=false}
+  if(vhs&&!$('stamp').checked){$('stamp').checked=true;stampAuto=true}else if(!vhs&&stampAuto){$('stamp').checked=false;stampAuto=false}
+  refreshStyleUI();
+}
+function refreshStyleUI(){
+  STYLES.forEach(s=>{const i=stack.findIndex(l=>l.id===s.id);const on=s.id?i>=0:!stack.length;
+    s.el.classList.toggle('on',on);
+    if(s.add){s.add.textContent=i>=0?'−':'＋';s.add.classList.toggle('in',i>=0);s.add.title=i>=0?'Remove this layer':'Layer this style on top'}
+    if(s.num){s.num.hidden=!(i>=0&&stack.length>1);s.num.textContent=i+1}});
+  const sig=stack.map(l=>l.id).join(',');BLENDS.forEach(b=>b.el.classList.toggle('on',b.layers.map(l=>l[0]).join(',')===sig));
+  $('styleDesc').innerHTML=!stack.length?'No filter. Click a style to use it, or tap <b style="color:var(--cyan)">＋</b> on several to blend them.':
+    stack.length===1?esc(STYLES[stack[0].id].desc)+' Tap <b style="color:var(--cyan)">＋</b> on another style to blend it in.':
+    '<b style="color:var(--text)">Blend:</b> '+stack.map(l=>esc(STYLES[l.id].name)).join(' + ')+'. Layer 1 is applied first, and each layer after it goes on top.';
+  const box=$('layers');box.innerHTML='';
+  stack.forEach((l,i)=>{
+    const r=document.createElement('div');r.className='layer';
+    r.innerHTML='<b>'+(i+1)+'</b><span>'+esc(STYLES[l.id].name)+'</span><input type="range" min="0" max="100" value="'+Math.round(l.amt*100)+'" title="Strength"><output>'+Math.round(l.amt*100)+'</output><div class="lb">'+(stack.length>1?'<button data-a="u" title="Move up">▲</button><button data-a="d" title="Move down">▼</button>':'')+'<button data-a="x" title="Remove">✕</button></div>';
+    const rg=r.querySelector('input'),o=r.querySelector('output');
+    rg.oninput=()=>{l.amt=+rg.value/100;o.textContent=rg.value};
+    r.querySelector('.lb').onclick=e=>{const a=e.target.dataset.a;if(!a)return;
+      if(a==='x')stack.splice(i,1);
+      else{const j=i+(a==='u'?-1:1);if(j<0||j>=stack.length)return;[stack[i],stack[j]]=[stack[j],stack[i]]}
+      styleChanged()};
+    box.appendChild(r);
+  });
+}
+$('clearStyles').onclick=()=>{stack=[];styleChanged()};
+styleChanged();
 $('lb').onchange=()=>{lbAuto=false};$('stamp').onchange=()=>{stampAuto=false};
-$('amt').oninput=e=>{$('amtO').textContent=e.target.value};
 ADJ.forEach(k=>{const el=$(k);el.oninput=()=>{adj[k]=+el.value;el.nextElementSibling.textContent=el.value}});
 $('resetAdj').onclick=()=>ADJ.forEach(k=>{$(k).value=0;adj[k]=0;$(k).nextElementSibling.textContent='0'});
 $('quality').onchange=()=>{thumbsDirty=true};
@@ -800,7 +882,7 @@ async function saveBlob(blob,name){
   catch(e){const c=e&&e.code;if(c==='declined')return;
     toast(c==='too_large'?'That file is too big for this view. Try exporting at 720p.':c==='rate_limited'?'A save prompt is already open. Finish that one first.':'Couldn’t save the file ('+(c||'error')+').')}
 }
-const slug=()=>STYLES[styleId].name.toLowerCase().replace(/\s+/g,'-');
+const slug=()=>(stack.length?stack.map(l=>STYLES[l.id].name).join('-'):'original').toLowerCase().replace(/\s+/g,'-');
 $('snapBtn').onclick=()=>out.toBlob(b=>{if(b)saveBlob(b,'neon-cut-frame-'+slug()+'.png')},'image/png');
 
 // ---------- export ----------

@@ -8,6 +8,7 @@ A browser video editor with film-style filters. Everything runs on your device, 
 - 12 transitions with animated previews: Cut, Crossfade, Dip to black, Flash, Slide, Push, Wipe, Zoom, Circle, Blur, Spin and Glitch. Use one for every clip change, or pick a different one per change, and adjust its length
 - Fade in from black at the start and fade out to black at the end
 - 10 styles, each with an intensity slider: Original, Cinematic, VHS, Gloomy, Noir, Vintage film, Neon, Dreamy, Super 8 and Glitch
+- Blend styles: tap **＋** on any style to layer it on top (up to 4), give each layer its own strength, and reorder them. There are also 6 ready-made blends: Dream tape, Dream cinema, Neon tape, Moody film, Noir tape and Glitchy home movie
 - Adjustments: brightness, contrast, saturation, warmth, film grain, vignette and letterbox bars
 - Captions in 4 fonts, plus an optional VHS camcorder stamp
 - Export the whole sequence to MP4 or WEBM at 480p, 720p, 1080p or the original size, plus PNG frame grabs
