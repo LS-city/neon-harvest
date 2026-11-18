@@ -1294,7 +1294,7 @@ async function w3Init(){if(W3.on||W3.loading||W3.failed)return;W3.loading=true;
   W3.loading=false;}
 function w3Reset(){const T=W3.T;W3.scene=new T.Scene();W3.glow=[];W3.beat=[];W3.bass=[];W3.spin=[];W3.mixer=null;W3.city=null;W3.cam=new T.PerspectiveCamera(60,16/9,.1,2000);W3.fov=60;W3.auto=null;W3.places=[];W3.pi=0;W3.trans=0;W3.bars=0;}
 /* PLACES: top-level Blender objects named place_Something are separate places. While you play, the world travels to the next one every 8 bars, and on OVERDRIVE. */
-let w3TravelOn=true;try{w3TravelOn=localStorage.getItem('bw_travel')!=='0';}catch(_){}
+const W3_BARS=4;let w3TravelOn=true;try{w3TravelOn=localStorage.getItem('bw_travel')!=='0';}catch(_){}
 function w3Show(i){W3.pi=i;W3.places.forEach((p,j)=>p.visible=j===i);const p=W3.places[i];try{W3.scene.background=new W3.T.Color((p&&p.userData.sky)||'#07011a');}catch(_){}}
 function w3Travel(){if(W3.places.length<2||W3.trans>0)return;W3.trans=1;W3.next=(W3.pi+1)%W3.places.length;W3.bars=0;}
 function w3Default(){const T=W3.T;w3Reset();W3.custom=false;W3.proc=true;const s=W3.scene;s.background=new T.Color('#07011a');s.fog=new T.Fog('#2a0845',40,260);
@@ -1309,7 +1309,7 @@ function w3Default(){const T=W3.T;w3Reset();W3.custom=false;W3.proc=true;const s
     b.position.set(side*(18+Math.random()*60),h/2,-Math.random()*400);b.userData.edge=e;b.userData.h=h;city.add(b);W3.glow.push(b.material);
     if(Math.random()<.25)W3.beat.push(b);}
   W3.cam.position.set(0,6,20);W3.cam.lookAt(0,10,-100);}
-async function w3Builtin(){try{const r=await fetch('beatwave-scenes/synthwave-stage.glb');if(!r.ok)throw 0;await w3LoadBuf(await r.arrayBuffer(),'stage',true,true);}catch(_){w3Default();}}
+async function w3Builtin(){for(const u of ['beatwave-scenes/synthwave-stage.glb','https://ls-city.github.io/neon-harvest/beatwave-scenes/synthwave-stage.glb']){try{const r=await fetch(u);if(!r.ok)continue;await w3LoadBuf(await r.arrayBuffer(),'stage',true,true);return;}catch(_){}}w3Default();}
 async function w3LoadBuf(buf,name,quiet,builtin){const T=W3.T;const gltf=await new Promise((ok,no)=>new W3.GL().parse(buf,'',ok,no));
   w3Reset();W3.custom=!builtin;W3.proc=false;const s=W3.scene,root=gltf.scene;s.add(root);
   let lights=0;root.traverse(o=>{if(o.isLight)lights++;const n=(o.name||'').toLowerCase();
@@ -1335,7 +1335,7 @@ function draw3D(now,dt,P){if(!W3.on){w3Init();return false;}
   W3.spin.forEach(o=>{o.rotation.y+=dt*(.4+hype*3);});
   if(W3.mixer)W3.mixer.update(dt*bpm/120);
   let warp=0;if(W3.places.length>1){
-    if(w3TravelOn&&ctx&&clockOn){const bar=Math.floor((ctx.currentTime-t0)/(spb()*4));if(bar!==W3.bar){W3.bar=bar;if(ctx.currentTime-lastPressT<3||loopOn){if(++W3.bars>=8)w3Travel();}}
+    if(w3TravelOn&&ctx&&clockOn){const bar=Math.floor((ctx.currentTime-t0)/(spb()*4));if(bar!==W3.bar){W3.bar=bar;if(ctx.currentTime-lastPressT<3||loopOn){if(++W3.bars>=W3_BARS)w3Travel();}}
       if(od&&!W3.od)w3Travel();}
     W3.od=od;
     if(W3.trans>0){const b4=W3.trans;W3.trans=Math.max(0,W3.trans-dt*1.2);warp=Math.sin((1-W3.trans)*Math.PI);fx.shake=Math.max(fx.shake,warp*.4);
@@ -1347,13 +1347,18 @@ function draw3D(now,dt,P){if(!W3.on){w3Init();return false;}
     cam.position.x=Math.sin(W3.t*.3)*3+(typeof steer!=='undefined'?steer*4:0);cam.position.y=6+Math.sin(W3.t*.7)*.8-k*.6;cam.rotation.z=-(typeof steer!=='undefined'?steer*.05:0);}
   else if(W3.auto){const{ctr,sz}=W3.auto,a=W3.t*.15;cam.position.set(ctr.x+Math.sin(a)*sz*.8,ctr.y+sz*.25-k*sz*.01,ctr.z+Math.cos(a)*sz*.8);cam.lookAt(ctr);}
   cam.fov=Math.min(150,W3.fov+k*4+hype*6+warp*55);cam.updateProjectionMatrix();if(warp)cam.rotation.z+=warp*.3*dt*60*.02;
-  W3.r.render(W3.scene,cam);g.drawImage(glc,0,0,W,H);return true;}
+  W3.r.render(W3.scene,cam);g.drawImage(glc,0,0,W,H);
+  if(W3.places.length>1&&!(REC&&recClean)){const nm=W3.places[W3.pi].name.replace(/^place_/i,'').toUpperCase();g.save();g.font='700 18px Orbitron,sans-serif';g.textAlign='left';g.fillStyle='rgba(0,0,0,.45)';g.fillRect(14,14,250,w3TravelOn?54:32);
+    g.fillStyle=P.wave;g.shadowColor=P.wave;g.shadowBlur=GL*10;g.fillText('📍 '+nm,24,37);g.shadowBlur=0;
+    if(w3TravelOn){g.font='11px "Share Tech Mono",monospace';g.fillStyle='rgba(255,255,255,.75)';g.fillText('NEXT PLACE',24,58);for(let i=0;i<W3_BARS;i++){g.fillStyle=i<W3.bars?P.acc:'rgba(255,255,255,.2)';g.fillRect(104+i*22,49,16,10);}}g.restore();}
+  return true;}
 {const wa=document.getElementById('worldAuto');const fi=document.createElement('input');fi.type='file';fi.accept='.glb,.gltf';fi.style.display='none';
   const lb=document.createElement('button');lb.id='w3Load';lb.textContent='📦 BLENDER SCENE';lb.title='Load a 3D scene you made in Blender (File > Export > glTF 2.0 .glb). Shows in the 3D CITY world and reacts to your beats.';
   const rb=document.createElement('button');rb.id='w3Reset';rb.textContent='↺ STAGE';rb.title='Go back to the built-in synthwave stage';rb.style.display='none';
-  const tb=document.createElement('button');tb.id='w3Travel';tb.title='3D world changes into a new place every 8 bars while you play, and when you hit OVERDRIVE';
+  const tb=document.createElement('button');tb.id='w3Travel';tb.title='3D world changes into a new place every 4 bars while you play, and when you hit OVERDRIVE';
   const tbu=()=>{tb.textContent='🧭 TRAVEL: '+(w3TravelOn?'ON':'OFF');tb.classList.toggle('on',w3TravelOn);};tbu();tb.onclick=()=>{w3TravelOn=!w3TravelOn;try{localStorage.setItem('bw_travel',w3TravelOn?'1':'0');}catch(_){}tbu();};
-  wa.after(lb,tb,rb,fi);lb.onclick=()=>fi.click();
+  const nb=document.createElement('button');nb.id='w3Next';nb.textContent='⏭ NEXT PLACE';nb.title='Jump to the next 3D place now';nb.onclick=()=>{if(world!=='city3d'){worldAuto=false;wa.classList.remove('on');setWorld('city3d');saveWorld();}w3Travel();};
+  wa.after(lb,tb,nb,rb,fi);lb.onclick=()=>fi.click();
   fi.onchange=async()=>{const f=fi.files[0];fi.value='';if(!f)return;if(f.name.toLowerCase().endsWith('.gltf')){alertBox('Export as .glb (glTF Binary) in Blender so everything is in one file.');return;}
     const buf=await f.arrayBuffer();if(!W3.on)await w3Init();if(!W3.on)return;
     try{await w3LoadBuf(buf.slice(0),f.name);try{await W3DB.put({buf,name:f.name});}catch(_){}worldAuto=false;wa.classList.remove('on');setWorld('city3d');saveWorld();}
