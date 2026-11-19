@@ -80,6 +80,48 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
 .card input{width:100%;margin:8px 0 6px;min-width:0}
 .empty{color:var(--muted);text-align:center;padding:50px 10px}
 @media (max-width:900px){.key{width:56px;height:50px}.key small{display:none}}
+
+/* ================= PHONE LAYOUT (only when body.phone) ================= */
+#layoutBtn{border-color:var(--cyan);color:var(--cyan)}
+#pads,#phoneBar{display:none}
+body.phone{touch-action:manipulation;padding-bottom:74px}
+body.phone .wrap{padding:8px}
+body.phone header{gap:6px}
+body.phone h1{font-size:18px;letter-spacing:2px}
+body.phone .tab{padding:7px 10px;font-size:10px;letter-spacing:1px}
+body.phone #v-studio>.panel{display:none}
+body.phone #v-studio.active{display:grid;grid-template-columns:1fr;gap:0}
+body.phone .stage{margin-top:8px}
+body.phone #pads{display:block;margin-top:8px}
+body.phone #phoneBar{display:flex}
+body.phone.phoneSet #v-studio>.panel{display:block}
+body.phone.phoneSet #dancerPanel[style*="none"]{display:none!important}
+body.phone.phoneSet #pads{display:none}
+body.phone #kb,body.phone .legend{display:none}
+body.phone .genres button{min-width:0}
+body.phone input[type=text]{min-width:0}
+.ptabs{display:flex;gap:5px;margin-bottom:6px}
+.ptabs button{flex:1;padding:10px 4px;font-size:11px;letter-spacing:1px;border-color:var(--c);color:var(--c)}
+.ptabs button.on{background:var(--c);color:#0b0221;box-shadow:0 0 14px var(--c)}
+.prow{display:none;grid-template-columns:repeat(5,1fr);gap:6px}
+.prow.show{display:grid}
+.pad{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border:1px solid var(--c);color:var(--c);background:#0b0221;border-radius:12px;
+  min-height:clamp(78px,17vh,150px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:1px;text-align:center;padding:4px;transition:background .06s,box-shadow .06s}
+.pad b{font-size:10px;opacity:.6}
+.pad.hit{background:var(--c);color:#0b0221;box-shadow:0 0 22px var(--c)}
+.pad.armed{outline:2px solid var(--c);outline-offset:1px}
+#phoneBar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(11,2,33,.96);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));gap:6px;align-items:center}
+#phoneBar select{flex:1;min-width:0;padding:10px 6px;font-size:13px}
+#phoneBar button{padding:11px 10px;font-size:11px;letter-spacing:1px}
+#phoneBar button.recon{background:#ff2b2b;border-color:#ff2b2b;color:#fff}
+@media (orientation:landscape){
+  body.phone:not(.phoneSet) #v-studio.active{grid-template-columns:46% 1fr;gap:8px;align-items:start}
+  body.phone .ptabs{display:none}
+  body.phone .prow{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:4px}
+  body.phone .pad{min-height:min(15vh,64px);font-size:8px}
+  body.phone .pad b{display:none}
+  body.phone.phoneSet #v-studio.active{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -91,6 +133,7 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
   <div class="tabs">
     <button class="tab active" data-v="studio">STUDIO</button>
     <button class="tab" data-v="recs">RECORDINGS <span class="badge" id="recCount">0</span></button>
+    <button id="layoutBtn" title="Switch between the PC layout and the phone layout">📱 PHONE</button>
   </div>
 </header>
 
@@ -200,6 +243,13 @@ body.recbig #recBack{display:block}body.recbig #recBar{display:flex}
   </div>
   <div class="recs" id="recList"><div class="empty">No videos yet. Go to STUDIO and hit ● RECORD VIDEO.</div></div>
 </div>
+</div>
+<div id="phoneBar">
+  <select id="pGenre" aria-label="Genre"></select>
+  <button id="pLoopRec">● LOOP</button>
+  <button id="pLoopPlay">▶</button>
+  <button id="pRec">● REC</button>
+  <button id="pSet">⚙</button>
 </div>
 
 <script>
@@ -1413,6 +1463,61 @@ function drawChar3D(now,dt,P){if(!CH.on){chInit();return false;}
   const h=H*.66,w=h*480/600,x=cx+steer*60-w/2,foot=H*.97,y=foot-h;
   g.save();g.globalCompositeOperation='lighter';const pool=g.createRadialGradient(cx+steer*60,foot-h*.04,4,cx+steer*60,foot-h*.04,w*.55);pool.addColorStop(0,hexA(P.wave,.35+k*.3));pool.addColorStop(1,hexA(P.wave,0));g.fillStyle=pool;g.fillRect(x-w*.2,foot-h*.2,w*1.4,h*.3);g.restore();
   g.save();g.shadowColor=P.wave;g.shadowBlur=GL*(10+k*20);g.drawImage(chc,x,y,w,h);g.restore();return true;}
+</script>
+<script>
+/* ================= PHONE LAYOUT + PC/PHONE SWITCH =================
+   The PC layout is untouched. The phone layout is the same page with big touch pads,
+   tabs for each key row and a bottom bar. The choice is remembered on each device.
+   Links: beatwave.html?phone opens the phone layout, beatwave.html?pc opens the PC layout. */
+(function(){
+  const body=document.body,stage=document.getElementById('stage');
+  const pads=document.createElement('div');pads.id='pads';
+  const tabs=document.createElement('div');tabs.className='ptabs';pads.appendChild(tabs);
+  const TABN={lead:'MELODY',chord:'CHORDS',drum:'DRUMS',bass:'BASS'};let cur='drum';const rowEls={},tabEls={};
+  ROWS.forEach(r=>{
+    const tb=document.createElement('button');tb.textContent=TABN[r.type];tb.style.setProperty('--c',r.c);tb.onclick=()=>showRow(r.type);tabs.appendChild(tb);tabEls[r.type]=tb;
+    const row=document.createElement('div');row.className='prow';rowEls[r.type]=row;
+    r.keys.forEach(k=>{const m=KEYMAP[k],pd=document.createElement('div');pd.className='pad';pd.style.setProperty('--c',r.c);
+      pd.innerHTML='<span></span><b>'+k.toUpperCase()+'</b>';const lab=pd.querySelector('span');
+      pd.addEventListener('pointerdown',e=>{e.preventDefault();press(k);});
+      pd.addEventListener('contextmenu',e=>e.preventDefault());
+      // copy the light-up and the label from the PC key, so pads always match
+      const sync=()=>{pd.classList.toggle('hit',m.el.classList.contains('hit'));pd.classList.toggle('armed',m.el.classList.contains('armed'));lab.textContent=m.el.querySelector('small').textContent||k.toUpperCase();};
+      new MutationObserver(sync).observe(m.el,{attributes:true,attributeFilter:['class'],subtree:true,childList:true,characterData:true});sync();
+      row.appendChild(pd);});
+    pads.appendChild(row);});
+  stage.after(pads);
+  function showRow(t){cur=t;Object.keys(rowEls).forEach(x=>{rowEls[x].classList.toggle('show',x===t);tabEls[x].classList.toggle('on',x===t);});}
+  showRow(cur);
+  // bottom bar: works the real PC buttons, so everything stays in step
+  const pG=document.getElementById('pGenre');
+  Object.entries(GENRES).forEach(([id,g])=>{const o=document.createElement('option');o.value=id;o.textContent=g.name;pG.appendChild(o);});
+  pG.onchange=()=>{initAudio();setGenre(pG.value);};
+  const click=id=>document.getElementById(id).click();
+  document.getElementById('pLoopRec').onclick=()=>click('loopRec');
+  document.getElementById('pLoopPlay').onclick=()=>click('loopPlay');
+  document.getElementById('pRec').onclick=()=>click('recBtn');
+  document.getElementById('pSet').onclick=()=>{body.classList.toggle('phoneSet');document.getElementById('pSet').textContent=body.classList.contains('phoneSet')?'✕ DONE':'⚙';window.scrollTo(0,0);};
+  const mirror=(src,dst,fn)=>new MutationObserver(fn).observe(document.getElementById(src),{attributes:true,childList:true,characterData:true,subtree:true});
+  mirror('recBtn','pRec',()=>{const b=document.getElementById('recBtn'),p=document.getElementById('pRec');const on=b.classList.contains('recon');p.classList.toggle('recon',on);p.textContent=on?'■ '+(b.textContent.match(/\d+:\d\d/)||[''])[0]:'● REC';});
+  mirror('loopRec','pLoopRec',()=>{const b=document.getElementById('loopRec');document.getElementById('pLoopRec').classList.toggle('on',b.classList.contains('on'));});
+  mirror('loopPlay','pLoopPlay',()=>{const b=document.getElementById('loopPlay');document.getElementById('pLoopPlay').textContent=/STOP|■/.test(b.textContent)?'■':'▶';});
+  const _sg=setGenre;setGenre=function(id){_sg(id);pG.value=id;};pG.value=genre;
+  // phones only let sound start after a tap
+  ['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{try{initAudio();}catch(_){}},{capture:true,passive:true}));
+  // the switch
+  const btn=document.getElementById('layoutBtn');
+  function setLayout(ph,save){body.classList.toggle('phone',ph);if(!ph)body.classList.remove('phoneSet');document.getElementById('pSet').textContent='⚙';
+    btn.textContent=ph?'🖥 PC':'📱 PHONE';btn.title=ph?'Switch to the PC layout':'Switch to the phone layout';
+    if(save){try{localStorage.setItem('bw_layout',ph?'phone':'pc');}catch(_){}}}
+  btn.onclick=()=>setLayout(!body.classList.contains('phone'),true);
+  const q=new URLSearchParams(location.search);let pick=null;
+  if(q.has('phone'))pick='phone';else if(q.has('pc'))pick='pc';
+  if(pick)setLayout(pick==='phone',true);
+  else{let s=null;try{s=localStorage.getItem('bw_layout');}catch(_){}
+    if(s)setLayout(s==='phone',false);
+    else setLayout(matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<820,false);}
+})();
 </script>
 </body>
 </html>
