@@ -98,6 +98,8 @@ body.phone.phoneSet #v-studio>.panel{display:block}
 body.phone.phoneSet #dancerPanel[style*="none"]{display:none!important}
 body.phone.phoneSet #pads{display:none}
 body.phone #kb,body.phone .legend{display:none}
+body.phone #fxSetBtns,body.phone #fxLvl{display:none}
+#liteNote{display:none;color:var(--cyan);font-size:11px;letter-spacing:1px}body.phone #liteNote{display:inline}
 body.phone .genres button{min-width:0}
 body.phone input[type=text]{min-width:0}
 .ptabs{display:flex;gap:5px;margin-bottom:6px}
@@ -152,7 +154,7 @@ body.phone input[type=text]{min-width:0}
 
   <div class="panel">
     <div class="row">
-      <span class="t">Effects</span><span class="row" id="fxSetBtns"></span>
+      <span class="t">Effects</span><span id="liteNote">PHONE MODE: FLASHY EFFECTS OFF</span><span class="row" id="fxSetBtns"></span>
       <button id="fxLvl" title="How wild the effects get">FX: HIGH</button>
       <button id="viewToggle">VIEW: VISUALS</button>
       <button id="dancerBtn" title="Change how your person looks">🕺 PERSON LOOK</button>
@@ -333,7 +335,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
 let ctx,master,comp,analyser,delay,delaySend,verbSend,noiseBuf,recDest;
 function initAudio(){
   if(ctx){if(ctx.state==='suspended')ctx.resume();return;}
-  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  ctx=new (window.AudioContext||window.webkitAudioContext)(LITE?{latencyHint:'balanced'}:undefined);
   master=ctx.createGain();master.gain.value=vol();
   comp=ctx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;
   analyser=ctx.createAnalyser();analyser.fftSize=2048;
@@ -695,6 +697,7 @@ focusbar.onclick=()=>{frame.blur();window.focus();focusbar.style.display='none';
 window.addEventListener('focus',()=>focusbar.style.display='none');
 
 /* ================= RECORDING ================= */
+let LITE=false;/* phone layout: no flashy effects, softer glow, 30 fps, lighter recording, so the sound stays smooth */
 let REC=false,S=1,GL=1,recClean=false,recCropped=false,recorder=null,chunks=[],recStart=0,recTimer=null,dispStream=null,recs=[],recN=0;
 const recBtn=document.getElementById('recBtn'),recChip=document.getElementById('recChip');
 function pickMime(){const opts=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];return opts.find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';}
@@ -702,7 +705,7 @@ recBtn.onclick=async()=>{
   if(recorder){recorder.stop();return;}
   initAudio();if(!window.MediaRecorder){alertBox('Your browser can\'t record video. Try Chrome or Edge.');return;}
   const mode=document.getElementById('recMode').value;let stream;
-  if(mode==='visuals'||mode==='dancer'){setView(mode);S=1.5;cv.width=1920;cv.height=1080;stream=new MediaStream([...cv.captureStream(60).getVideoTracks(),...recDest.stream.getAudioTracks()]);}
+  if(mode==='visuals'||mode==='dancer'){setView(mode);S=LITE?1:1.5;cv.width=W*S;cv.height=H*S;stream=new MediaStream([...cv.captureStream(LITE?30:60).getVideoTracks(),...recDest.stream.getAudioTracks()]);}
   else{
     if(!frame.src){alertBox('Load your game first (SHOW ON SCREEN), then record.');return;}
     setView('game');
@@ -717,7 +720,7 @@ recBtn.onclick=async()=>{
     dispStream.getVideoTracks()[0].addEventListener('ended',()=>{if(recorder)recorder.stop();});
   }
   const mime=pickMime();chunks=[];
-  recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:16e6,audioBitsPerSecond:192000}:{});
+  recorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:LITE?5e6:16e6,audioBitsPerSecond:192000}:{});
   recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
   recorder.onstop=()=>{const type=recorder.mimeType||mime||'video/webm';const blob=new Blob(chunks,{type});const dur=(performance.now()-recStart)/1000;
     addRec(blob,type,dur);recorder=null;clearInterval(recTimer);recChip.style.display='none';recBtn.textContent='● RECORD VIDEO';recBtn.classList.remove('recon');
@@ -726,7 +729,7 @@ recBtn.onclick=async()=>{
   recorder.start(500);recStart=performance.now();recChip.style.display='inline';recBtn.textContent='■ STOP VIDEO';recBtn.classList.add('recon');
   recTimer=setInterval(()=>{const s=Math.floor((performance.now()-recStart)/1000);const tm=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');recChip.textContent='● REC '+tm;recBtn.textContent='■ STOP VIDEO '+tm;document.getElementById('recBarTime').textContent='● REC '+tm;},250);
 };
-function setRecQuality(on){REC=on;GL=on?.3:1;S=on?1.5:1;cv.width=W*S;cv.height=H*S;document.body.classList.toggle('recbig',on);stageEl.classList.toggle('big',on);stageEl.style.transform='';frame.style.filter='';}
+function setRecQuality(on){REC=on;GL=on?.3:(LITE?.35:1);S=on?1.5:1;cv.width=W*S;cv.height=H*S;document.body.classList.toggle('recbig',on);stageEl.classList.toggle('big',on);stageEl.style.transform='';frame.style.filter='';}
 document.getElementById('recBarStop').onclick=()=>{if(recorder)recorder.stop();};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&recorder){e.preventDefault();recorder.stop();}},true);
 function alertBox(msg){linkErr.style.color='#ff6b8a';linkErr.textContent=msg;}
@@ -1033,8 +1036,9 @@ let FXW=1;
 function setFxSet(v){fxSet=v;try{localStorage.setItem('bw_fxset',v);}catch(_){}document.querySelectorAll('#fxSetBtns button').forEach(b=>b.classList.toggle('on',b.dataset.f===v));}
 {const fb=document.getElementById('fxSetBtns');FX_SETS.forEach(([id,n])=>{const b=document.createElement('button');b.textContent=n;b.dataset.f=id;b.title=id==='all'?'Every effect':id==='flashy'?'Only flashy screen effects: the world stays still':'Only the world reacts: no flashy overlays';b.onclick=()=>setFxSet(id);fb.appendChild(b);});setFxSet(fxSet);}
 function draw(now){
+  if(LITE&&now-last<30){requestAnimationFrame(draw);return;}
   const dt=Math.min((now-last)/1000,.05);last=now;const P=worldPal(GENRES[genre].pal);
-  const FL=fxSet!=='world',WR=fxSet!=='flashy';FXW=WR?1:0;
+  const FL=fxSet!=='world'&&!LITE,WR=fxSet!=='flashy'||LITE;FXW=WR?1:0;
   if(!FL){rings.length=0;beams.length=0;lasers.length=0;comets.length=0;sweeps.length=0;sparks.length=0;shocks.length=0;shapes.length=0;rain.length=0;bolts.length=0;confetti.length=0;ripples.length=0;trail.length=0;pops.length=0;fx.glitch=0;fx.shake=0;if(!SW.warp)fx.flash=0;}
   vq.sort((a,b)=>a.t-b.t);
   if(ctx)while(vq.length&&vq[0].t<=ctx.currentTime){const e=vq.shift();trigger(e.k,e.vel);}
@@ -1507,7 +1511,7 @@ function drawChar3D(now,dt,P){if(!CH.on){chInit();return false;}
   ['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{try{initAudio();}catch(_){}},{capture:true,passive:true}));
   // the switch
   const btn=document.getElementById('layoutBtn');
-  function setLayout(ph,save){body.classList.toggle('phone',ph);if(!ph)body.classList.remove('phoneSet');document.getElementById('pSet').textContent='⚙';
+  function setLayout(ph,save){body.classList.toggle('phone',ph);LITE=ph;GL=REC?GL:(ph?.35:1);if(!ph)body.classList.remove('phoneSet');document.getElementById('pSet').textContent='⚙';
     btn.textContent=ph?'🖥 PC':'📱 PHONE';btn.title=ph?'Switch to the PC layout':'Switch to the phone layout';
     if(save){try{localStorage.setItem('bw_layout',ph?'phone':'pc');}catch(_){}}}
   btn.onclick=()=>setLayout(!body.classList.contains('phone'),true);
