@@ -334,16 +334,18 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
 /* ================= AUDIO ================= */
 let ctx,master,comp,analyser,delay,delaySend,verbSend,noiseBuf,recDest;
 function initAudio(){
-  if(ctx){if(ctx.state==='suspended')ctx.resume();return;}
+  if(ctx){if(ctx.state!=='running')ctx.resume();return;}
   ctx=new (window.AudioContext||window.webkitAudioContext)(LITE?{latencyHint:'balanced'}:undefined);
   master=ctx.createGain();master.gain.value=vol();
   comp=ctx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;
   analyser=ctx.createAnalyser();analyser.fftSize=2048;
-  master.connect(comp);comp.connect(analyser);analyser.connect(ctx.destination);
-  recDest=ctx.createMediaStreamDestination();comp.connect(recDest);
+  // safety limiter at the very end: loud stacks of notes get held under 0 dB instead of clipping (that clipping is the "scratch")
+  const lim=ctx.createDynamicsCompressor();lim.threshold.value=-3;lim.knee.value=0;lim.ratio.value=20;lim.attack.value=.001;lim.release.value=.08;
+  master.connect(comp);comp.connect(lim);lim.connect(analyser);analyser.connect(ctx.destination);
+  recDest=ctx.createMediaStreamDestination();lim.connect(recDest);
   delay=ctx.createDelay(2);const fb=ctx.createGain();fb.gain.value=.35;const dl=ctx.createBiquadFilter();dl.type='lowpass';dl.frequency.value=2800;
   delaySend=ctx.createGain();delaySend.gain.value=.35;delaySend.connect(delay);delay.connect(dl);dl.connect(fb);fb.connect(delay);dl.connect(master);
-  const conv=ctx.createConvolver();const len=ctx.sampleRate*2.2,ir=ctx.createBuffer(2,len,ctx.sampleRate);
+  const conv=ctx.createConvolver();const len=ctx.sampleRate*(LITE?1.2:2.2),ir=ctx.createBuffer(2,len,ctx.sampleRate);
   for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);}
   conv.buffer=ir;verbSend=ctx.createGain();verbSend.gain.value=.3;verbSend.connect(conv);conv.connect(master);
   noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const nd=noiseBuf.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
@@ -356,13 +358,23 @@ const vol=()=>{const v=document.getElementById('vol').value/100;return v*v;};
 function setDelay(){if(!delay)return;delay.delayTime.value=(60/bpm)*(genre==='techno'?0.5:0.75);}
 function env(gn,t,peak,dec,att=0.003){gn.gain.setValueAtTime(0.0001,t);gn.gain.exponentialRampToValueAtTime(peak,t+att);gn.gain.exponentialRampToValueAtTime(0.0001,t+dec);}
 function G(){return ctx.createGain();}
-function noise(t,dur){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.start(t);s.stop(t+dur+.05);return s;}
-function osc(type,f,t,dur){const o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);o.start(t);o.stop(t+dur+.05);return o;}
+function noise(t,dur){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.start(t);s.stop(t+dur+.05);PEND.push(s);PEND_END=Math.max(PEND_END,t+dur+.05);return s;}
+function osc(type,f,t,dur){const o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);o.start(t);o.stop(t+dur+.05);PEND.push(o);PEND_END=Math.max(PEND_END,t+dur+.05);return o;}
+/* VOICE LIMIT: every sound counts its oscillators. If too many are ringing at once (fast tapping + echo + chords),
+   the oldest sounds fade out in 30 ms and stop, so the audio never overloads. Phone: 90, PC: 320. */
+let PEND=[],PEND_END=0,VOICES=[],LIVE=0;const VCAP=()=>LITE?90:320;
+function voiceOut(){const now=ctx.currentTime;const vg=G();
+  if(PEND.length){VOICES.push({vg,srcs:PEND,end:PEND_END,t:now});LIVE+=PEND.length;PEND=[];PEND_END=0;}
+  if(VOICES.length>8&&VOICES[0].end<now){VOICES=VOICES.filter(v=>{if(v.end<now){LIVE-=v.srcs.length;return false;}return true;});}
+  while(LIVE>VCAP()&&VOICES.length>1){const v=VOICES.shift();LIVE-=v.srcs.length;
+    try{v.vg.gain.cancelScheduledValues(now);v.vg.gain.setValueAtTime(v.vg.gain.value,now);v.vg.gain.linearRampToValueAtTime(0,now+.03);}catch(_){}
+    v.srcs.forEach(s=>{try{s.stop(now+.04);}catch(_){}});}
+  return vg;}
 function filt(type,f,q=1){const b=ctx.createBiquadFilter();b.type=type;b.frequency.value=f;b.Q.value=q;return b;}
 const curves={};function dist(k){if(!curves[k]){const n=2048,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i*2/n-1;c[i]=(1+k)*x/(1+k*Math.abs(x));}curves[k]=c;}const w=ctx.createWaveShaper();w.curve=curves[k];w.oversample='2x';return w;}
 const mtof=m=>440*Math.pow(2,(m-69)/12);
 let bus=null,busV=1;
-function out(node,{dly=0,verb=0}={}){node.connect(bus||master);if(dly){const s=G();s.gain.value=dly*busV;node.connect(s);s.connect(delaySend);}if(verb){const s=G();s.gain.value=verb*busV;node.connect(s);s.connect(verbSend);}}
+function out(src,{dly=0,verb=0}={}){const node=voiceOut();src.connect(node);node.connect(bus||master);if(dly){const s=G();s.gain.value=dly*busV;node.connect(s);s.connect(delaySend);}if(verb){const s=G();s.gain.value=verb*busV;node.connect(s);s.connect(verbSend);}}
 
 const DRUM_P={
   synthwave:{kick:[160,42,.5,0],snare:[1200,200,.22,.25],hat:[7500,.05],tom:1,verb:.25},
@@ -389,15 +401,15 @@ function thump(t,f0,f1,dec,vol,o,type){const ob=osc(type||'sine',f0,t,dec);ob.fr
 function fm(f,t,dec,vol,ratio,index,idec,ctype,o){const car=osc(ctype||'sine',f,t,dec),mod=osc('sine',f*ratio,t,dec),mg=G(),gn=G();mg.gain.setValueAtTime(f*index,t);mg.gain.exponentialRampToValueAtTime(Math.max(1,f*index*.05),t+idec);mod.connect(mg);mg.connect(car.frequency);env(gn,t,vol,dec,.004);car.connect(gn);out(gn,o);return gn;}
 // PIANO voice: hammered strings (decaying harmonics + a soft hammer knock)
 function piano(m,t,dec,vol,o){const f0=mtof(m),gn=G(),lp=filt('lowpass',Math.min(9000,f0*8),.7);env(gn,t,vol,dec,.002);
-  [[1,1,1],[2,.45,.7],[3,.22,.5],[4,.12,.35],[5,.06,.25]].forEach(([p,a,dk])=>{const og=G();og.gain.setValueAtTime(a,t);og.gain.exponentialRampToValueAtTime(a*.02+1e-4,t+dec*dk);osc('sine',f0*p*(1+p*p*.0004),t,dec).connect(og);og.connect(lp);});
-  const d=osc('sine',f0,t,dec),dg=G();d.detune.value=4;dg.gain.value=.35;d.connect(dg);dg.connect(lp);lp.connect(gn);out(gn,o||{verb:.3});
+  (LITE?[[1,1,1],[2,.5,.7],[3,.25,.5]]:[[1,1,1],[2,.45,.7],[3,.22,.5],[4,.12,.35],[5,.06,.25]]).forEach(([p,a,dk])=>{const og=G();og.gain.setValueAtTime(a,t);og.gain.exponentialRampToValueAtTime(a*.02+1e-4,t+dec*dk);osc('sine',f0*p*(1+p*p*.0004),t,dec).connect(og);og.connect(lp);});
+  if(!LITE){const d=osc('sine',f0,t,dec),dg=G();d.detune.value=4;dg.gain.value=.35;d.connect(dg);dg.connect(lp);}lp.connect(gn);out(gn,o||{verb:.3});
   const h=noise(t,.03),hf=filt('bandpass',Math.min(4000,f0*4),1),hg=G();env(hg,t,vol*.2,.03,.001);h.connect(hf);hf.connect(hg);out(hg);return gn;}
 // VIOLIN voice: bowed strings (two detuned saws, wooden body resonance, slow-blooming vibrato, bow noise)
 function bow(m,t,dur,vol,o,vib){const f0=mtof(m),gn=G(),lp=filt('lowpass',Math.min(7000,f0*7),.8),b1=filt('peaking',280,1.2),b2=filt('peaking',2900,1.5);b1.gain.value=5;b2.gain.value=6;
   gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(vol,t+.07);gn.gain.setValueAtTime(vol,t+Math.max(.08,dur*.6));gn.gain.exponentialRampToValueAtTime(.0001,t+dur);
   const v=osc('sine',5.6,t,dur),vg=G();vg.gain.setValueAtTime(0,t);vg.gain.linearRampToValueAtTime(vib==null?14:vib,t+Math.min(.35,dur*.5));v.connect(vg);
-  [-5,5].forEach(dt=>{const s=osc('sawtooth',f0,t,dur);s.detune.value=dt;vg.connect(s.detune);s.connect(lp);});lp.connect(b1);b1.connect(b2);b2.connect(gn);
-  const r=noise(t,dur),rf=filt('bandpass',3200,2),rg=G();rg.gain.value=vol*.5;r.connect(rf);rf.connect(rg);rg.connect(gn);out(gn,o||{verb:.45});return gn;}
+  (LITE?[0]:[-5,5]).forEach(dt=>{const s=osc('sawtooth',f0,t,dur);s.detune.value=dt;vg.connect(s.detune);s.connect(lp);});lp.connect(b1);b1.connect(b2);b2.connect(gn);
+  if(!LITE){const r=noise(t,dur),rf=filt('bandpass',3200,2),rg=G();rg.gain.value=vol*.5;r.connect(rf);rf.connect(rg);rg.connect(gn);}out(gn,o||{verb:.45});return gn;}
 const XD={
   piano(n,t){if(n==='perc'){piano(GENRES.piano.root+36,t,1.2,.25,{verb:.4});}
     else if(n==='crash'){[0,7,12].forEach(i=>piano(GENRES.piano.root-24+i,t,2.6,.22,{verb:.5}));}
@@ -467,7 +479,7 @@ function playBass(m,t){
 }
 const XC={
   piano(notes,t){notes.forEach((n,i)=>piano(n,t+i*.012,2.2,.14,{verb:.35}));},
-  violin(notes,t){notes.forEach((n,i)=>[-9,9].forEach(dt=>{const g=bow(n+(dt>0?12:0),t+i*.02,2.2,.045,{verb:.6},10);}));},
+  violin(notes,t){notes.forEach((n,i)=>(LITE?[-9]:[-9,9]).forEach(dt=>{const g=bow(n+(dt>0?12:0),t+i*.02,2.2,LITE?.07:.045,{verb:.6},10);}));},
   arcade(notes,t){notes.forEach(n=>fm(mtof(n),t,.55,.075,1,2.2,.25,'sine',{dly:.3,verb:.25}));},
   anime(notes,t){notes.forEach((n,i)=>{const gn=G(),f=filt('lowpass',4200);env(gn,t,.1,1.3,.003);osc('triangle',mtof(n),t,1.4).connect(f);const h=osc('sine',mtof(n)*2,t,.6),hg=G();hg.gain.value=.35;h.connect(hg);hg.connect(f);f.connect(gn);out(gn,{verb:.3});});
     const pf=filt('lowpass',2600),pg=G();env(pg,t,.04,1.6,.18);pf.connect(pg);out(pg,{verb:.45});notes.forEach(n=>[-10,10].forEach(det=>{const o=osc('sawtooth',mtof(n),t,1.7);o.detune.value=det;o.connect(pf);}));},
@@ -582,7 +594,7 @@ const spb=()=>60/bpm,loopBeats=()=>+document.getElementById('bars').value*4,loop
 function setBpm(v){const now=ctx?ctx.currentTime:0;if(clockOn){const cur=(now-t0)/spb();bpm=+v;t0=now-cur*spb();}else bpm=+v;
   document.getElementById('bpm').value=bpm;document.getElementById('bpmv').textContent=bpm;setDelay();}
 function tick(){
-  const a=schedTo,b=ctx.currentTime+0.12,L=loopLen(),sp=spb();
+  const a=schedTo,b=ctx.currentTime+(LITE?0.3:0.15),L=loopLen(),sp=spb();
   if(b<=a)return;
   const k0=Math.floor((a-t0)/L),k1=Math.floor((b-t0)/L);
   for(let k=k0;k<=k1;k++){const base=t0+k*L;
@@ -628,7 +640,7 @@ document.getElementById('flowBtn').onclick=e=>{flow=!flow;if(!flow)flowHits=[];e
 
 /* ================= PRESS ================= */
 function press(k){
-  initAudio();if(sync||flow||magic)clockStart();const now=ctx.currentTime;let t=sync?slotFor(k,now):now;lastPressT=now;typeTimes.push(now);if(typeTimes.length>80)typeTimes.shift();
+  initAudio();if(sync||flow||magic)clockStart();const now=ctx.currentTime;let t=sync?slotFor(k,now):now;t=Math.max(t,now+(LITE?.025:.006));lastPressT=now;typeTimes.push(now);if(typeTimes.length>80)typeTimes.shift();
   if(sync&&KEYMAP[k].type!=='drum'){const div=SNAP_DIV[KEYMAP[k].type]||4,step=spb()/div;let n=0;while(n<4&&(slotUse[t.toFixed(3)]||0)>=(KEYMAP[k].type==='lead'?1:2)){t+=step;n++;}const key=t.toFixed(3);slotUse[key]=(slotUse[key]||0)+1;if(Object.keys(slotUse).length>200)slotUse={};}
   sound(k,t);
   const m=KEYMAP[k];m.el.classList.add('armed');setTimeout(()=>m.el.classList.remove('armed'),Math.max(60,(t-now)*1000+40));
@@ -1509,6 +1521,8 @@ function drawChar3D(now,dt,P){if(!CH.on){chInit();return false;}
   const _sg=setGenre;setGenre=function(id){_sg(id);pG.value=id;};pG.value=genre;
   // phones only let sound start after a tap
   ['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{try{initAudio();}catch(_){}},{capture:true,passive:true}));
+  // if the phone pauses the sound (call, app switch), wake it back up
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ctx&&ctx.state!=='running')ctx.resume();});
   // the switch
   const btn=document.getElementById('layoutBtn');
   function setLayout(ph,save){body.classList.toggle('phone',ph);LITE=ph;GL=REC?GL:(ph?.35:1);if(!ph)body.classList.remove('phoneSet');document.getElementById('pSet').textContent='⚙';
